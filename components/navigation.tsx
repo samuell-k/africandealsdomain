@@ -17,8 +17,17 @@ export default function Navigation() {
     { href: "/contact", label: "Contact", icon: Video },
   ]
 
+  const navStyle = {
+    background: "linear-gradient(to right, #9333ea, #7c3aed, #2563eb) !important",
+    color: "white !important",
+  }
+
+  const textStyle = {
+    color: "white !important",
+  }
+
   return (
-    <nav className="bg-gradient-to-r from-purple-600 via-purple-700 to-blue-600 shadow-lg border-b sticky top-0 z-50 backdrop-blur-sm">
+    <nav className="shadow-lg border-b sticky top-0 z-50 backdrop-blur-sm" style={navStyle}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
@@ -26,7 +35,9 @@ export default function Navigation() {
             <div className="w-10 h-10 bg-gradient-to-br from-white to-purple-100 rounded-xl shadow-md group-hover:shadow-lg transition-all duration-300 flex items-center justify-center">
               <Camera className="h-5 w-5 text-purple-600" />
             </div>
-            <span className="font-bold text-xl text-white">CreativeStudio</span>
+            <span className="font-bold text-xl" style={textStyle}>
+              CreativeStudio
+            </span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -37,14 +48,15 @@ export default function Navigation() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="flex items-center space-x-2 px-4 py-2 rounded-lg text-white/90 hover:text-white hover:bg-white/10 font-medium transition-all duration-200 group"
+                  className="flex items-center space-x-2 px-4 py-2 rounded-lg hover:bg-white/10 font-medium transition-all duration-200 group"
+                  style={textStyle}
                 >
-                  <IconComponent className="h-4 w-4 group-hover:scale-110 transition-transform" />
-                  <span>{item.label}</span>
+                  <IconComponent className="h-4 w-4 group-hover:scale-110 transition-transform" style={textStyle} />
+                  <span style={textStyle}>{item.label}</span>
                 </Link>
               )
             })}
-            <Button className="ml-4 bg-white text-purple-600 hover:bg-purple-50 shadow-md hover:shadow-lg transition-all duration-200">
+            <Button className="ml-4 shadow-md hover:shadow-lg transition-all duration-200 bg-white text-purple-600 hover:bg-gray-100">
               Get Started
             </Button>
           </div>
@@ -55,9 +67,10 @@ export default function Navigation() {
               variant="ghost"
               size="sm"
               onClick={() => setIsOpen(!isOpen)}
-              className="text-white hover:bg-white/10"
+              className="hover:bg-white/10"
+              style={textStyle}
             >
-              {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              {isOpen ? <X className="h-6 w-6" style={textStyle} /> : <Menu className="h-6 w-6" style={textStyle} />}
             </Button>
           </div>
         </div>
@@ -72,15 +85,16 @@ export default function Navigation() {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className="flex items-center space-x-3 px-4 py-3 rounded-lg text-white/90 hover:text-white hover:bg-white/10 font-medium transition-all duration-200"
+                    className="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 font-medium transition-all duration-200"
                     onClick={() => setIsOpen(false)}
+                    style={textStyle}
                   >
-                    <IconComponent className="h-4 w-4" />
-                    <span>{item.label}</span>
+                    <IconComponent className="h-4 w-4" style={textStyle} />
+                    <span style={textStyle}>{item.label}</span>
                   </Link>
                 )
               })}
-              <Button className="mx-4 mt-2 bg-white text-purple-600 hover:bg-purple-50 w-fit">Get Started</Button>
+              <Button className="mx-4 mt-2 w-fit bg-white text-purple-600 hover:bg-gray-100">Get Started</Button>
             </div>
           </div>
         )}

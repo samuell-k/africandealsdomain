@@ -1,80 +1,78 @@
-import { supabase } from "@/lib/supabase/client"
+import { createClient } from "@/lib/supabase/server"
 import Navigation from "@/components/navigation"
 import Footer from "@/components/footer"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
 import { Camera, Video, Palette, Package, Calendar, Check } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 
+function getFallbackServices() {
+  return [
+    {
+      id: 1,
+      title: "Wedding Photography",
+      description: "Capture your special day with stunning, timeless photographs that tell your unique love story.",
+      price_range: "Starting at $2,500",
+      icon: "Camera",
+      created_at: new Date().toISOString(),
+    },
+    {
+      id: 2,
+      title: "Corporate Videography",
+      description: "Professional video production for corporate events, training materials, and promotional content.",
+      price_range: "Starting at $3,000",
+      icon: "Video",
+      created_at: new Date().toISOString(),
+    },
+    {
+      id: 3,
+      title: "Brand Design",
+      description: "Complete brand identity design including logos, color schemes, and marketing materials.",
+      price_range: "Starting at $1,500",
+      icon: "Palette",
+      created_at: new Date().toISOString(),
+    },
+    {
+      id: 4,
+      title: "Event Photography",
+      description: "Professional event coverage for conferences, parties, and special occasions.",
+      price_range: "Starting at $800",
+      icon: "Camera",
+      created_at: new Date().toISOString(),
+    },
+    {
+      id: 5,
+      title: "Product Photography",
+      description: "High-quality product shots for e-commerce, catalogs, and marketing materials.",
+      price_range: "Starting at $500",
+      icon: "Package",
+      created_at: new Date().toISOString(),
+    },
+    {
+      id: 6,
+      title: "Social Media Content",
+      description: "Engaging visual content creation for social media platforms and digital marketing.",
+      price_range: "Starting at $1,200",
+      icon: "Calendar",
+      created_at: new Date().toISOString(),
+    },
+  ]
+}
+
 async function getServices() {
   try {
+    const supabase = createClient()
     const { data, error } = await supabase.from("services").select("*").order("created_at", { ascending: true })
 
     if (error) {
-      if (error.message.includes("Could not find the table")) {
-        console.log("Database tables not found, using fallback services data")
-        return [
-          {
-            id: 1,
-            title: "Wedding Photography",
-            description:
-              "Capture your special day with stunning, timeless photographs that tell your unique love story.",
-            price_range: "Starting at $2,500",
-            icon: "Camera",
-            created_at: new Date().toISOString(),
-          },
-          {
-            id: 2,
-            title: "Corporate Videography",
-            description:
-              "Professional video production for corporate events, training materials, and promotional content.",
-            price_range: "Starting at $3,000",
-            icon: "Video",
-            created_at: new Date().toISOString(),
-          },
-          {
-            id: 3,
-            title: "Brand Design",
-            description: "Complete brand identity design including logos, color schemes, and marketing materials.",
-            price_range: "Starting at $1,500",
-            icon: "Palette",
-            created_at: new Date().toISOString(),
-          },
-          {
-            id: 4,
-            title: "Event Photography",
-            description: "Professional event coverage for conferences, parties, and special occasions.",
-            price_range: "Starting at $800",
-            icon: "Camera",
-            created_at: new Date().toISOString(),
-          },
-          {
-            id: 5,
-            title: "Product Photography",
-            description: "High-quality product shots for e-commerce, catalogs, and marketing materials.",
-            price_range: "Starting at $500",
-            icon: "Package",
-            created_at: new Date().toISOString(),
-          },
-          {
-            id: 6,
-            title: "Social Media Content",
-            description: "Engaging visual content creation for social media platforms and digital marketing.",
-            price_range: "Starting at $1,200",
-            icon: "Calendar",
-            created_at: new Date().toISOString(),
-          },
-        ]
-      }
-      console.error("Error fetching services:", error)
-      return []
+      console.log("Database error, using fallback services data:", error.message)
+      return getFallbackServices()
     }
 
     return data || []
   } catch (error) {
-    console.error("Error fetching services:", error)
-    return []
+    console.log("Error fetching services, using fallback data:", error)
+    return getFallbackServices()
   }
 }
 
@@ -166,123 +164,241 @@ export default async function ServicesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gray-900">
       <Navigation />
 
-      {/* Hero Section */}
-      <section className="py-20 bg-gradient-to-br from-purple-50 to-blue-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Hero Section with Video Background */}
+      <section className="relative py-20 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-900/90 via-blue-900/90 to-gray-900/90" />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-8">
-              <h1 className="text-5xl font-bold text-gray-900 leading-tight">
-                Our
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600">
+              <h1 className="text-4xl font-bold text-white leading-tight">
+                Professional
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400">
                   {" "}
-                  Services
+                  Multimedia Services
                 </span>
               </h1>
-              <p className="text-xl text-gray-600 leading-relaxed">
-                Professional multimedia solutions tailored to your unique needs and vision
+              <p className="text-lg text-gray-300 leading-relaxed">
+                Cutting-edge creative solutions powered by advanced technology and artistic vision
               </p>
+
+              {/* Stats Cards */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-gradient-to-br from-purple-800/50 to-blue-800/50 backdrop-blur-sm rounded-xl p-4 border border-purple-500/20">
+                  <div className="text-2xl font-bold text-white">500+</div>
+                  <div className="text-sm text-gray-300">Projects Completed</div>
+                  <div className="w-full bg-gray-700 rounded-full h-2 mt-2">
+                    <div className="bg-gradient-to-r from-purple-500 to-blue-500 h-2 rounded-full w-4/5"></div>
+                  </div>
+                </div>
+                <div className="bg-gradient-to-br from-blue-800/50 to-purple-800/50 backdrop-blur-sm rounded-xl p-4 border border-blue-500/20">
+                  <div className="text-2xl font-bold text-white">98%</div>
+                  <div className="text-sm text-gray-300">Client Satisfaction</div>
+                  <div className="w-full bg-gray-700 rounded-full h-2 mt-2">
+                    <div className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full w-full"></div>
+                  </div>
+                </div>
+              </div>
             </div>
+
             <div className="relative">
-              <Image
-                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/fc069051-d25a-46b4-b61c-48a61669cdd0-3uHD0WZHnWDacvWjrb98ArXsbCw9SG.jpeg" // Using video editing workspace image
-                alt="Professional multimedia equipment and studio setup"
-                width={400} // Made smaller from 600
-                height={300} // Made smaller from 500
-                className="rounded-2xl shadow-2xl"
-              />
+              <div className="bg-gradient-to-br from-purple-800/30 to-blue-800/30 backdrop-blur-sm rounded-2xl p-6 border border-purple-500/20">
+                <Image
+                  src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/fc069051-d25a-46b4-b61c-48a61669cdd0-3uHD0WZHnWDacvWjrb98ArXsbCw9SG.jpeg"
+                  alt="Professional multimedia equipment and studio setup"
+                  width={400}
+                  height={300}
+                  className="rounded-xl shadow-2xl"
+                />
+                <div className="absolute -top-4 -right-4 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full p-3">
+                  <Video className="h-6 w-6 text-white" />
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Services Grid */}
-      <section className="py-20 bg-white">
+      {/* Services Grid with Modern Dark Cards */}
+      <section className="py-20 bg-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {services.map((service) => {
+          <div className="text-center space-y-4 mb-16">
+            <h2 className="text-3xl font-bold text-white">Our Services</h2>
+            <p className="text-gray-400 max-w-2xl mx-auto">
+              Professional multimedia solutions with cutting-edge technology
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {services.map((service, index) => {
               const IconComponent = getIcon(service.icon)
               const features = serviceFeatures[service.title as keyof typeof serviceFeatures] || []
 
               return (
-                <Card key={service.id} className="group hover:shadow-xl transition-shadow duration-300 overflow-hidden">
-                  <div className="relative h-40 overflow-hidden">
-                    {" "}
-                    {/* Made smaller from h-48 */}
-                    <Image
-                      src={
-                        getServiceImage(service.title) ||
-                        "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Battle%20of%20the%20brands%21%20We%20break%20down%20the%20pros%20and%E2%80%A6-Z3llZBagItsXwqfUoEPJQ21QkmfAQv.jpeg"
-                      }
-                      alt={`${service.title} service`}
-                      width={250} // Made smaller from 300
-                      height={160} // Made smaller from 200
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-                  </div>
-
-                  <CardContent className="p-8 space-y-6">
-                    <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <IconComponent className="h-8 w-8 text-purple-600" />
-                    </div>
-
-                    <div className="space-y-4">
-                      <h3 className="text-2xl font-semibold text-gray-900">{service.title}</h3>
-                      <p className="text-gray-600 leading-relaxed">{service.description}</p>
-                      <p className="text-2xl font-bold text-purple-600">{service.price_range}</p>
-                    </div>
-
-                    {features.length > 0 && (
-                      <div className="space-y-3">
-                        <h4 className="font-semibold text-gray-900">What's Included:</h4>
-                        <ul className="space-y-2">
-                          {features.slice(0, 4).map((feature, index) => (
-                            <li key={index} className="flex items-center space-x-2 text-sm text-gray-600">
-                              <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
-                              <span>{feature}</span>
-                            </li>
-                          ))}
-                        </ul>
+                <div key={service.id} className="group">
+                  <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 hover:border-purple-500/50 transition-all duration-300 hover:transform hover:scale-105">
+                    {/* Service Image */}
+                    <div className="relative h-32 overflow-hidden rounded-xl mb-6">
+                      <Image
+                        src={getServiceImage(service.title) || "/placeholder.svg"}
+                        alt={`${service.title} service`}
+                        width={250}
+                        height={128}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                      <div className="absolute top-3 right-3 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full p-2">
+                        <IconComponent className="h-4 w-4 text-white" />
                       </div>
-                    )}
+                    </div>
 
-                    <Link href="/contact">
-                      <Button className="w-full bg-purple-600 hover:bg-purple-700">Get Quote</Button>
-                    </Link>
-                  </CardContent>
-                </Card>
+                    {/* Service Content */}
+                    <div className="space-y-4">
+                      <h3 className="text-xl font-semibold text-white">{service.title}</h3>
+                      <p className="text-gray-400 text-sm leading-relaxed">{service.description}</p>
+
+                      {/* Price with Progress Bar */}
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400">
+                            {service.price_range}
+                          </span>
+                          <span className="text-xs text-gray-500">Popular</span>
+                        </div>
+                        <div className="w-full bg-gray-700 rounded-full h-1">
+                          <div
+                            className={`bg-gradient-to-r from-purple-500 to-blue-500 h-1 rounded-full`}
+                            style={{ width: `${60 + index * 10}%` }}
+                          ></div>
+                        </div>
+                      </div>
+
+                      {/* Features */}
+                      {features.length > 0 && (
+                        <div className="space-y-2">
+                          <h4 className="font-medium text-gray-300 text-sm">Includes:</h4>
+                          <ul className="space-y-1">
+                            {features.slice(0, 3).map((feature, idx) => (
+                              <li key={idx} className="flex items-center space-x-2 text-xs text-gray-400">
+                                <Check className="h-3 w-3 text-green-400 flex-shrink-0" />
+                                <span>{feature}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      <Link href="/contact">
+                        <Button className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border-0">
+                          Get Quote
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
               )
             })}
           </div>
         </div>
       </section>
 
-      {/* Process Section */}
-      <section className="py-20 bg-gray-50">
+      {/* Technology Stack Cards */}
+      <section className="py-20 bg-gray-800/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center space-y-4 mb-16">
-            <h2 className="text-4xl font-bold text-gray-900">Our Process</h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              A streamlined approach to delivering exceptional results
-            </p>
+            <h2 className="text-3xl font-bold text-white">Our Technology</h2>
+            <p className="text-gray-400">Professional equipment and software we use</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {[
-              { step: "01", title: "Consultation", description: "We discuss your vision, goals, and requirements" },
-              { step: "02", title: "Planning", description: "Detailed project planning and timeline creation" },
-              { step: "03", title: "Creation", description: "Professional execution of your multimedia project" },
-              { step: "04", title: "Delivery", description: "Final delivery with revisions and support" },
+              { name: "Canon R5", type: "Camera", usage: "95%" },
+              { name: "Adobe Premiere", type: "Editing", usage: "90%" },
+              { name: "DJI Ronin", type: "Stabilizer", usage: "85%" },
+              { name: "Photoshop", type: "Design", usage: "98%" },
+            ].map((tech, index) => (
+              <div
+                key={index}
+                className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50"
+              >
+                <div className="text-center space-y-3">
+                  <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center mx-auto">
+                    <Camera className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <div className="text-white font-medium text-sm">{tech.name}</div>
+                    <div className="text-gray-400 text-xs">{tech.type}</div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="w-full bg-gray-700 rounded-full h-1">
+                      <div
+                        className="bg-gradient-to-r from-purple-500 to-blue-500 h-1 rounded-full"
+                        style={{ width: tech.usage }}
+                      ></div>
+                    </div>
+                    <div className="text-xs text-gray-500">{tech.usage} Usage</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Process Section with Modern Cards */}
+      <section className="py-20 bg-gray-900">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center space-y-4 mb-16">
+            <h2 className="text-3xl font-bold text-white">Our Process</h2>
+            <p className="text-gray-400 max-w-2xl mx-auto">Streamlined workflow for exceptional results</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            {[
+              {
+                step: "01",
+                title: "Consultation",
+                description: "Vision & requirements discussion",
+                color: "from-purple-500 to-pink-500",
+              },
+              {
+                step: "02",
+                title: "Planning",
+                description: "Detailed project timeline",
+                color: "from-blue-500 to-cyan-500",
+              },
+              {
+                step: "03",
+                title: "Creation",
+                description: "Professional execution",
+                color: "from-green-500 to-teal-500",
+              },
+              {
+                step: "04",
+                title: "Delivery",
+                description: "Final delivery & support",
+                color: "from-orange-500 to-red-500",
+              },
             ].map((item, index) => (
-              <div key={index} className="text-center space-y-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full flex items-center justify-center mx-auto">
+              <div
+                key={index}
+                className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700/50 text-center space-y-4"
+              >
+                <div
+                  className={`w-16 h-16 bg-gradient-to-r ${item.color} rounded-full flex items-center justify-center mx-auto`}
+                >
                   <span className="text-white font-bold text-lg">{item.step}</span>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900">{item.title}</h3>
-                <p className="text-gray-600">{item.description}</p>
+                <h3 className="text-lg font-semibold text-white">{item.title}</h3>
+                <p className="text-gray-400 text-sm">{item.description}</p>
+                <div className="w-full bg-gray-700 rounded-full h-1">
+                  <div
+                    className={`bg-gradient-to-r ${item.color} h-1 rounded-full`}
+                    style={{ width: `${25 * (index + 1)}%` }}
+                  ></div>
+                </div>
               </div>
             ))}
           </div>
@@ -290,17 +406,28 @@ export default async function ServicesPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-purple-600 to-blue-600">
+      <section className="py-20 bg-gradient-to-r from-purple-900 to-blue-900">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-4xl font-bold text-white mb-6">Ready to Get Started?</h2>
-          <p className="text-xl text-purple-100 mb-8">
-            Let's discuss your project and create something amazing together
+          <h2 className="text-3xl font-bold text-white mb-6">Ready to Create Something Amazing?</h2>
+          <p className="text-lg text-purple-200 mb-8">
+            Let's bring your vision to life with our professional multimedia services
           </p>
-          <Link href="/contact">
-            <Button size="lg" className="bg-white text-purple-600 hover:bg-gray-100">
-              Contact Us Today
-            </Button>
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link href="/contact">
+              <Button size="lg" className="bg-white text-purple-600 hover:bg-gray-100">
+                Start Your Project
+              </Button>
+            </Link>
+            <Link href="/portfolio">
+              <Button
+                size="lg"
+                variant="outline"
+                className="border-white text-white hover:bg-white hover:text-purple-600 bg-transparent"
+              >
+                View Our Work
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
 

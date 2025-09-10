@@ -2,7 +2,7 @@ import { supabase } from "@/lib/supabase/client"
 import Navigation from "@/components/navigation"
 import Footer from "@/components/footer"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
 import { Camera, Video, Palette, Star, ArrowRight } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
@@ -105,144 +105,249 @@ export default async function HomePage() {
     <div className="min-h-screen bg-white">
       <Navigation />
 
-      <section className="relative bg-gradient-to-br from-purple-50 via-white to-blue-50 py-20">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div className="space-y-6">
-              <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-100 to-blue-100 rounded-full border border-purple-200 shadow-sm">
-                <span className="text-sm font-medium text-purple-700">🎯 Professional Creative Studio</span>
+      <section className="relative bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 py-16 overflow-hidden">
+        <div className="absolute inset-0 z-0">
+          <video autoPlay loop muted playsInline className="w-full h-full object-cover">
+            <source
+              src="/placeholder.mp4?query=professional video editing workspace with multiple monitors showing creative content"
+              type="video/mp4"
+            />
+          </video>
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-900/80 via-purple-900/70 to-slate-900/80"></div>
+        </div>
+
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
+            {/* Left Analytics Card - Made smaller */}
+            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50 shadow-2xl">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center">
+                  <Camera className="h-4 w-4 text-white" />
+                </div>
+                <span className="text-cyan-400 font-medium text-sm">Smart Analytics</span>
               </div>
 
-              <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 leading-tight">
-                Transform Ideas Into
-                <span className="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 bg-gradient-to-r from-orange-500 to-red-500 rounded-md flex items-center justify-center">
+                      <Video className="h-3 w-3 text-white" />
+                    </div>
+                    <div className="flex-1 bg-slate-700 rounded-full h-1.5 w-16">
+                      <div className="bg-gradient-to-r from-blue-500 to-purple-500 h-1.5 rounded-full w-4/5"></div>
+                    </div>
+                  </div>
+                  <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 bg-gradient-to-r from-green-500 to-emerald-500 rounded-md flex items-center justify-center">
+                      <Palette className="h-3 w-3 text-white" />
+                    </div>
+                    <div className="flex-1 bg-slate-700 rounded-full h-1.5 w-16">
+                      <div className="bg-gradient-to-r from-green-500 to-cyan-500 h-1.5 rounded-full w-3/5"></div>
+                    </div>
+                  </div>
+                  <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded-md flex items-center justify-center">
+                      <Camera className="h-3 w-3 text-white" />
+                    </div>
+                    <div className="flex-1 bg-slate-700 rounded-full h-1.5 w-16">
+                      <div className="bg-gradient-to-r from-purple-500 to-pink-500 h-1.5 rounded-full w-5/6"></div>
+                    </div>
+                  </div>
+                  <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                </div>
+              </div>
+            </div>
+
+            {/* Center Content - Made more compact */}
+            <div className="space-y-4 text-center lg:text-left">
+              <div className="inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-purple-600/80 to-blue-600/80 rounded-full border border-purple-400/50 shadow-sm backdrop-blur-sm">
+                <span className="text-xs font-medium text-white">🎯 Professional Creative Studio</span>
+              </div>
+
+              <h1 className="text-3xl lg:text-4xl font-bold text-white leading-tight">
+                Find me the
+                <span className="bg-gradient-to-r from-orange-400 to-pink-400 bg-clip-text text-transparent">
                   {" "}
-                  Visual Stories
+                  best creative solutions
+                </span>
+                <br />
+                for
+                <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+                  {" "}
+                  your brand's future
+                </span>
+                <br />
+                that offers
+                <span className="bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
+                  {" "}
+                  quality content
+                </span>{" "}
+                and
+                <br />
+                <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                  multimedia opportunities
                 </span>
               </h1>
 
-              <p className="text-lg text-gray-600 leading-relaxed max-w-lg">
-                Professional photography, videography, and design services that bring your vision to life with
-                creativity and precision.
+              <p className="text-slate-300 text-sm leading-relaxed max-w-lg mx-auto lg:mx-0">
+                AI-powered creative solutions for modern brands and businesses
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                <Button className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-200">
-                  View Our Work
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  className="border-purple-300 text-purple-600 hover:bg-purple-50 bg-transparent"
-                >
-                  Get Quote
-                </Button>
-              </div>
-
-              <div className="grid grid-cols-3 gap-4 pt-6">
-                <div className="bg-white rounded-xl p-4 shadow-md border border-purple-100 text-center">
-                  <div className="text-2xl font-bold text-purple-600">500+</div>
-                  <div className="text-sm text-gray-600">Projects Completed</div>
-                </div>
-                <div className="bg-white rounded-xl p-4 shadow-md border border-blue-100 text-center">
-                  <div className="text-2xl font-bold text-blue-600">98%</div>
-                  <div className="text-sm text-gray-600">Client Satisfaction</div>
-                </div>
-                <div className="bg-white rounded-xl p-4 shadow-md border border-purple-100 text-center">
-                  <div className="text-2xl font-bold text-purple-600">5+</div>
-                  <div className="text-sm text-gray-600">Years Experience</div>
-                </div>
-              </div>
+              <Button className="bg-white text-slate-900 hover:bg-slate-100 shadow-lg hover:shadow-xl transition-all duration-200 rounded-full px-6 py-2">
+                <span className="text-slate-900 font-semibold text-sm">Start Your Journey</span>
+                <ArrowRight className="ml-2 h-3 w-3 text-slate-900" />
+              </Button>
             </div>
 
-            <div className="relative">
-              <div className="relative rounded-2xl overflow-hidden shadow-2xl">
+            {/* Right Equipment Card - Made smaller */}
+            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50 shadow-2xl">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                  <Video className="h-4 w-4 text-white" />
+                </div>
+                <span className="text-purple-400 font-medium text-sm">Pro Equipment</span>
+              </div>
+
+              <div className="relative rounded-lg overflow-hidden mb-3">
                 <Image
-                  src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/fc069051-d25a-46b4-b61c-48a61669cdd0-3uHD0WZHnWDacvWjrb98ArXsbCw9SG.jpeg"
-                  alt="Professional video editing workspace with concert footage"
-                  width={600}
-                  height={400}
-                  className="w-full h-auto"
+                  src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Battle%20of%20the%20brands%21%20We%20break%20down%20the%20pros%20and%E2%80%A6-Z3llZBagItsXwqfUoEPJQ21QkmfAQv.jpeg"
+                  alt="Professional camera equipment"
+                  width={300}
+                  height={120}
+                  className="w-full h-20 object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent"></div>
               </div>
-              <div className="absolute -top-4 -right-4 bg-white rounded-full p-3 shadow-lg border-4 border-purple-100">
-                <Camera className="h-6 w-6 text-purple-600" />
-              </div>
-              <div className="absolute -bottom-4 -left-4 bg-white rounded-full p-3 shadow-lg border-4 border-blue-100">
-                <Video className="h-6 w-6 text-blue-600" />
+
+              <div className="grid grid-cols-3 gap-1.5">
+                <div className="bg-gradient-to-r from-red-500/20 to-orange-500/20 rounded-md p-1.5 border border-red-500/30">
+                  <div className="w-4 h-4 bg-red-500 rounded-sm mx-auto"></div>
+                </div>
+                <div className="bg-gradient-to-r from-pink-500/20 to-purple-500/20 rounded-md p-1.5 border border-pink-500/30">
+                  <div className="w-4 h-4 bg-pink-500 rounded-sm mx-auto"></div>
+                </div>
+                <div className="bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-md p-1.5 border border-cyan-500/30">
+                  <div className="w-4 h-4 bg-cyan-500 rounded-sm mx-auto"></div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="py-16 bg-white">
+      <section className="py-12 bg-slate-800">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center space-y-4 mb-12">
-            <h2 className="text-3xl font-bold text-gray-900">My Creative Journey</h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              From passion to profession - building visual stories that matter
-            </p>
+          <div className="text-center space-y-2 mb-8">
+            <h2 className="text-2xl font-bold text-white">Connect With Us</h2>
+            <p className="text-sm text-slate-400">Follow our creative journey across platforms</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 text-center border border-purple-200">
-              <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Camera className="h-6 w-6 text-white" />
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {/* Instagram Card */}
+            <div className="bg-gradient-to-br from-pink-500/20 to-purple-500/20 backdrop-blur-sm rounded-xl p-4 border border-pink-500/30 hover:border-pink-400/50 transition-all duration-300 group cursor-pointer">
+              <div className="flex flex-col items-center space-y-2">
+                <div className="w-10 h-10 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Camera className="h-5 w-5 text-white" />
+                </div>
+                <span className="text-white text-xs font-medium">Instagram</span>
+                <div className="w-full bg-slate-700 rounded-full h-1">
+                  <div className="bg-gradient-to-r from-pink-500 to-purple-500 h-1 rounded-full w-4/5"></div>
+                </div>
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">Photography Expert</h3>
-              <p className="text-sm text-gray-600">
-                Specializing in wedding, corporate, and product photography with 5+ years experience
-              </p>
             </div>
 
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 text-center border border-blue-200">
-              <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Video className="h-6 w-6 text-white" />
+            {/* YouTube Card */}
+            <div className="bg-gradient-to-br from-red-500/20 to-orange-500/20 backdrop-blur-sm rounded-xl p-4 border border-red-500/30 hover:border-red-400/50 transition-all duration-300 group cursor-pointer">
+              <div className="flex flex-col items-center space-y-2">
+                <div className="w-10 h-10 bg-gradient-to-r from-red-500 to-orange-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Video className="h-5 w-5 text-white" />
+                </div>
+                <span className="text-white text-xs font-medium">YouTube</span>
+                <div className="w-full bg-slate-700 rounded-full h-1">
+                  <div className="bg-gradient-to-r from-red-500 to-orange-500 h-1 rounded-full w-3/4"></div>
+                </div>
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">Video Production</h3>
-              <p className="text-sm text-gray-600">
-                Creating compelling video content from concept to final edit for brands and events
-              </p>
             </div>
 
-            <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 text-center border border-green-200">
-              <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Palette className="h-6 w-6 text-white" />
+            {/* Facebook Card */}
+            <div className="bg-gradient-to-br from-blue-500/20 to-indigo-500/20 backdrop-blur-sm rounded-xl p-4 border border-blue-500/30 hover:border-blue-400/50 transition-all duration-300 group cursor-pointer">
+              <div className="flex flex-col items-center space-y-2">
+                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Palette className="h-5 w-5 text-white" />
+                </div>
+                <span className="text-white text-xs font-medium">Facebook</span>
+                <div className="w-full bg-slate-700 rounded-full h-1">
+                  <div className="bg-gradient-to-r from-blue-500 to-indigo-500 h-1 rounded-full w-5/6"></div>
+                </div>
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">Graphic Design</h3>
-              <p className="text-sm text-gray-600">
-                Crafting visual identities, logos, and marketing materials that make brands stand out
-              </p>
             </div>
 
-            <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-6 text-center border border-orange-200">
-              <div className="w-12 h-12 bg-orange-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Star className="h-6 w-6 text-white" />
+            {/* Twitter Card */}
+            <div className="bg-gradient-to-br from-cyan-500/20 to-blue-500/20 backdrop-blur-sm rounded-xl p-4 border border-cyan-500/30 hover:border-cyan-400/50 transition-all duration-300 group cursor-pointer">
+              <div className="flex flex-col items-center space-y-2">
+                <div className="w-10 h-10 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Star className="h-5 w-5 text-white" />
+                </div>
+                <span className="text-white text-xs font-medium">Twitter</span>
+                <div className="w-full bg-slate-700 rounded-full h-1">
+                  <div className="bg-gradient-to-r from-cyan-500 to-blue-500 h-1 rounded-full w-2/3"></div>
+                </div>
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">Award Winner</h3>
-              <p className="text-sm text-gray-600">
-                Recognized for excellence in creative work with multiple industry awards and certifications
-              </p>
+            </div>
+
+            {/* LinkedIn Card */}
+            <div className="bg-gradient-to-br from-blue-600/20 to-blue-700/20 backdrop-blur-sm rounded-xl p-4 border border-blue-600/30 hover:border-blue-500/50 transition-all duration-300 group cursor-pointer">
+              <div className="flex flex-col items-center space-y-2">
+                <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <ArrowRight className="h-5 w-5 text-white" />
+                </div>
+                <span className="text-white text-xs font-medium">LinkedIn</span>
+                <div className="w-full bg-slate-700 rounded-full h-1">
+                  <div className="bg-gradient-to-r from-blue-600 to-blue-700 h-1 rounded-full w-3/5"></div>
+                </div>
+              </div>
+            </div>
+
+            {/* TikTok Card */}
+            <div className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 backdrop-blur-sm rounded-xl p-4 border border-purple-500/30 hover:border-purple-400/50 transition-all duration-300 group cursor-pointer">
+              <div className="flex flex-col items-center space-y-2">
+                <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Video className="h-5 w-5 text-white" />
+                </div>
+                <span className="text-white text-xs font-medium">TikTok</span>
+                <div className="w-full bg-slate-700 rounded-full h-1">
+                  <div className="bg-gradient-to-r from-purple-500 to-pink-500 h-1 rounded-full w-4/6"></div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="py-16 bg-white">
+      <section className="py-12 bg-slate-900">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center space-y-2 mb-12">
-            <h2 className="text-2xl font-bold text-gray-900">Our Services</h2>
-            <p className="text-base text-gray-600 max-w-2xl mx-auto">
-              Professional multimedia solutions for every creative need
+          <div className="text-center space-y-2 mb-8">
+            <h2 className="text-2xl font-bold text-white">Professional Services</h2>
+            <p className="text-sm text-slate-400 max-w-2xl mx-auto">
+              Advanced multimedia solutions powered by cutting-edge technology
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {services.map((service, index) => (
-              <Card key={service.id} className="hover:shadow-lg transition-shadow duration-300 overflow-hidden">
-                <div className="relative h-32 overflow-hidden">
+              <div
+                key={service.id}
+                className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50 shadow-2xl hover:shadow-purple-500/10 transition-all duration-300 group"
+              >
+                <div className="relative h-24 rounded-lg overflow-hidden mb-4">
                   <Image
                     src={
                       service.icon === "Camera"
@@ -253,36 +358,122 @@ export default async function HomePage() {
                     }
                     alt={`${service.title} service`}
                     fill
-                    className="object-cover"
+                    className="object-cover group-hover:scale-105 transition-transform duration-300"
                   />
-                  <div className="absolute inset-0 bg-black/20"></div>
-                </div>
-                <CardContent className="p-6 text-center space-y-3">
-                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto">
-                    {service.icon === "Camera" && <Camera className="h-6 w-6 text-purple-600" />}
-                    {service.icon === "Video" && <Video className="h-6 w-6 text-purple-600" />}
-                    {service.icon === "Palette" && <Palette className="h-6 w-6 text-purple-600" />}
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent"></div>
+                  <div className="absolute top-2 left-2">
+                    <div
+                      className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                        service.icon === "Camera"
+                          ? "bg-gradient-to-r from-blue-500 to-cyan-500"
+                          : service.icon === "Video"
+                            ? "bg-gradient-to-r from-purple-500 to-pink-500"
+                            : "bg-gradient-to-r from-green-500 to-emerald-500"
+                      }`}
+                    >
+                      {service.icon === "Camera" && <Camera className="h-4 w-4 text-white" />}
+                      {service.icon === "Video" && <Video className="h-4 w-4 text-white" />}
+                      {service.icon === "Palette" && <Palette className="h-4 w-4 text-white" />}
+                    </div>
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900">{service.title}</h3>
-                  <p className="text-gray-600 text-sm">{service.description}</p>
-                  <p className="text-base font-medium text-purple-600">{service.price_range}</p>
-                </CardContent>
-              </Card>
+                </div>
+
+                <div className="space-y-3">
+                  <h3 className="text-lg font-semibold text-white">{service.title}</h3>
+                  <p className="text-slate-400 text-xs leading-relaxed">{service.description}</p>
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                      {service.price_range}
+                    </span>
+                    <div className="flex items-center gap-0.5">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className="h-2.5 w-2.5 fill-yellow-400 text-yellow-400" />
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="w-full bg-slate-700 rounded-full h-1.5">
+                    <div
+                      className={`h-1.5 rounded-full ${
+                        service.icon === "Camera"
+                          ? "bg-gradient-to-r from-blue-500 to-cyan-500 w-4/5"
+                          : service.icon === "Video"
+                            ? "bg-gradient-to-r from-purple-500 to-pink-500 w-5/6"
+                            : "bg-gradient-to-r from-green-500 to-emerald-500 w-3/4"
+                      }`}
+                    ></div>
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="py-16 bg-gray-50">
+      <section className="py-12 bg-white">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center space-y-2 mb-12">
-            <h2 className="text-2xl font-bold text-gray-900">Featured Projects</h2>
-            <p className="text-base text-gray-600 max-w-2xl mx-auto">
+          <div className="text-center space-y-2 mb-8">
+            <h2 className="text-xl font-bold text-gray-900">My Creative Journey</h2>
+            <p className="text-sm text-gray-600 max-w-2xl mx-auto">
+              From passion to profession - building visual stories that matter
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4 text-center border border-purple-200">
+              <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Camera className="h-5 w-5 text-white" />
+              </div>
+              <h3 className="font-semibold text-gray-900 mb-2 text-sm">Photography Expert</h3>
+              <p className="text-xs text-gray-600">
+                Specializing in wedding, corporate, and product photography with 5+ years experience
+              </p>
+            </div>
+
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 text-center border border-blue-200">
+              <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Video className="h-5 w-5 text-white" />
+              </div>
+              <h3 className="font-semibold text-gray-900 mb-2 text-sm">Video Production</h3>
+              <p className="text-xs text-gray-600">
+                Creating compelling video content from concept to final edit for brands and events
+              </p>
+            </div>
+
+            <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 text-center border border-green-200">
+              <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Palette className="h-5 w-5 text-white" />
+              </div>
+              <h3 className="font-semibold text-gray-900 mb-2 text-sm">Graphic Design</h3>
+              <p className="text-xs text-gray-600">
+                Crafting visual identities, logos, and marketing materials that make brands stand out
+              </p>
+            </div>
+
+            <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-4 text-center border border-orange-200">
+              <div className="w-10 h-10 bg-orange-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Star className="h-5 w-5 text-white" />
+              </div>
+              <h3 className="font-semibold text-gray-900 mb-2 text-sm">Award Winner</h3>
+              <p className="text-xs text-gray-600">
+                Recognized for excellence in creative work with multiple industry awards and certifications
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-12 bg-gray-50">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center space-y-2 mb-8">
+            <h2 className="text-xl font-bold text-gray-900">Featured Projects</h2>
+            <p className="text-sm text-gray-600 max-w-2xl mx-auto">
               Recent creative projects that showcase our expertise
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {portfolio.map((item, index) => (
               <Card key={item.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
                 <div className="relative aspect-[4/3] overflow-hidden">
@@ -304,9 +495,9 @@ export default async function HomePage() {
                     </span>
                   </div>
                 </div>
-                <div className="p-4">
-                  <h3 className="text-base font-semibold text-gray-900 mb-1">{item.title}</h3>
-                  <p className="text-gray-600 text-sm">{item.description}</p>
+                <div className="p-3">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-1">{item.title}</h3>
+                  <p className="text-gray-600 text-xs">{item.description}</p>
                 </div>
               </Card>
             ))}
@@ -314,58 +505,71 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="py-16 bg-white">
+      <section className="py-12 bg-slate-800">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center space-y-2 mb-12">
-            <h2 className="text-2xl font-bold text-gray-900">Client Testimonials</h2>
-            <p className="text-base text-gray-600">What our clients say about working with us</p>
+          <div className="text-center space-y-2 mb-8">
+            <h2 className="text-xl font-bold text-white">Client Success Stories</h2>
+            <p className="text-sm text-slate-400">Real results from our creative partnerships</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {testimonials.map((testimonial) => (
-              <Card key={testimonial.id} className="p-6">
-                <CardContent className="space-y-3">
-                  <div className="flex items-center space-x-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {testimonials.map((testimonial, index) => (
+              <div
+                key={testimonial.id}
+                className="bg-slate-900/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50 shadow-2xl"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center space-x-0.5">
                     {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                      <Star key={i} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
                     ))}
                   </div>
-                  <blockquote className="text-gray-700 text-sm leading-relaxed">"{testimonial.testimonial}"</blockquote>
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                      <span className="font-medium text-purple-600 text-sm">{testimonial.client_name.charAt(0)}</span>
+                  <div className="w-6 h-6 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-xs">✓</span>
+                  </div>
+                </div>
+
+                <blockquote className="text-slate-300 text-xs leading-relaxed mb-3">
+                  "{testimonial.testimonial}"
+                </blockquote>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                      <span className="font-medium text-white text-xs">{testimonial.client_name.charAt(0)}</span>
                     </div>
                     <div>
-                      <p className="font-medium text-gray-900 text-sm">{testimonial.client_name}</p>
-                      <p className="text-purple-600 text-xs">{testimonial.client_company}</p>
+                      <p className="font-medium text-white text-xs">{testimonial.client_name}</p>
+                      <p className="text-purple-400 text-xs">{testimonial.client_company}</p>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+
+                  <div className="w-full max-w-16 bg-slate-700 rounded-full h-1 ml-3">
+                    <div className="bg-gradient-to-r from-purple-500 to-pink-500 h-1 rounded-full w-4/5"></div>
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="py-16 bg-purple-600">
+      <section className="py-12 bg-purple-600">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-2xl lg:text-3xl font-bold text-white mb-4">Ready to Start Your Project?</h2>
-          <p className="text-base text-purple-100 mb-6 max-w-2xl mx-auto">
+          <h2 className="text-xl lg:text-2xl font-bold text-white mb-3">Ready to Start Your Project?</h2>
+          <p className="text-sm text-purple-100 mb-4 max-w-2xl mx-auto">
             Let's work together to create something amazing that tells your story
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <div className="flex flex-col sm:flex-row gap-2 justify-center">
             <Link href="/contact">
-              <Button className="bg-white text-purple-600 hover:bg-gray-100">
-                Get Started
-                <ArrowRight className="ml-2 h-4 w-4" />
+              <Button className="bg-white text-purple-600 hover:bg-gray-100 px-6 py-2">
+                <span className="text-purple-600 text-sm">Get Started</span>
+                <ArrowRight className="ml-2 h-3 w-3 text-purple-600" />
               </Button>
             </Link>
             <Link href="/portfolio">
-              <Button
-                variant="outline"
-                className="border-white text-white hover:bg-white hover:text-purple-600 bg-transparent"
-              >
-                View Portfolio
+              <Button className="bg-purple-800 text-white hover:bg-purple-900 border-0 px-6 py-2">
+                <span className="text-white text-sm">View Portfolio</span>
               </Button>
             </Link>
           </div>

@@ -314,3 +314,25 @@ html {
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+
+/* Navigation specific styles to ensure proper contrast */
+nav[class*="bg-gradient"] {
+  background: linear-gradient(to right, rgb(147, 51, 234), rgb(126, 58, 242), rgb(59, 130, 246)) !important;
+}
+
+nav[class*="bg-gradient"] * {
+  color: white !important;
+}
+
+nav[class*="bg-gradient"] .text-purple-600 {
+  color: rgb(147, 51, 234) !important;
+}
+
+nav[class*="bg-gradient"] button[class*="bg-white"] {
+  background-color: white !important;
+  color: rgb(147, 51, 234) !important;
+}
+
+nav[class*="bg-gradient"] button[class*="bg-white"]:hover {
+  background-color: rgb(243, 244, 246) !important;
+}
