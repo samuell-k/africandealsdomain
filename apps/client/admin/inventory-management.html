@@ -1,0 +1,1847 @@
+<!DOCTYPE html>
+<html lang="en" class="admin-page">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Management | Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="admin-auth-check.js"></script>
+    <script src="admin-utils.js"></script>
+    <style>
+        :root {
+            --primary-color: #080b3b;
+            --secondary-color: #1e40af;
+            --accent-color: #3b82f6;
+        }
+        
+        .glass-morphism {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        }
+        .sidebar {
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .nav-item {
+            transition: all 0.3s ease;
+        }
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+        .nav-item.active {
+            background: rgba(255, 255, 255, 0.2);
+            border-left: 3px solid #3b82f6;
+        }
+        .loading-spinner {
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 2px solid #3b82f6;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .form-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+        }
+        .inventory-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .inventory-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+        .stock-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        .stock-high { background: #22c55e; }
+        .stock-medium { background: #f59e0b; }
+        .stock-low { background: #ef4444; }
+        .stock-out { background: #6b7280; }
+        .status-badge {
+            @apply px-3 py-1 rounded-full text-xs font-medium;
+        }
+        .status-active { @apply bg-green-500/20 text-green-400; }
+        .status-inactive { @apply bg-gray-500/20 text-gray-400; }
+        .status-pending { @apply bg-yellow-500/20 text-yellow-400; }
+        .status-critical { @apply bg-red-500/20 text-red-400; }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .tab-btn {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .tab-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .tab-btn.active {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: var(--accent-color);
+        }
+        .live-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #22c55e;
+            display: inline-block;
+            margin-right: 6px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .real-time-badge {
+            background: linear-gradient(45deg, #22c55e, #16a34a);
+            color: white;
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 1rem;
+            font-weight: 600;
+        }
+        .warehouse-card {
+            transition: all 0.3s ease;
+        }
+        .warehouse-card:hover {
+            transform: translateY(-2px);
+        }
+        .warehouse-card.active {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(16, 185, 129, 0.1));
+            border: 2px solid #22c55e;
+        }
+        .movement-item {
+            transition: all 0.3s ease;
+        }
+        .movement-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .movement-in { border-left: 4px solid #22c55e; }
+        .movement-out { border-left: 4px solid #ef4444; }
+        .movement-transfer { border-left: 4px solid #3b82f6; }
+        .movement-adjustment { border-left: 4px solid #f59e0b; }
+        .chart-container {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .alert-item {
+            transition: all 0.3s ease;
+        }
+        .alert-item:hover {
+            transform: translateX(4px);
+        }
+        .alert-critical { border-left: 4px solid #ef4444; background: rgba(239, 68, 68, 0.1); }
+        .alert-warning { border-left: 4px solid #f59e0b; background: rgba(245, 158, 11, 0.1); }
+        .alert-info { border-left: 4px solid #3b82f6; background: rgba(59, 130, 246, 0.1); }
+        .barcode-scanner {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .barcode-scanner:hover {
+            border-color: var(--accent-color);
+            background: rgba(59, 130, 246, 0.1);
+        }
+        .quantity-input {
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.25rem;
+        }
+        .forecast-card {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(16, 185, 129, 0.1));
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+    </style>
+</head>
+
+<body class="gradient-bg min-h-screen">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <div class="sidebar w-64 lg:w-80 flex-shrink-0 hidden md:flex flex-col">
+            <div class="p-6 border-b border-white/10">
+                <h2 class="text-xl font-bold text-white">Admin Panel</h2>
+            </div>
+            
+            <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+                <a href="dashboard.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="user-management.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-users"></i>
+                    <span>User Management</span>
+                </a>
+                <a href="manual-payment-approval.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-credit-card"></i>
+                    <span>Payment Approval</span>
+                </a>
+                <a href="payment-credentials.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-wallet"></i>
+                    <span>Payment Credentials</span>
+                </a>
+                <a href="products.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-box"></i>
+                    <span>Products</span>
+                </a>
+                <a href="order-management.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Orders</span>
+                </a>
+                <a href="agents.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-user-tie"></i>
+                    <span>Agents</span>
+                </a>
+                <a href="categories.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-tags"></i>
+                    <span>Categories</span>
+                </a>
+                <a href="brands.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-trademark"></i>
+                    <span>Brands</span>
+                </a>
+                <a href="reviews.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-star"></i>
+                    <span>Reviews</span>
+                </a>
+                <a href="sellers.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-store"></i>
+                    <span>Sellers</span>
+                </a>
+                <a href="support-tickets.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-ticket-alt"></i>
+                    <span>Support Tickets</span>
+                </a>
+                <a href="logs.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-file-alt"></i>
+                    <span>System Logs</span>
+                </a>
+                <a href="promotions.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-tags"></i>
+                    <span>Promotions</span>
+                </a>
+                <a href="cms-management.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-edit"></i>
+                    <span>CMS Management</span>
+                </a>
+                <a href="notification-management.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-bell"></i>
+                    <span>Notifications</span>
+                </a>
+                <a href="backup-restore.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-database"></i>
+                    <span>Backup & Restore</span>
+                </a>
+                <a href="security-api.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Security & API</span>
+                </a>
+                <a href="performance-analytics.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Performance & Analytics</span>
+                </a>
+                <a href="system-integrations.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-plug"></i>
+                    <span>System Integrations</span>
+                </a>
+                <a href="file-manager.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-folder-open"></i>
+                    <span>File Manager</span>
+                </a>
+                <a href="email-templates.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-envelope-open-text"></i>
+                    <span>Email Templates</span>
+                </a>
+                <a href="tax-currency-management.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-coins"></i>
+                    <span>Tax & Currency</span>
+                </a>
+                <a href="shipping-delivery.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-truck"></i>
+                    <span>Shipping & Delivery</span>
+                </a>
+                <a href="import-export.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span>Import/Export</span>
+                </a>
+                <a href="inventory-management.html" class="nav-item active flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-warehouse"></i>
+                    <span>Inventory Management</span>
+                </a>
+                <a href="reports.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Reports</span>
+                </a>
+                <a href="settings.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
+            
+            <!-- Header -->
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 space-y-4 sm:space-y-0">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-white mb-2 flex items-center">
+                        Inventory Management
+                        <span class="live-indicator ml-3"></span>
+                        <span class="real-time-badge ml-2">Real-Time</span>
+                    </h1>
+                    <p class="text-white/70">Monitor stock levels, manage warehouses, and track inventory movements</p>
+                </div>
+                <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                    <button onclick="openStockAdjustment()" class="bg-green-500 hover:bg-green-600 text-white px-3 sm:px-4 py-2 rounded-lg transition text-sm flex items-center justify-center">
+                        <i class="fas fa-plus-minus mr-2"></i>Adjust Stock
+                    </button>
+                    <button onclick="openBarcodeScanner()" class="bg-blue-500 hover:bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-lg transition text-sm flex items-center justify-center">
+                        <i class="fas fa-barcode mr-2"></i>Scan Item
+                    </button>
+                    <button onclick="refreshInventory()" class="bg-purple-500 hover:bg-purple-600 text-white px-3 sm:px-4 py-2 rounded-lg transition text-sm flex items-center justify-center">
+                        <i class="fas fa-refresh mr-2"></i>Refresh
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-6 mb-6">
+                <div class="glass-morphism rounded-xl p-4 sm:p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-white/70 text-sm">Total Products</h3>
+                        <div class="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-boxes text-blue-400"></i>
+                        </div>
+                    </div>
+                    <p class="text-white text-2xl font-bold" id="total-products">2,458</p>
+                    <p class="text-white/60 text-xs">In inventory</p>
+                </div>
+                
+                <div class="glass-morphism rounded-xl p-4 sm:p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-white/70 text-sm">Low Stock</h3>
+                        <div class="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-exclamation-triangle text-yellow-400"></i>
+                        </div>
+                    </div>
+                    <p class="text-white text-2xl font-bold" id="low-stock-items">23</p>
+                    <p class="text-white/60 text-xs">Needs attention</p>
+                </div>
+                
+                <div class="glass-morphism rounded-xl p-4 sm:p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-white/70 text-sm">Out of Stock</h3>
+                        <div class="w-10 h-10 bg-red-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-times-circle text-red-400"></i>
+                        </div>
+                    </div>
+                    <p class="text-white text-2xl font-bold" id="out-of-stock-items">7</p>
+                    <p class="text-white/60 text-xs">Urgent restock</p>
+                </div>
+                
+                <div class="glass-morphism rounded-xl p-4 sm:p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-white/70 text-sm">Inventory Value</h3>
+                        <div class="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-dollar-sign text-green-400"></i>
+                        </div>
+                    </div>
+                    <p class="text-white text-2xl font-bold" id="inventory-value">$1.2M</p>
+                    <p class="text-white/60 text-xs">Total worth</p>
+                </div>
+                
+                <div class="glass-morphism rounded-xl p-4 sm:p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-white/70 text-sm">Warehouses</h3>
+                        <div class="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-warehouse text-purple-400"></i>
+                        </div>
+                    </div>
+                    <p class="text-white text-2xl font-bold" id="total-warehouses">4</p>
+                    <p class="text-white/60 text-xs">Active locations</p>
+                </div>
+            </div>
+
+            <!-- Tab Navigation -->
+            <div class="flex flex-wrap gap-2 mb-6">
+                <div class="tab-btn active" data-tab="overview" onclick="switchTab('overview')">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-chart-pie"></i>
+                        <span class="text-white font-medium">Overview</span>
+                    </div>
+                </div>
+                <div class="tab-btn" data-tab="products" onclick="switchTab('products')">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-box"></i>
+                        <span class="text-white font-medium">Products</span>
+                        <span class="text-white/50 text-sm">(2,458)</span>
+                    </div>
+                </div>
+                <div class="tab-btn" data-tab="warehouses" onclick="switchTab('warehouses')">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-warehouse"></i>
+                        <span class="text-white font-medium">Warehouses</span>
+                        <span class="text-white/50 text-sm">(4)</span>
+                    </div>
+                </div>
+                <div class="tab-btn" data-tab="movements" onclick="switchTab('movements')">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-exchange-alt"></i>
+                        <span class="text-white font-medium">Movements</span>
+                    </div>
+                </div>
+                <div class="tab-btn" data-tab="alerts" onclick="switchTab('alerts')">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-bell"></i>
+                        <span class="text-white font-medium">Alerts</span>
+                        <span class="text-white/50 text-sm">(30)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Contents -->
+            
+            <!-- Overview Tab -->
+            <div id="overview-tab" class="tab-content active">
+                <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                    
+                    <!-- Stock Level Distribution -->
+                    <div class="glass-morphism rounded-xl p-6">
+                        <h3 class="text-xl font-bold text-white mb-4">Stock Level Distribution</h3>
+                        <div class="chart-container">
+                            <div class="text-center text-white/70">
+                                <i class="fas fa-chart-pie text-4xl mb-3"></i>
+                                <p>Stock distribution visualization</p>
+                                <div class="mt-4 space-y-2 text-sm">
+                                    <div class="flex items-center justify-center space-x-2">
+                                        <div class="stock-indicator stock-high"></div>
+                                        <span>High Stock (2,100)</span>
+                                    </div>
+                                    <div class="flex items-center justify-center space-x-2">
+                                        <div class="stock-indicator stock-medium"></div>
+                                        <span>Medium Stock (328)</span>
+                                    </div>
+                                    <div class="flex items-center justify-center space-x-2">
+                                        <div class="stock-indicator stock-low"></div>
+                                        <span>Low Stock (23)</span>
+                                    </div>
+                                    <div class="flex items-center justify-center space-x-2">
+                                        <div class="stock-indicator stock-out"></div>
+                                        <span>Out of Stock (7)</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Top Moving Products -->
+                    <div class="glass-morphism rounded-xl p-6">
+                        <h3 class="text-xl font-bold text-white mb-4">Top Moving Products</h3>
+                        <div id="top-products" class="space-y-3">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Inventory Forecast -->
+                    <div class="forecast-card">
+                        <h3 class="text-xl font-bold text-white mb-4">Inventory Forecast</h3>
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center">
+                                <span class="text-white/70 text-sm">Expected Restock Needed:</span>
+                                <span class="text-white font-bold">Next 7 days</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-white/70 text-sm">Critical Items:</span>
+                                <span class="text-red-400 font-bold">12 products</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-white/70 text-sm">Seasonal Demand:</span>
+                                <span class="text-yellow-400 font-bold">High</span>
+                            </div>
+                            <button onclick="generateForecastReport()" 
+                                    class="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm mt-4">
+                                <i class="fas fa-chart-line mr-2"></i>Full Forecast Report
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Products Tab -->
+            <div id="products-tab" class="tab-content">
+                <div class="glass-morphism rounded-xl overflow-hidden">
+                    <div class="p-4 sm:p-6 border-b border-white/10">
+                        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-3 sm:space-y-0">
+                            <h3 class="text-lg sm:text-xl font-bold text-white">Product Inventory</h3>
+                            <div class="flex flex-wrap gap-2">
+                                <select id="stock-filter" class="form-input px-3 py-2 rounded-lg text-sm" onchange="filterProducts()">
+                                    <option value="">All Stock Levels</option>
+                                    <option value="high">High Stock</option>
+                                    <option value="medium">Medium Stock</option>
+                                    <option value="low">Low Stock</option>
+                                    <option value="out">Out of Stock</option>
+                                </select>
+                                <select id="category-filter" class="form-input px-3 py-2 rounded-lg text-sm" onchange="filterProducts()">
+                                    <option value="">All Categories</option>
+                                    <option value="electronics">Electronics</option>
+                                    <option value="clothing">Clothing</option>
+                                    <option value="groceries">Groceries</option>
+                                </select>
+                                <input type="text" id="product-search" placeholder="Search products..." 
+                                       class="form-input px-3 py-2 rounded-lg text-sm" oninput="searchProducts()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="products-container" class="p-6">
+                        <div class="text-center py-8">
+                            <div class="loading-spinner mx-auto mb-4"></div>
+                            <p class="text-white/70">Loading product inventory...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Warehouses Tab -->
+            <div id="warehouses-tab" class="tab-content">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="warehouses-container">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Movements Tab -->
+            <div id="movements-tab" class="tab-content">
+                <div class="glass-morphism rounded-xl overflow-hidden">
+                    <div class="p-4 sm:p-6 border-b border-white/10">
+                        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-3 sm:space-y-0">
+                            <h3 class="text-lg sm:text-xl font-bold text-white">Inventory Movements</h3>
+                            <div class="flex space-x-2">
+                                <select id="movement-filter" class="form-input px-3 py-2 rounded-lg text-sm" onchange="filterMovements()">
+                                    <option value="">All Movements</option>
+                                    <option value="in">Stock In</option>
+                                    <option value="out">Stock Out</option>
+                                    <option value="transfer">Transfers</option>
+                                    <option value="adjustment">Adjustments</option>
+                                </select>
+                                <button onclick="exportMovements()" class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg text-sm">
+                                    <i class="fas fa-download mr-2"></i>Export
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="movements-container" class="p-6">
+                        <div class="text-center py-8">
+                            <div class="loading-spinner mx-auto mb-4"></div>
+                            <p class="text-white/70">Loading inventory movements...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alerts Tab -->
+            <div id="alerts-tab" class="tab-content">
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                    
+                    <!-- Active Alerts -->
+                    <div class="glass-morphism rounded-xl p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-xl font-bold text-white">Active Alerts</h3>
+                            <button onclick="markAllAlertsRead()" class="text-blue-400 hover:text-blue-300 text-sm">
+                                Mark All Read
+                            </button>
+                        </div>
+                        <div id="alerts-container" class="space-y-3">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Alert Settings -->
+                    <div class="glass-morphism rounded-xl p-6">
+                        <h3 class="text-xl font-bold text-white mb-4">Alert Settings</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-white/70 text-sm mb-2">Low Stock Threshold</label>
+                                <input type="number" id="low-stock-threshold" value="10" 
+                                       class="w-full p-3 rounded-lg form-input" min="1">
+                            </div>
+
+                            <div>
+                                <label class="block text-white/70 text-sm mb-2">Critical Stock Threshold</label>
+                                <input type="number" id="critical-stock-threshold" value="5" 
+                                       class="w-full p-3 rounded-lg form-input" min="0">
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="block text-white/70 text-sm">Email Notifications</label>
+                                <label class="flex items-center space-x-2">
+                                    <input type="checkbox" id="email-low-stock" checked class="rounded">
+                                    <span class="text-white text-sm">Low stock alerts</span>
+                                </label>
+                                <label class="flex items-center space-x-2">
+                                    <input type="checkbox" id="email-out-of-stock" checked class="rounded">
+                                    <span class="text-white text-sm">Out of stock alerts</span>
+                                </label>
+                                <label class="flex items-center space-x-2">
+                                    <input type="checkbox" id="email-overstocking" class="rounded">
+                                    <span class="text-white text-sm">Overstocking alerts</span>
+                                </label>
+                            </div>
+
+                            <button onclick="saveAlertSettings()" 
+                                    class="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">
+                                <i class="fas fa-save mr-2"></i>Save Settings
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stock Adjustment Modal -->
+    <div id="stock-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+        <div class="glass-morphism p-6 sm:p-8 rounded-xl max-w-lg w-full mx-4">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl sm:text-2xl font-bold text-white">Stock Adjustment</h2>
+                <button onclick="closeStockModal()" class="text-white/70 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <form id="stock-form" class="space-y-4">
+                <div>
+                    <label class="block text-white/70 text-sm mb-2">Product *</label>
+                    <input type="text" id="product-search-modal" required 
+                           class="w-full p-3 rounded-lg form-input" 
+                           placeholder="Search product by name or SKU...">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-white/70 text-sm mb-2">Current Stock</label>
+                        <input type="number" id="current-stock" readonly 
+                               class="w-full p-3 rounded-lg form-input bg-white/5">
+                    </div>
+
+                    <div>
+                        <label class="block text-white/70 text-sm mb-2">Warehouse</label>
+                        <select id="warehouse-select" class="w-full p-3 rounded-lg form-input">
+                            <option value="">Select Warehouse</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-white/70 text-sm mb-2">Adjustment Type *</label>
+                    <select id="adjustment-type" required class="w-full p-3 rounded-lg form-input" onchange="updateAdjustmentFields()">
+                        <option value="">Select Type</option>
+                        <option value="add">Add Stock</option>
+                        <option value="remove">Remove Stock</option>
+                        <option value="set">Set Stock Level</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-white/70 text-sm mb-2">Quantity *</label>
+                    <input type="number" id="adjustment-quantity" required min="0" 
+                           class="w-full p-3 rounded-lg form-input quantity-input">
+                </div>
+
+                <div>
+                    <label class="block text-white/70 text-sm mb-2">Reason</label>
+                    <select id="adjustment-reason" class="w-full p-3 rounded-lg form-input">
+                        <option value="">Select Reason</option>
+                        <option value="damaged">Damaged Goods</option>
+                        <option value="returned">Customer Returns</option>
+                        <option value="recount">Stock Recount</option>
+                        <option value="supplier">Supplier Delivery</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-white/70 text-sm mb-2">Notes</label>
+                    <textarea id="adjustment-notes" rows="3" 
+                              class="w-full p-3 rounded-lg form-input" 
+                              placeholder="Additional notes..."></textarea>
+                </div>
+
+                <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 pt-6 border-t border-white/10">
+                    <button type="submit" class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg">
+                        <i class="fas fa-check mr-2"></i>Apply Adjustment
+                    </button>
+                    <button type="button" onclick="closeStockModal()" 
+                            class="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Barcode Scanner Modal -->
+    <div id="barcode-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+        <div class="glass-morphism p-6 sm:p-8 rounded-xl max-w-lg w-full mx-4">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl sm:text-2xl font-bold text-white">Barcode Scanner</h2>
+                <button onclick="closeBarcodeModal()" class="text-white/70 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <div class="barcode-scanner">
+                <i class="fas fa-barcode text-4xl text-white/50 mb-4"></i>
+                <h3 class="text-white font-semibold mb-2">Scan Product Barcode</h3>
+                <p class="text-white/60 text-sm mb-4">Position barcode within the scanner area</p>
+                
+                <div class="mb-4">
+                    <input type="text" id="barcode-input" 
+                           class="w-full p-3 rounded-lg form-input text-center" 
+                           placeholder="Or manually enter barcode..." 
+                           onchange="processBarcodeInput()">
+                </div>
+
+                <div class="flex space-x-3">
+                    <button onclick="startScanning()" 
+                            class="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">
+                        <i class="fas fa-camera mr-2"></i>Start Camera
+                    </button>
+                    <button onclick="closeBarcodeModal()" 
+                            class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+
+            <div id="scanned-product" class="hidden mt-6 p-4 bg-green-500/20 border border-green-500/50 rounded-lg">
+                <h4 class="text-green-400 font-semibold mb-2">Product Found!</h4>
+                <div id="scanned-product-details">
+                    <!-- Product details will be populated here -->
+                </div>
+                <div class="flex space-x-2 mt-4">
+                    <button onclick="viewProductInventory()" 
+                            class="flex-1 bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm">
+                        View Details
+                    </button>
+                    <button onclick="adjustScannedProduct()" 
+                            class="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-sm">
+                        Adjust Stock
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // Global variables
+    let currentTab = 'overview';
+    let inventoryData = [];
+    let warehouseData = [];
+    let movementsData = [];
+    let alertsData = [];
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('📦 Inventory Management initializing...');
+        
+        // Check authentication first
+        if (!checkAuthentication()) return;
+        
+        // Load data
+        loadAllData();
+        setupEventListeners();
+        
+        console.log('✅ Inventory Management initialized');
+    });
+
+    // Check authentication
+    function checkAuthentication() {
+        const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
+        const userRole = localStorage.getItem('userRole');
+        
+        if (!token) {
+            console.log('❌ No authentication token found');
+            window.location.href = '/auth/auth-admin.html';
+            return false;
+        }
+        
+        if (userRole !== 'admin') {
+            console.log('❌ Insufficient permissions');
+            window.location.href = '/auth/auth-admin.html';
+            return false;
+        }
+        
+        console.log('✅ Authentication verified');
+        return true;
+    }
+
+    // Setup event listeners
+    function setupEventListeners() {
+        // Form submissions
+        document.getElementById('stock-form').addEventListener('submit', handleStockAdjustment);
+        
+        // Search and filter inputs
+        document.getElementById('product-search').addEventListener('input', searchProducts);
+        document.getElementById('stock-filter').addEventListener('change', filterProducts);
+        document.getElementById('category-filter').addEventListener('change', filterProducts);
+        document.getElementById('movement-filter').addEventListener('change', filterMovements);
+        
+        // Barcode input
+        document.getElementById('barcode-input').addEventListener('change', processBarcodeInput);
+    }
+
+    // Load all data
+    async function loadAllData() {
+        await Promise.all([
+            loadInventoryData(),
+            loadWarehouseData(),
+            loadMovementsData(),
+            loadAlertsData(),
+            loadTopProducts()
+        ]);
+    }
+
+    // Load inventory data
+    async function loadInventoryData() {
+        try {
+            console.log('📦 Loading inventory data...');
+            
+            // Mock inventory data
+            const mockInventory = [
+                {
+                    id: 1,
+                    name: 'iPhone 15 Pro Max',
+                    sku: 'IPH-15PM-256-BLK',
+                    category: 'Electronics',
+                    brand: 'Apple',
+                    price: 1299.99,
+                    current_stock: 45,
+                    reserved_stock: 8,
+                    available_stock: 37,
+                    reorder_point: 15,
+                    max_stock: 100,
+                    stock_status: 'medium',
+                    warehouses: {
+                        'main': 25,
+                        'east': 12,
+                        'west': 8,
+                        'south': 0
+                    },
+                    last_updated: new Date(Date.now() - 2 * 60 * 60 * 1000),
+                    value: 58499.55
+                },
+                {
+                    id: 2,
+                    name: 'Samsung Galaxy S24 Ultra',
+                    sku: 'SAM-S24U-512-TIT',
+                    category: 'Electronics',
+                    brand: 'Samsung',
+                    price: 1199.99,
+                    current_stock: 78,
+                    reserved_stock: 15,
+                    available_stock: 63,
+                    reorder_point: 20,
+                    max_stock: 120,
+                    stock_status: 'high',
+                    warehouses: {
+                        'main': 35,
+                        'east': 20,
+                        'west': 15,
+                        'south': 8
+                    },
+                    last_updated: new Date(Date.now() - 4 * 60 * 60 * 1000),
+                    value: 93599.22
+                },
+                {
+                    id: 3,
+                    name: 'Organic Coffee Beans 1kg',
+                    sku: 'COF-ORG-1KG-ETH',
+                    category: 'Groceries',
+                    brand: 'Ethiopian Premium',
+                    price: 24.99,
+                    current_stock: 8,
+                    reserved_stock: 3,
+                    available_stock: 5,
+                    reorder_point: 50,
+                    max_stock: 200,
+                    stock_status: 'low',
+                    warehouses: {
+                        'main': 8,
+                        'east': 0,
+                        'west': 0,
+                        'south': 0
+                    },
+                    last_updated: new Date(Date.now() - 6 * 60 * 60 * 1000),
+                    value: 199.92
+                },
+                {
+                    id: 4,
+                    name: 'Nike Air Max 270',
+                    sku: 'NIK-AM270-US10-WHT',
+                    category: 'Clothing',
+                    brand: 'Nike',
+                    price: 129.99,
+                    current_stock: 0,
+                    reserved_stock: 0,
+                    available_stock: 0,
+                    reorder_point: 25,
+                    max_stock: 80,
+                    stock_status: 'out',
+                    warehouses: {
+                        'main': 0,
+                        'east': 0,
+                        'west': 0,
+                        'south': 0
+                    },
+                    last_updated: new Date(Date.now() - 12 * 60 * 60 * 1000),
+                    value: 0
+                },
+                {
+                    id: 5,
+                    name: 'Dell XPS 13 Laptop',
+                    sku: 'DEL-XPS13-i7-16GB',
+                    category: 'Electronics',
+                    brand: 'Dell',
+                    price: 1899.99,
+                    current_stock: 156,
+                    reserved_stock: 24,
+                    available_stock: 132,
+                    reorder_point: 30,
+                    max_stock: 200,
+                    stock_status: 'high',
+                    warehouses: {
+                        'main': 80,
+                        'east': 35,
+                        'west': 25,
+                        'south': 16
+                    },
+                    last_updated: new Date(Date.now() - 1 * 60 * 60 * 1000),
+                    value: 296399.44
+                }
+            ];
+
+            inventoryData = mockInventory;
+            renderProducts(inventoryData);
+            
+            console.log('✅ Inventory data loaded successfully');
+
+        } catch (error) {
+            console.error('❌ Error loading inventory data:', error);
+            document.getElementById('products-container').innerHTML = createErrorState(error.message, 'loadInventoryData()');
+        }
+    }
+
+    // Load warehouse data
+    async function loadWarehouseData() {
+        try {
+            console.log('🏢 Loading warehouse data...');
+            
+            // Mock warehouse data
+            const mockWarehouses = [
+                {
+                    id: 'main',
+                    name: 'Main Warehouse',
+                    location: 'Kigali Central',
+                    address: '123 Commerce Street, Kigali, Rwanda',
+                    capacity: 10000,
+                    occupied: 7856,
+                    utilization: 78.56,
+                    status: 'active',
+                    products_count: 2458,
+                    total_value: 980000,
+                    manager: 'Jean Baptiste',
+                    phone: '+250 789 123 456',
+                    last_audit: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+                    climate_controlled: true,
+                    security_level: 'High'
+                },
+                {
+                    id: 'east',
+                    name: 'Eastern Distribution Center',
+                    location: 'Kayonza',
+                    address: '45 Industrial Zone, Kayonza, Rwanda',
+                    capacity: 5000,
+                    occupied: 3420,
+                    utilization: 68.4,
+                    status: 'active',
+                    products_count: 1250,
+                    total_value: 420000,
+                    manager: 'Marie Claire',
+                    phone: '+250 785 987 654',
+                    last_audit: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
+                    climate_controlled: false,
+                    security_level: 'Medium'
+                },
+                {
+                    id: 'west',
+                    name: 'Western Hub',
+                    location: 'Rubavu',
+                    address: '78 Lakeside Road, Rubavu, Rwanda',
+                    capacity: 3000,
+                    occupied: 2100,
+                    utilization: 70.0,
+                    status: 'active',
+                    products_count: 890,
+                    total_value: 280000,
+                    manager: 'Paul Uwimana',
+                    phone: '+250 784 567 890',
+                    last_audit: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000),
+                    climate_controlled: true,
+                    security_level: 'Medium'
+                },
+                {
+                    id: 'south',
+                    name: 'Southern Depot',
+                    location: 'Huye',
+                    address: '12 University Avenue, Huye, Rwanda',
+                    capacity: 2000,
+                    occupied: 1456,
+                    utilization: 72.8,
+                    status: 'maintenance',
+                    products_count: 650,
+                    total_value: 180000,
+                    manager: 'Grace Mukamana',
+                    phone: '+250 782 345 678',
+                    last_audit: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+                    climate_controlled: false,
+                    security_level: 'Low'
+                }
+            ];
+
+            warehouseData = mockWarehouses;
+            renderWarehouses(warehouseData);
+            populateWarehouseSelect(warehouseData);
+            
+            console.log('✅ Warehouse data loaded successfully');
+
+        } catch (error) {
+            console.error('❌ Error loading warehouse data:', error);
+            document.getElementById('warehouses-container').innerHTML = createErrorState(error.message, 'loadWarehouseData()');
+        }
+    }
+
+    // Load movements data
+    async function loadMovementsData() {
+        try {
+            console.log('🔄 Loading movements data...');
+            
+            // Mock movements data
+            const mockMovements = [
+                {
+                    id: 1,
+                    type: 'in',
+                    product: 'iPhone 15 Pro Max',
+                    sku: 'IPH-15PM-256-BLK',
+                    quantity: 25,
+                    warehouse: 'Main Warehouse',
+                    reason: 'Supplier Delivery',
+                    user: 'admin@africandeals.com',
+                    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
+                    reference: 'PO-2025-0817-001',
+                    unit_cost: 1100.00,
+                    total_value: 27500.00
+                },
+                {
+                    id: 2,
+                    type: 'out',
+                    product: 'Samsung Galaxy S24 Ultra',
+                    sku: 'SAM-S24U-512-TIT',
+                    quantity: 8,
+                    warehouse: 'Eastern Distribution Center',
+                    reason: 'Customer Order',
+                    user: 'warehouse@africandeals.com',
+                    timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000),
+                    reference: 'ORD-2025-0817-456',
+                    unit_cost: 1000.00,
+                    total_value: 8000.00
+                },
+                {
+                    id: 3,
+                    type: 'transfer',
+                    product: 'Dell XPS 13 Laptop',
+                    sku: 'DEL-XPS13-i7-16GB',
+                    quantity: 12,
+                    from_warehouse: 'Main Warehouse',
+                    to_warehouse: 'Western Hub',
+                    reason: 'Stock Rebalancing',
+                    user: 'admin@africandeals.com',
+                    timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000),
+                    reference: 'TRF-2025-0817-789',
+                    unit_cost: 1750.00,
+                    total_value: 21000.00
+                },
+                {
+                    id: 4,
+                    type: 'adjustment',
+                    product: 'Organic Coffee Beans 1kg',
+                    sku: 'COF-ORG-1KG-ETH',
+                    quantity: -5,
+                    warehouse: 'Main Warehouse',
+                    reason: 'Damaged Goods',
+                    user: 'warehouse@africandeals.com',
+                    timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000),
+                    reference: 'ADJ-2025-0817-123',
+                    unit_cost: 20.00,
+                    total_value: -100.00
+                },
+                {
+                    id: 5,
+                    type: 'out',
+                    product: 'Nike Air Max 270',
+                    sku: 'NIK-AM270-US10-WHT',
+                    quantity: 15,
+                    warehouse: 'Main Warehouse',
+                    reason: 'Customer Order',
+                    user: 'sales@africandeals.com',
+                    timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000),
+                    reference: 'ORD-2025-0817-234',
+                    unit_cost: 110.00,
+                    total_value: 1650.00
+                }
+            ];
+
+            movementsData = mockMovements;
+            renderMovements(movementsData);
+            
+            console.log('✅ Movements data loaded successfully');
+
+        } catch (error) {
+            console.error('❌ Error loading movements data:', error);
+            document.getElementById('movements-container').innerHTML = createErrorState(error.message, 'loadMovementsData()');
+        }
+    }
+
+    // Load alerts data
+    async function loadAlertsData() {
+        try {
+            console.log('🚨 Loading alerts data...');
+            
+            // Mock alerts data
+            const mockAlerts = [
+                {
+                    id: 1,
+                    type: 'critical',
+                    title: 'Out of Stock Alert',
+                    message: 'Nike Air Max 270 is completely out of stock',
+                    product: 'Nike Air Max 270',
+                    sku: 'NIK-AM270-US10-WHT',
+                    timestamp: new Date(Date.now() - 30 * 60 * 1000),
+                    read: false,
+                    action_required: true
+                },
+                {
+                    id: 2,
+                    type: 'warning',
+                    title: 'Low Stock Warning',
+                    message: 'Organic Coffee Beans 1kg stock is below reorder point',
+                    product: 'Organic Coffee Beans 1kg',
+                    sku: 'COF-ORG-1KG-ETH',
+                    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
+                    read: false,
+                    action_required: true
+                },
+                {
+                    id: 3,
+                    type: 'info',
+                    title: 'Warehouse Maintenance',
+                    message: 'Southern Depot is currently under maintenance',
+                    warehouse: 'Southern Depot',
+                    timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000),
+                    read: true,
+                    action_required: false
+                },
+                {
+                    id: 4,
+                    type: 'warning',
+                    title: 'Audit Overdue',
+                    message: 'Southern Depot audit is overdue by 5 days',
+                    warehouse: 'Southern Depot',
+                    timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000),
+                    read: false,
+                    action_required: true
+                },
+                {
+                    id: 5,
+                    type: 'critical',
+                    title: 'High Demand Alert',
+                    message: 'iPhone 15 Pro Max demand exceeds current stock capacity',
+                    product: 'iPhone 15 Pro Max',
+                    sku: 'IPH-15PM-256-BLK',
+                    timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
+                    read: false,
+                    action_required: true
+                }
+            ];
+
+            alertsData = mockAlerts;
+            renderAlerts(alertsData);
+            
+            console.log('✅ Alerts data loaded successfully');
+
+        } catch (error) {
+            console.error('❌ Error loading alerts data:', error);
+            document.getElementById('alerts-container').innerHTML = createErrorState(error.message, 'loadAlertsData()');
+        }
+    }
+
+    // Load top products
+    async function loadTopProducts() {
+        try {
+            // Generate top products from inventory data
+            const topProducts = inventoryData
+                .sort((a, b) => (b.current_stock * b.price) - (a.current_stock * a.price))
+                .slice(0, 5);
+            
+            renderTopProducts(topProducts);
+            
+        } catch (error) {
+            console.error('❌ Error loading top products:', error);
+        }
+    }
+
+    // Render functions
+    function renderProducts(products) {
+        const container = document.getElementById('products-container');
+        
+        if (!products || products.length === 0) {
+            container.innerHTML = createEmptyState(
+                'products', 
+                'No Products Found', 
+                'No products match your search criteria.',
+                ''
+            );
+            return;
+        }
+
+        const productsHTML = `
+            <div class="space-y-4">
+                ${products.map(product => `
+                    <div class="inventory-card glass-morphism rounded-lg p-6 border-l-4 border-${getStockColor(product.stock_status)}">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-3 mb-2">
+                                    <h3 class="text-white font-semibold text-lg">${product.name}</h3>
+                                    <span class="stock-indicator stock-${product.stock_status}"></span>
+                                    <span class="px-2 py-1 bg-${getStockColor(product.stock_status)}/20 text-${getStockColor(product.stock_status)}-400 text-xs rounded uppercase">
+                                        ${product.stock_status}
+                                    </span>
+                                </div>
+                                <p class="text-white/60 text-sm mb-2">SKU: ${product.sku} • ${product.category} • ${product.brand}</p>
+                                <p class="text-white/50 text-xs">Last updated: ${formatTimeAgo(product.last_updated)}</p>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-white text-xl font-bold">${product.current_stock}</div>
+                                <div class="text-white/60 text-xs">Current Stock</div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                            <div>
+                                <span class="text-white/50 text-xs">Available:</span>
+                                <p class="text-green-400 font-medium">${product.available_stock}</p>
+                            </div>
+                            <div>
+                                <span class="text-white/50 text-xs">Reserved:</span>
+                                <p class="text-yellow-400 font-medium">${product.reserved_stock}</p>
+                            </div>
+                            <div>
+                                <span class="text-white/50 text-xs">Reorder Point:</span>
+                                <p class="text-white font-medium">${product.reorder_point}</p>
+                            </div>
+                            <div>
+                                <span class="text-white/50 text-xs">Total Value:</span>
+                                <p class="text-white font-medium">$${formatNumber(product.value)}</p>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <p class="text-white/50 text-xs mb-2">Warehouse Distribution:</p>
+                            <div class="grid grid-cols-4 gap-2">
+                                ${Object.entries(product.warehouses).map(([warehouse, stock]) => `
+                                    <div class="text-center p-2 bg-white/5 rounded">
+                                        <div class="text-white text-sm font-medium">${stock}</div>
+                                        <div class="text-white/60 text-xs">${warehouse.toUpperCase()}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between items-center">
+                            <div class="text-xs text-white/50">
+                                Product ID: #${product.id}
+                            </div>
+                            <div class="flex space-x-2">
+                                <button onclick="viewProductDetails(${product.id})" 
+                                        class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm">
+                                    <i class="fas fa-eye mr-1"></i>Details
+                                </button>
+                                <button onclick="adjustProductStock(${product.id})" 
+                                        class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm">
+                                    <i class="fas fa-plus-minus mr-1"></i>Adjust
+                                </button>
+                                <button onclick="transferProduct(${product.id})" 
+                                        class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-1 rounded text-sm">
+                                    <i class="fas fa-exchange-alt mr-1"></i>Transfer
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        
+        container.innerHTML = productsHTML;
+    }
+
+    function renderWarehouses(warehouses) {
+        const container = document.getElementById('warehouses-container');
+        
+        const warehousesHTML = warehouses.map(warehouse => `
+            <div class="warehouse-card glass-morphism rounded-lg p-6 ${warehouse.status === 'active' ? 'active' : ''}">
+                <div class="flex items-start justify-between mb-4">
+                    <div>
+                        <h3 class="text-white font-semibold text-lg mb-1">${warehouse.name}</h3>
+                        <p class="text-white/60 text-sm">${warehouse.location}</p>
+                        <p class="text-white/50 text-xs">${warehouse.address}</p>
+                    </div>
+                    <span class="status-badge status-${warehouse.status === 'maintenance' ? 'pending' : 'active'}">
+                        ${warehouse.status.charAt(0).toUpperCase() + warehouse.status.slice(1)}
+                    </span>
+                </div>
+
+                <div class="space-y-3 mb-4">
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="text-white/70">Utilization</span>
+                            <span class="text-white">${warehouse.utilization}%</span>
+                        </div>
+                        <div class="w-full bg-white/20 rounded-full h-2">
+                            <div class="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full" 
+                                 style="width: ${warehouse.utilization}%"></div>
+                        </div>
+                        <p class="text-white/60 text-xs mt-1">${warehouse.occupied} / ${warehouse.capacity} units</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="text-white/50">Products:</span>
+                            <p class="text-white font-medium">${formatNumber(warehouse.products_count)}</p>
+                        </div>
+                        <div>
+                            <span class="text-white/50">Total Value:</span>
+                            <p class="text-white font-medium">$${formatNumber(warehouse.total_value)}</p>
+                        </div>
+                        <div>
+                            <span class="text-white/50">Manager:</span>
+                            <p class="text-white font-medium">${warehouse.manager}</p>
+                        </div>
+                        <div>
+                            <span class="text-white/50">Last Audit:</span>
+                            <p class="text-white font-medium">${formatDate(warehouse.last_audit)}</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-4 text-xs">
+                        ${warehouse.climate_controlled ? 
+                            '<span class="text-blue-400"><i class="fas fa-thermometer-half mr-1"></i>Climate Controlled</span>' : 
+                            '<span class="text-white/50"><i class="fas fa-thermometer-half mr-1"></i>No Climate Control</span>'
+                        }
+                        <span class="text-${warehouse.security_level === 'High' ? 'green' : warehouse.security_level === 'Medium' ? 'yellow' : 'red'}-400">
+                            <i class="fas fa-shield-alt mr-1"></i>${warehouse.security_level} Security
+                        </span>
+                    </div>
+                </div>
+
+                <div class="flex space-x-2">
+                    <button onclick="viewWarehouseDetails('${warehouse.id}')" 
+                            class="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-sm">
+                        <i class="fas fa-eye mr-1"></i>View Details
+                    </button>
+                    <button onclick="manageWarehouse('${warehouse.id}')" 
+                            class="flex-1 bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm">
+                        <i class="fas fa-cog mr-1"></i>Manage
+                    </button>
+                </div>
+            </div>
+        `).join('');
+        
+        container.innerHTML = warehousesHTML;
+    }
+
+    function renderMovements(movements) {
+        const container = document.getElementById('movements-container');
+        
+        if (!movements || movements.length === 0) {
+            container.innerHTML = createEmptyState(
+                'movements', 
+                'No Movements Found', 
+                'No inventory movements match your criteria.',
+                ''
+            );
+            return;
+        }
+
+        const movementsHTML = `
+            <div class="space-y-4">
+                ${movements.map(movement => `
+                    <div class="movement-item glass-morphism rounded-lg p-4 movement-${movement.type}">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-3 mb-2">
+                                    <h4 class="text-white font-semibold">${movement.product}</h4>
+                                    <span class="px-2 py-1 bg-${getMovementColor(movement.type)}/20 text-${getMovementColor(movement.type)}-400 text-xs rounded uppercase">
+                                        ${getMovementType(movement.type)}
+                                    </span>
+                                </div>
+                                <p class="text-white/60 text-sm">SKU: ${movement.sku} • ${movement.reason}</p>
+                                <p class="text-white/50 text-xs">${movement.user} • ${movement.reference}</p>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-white text-lg font-bold ${movement.quantity < 0 ? 'text-red-400' : 'text-green-400'}">
+                                    ${movement.quantity > 0 ? '+' : ''}${movement.quantity}
+                                </div>
+                                <div class="text-white/60 text-xs">${formatTimeAgo(movement.timestamp)}</div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                            <div>
+                                <span class="text-white/50">Warehouse:</span>
+                                <p class="text-white">${movement.warehouse || movement.from_warehouse || 'N/A'}</p>
+                            </div>
+                            ${movement.to_warehouse ? `
+                                <div>
+                                    <span class="text-white/50">To Warehouse:</span>
+                                    <p class="text-white">${movement.to_warehouse}</p>
+                                </div>
+                            ` : ''}
+                            <div>
+                                <span class="text-white/50">Unit Cost:</span>
+                                <p class="text-white">$${movement.unit_cost.toFixed(2)}</p>
+                            </div>
+                            <div>
+                                <span class="text-white/50">Total Value:</span>
+                                <p class="text-white font-medium">$${Math.abs(movement.total_value).toFixed(2)}</p>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        
+        container.innerHTML = movementsHTML;
+    }
+
+    function renderAlerts(alerts) {
+        const container = document.getElementById('alerts-container');
+        
+        if (!alerts || alerts.length === 0) {
+            container.innerHTML = createEmptyState(
+                'alerts', 
+                'No Active Alerts', 
+                'All inventory levels are within normal ranges.',
+                ''
+            );
+            return;
+        }
+
+        const alertsHTML = `
+            <div class="space-y-3">
+                ${alerts.map(alert => `
+                    <div class="alert-item glass-morphism rounded-lg p-4 alert-${alert.type} ${alert.read ? 'opacity-60' : ''}">
+                        <div class="flex items-start justify-between mb-2">
+                            <div class="flex items-center space-x-2">
+                                <i class="fas fa-${alert.type === 'critical' ? 'exclamation-triangle' : alert.type === 'warning' ? 'exclamation-circle' : 'info-circle'} text-${alert.type === 'critical' ? 'red' : alert.type === 'warning' ? 'yellow' : 'blue'}-400"></i>
+                                <h4 class="text-white font-semibold text-sm">${alert.title}</h4>
+                                ${!alert.read ? '<div class="w-2 h-2 bg-blue-400 rounded-full"></div>' : ''}
+                            </div>
+                            <span class="text-white/60 text-xs">${formatTimeAgo(alert.timestamp)}</span>
+                        </div>
+                        <p class="text-white/70 text-sm mb-3">${alert.message}</p>
+                        <div class="flex space-x-2">
+                            ${alert.action_required ? `
+                                <button onclick="handleAlert(${alert.id})" 
+                                        class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-xs">
+                                    <i class="fas fa-bolt mr-1"></i>Take Action
+                                </button>
+                            ` : ''}
+                            <button onclick="markAlertRead(${alert.id})" 
+                                    class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded text-xs">
+                                ${alert.read ? 'Mark Unread' : 'Mark Read'}
+                            </button>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        
+        container.innerHTML = alertsHTML;
+    }
+
+    function renderTopProducts(products) {
+        const container = document.getElementById('top-products');
+        
+        const topProductsHTML = products.map((product, index) => `
+            <div class="flex items-center space-x-3 p-3 bg-white/5 rounded-lg">
+                <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                    ${index + 1}
+                </div>
+                <div class="flex-1">
+                    <p class="text-white font-medium text-sm">${product.name}</p>
+                    <p class="text-white/60 text-xs">${product.current_stock} units • $${formatNumber(product.value)}</p>
+                </div>
+                <div class="stock-indicator stock-${product.stock_status}"></div>
+            </div>
+        `).join('');
+        
+        container.innerHTML = topProductsHTML;
+    }
+
+    // Tab switching
+    function switchTab(tab) {
+        currentTab = tab;
+        
+        // Update active tab
+        document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+        document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+        
+        // Show/hide tab content
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.remove('active');
+        });
+        document.getElementById(`${tab}-tab`).classList.add('active');
+    }
+
+    // Modal functions
+    function openStockAdjustment() {
+        document.getElementById('stock-modal').classList.remove('hidden');
+        document.getElementById('stock-modal').classList.add('flex');
+    }
+
+    function closeStockModal() {
+        document.getElementById('stock-modal').classList.add('hidden');
+        document.getElementById('stock-modal').classList.remove('flex');
+        document.getElementById('stock-form').reset();
+    }
+
+    function openBarcodeScanner() {
+        document.getElementById('barcode-modal').classList.remove('hidden');
+        document.getElementById('barcode-modal').classList.add('flex');
+        document.getElementById('barcode-input').focus();
+    }
+
+    function closeBarcodeModal() {
+        document.getElementById('barcode-modal').classList.add('hidden');
+        document.getElementById('barcode-modal').classList.remove('flex');
+        document.getElementById('scanned-product').classList.add('hidden');
+        document.getElementById('barcode-input').value = '';
+    }
+
+    // Stock adjustment handling
+    async function handleStockAdjustment(e) {
+        e.preventDefault();
+        
+        const formData = {
+            product: document.getElementById('product-search-modal').value,
+            warehouse: document.getElementById('warehouse-select').value,
+            type: document.getElementById('adjustment-type').value,
+            quantity: parseInt(document.getElementById('adjustment-quantity').value),
+            reason: document.getElementById('adjustment-reason').value,
+            notes: document.getElementById('adjustment-notes').value
+        };
+        
+        try {
+            showToast('Stock adjustment applied successfully', 'success');
+            closeStockModal();
+            loadInventoryData(); // Refresh inventory data
+            
+        } catch (error) {
+            console.error('❌ Error applying stock adjustment:', error);
+            showToast('Error applying stock adjustment: ' + error.message, 'error');
+        }
+    }
+
+    // Barcode processing
+    function processBarcodeInput() {
+        const barcode = document.getElementById('barcode-input').value.trim();
+        if (!barcode) return;
+        
+        // Mock barcode lookup
+        const mockProducts = {
+            'IPH-15PM-256-BLK': {
+                name: 'iPhone 15 Pro Max',
+                sku: 'IPH-15PM-256-BLK',
+                current_stock: 45,
+                price: 1299.99
+            },
+            '123456789012': {
+                name: 'Samsung Galaxy S24 Ultra',
+                sku: 'SAM-S24U-512-TIT',
+                current_stock: 78,
+                price: 1199.99
+            }
+        };
+        
+        const product = mockProducts[barcode];
+        if (product) {
+            displayScannedProduct(product);
+        } else {
+            showToast('Product not found for barcode: ' + barcode, 'error');
+        }
+    }
+
+    function displayScannedProduct(product) {
+        const scannedDiv = document.getElementById('scanned-product');
+        const detailsDiv = document.getElementById('scanned-product-details');
+        
+        detailsDiv.innerHTML = `
+            <div class="space-y-2">
+                <div class="flex justify-between">
+                    <span class="text-white/70">Product:</span>
+                    <span class="text-white font-medium">${product.name}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-white/70">SKU:</span>
+                    <span class="text-white">${product.sku}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-white/70">Current Stock:</span>
+                    <span class="text-white font-bold">${product.current_stock}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-white/70">Price:</span>
+                    <span class="text-white">$${product.price}</span>
+                </div>
+            </div>
+        `;
+        
+        scannedDiv.classList.remove('hidden');
+        window.scannedProduct = product;
+    }
+
+    function startScanning() {
+        showToast('Camera scanner would start here', 'info');
+        // In a real implementation, this would start the camera for barcode scanning
+    }
+
+    // Search and filter functions
+    function searchProducts() {
+        const searchTerm = document.getElementById('product-search').value.toLowerCase();
+        const filtered = inventoryData.filter(product => 
+            product.name.toLowerCase().includes(searchTerm) ||
+            product.sku.toLowerCase().includes(searchTerm) ||
+            product.brand.toLowerCase().includes(searchTerm)
+        );
+        renderProducts(filtered);
+    }
+
+    function filterProducts() {
+        const stockFilter = document.getElementById('stock-filter').value;
+        const categoryFilter = document.getElementById('category-filter').value;
+        
+        let filtered = inventoryData;
+        
+        if (stockFilter) {
+            filtered = filtered.filter(product => product.stock_status === stockFilter);
+        }
+        
+        if (categoryFilter) {
+            filtered = filtered.filter(product => product.category.toLowerCase() === categoryFilter);
+        }
+        
+        renderProducts(filtered);
+    }
+
+    function filterMovements() {
+        const typeFilter = document.getElementById('movement-filter').value;
+        
+        let filtered = movementsData;
+        
+        if (typeFilter) {
+            filtered = filtered.filter(movement => movement.type === typeFilter);
+        }
+        
+        renderMovements(filtered);
+    }
+
+    // Helper functions
+    function populateWarehouseSelect(warehouses) {
+        const select = document.getElementById('warehouse-select');
+        const options = warehouses
+            .filter(w => w.status === 'active')
+            .map(w => `<option value="${w.id}">${w.name}</option>`)
+            .join('');
+        select.innerHTML = '<option value="">Select Warehouse</option>' + options;
+    }
+
+    function getStockColor(status) {
+        const colors = {
+            'high': 'green-500',
+            'medium': 'yellow-500',
+            'low': 'red-500',
+            'out': 'gray-500'
+        };
+        return colors[status] || 'gray-500';
+    }
+
+    function getMovementColor(type) {
+        const colors = {
+            'in': 'green-500',
+            'out': 'red-500',
+            'transfer': 'blue-500',
+            'adjustment': 'yellow-500'
+        };
+        return colors[type] || 'gray-500';
+    }
+
+    function getMovementType(type) {
+        const types = {
+            'in': 'Stock In',
+            'out': 'Stock Out',
+            'transfer': 'Transfer',
+            'adjustment': 'Adjustment'
+        };
+        return types[type] || type;
+    }
+
+    function formatNumber(num) {
+        if (num >= 1000000) {
+            return (num / 1000000).toFixed(1) + 'M';
+        } else if (num >= 1000) {
+            return (num / 1000).toFixed(1) + 'K';
+        }
+        return num.toString();
+    }
+
+    function formatDate(dateString) {
+        if (!dateString) return 'N/A';
+        return new Date(dateString).toLocaleDateString();
+    }
+
+    function formatTimeAgo(dateString) {
+        if (!dateString) return 'Unknown';
+        
+        const now = new Date();
+        const date = new Date(dateString);
+        const diffInSeconds = Math.floor((now - date) / 1000);
+        
+        if (diffInSeconds < 60) return 'Just now';
+        if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+        if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+        return `${Math.floor(diffInSeconds / 86400)}d ago`;
+    }
+
+    function createEmptyState(type, title, description, actions = '') {
+        return `
+            <div class="text-center py-12">
+                <div class="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-${type === 'products' ? 'boxes' : type === 'movements' ? 'exchange-alt' : type === 'alerts' ? 'bell' : 'warehouse'} text-white/30 text-3xl"></i>
+                </div>
+                <h3 class="text-white text-xl font-semibold mb-2">${title}</h3>
+                <p class="text-white/60 mb-6 max-w-md mx-auto">${description}</p>
+                ${actions}
+            </div>
+        `;
+    }
+
+    function createErrorState(message, retry = null) {
+        return `
+            <div class="text-center py-12">
+                <div class="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-exclamation-triangle text-red-400 text-3xl"></i>
+                </div>
+                <h3 class="text-white text-xl font-semibold mb-2">Error Loading Data</h3>
+                <p class="text-white/60 mb-6 max-w-md mx-auto">${message}</p>
+                ${retry ? `<button onclick="${retry}" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg"><i class="fas fa-refresh mr-2"></i>Try Again</button>` : ''}
+            </div>
+        `;
+    }
+
+    function showToast(message, type = 'info') {
+        console.log(`[${type.toUpperCase()}] ${message}`);
+        
+        const toast = document.createElement('div');
+        toast.className = `fixed top-4 right-4 z-50 px-6 py-4 rounded-lg text-white ${
+            type === 'success' ? 'bg-green-500' : 
+            type === 'error' ? 'bg-red-500' : 
+            type === 'warning' ? 'bg-yellow-500' : 'bg-blue-500'
+        }`;
+        toast.textContent = message;
+        
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+
+    // Make functions globally available
+    window.switchTab = switchTab;
+    window.openStockAdjustment = openStockAdjustment;
+    window.closeStockModal = closeStockModal;
+    window.openBarcodeScanner = openBarcodeScanner;
+    window.closeBarcodeModal = closeBarcodeModal;
+    window.processBarcodeInput = processBarcodeInput;
+    window.startScanning = startScanning;
+    window.searchProducts = searchProducts;
+    window.filterProducts = filterProducts;
+    window.filterMovements = filterMovements;
+    window.refreshInventory = loadAllData;
+    window.generateForecastReport = () => showToast('Forecast report generated', 'success');
+    window.markAllAlertsRead = () => showToast('All alerts marked as read', 'success');
+    window.saveAlertSettings = () => showToast('Alert settings saved', 'success');
+    window.viewProductDetails = (id) => showToast(`Viewing product details for ID: ${id}`, 'info');
+    window.adjustProductStock = (id) => { window.selectedProductId = id; openStockAdjustment(); };
+    window.transferProduct = (id) => showToast(`Initiating transfer for product ID: ${id}`, 'info');
+    window.viewWarehouseDetails = (id) => showToast(`Viewing warehouse details for: ${id}`, 'info');
+    window.manageWarehouse = (id) => showToast(`Managing warehouse: ${id}`, 'info');
+    window.exportMovements = () => showToast('Exporting movements data', 'success');
+    window.handleAlert = (id) => showToast(`Handling alert ID: ${id}`, 'info');
+    window.markAlertRead = (id) => showToast(`Alert ID ${id} marked as read`, 'success');
+    window.viewProductInventory = () => { closeBarcodeModal(); switchTab('products'); };
+    window.adjustScannedProduct = () => { closeBarcodeModal(); openStockAdjustment(); };
+
+</script>
+
+</body>
+</html>

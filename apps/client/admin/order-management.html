@@ -1,0 +1,1867 @@
+<!DOCTYPE html>
+<html lang="en" class="admin-page">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Management | Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="admin-auth-check.js"></script>
+    <script src="admin-utils.js"></script>
+    <script src="api-client.js"></script>
+    <style>
+        :root {
+            --primary-color: #080b3b;
+            --secondary-color: #1e40af;
+            --accent-color: #3b82f6;
+        }
+        
+        .glass-morphism {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        }
+        .sidebar {
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .nav-item {
+            transition: all 0.3s ease;
+        }
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+        .nav-item.active {
+            background: rgba(255, 255, 255, 0.2);
+            border-left: 3px solid #3b82f6;
+        }
+        .loading-spinner {
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 2px solid #3b82f6;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .form-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+        }
+        .order-status-badge {
+            @apply px-2 py-1 rounded-full text-xs font-medium;
+        }
+        .status-pending { @apply bg-yellow-500/20 text-yellow-400; }
+        .status-confirmed { @apply bg-cyan-500/20 text-cyan-400; }
+        .status-processing { @apply bg-blue-500/20 text-blue-400; }
+        .status-shipped { @apply bg-purple-500/20 text-purple-400; }
+        .status-delivered { @apply bg-green-500/20 text-green-400; }
+        .status-cancelled { @apply bg-red-500/20 text-red-400; }
+        .status-disputed { @apply bg-orange-500/20 text-orange-400; }
+        .status-refunded { @apply bg-gray-500/20 text-gray-400; }
+        .status-completed { @apply bg-emerald-500/20 text-emerald-400; }
+        
+        /* Payment Status Badges */
+        .payment-status-badge {
+            @apply px-2 py-1 rounded-full text-xs font-medium;
+        }
+        .payment-status-badge.status-pending { @apply bg-amber-500/20 text-amber-400; }
+        .payment-status-badge.status-paid { @apply bg-green-500/20 text-green-400; }
+        .payment-status-badge.status-confirmed { @apply bg-emerald-500/20 text-emerald-400; }
+        .payment-status-badge.status-failed { @apply bg-red-500/20 text-red-400; }
+        .payment-status-badge.status-rejected { @apply bg-red-600/20 text-red-500; }
+        .payment-status-badge.status-refunded { @apply bg-gray-500/20 text-gray-400; }
+    </style>
+</head>
+
+<body class="gradient-bg min-h-screen">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <div class="sidebar w-64 lg:w-80 flex-shrink-0 hidden md:flex flex-col">
+            <div class="p-6 border-b border-white/10">
+                <h2 class="text-xl font-bold text-white">Admin Panel</h2>
+            </div>
+            
+            <nav class="flex-1 p-4 space-y-2">
+                <a href="dashboard.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="user-management.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-users"></i>
+                    <span>User Management</span>
+                </a>
+                <a href="manual-payment-approval.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-credit-card"></i>
+                    <span>Payment Approval</span>
+                </a>
+                <a href="payment-credentials.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-wallet"></i>
+                    <span>Payment Credentials</span>
+                </a>
+                <a href="products.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-box"></i>
+                    <span>Products</span>
+                </a>
+                <a href="order-management.html" class="nav-item active flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Orders</span>
+                </a>
+                <a href="agents.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-user-tie"></i>
+                    <span>Agents</span>
+                </a>
+                <a href="reports.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Reports</span>
+                </a>
+                <a href="settings.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
+            
+            <!-- Header -->
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 space-y-4 sm:space-y-0">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-white mb-2">Order Management</h1>
+                    <p class="text-white/70">Monitor orders, resolve disputes, and coordinate deliveries</p>
+                </div>
+                <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                    <button id="disputes-btn" class="bg-orange-600 hover:bg-orange-700 text-white px-3 sm:px-4 py-2 rounded-lg transition text-sm flex items-center justify-center">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>Disputes
+                    </button>
+                    <button id="refunds-btn" class="bg-red-600 hover:bg-red-700 text-white px-3 sm:px-4 py-2 rounded-lg transition text-sm flex items-center justify-center">
+                        <i class="fas fa-undo mr-2"></i>Refunds
+                    </button>
+                    <button id="agents-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-lg transition text-sm flex items-center justify-center">
+                        <i class="fas fa-users mr-2"></i>Agents
+                    </button>
+                </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
+                <div class="glass-morphism rounded-xl p-4 sm:p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-white/70 text-xs sm:text-sm">Total Orders</p>
+                            <p class="text-white text-lg sm:text-2xl font-bold" id="total-orders">0</p>
+                        </div>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-shopping-cart text-blue-400 text-lg sm:text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-morphism rounded-xl p-4 sm:p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-white/70 text-xs sm:text-sm">Pending Orders</p>
+                            <p class="text-white text-lg sm:text-2xl font-bold" id="pending-orders">0</p>
+                        </div>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-clock text-yellow-400 text-lg sm:text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-morphism rounded-xl p-4 sm:p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-white/70 text-xs sm:text-sm">Processing</p>
+                            <p class="text-white text-lg sm:text-2xl font-bold" id="processing-orders">0</p>
+                        </div>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-cog text-blue-400 text-lg sm:text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-morphism rounded-xl p-4 sm:p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-white/70 text-xs sm:text-sm">Completed</p>
+                            <p class="text-white text-lg sm:text-2xl font-bold" id="completed-orders">0</p>
+                        </div>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-check-circle text-green-400 text-lg sm:text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="glass-morphism rounded-xl p-4 sm:p-6 mb-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="sm:col-span-2 lg:col-span-1">
+                        <label class="block text-white/70 text-sm mb-2">Search Orders</label>
+                        <input type="text" id="search-orders" placeholder="Order number, customer..." 
+                               class="w-full p-3 rounded-lg form-input text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-white/70 text-sm mb-2">Status</label>
+                        <select id="status-filter" class="w-full p-3 rounded-lg form-input text-sm">
+                            <option value="">All Statuses</option>
+                            <option value="pending">Pending</option>
+                            <option value="confirmed">Confirmed</option>
+                            <option value="processing">Processing</option>
+                            <option value="shipped">Shipped</option>
+                            <option value="delivered">Delivered</option>
+                            <option value="cancelled">Cancelled</option>
+                            <option value="disputed">Disputed</option>
+                            <option value="refunded">Refunded</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-white/70 text-sm mb-2">Payment Status</label>
+                        <select id="payment-status-filter" class="w-full p-3 rounded-lg form-input text-sm">
+                            <option value="">All Payments</option>
+                            <option value="pending">Pending</option>
+                            <option value="paid">Paid</option>
+                            <option value="confirmed">Confirmed</option>
+                            <option value="failed">Failed</option>
+                            <option value="rejected">Rejected</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-white/70 text-sm mb-2">Date Range</label>
+                        <select id="date-filter" class="w-full p-3 rounded-lg form-input text-sm">
+                            <option value="all">All Time</option>
+                            <option value="today">Today</option>
+                            <option value="week">This Week</option>
+                            <option value="month">This Month</option>
+                        </select>
+                    </div>
+                    <div class="flex items-end sm:col-span-2 lg:col-span-1">
+                        <button onclick="loadOrders()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg text-sm font-medium">
+                            <i class="fas fa-search mr-2"></i>Apply Filters
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Orders List -->
+            <div class="glass-morphism rounded-xl overflow-hidden">
+                <div class="p-4 sm:p-6 border-b border-white/10">
+                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-3 sm:space-y-0">
+                        <h3 class="text-lg sm:text-xl font-bold text-white">Orders List</h3>
+                        <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                            <button onclick="exportOrders()" class="bg-gray-500 hover:bg-gray-600 text-white px-3 sm:px-4 py-2 rounded-lg text-sm flex items-center justify-center">
+                                <i class="fas fa-download mr-2"></i>Export
+                            </button>
+                            <button onclick="loadOrders()" class="bg-blue-500 hover:bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-lg text-sm flex items-center justify-center">
+                                <i class="fas fa-refresh mr-2"></i>Refresh
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="orders-container" class="overflow-x-auto">
+                    <div class="text-center py-8">
+                        <div class="loading-spinner mx-auto mb-4"></div>
+                        <p class="text-white/70">Loading orders...</p>
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                <div id="pagination-container" class="p-4 sm:p-6 border-t border-white/10">
+                    <!-- Pagination will be inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Detail Modal -->
+    <div id="order-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+        <div class="glass-morphism p-6 sm:p-8 rounded-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 id="modal-title" class="text-xl sm:text-2xl font-bold text-white">Order Details</h2>
+                <button onclick="closeOrderModal()" class="text-white/70 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <div id="order-details">
+                <!-- Order details will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+<script>
+    // Global variables
+    let currentOrders = [];
+    let currentPage = 1;
+    let totalPages = 1;
+    let selectedOrderId = null;
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('🚀 Order Management page initializing...');
+        
+        // Check authentication first
+        if (!checkAuthentication()) return;
+        
+        // Load data
+        loadOrderStats();
+        loadOrders();
+        setupEventListeners();
+    });
+
+    // Check authentication
+    function checkAuthentication() {
+        const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
+        const userRole = localStorage.getItem('userRole');
+        
+        if (!token) {
+            console.log('❌ No authentication token found');
+            window.location.href = '/auth/auth-admin.html';
+            return false;
+        }
+        
+        if (userRole !== 'admin') {
+            console.log('❌ Insufficient permissions');
+            window.location.href = '/auth/auth-admin.html';
+            return false;
+        }
+        
+        console.log('✅ Authentication verified');
+        return true;
+    }
+
+    // Setup event listeners
+    function setupEventListeners() {
+        // Filter events
+        document.getElementById('status-filter').addEventListener('change', loadOrders);
+        document.getElementById('payment-status-filter').addEventListener('change', loadOrders);
+        document.getElementById('date-filter').addEventListener('change', loadOrders);
+        document.getElementById('search-orders').addEventListener('input', debounce(loadOrders, 500));
+        
+        // Button events
+        document.getElementById('disputes-btn').addEventListener('click', () => showNotification('Feature coming soon', 'info'));
+        document.getElementById('refunds-btn').addEventListener('click', () => showNotification('Feature coming soon', 'info'));
+        document.getElementById('agents-btn').addEventListener('click', () => showNotification('Feature coming soon', 'info'));
+    }
+
+    // Load order statistics
+    async function loadOrderStats() {
+        try {
+            console.log('📊 Loading order statistics...');
+            
+            const response = await makeAuthenticatedRequest('/api/admin/dashboard');
+            
+            if (response.success) {
+                // Updated to match the actual response structure from remain-order-endpoints
+                const stats = response.stats?.orders || {};
+                
+                document.getElementById('total-orders').textContent = stats.total_orders || 0;
+                document.getElementById('pending-orders').textContent = stats.pending_orders || 0;
+                document.getElementById('processing-orders').textContent = stats.processing_orders || 0;
+                document.getElementById('completed-orders').textContent = stats.completed_orders || 0;
+                
+                console.log('✅ Order statistics loaded');
+            } else {
+                throw new Error(response.message || 'Failed to load statistics');
+            }
+        } catch (error) {
+            console.error('❌ Error loading order statistics:', error);
+            showToast('Failed to load order statistics', 'error');
+        }
+    }
+
+    // Load orders from API
+    async function loadOrders(page = 1) {
+        try {
+            console.log('📊 Loading orders...');
+            
+            const searchTerm = document.getElementById('search-orders')?.value || '';
+            const statusFilter = document.getElementById('status-filter')?.value || '';
+            const paymentStatusFilter = document.getElementById('payment-status-filter')?.value || '';
+            const dateFilter = document.getElementById('date-filter')?.value || '';
+
+            const params = new URLSearchParams({
+                page: page,
+                limit: 20,
+                search: searchTerm,
+                status: statusFilter,
+                payment_status: paymentStatusFilter,
+                date_range: dateFilter
+            });
+
+            console.log('🔍 Request params:', {
+                page, limit: 20, search: searchTerm, status: statusFilter, payment_status: paymentStatusFilter, date_range: dateFilter
+            });
+
+            const response = await makeAuthenticatedRequest(
+                `/api/admin/orders?${params.toString()}`
+            );
+
+            console.log('📡 API Response:', response);
+
+            if (response.success) {
+                // Ensure we have the orders property
+                if (!response.orders) {
+                    console.warn('⚠️ Response missing orders property:', response);
+                    throw new Error('Invalid response format: missing orders data');
+                }
+
+                currentOrders = response.orders;
+                currentPage = response.pagination?.current_page || page;
+                totalPages = response.pagination?.total_pages || 1;
+                
+                console.log(`✅ Loaded ${response.orders.length} orders`);
+                
+                renderOrdersTable(response.orders);
+                renderPagination(response.pagination);
+                
+                console.log('✅ Orders loaded successfully');
+            } else {
+                throw new Error(response.message || 'Failed to load orders');
+            }
+
+        } catch (error) {
+            console.error('❌ Error loading orders:', error);
+            console.error('❌ Error stack:', error.stack);
+            document.getElementById('orders-container').innerHTML = 
+                createErrorState(`${error.message}\n\nCheck console for details.`, 'loadOrders()');
+            showToast('Failed to load orders: ' + error.message, 'error');
+        }
+    }
+
+    // Render orders table (mobile-first responsive)
+    function renderOrdersTable(orders) {
+        const container = document.getElementById('orders-container');
+        
+        if (!orders || !Array.isArray(orders) || orders.length === 0) {
+            container.innerHTML = createEmptyState(
+                'orders', 
+                'No Orders Found', 
+                'No orders match your current filters.',
+                '<button onclick="loadOrders()" class="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"><i class="fas fa-refresh mr-2"></i>Refresh Orders</button>'
+            );
+            return;
+        }
+
+        // Validate and clean orders data
+        const validOrders = orders.filter(order => order && typeof order === 'object');
+
+        // Mobile-first: Cards on mobile, table on desktop
+        const mobileCardsHTML = `
+            <div class="block lg:hidden space-y-3 p-4">
+                ${validOrders.map(order => `
+                    <div class="bg-white/5 rounded-lg p-4 hover:bg-white/10 transition-colors">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex-1">
+                                <div class="text-white font-semibold">#${order.order_number || order.id}</div>
+                                <div class="text-xs text-white/70 mt-1">${formatDate(order.created_at)}</div>
+                                
+                                <!-- Stakeholder Information -->
+                                <div class="mt-2 space-y-1 text-xs">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-user text-blue-400 mr-2 w-3"></i>
+                                        <span class="text-white/70">Buyer:</span>
+                                        <span class="text-white ml-1">${order.buyer_name || order.user_name || 'N/A'}</span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <i class="fas fa-store text-green-400 mr-2 w-3"></i>
+                                        <span class="text-white/70">Seller:</span>
+                                        <span class="text-white ml-1">${order.seller_name || 'N/A'}</span>
+                                    </div>
+                                    ${order.agent_name ? `
+                                    <div class="flex items-center">
+                                        <i class="fas fa-headset text-purple-400 mr-2 w-3"></i>
+                                        <span class="text-white/70">Agent:</span>
+                                        <span class="text-white ml-1">${order.agent_name}</span>
+                                    </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                            
+                            <div class="text-right ml-4">
+                                <!-- Pricing Information -->
+                                ${order.base_total_amount && order.base_total_amount !== order.final_total_amount ? `
+                                <div class="text-xs text-white/50">Base: ${formatCurrency(order.base_total_amount)}</div>
+                                ` : ''}
+                                <div class="text-white font-semibold">${formatCurrency(order.final_total_amount || order.total_amount)}</div>
+                                ${order.total_quantity ? `
+                                <div class="text-xs text-blue-300">${order.total_quantity} items</div>
+                                ` : ''}
+                                <span class="order-status-badge status-${order.status}">${formatStatus(order.status)}</span>
+                                ${order.payment_status ? `<div class="payment-status-badge status-${order.payment_status} mt-1">${formatPaymentStatus(order.payment_status)}</div>` : ''}
+                            </div>
+                        </div>
+                        
+                        <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                            <button onclick="viewOrder(${order.id})" 
+                                    class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-sm flex items-center justify-center">
+                                <i class="fas fa-eye mr-1"></i>View
+                            </button>
+                            <button onclick="updateOrderStatus(${order.id}, '${order.status}')" 
+                                    class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm flex items-center justify-center">
+                                <i class="fas fa-edit mr-1"></i>Update
+                            </button>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+
+        // Desktop table
+        const desktopTableHTML = `
+            <div class="hidden lg:block">
+                <table class="w-full">
+                    <thead class="bg-white/5">
+                        <tr>
+                            <th class="text-left p-4 text-white/70 font-semibold">Order</th>
+                            <th class="text-left p-4 text-white/70 font-semibold">Stakeholders</th>
+                            <th class="text-left p-4 text-white/70 font-semibold">Pricing</th>
+                            <th class="text-left p-4 text-white/70 font-semibold">Status</th>
+                            <th class="text-left p-4 text-white/70 font-semibold">Date</th>
+                            <th class="text-left p-4 text-white/70 font-semibold">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${validOrders.map(order => `
+                            <tr class="border-t border-white/10 hover:bg-white/5">
+                                <td class="p-4">
+                                    <div class="text-white font-semibold">#${order.order_number || order.id}</div>
+                                    <div class="text-white/50 text-sm">ID: ${order.id}</div>
+                                </td>
+                                <td class="p-4">
+                                    <div class="space-y-1 text-sm">
+                                        <div class="flex items-center">
+                                            <i class="fas fa-user text-blue-400 mr-2"></i>
+                                            <span class="text-white">${order.buyer_name || order.user_name || 'N/A'}</span>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <i class="fas fa-store text-green-400 mr-2"></i>
+                                            <span class="text-white/70">${order.seller_name || 'N/A'}</span>
+                                        </div>
+                                        ${order.agent_name ? `
+                                        <div class="flex items-center">
+                                            <i class="fas fa-headset text-purple-400 mr-2"></i>
+                                            <span class="text-white/70">${order.agent_name}</span>
+                                        </div>
+                                        ` : ''}
+                                    </div>
+                                </td>
+                                <td class="p-4">
+                                    <div class="text-white font-semibold">${formatCurrency(order.final_total_amount || order.total_amount)}</div>
+                                    ${order.base_total_amount && order.base_total_amount !== order.final_total_amount ? `
+                                    <div class="text-xs text-white/50">Base: ${formatCurrency(order.base_total_amount)}</div>
+                                    ` : ''}
+                                    ${order.total_quantity ? `
+                                    <div class="text-xs text-blue-300">${order.total_quantity} items</div>
+                                    ` : ''}
+                                </td>
+                                <td class="p-4">
+                                    <span class="order-status-badge status-${order.status}">${formatStatus(order.status)}</span>
+                                    ${order.payment_status ? `<div class="payment-status-badge status-${order.payment_status} mt-1">${formatPaymentStatus(order.payment_status)}</div>` : ''}
+                                </td>
+                                <td class="p-4 text-white/70 text-sm">
+                                    ${formatDate(order.created_at)}
+                                </td>
+                                <td class="p-4">
+                                    <div class="flex space-x-2">
+                                        <button onclick="viewOrder(${order.id})" 
+                                                class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-xs">
+                                            <i class="fas fa-eye mr-1"></i>View
+                                        </button>
+                                        <button onclick="updateOrderStatus(${order.id}, '${order.status}')" 
+                                                class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-xs">
+                                            <i class="fas fa-edit mr-1"></i>Update
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+        
+        container.innerHTML = mobileCardsHTML + desktopTableHTML;
+    }
+
+    // Format order status
+    function formatStatus(status) {
+        const statusMap = {
+            'PENDING': 'Pending',
+            'pending': 'Pending',
+            'CONFIRMED': 'Confirmed',
+            'confirmed': 'Confirmed', 
+            'PROCESSING': 'Processing',
+            'processing': 'Processing',
+            'SHIPPED': 'Shipped',
+            'shipped': 'Shipped',
+            'DELIVERED': 'Delivered',
+            'delivered': 'Delivered',
+            'CANCELLED': 'Cancelled',
+            'cancelled': 'Cancelled',
+            'DISPUTED': 'Disputed',
+            'disputed': 'Disputed',
+            'COMPLETED': 'Completed',
+            'completed': 'Completed',
+            'REFUNDED': 'Refunded',
+            'refunded': 'Refunded',
+            'PICKED_FROM_SELLER': 'Picked from Seller',
+            'ASSIGNED_TO_PDA': 'Assigned to PDA',
+            'EN_ROUTE_TO_BUYER': 'En Route to Buyer',
+            'READY_FOR_PICKUP': 'Ready for Pickup',
+            'EN_ROUTE_TO_PSM': 'En Route to PSM',
+            'DEPOSITED_AT_PSM': 'Deposited at PSM',
+            'PDA_EN_ROUTE_TO_SELLER': 'PDA En Route to Seller',
+            'PDA_AT_SELLER': 'PDA at Seller'
+        };
+        return statusMap[status] || (status ? status.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase()) : 'Unknown');
+    }
+
+    // Format payment status  
+    function formatPaymentStatus(status) {
+        const paymentStatusMap = {
+            'pending': 'Pending',
+            'paid': 'Paid',
+            'confirmed': 'Confirmed',
+            'partially_paid': 'Partially Paid',
+            'failed': 'Failed',
+            'rejected': 'Rejected',
+            'refunded': 'Refunded',
+            'disputed': 'Disputed'
+        };
+        return paymentStatusMap[status] || (status || 'Not Set');
+    }
+
+    // View order details
+    async function viewOrder(orderId) {
+        try {
+            console.log('🔍 Loading order details:', orderId);
+            
+            const response = await makeAuthenticatedRequest(`/api/admin/orders/${orderId}`);
+            
+            if (response.success) {
+                selectedOrderId = orderId;
+                showOrderModal(response.order);
+            } else {
+                throw new Error(response.message || 'Failed to load order details');
+            }
+        } catch (error) {
+            console.error('❌ Error loading order details:', error);
+            showToast('Failed to load order details: ' + error.message, 'error');
+        }
+    }
+
+    // Enhanced order details with product breakdown  
+    async function showOrderModal(order) {
+        try {
+            // Fetch complete order details including all products
+            const detailResponse = await makeAuthenticatedRequest(`/api/admin/orders-enhanced/${order.id}`);
+            let orderDetails = order;
+            
+            if (detailResponse && detailResponse.success) {
+                orderDetails = { ...order, ...detailResponse.order };
+            }
+
+            const orderDetailsHTML = await generateEnhancedOrderHTML(orderDetails);
+            document.getElementById('order-details').innerHTML = orderDetailsHTML;
+            document.getElementById('order-modal').classList.remove('hidden');
+            document.getElementById('order-modal').classList.add('flex');
+            
+        } catch (error) {
+            console.error('Error loading enhanced order details:', error);
+            // Fallback to basic order modal
+            showBasicOrderModal(order);
+        }
+    }
+
+    // Generate enhanced order HTML with complete product breakdown
+    async function generateEnhancedOrderHTML(order) {
+        // Calculate comprehensive pricing
+        const baseAmount = parseFloat(order.base_total_amount || order.calculated_base || 0);
+        const finalAmount = parseFloat(order.final_total_amount || order.total_amount || 0);
+        const itemsTotal = parseFloat(order.items_total || 0);
+        const storedCommission = parseFloat(order.commission_amount || 0);
+        const calculatedCommission = parseFloat(order.calculated_commission || 0);
+        const commission = storedCommission || calculatedCommission || Math.max(0, (itemsTotal || finalAmount) - baseAmount);
+        
+        const shippingCost = parseFloat(order.shipping_cost || order.delivery_fee || 0);
+        const taxAmount = parseFloat(order.tax_amount || order.transaction_fee || 0);
+        const discountAmount = parseFloat(order.discount_amount || 0);
+        const additionalFees = parseFloat(order.additional_fees || 0);
+        
+        // Commission analysis
+        const commissionRate = baseAmount > 0 ? ((commission / baseAmount) * 100).toFixed(2) : '0.00';
+        const targetCommissionRate = 21.0;
+        const isCorrectCommission = Math.abs(parseFloat(commissionRate) - targetCommissionRate) < 2.0;
+
+        return `
+            <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
+                <!-- Order Information -->
+                <div class="xl:col-span-4">
+                    <h3 class="text-lg font-semibold text-white mb-4">Order Information</h3>
+                    <div class="space-y-3 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-white/70">Order Number:</span>
+                            <span class="text-white font-mono">${order.order_number || order.id}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-white/70">Status:</span>
+                            <span class="order-status-badge status-${order.status || 'pending'}">${formatStatus(order.status)}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-white/70">Payment:</span>
+                            <span class="payment-status-badge status-${order.payment_status || 'pending'}">${formatPaymentStatus(order.payment_status)}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-white/70">Items:</span>
+                            <span class="text-blue-300">${order.item_count || 0} products, ${order.total_quantity || 0} total</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-white/70">Created:</span>
+                            <span class="text-white">${formatDate(order.created_at)}</span>
+                        </div>
+                        ${order.tracking_number ? `
+                        <div class="flex justify-between">
+                            <span class="text-white/70">Tracking:</span>
+                            <span class="text-white">${order.tracking_number}</span>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+
+                <!-- Enhanced Pricing Breakdown -->
+                <div class="xl:col-span-4">
+                    <h3 class="text-lg font-semibold text-white mb-4">
+                        Detailed Pricing Analysis 
+                        ${isCorrectCommission ? 
+                            '<i class="fas fa-check-circle text-green-400 ml-2" title="Correct 21% commission"></i>' : 
+                            '<i class="fas fa-exclamation-triangle text-yellow-400 ml-2" title="Commission rate: ' + commissionRate + '%"></i>'
+                        }
+                    </h3>
+                    <div class="space-y-3 text-sm">
+                        <!-- Seller Base Price -->
+                        <div class="bg-blue-500/20 p-3 rounded-lg border border-blue-500/30">
+                            <div class="flex justify-between items-center">
+                                <span class="text-white/70">Seller Base Price:</span>
+                                <span class="text-blue-300 font-semibold">FRW ${baseAmount.toLocaleString('en-RW')}</span>
+                            </div>
+                            <div class="text-xs text-white/50 mt-1">Base price set by seller (without commission)</div>
+                        </div>
+
+                        <!-- Platform Commission -->
+                        <div class="bg-yellow-500/20 p-3 rounded-lg border border-yellow-500/30">
+                            <div class="flex justify-between items-center">
+                                <span class="text-white/70">Platform Commission (${commissionRate}%):</span>
+                                <span class="text-yellow-300 font-semibold">+FRW ${commission.toLocaleString('en-RW')}</span>
+                            </div>
+                            <div class="text-xs text-white/50 mt-1">
+                                ${isCorrectCommission ? 'Correct 21% commission rate' : 'Deviation from target 21% commission'}
+                            </div>
+                        </div>
+
+                        <!-- Buyer Visible Price -->
+                        <div class="bg-green-500/20 p-3 rounded-lg border border-green-500/30">
+                            <div class="flex justify-between items-center">
+                                <span class="text-white/70">Buyer Visible Price:</span>
+                                <span class="text-green-300 font-bold">FRW ${(baseAmount + commission).toLocaleString('en-RW')}</span>
+                            </div>
+                            <div class="text-xs text-white/50 mt-1">Price shown to buyers (base + 21% commission)</div>
+                        </div>
+
+                        <!-- Additional Fees -->
+                        ${shippingCost > 0 ? `
+                        <div class="bg-orange-500/20 p-3 rounded-lg border border-orange-500/30">
+                            <div class="flex justify-between items-center">
+                                <span class="text-white/70">Shipping & Delivery:</span>
+                                <span class="text-orange-300">+FRW ${shippingCost.toLocaleString('en-RW')}</span>
+                            </div>
+                            <div class="text-xs text-white/50 mt-1">Additional delivery charges</div>
+                        </div>
+                        ` : ''}
+
+                        ${taxAmount > 0 ? `
+                        <div class="flex justify-between">
+                            <span class="text-white/70">Transaction Fees:</span>
+                            <span class="text-white">+FRW ${taxAmount.toLocaleString('en-RW')}</span>
+                        </div>
+                        ` : ''}
+
+                        ${discountAmount > 0 ? `
+                        <div class="flex justify-between">
+                            <span class="text-white/70">Discount Applied:</span>
+                            <span class="text-green-400">-FRW ${discountAmount.toLocaleString('en-RW')}</span>
+                        </div>
+                        ` : ''}
+
+                        <!-- Final Total -->
+                        <div class="bg-purple-500/20 p-3 rounded-lg border border-purple-500/30 mt-4">
+                            <div class="flex justify-between items-center">
+                                <span class="text-white font-semibold">Final Total Paid by Buyer:</span>
+                                <span class="text-purple-300 font-bold text-lg">FRW ${finalAmount.toLocaleString('en-RW')}</span>
+                            </div>
+                            <div class="text-xs text-white/50 mt-1">Total amount charged to buyer's payment method</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stakeholders -->
+                <div class="xl:col-span-4">
+                    <h3 class="text-lg font-semibold text-white mb-4">Stakeholders</h3>
+                    <div class="space-y-3 text-sm">
+                        <div class="bg-white/5 p-3 rounded-lg">
+                            <div class="flex items-center mb-2">
+                                <i class="fas fa-user text-blue-400 mr-2"></i>
+                                <span class="text-white font-semibold">Buyer</span>
+                            </div>
+                            <div class="text-white">${order.buyer_name || order.user_name || 'Unknown Buyer'}</div>
+                            <div class="text-white/70 text-xs">${order.buyer_email || order.user_email || 'No email'}</div>
+                            ${order.buyer_phone ? `<div class="text-white/70 text-xs">${order.buyer_phone}</div>` : ''}
+                        </div>
+                        
+                        <div class="bg-white/5 p-3 rounded-lg">
+                            <div class="flex items-center mb-2">
+                                <i class="fas fa-store text-green-400 mr-2"></i>
+                                <span class="text-white font-semibold">Seller</span>
+                            </div>
+                            <div class="text-white">${order.seller_name || 'Unknown Seller'}</div>
+                            <div class="text-white/70 text-xs">${order.seller_email || 'No email'}</div>
+                            ${order.seller_phone ? `<div class="text-white/70 text-xs">${order.seller_phone}</div>` : ''}
+                        </div>
+                        
+                        ${order.agent_name ? `
+                        <div class="bg-white/5 p-3 rounded-lg">
+                            <div class="flex items-center mb-2">
+                                <i class="fas fa-headset text-purple-400 mr-2"></i>
+                                <span class="text-white font-semibold">Agent</span>
+                            </div>
+                            <div class="text-white">${order.agent_name}</div>
+                            <div class="text-white/70 text-xs">${order.agent_email || 'No email'}</div>
+                        </div>
+                        ` : `
+                        <div class="bg-white/5 p-3 rounded-lg opacity-50">
+                            <div class="flex items-center mb-2">
+                                <i class="fas fa-headset text-gray-400 mr-2"></i>
+                                <span class="text-white/50 font-semibold">No Agent Assigned</span>
+                            </div>
+                        </div>
+                        `}
+                    </div>
+                </div>
+
+                <!-- Order Items Details -->
+                <div class="xl:col-span-12">
+                    <h3 class="text-lg font-semibold text-white mb-4">
+                        <i class="fas fa-boxes mr-2"></i>Order Items Breakdown
+                    </h3>
+                    ${await generateOrderItemsHTML(order)}
+                </div>
+
+                <!-- Enhanced Location Information -->
+                <div class="xl:col-span-12">
+                    <h3 class="text-lg font-semibold text-white mb-4">
+                        <i class="fas fa-map-marker-alt mr-2"></i>Location Details
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <!-- Buyer Location -->
+                        <div class="bg-white/5 p-4 rounded-lg">
+                            <div class="flex items-center mb-3">
+                                <i class="fas fa-user text-blue-400 mr-2"></i>
+                                <span class="text-white font-semibold">Buyer Location</span>
+                            </div>
+                            <div class="text-sm space-y-1">
+                                <div class="text-white">${order.buyer_address || 'Address not provided'}</div>
+                                <div class="text-white/70">${order.buyer_city || ''} ${order.buyer_province || ''}</div>
+                                <div class="text-white/70">${order.buyer_country || 'Rwanda'}</div>
+                                ${order.buyer_phone ? `<div class="text-white/70"><i class="fas fa-phone mr-1"></i>${order.buyer_phone}</div>` : ''}
+                            </div>
+                        </div>
+                        
+                        <!-- Seller Location -->
+                        <div class="bg-white/5 p-4 rounded-lg">
+                            <div class="flex items-center mb-3">
+                                <i class="fas fa-store text-green-400 mr-2"></i>
+                                <span class="text-white font-semibold">Seller Location</span>
+                            </div>
+                            <div class="text-sm space-y-1">
+                                <div class="text-white">${order.seller_address || 'Address not provided'}</div>
+                                <div class="text-white/70">${order.seller_city || ''} ${order.seller_province || ''}</div>
+                                <div class="text-white/70">${order.seller_country || 'Rwanda'}</div>
+                                ${order.seller_phone ? `<div class="text-white/70"><i class="fas fa-phone mr-1"></i>${order.seller_phone}</div>` : ''}
+                            </div>
+                        </div>
+                        
+                        <!-- Product/Delivery Location -->
+                        <div class="bg-white/5 p-4 rounded-lg">
+                            <div class="flex items-center mb-3">
+                                <i class="fas fa-truck text-orange-400 mr-2"></i>
+                                <span class="text-white font-semibold">Delivery Details</span>
+                            </div>
+                            <div class="text-sm space-y-1">
+                                <div class="text-white">Method: ${order.delivery_method || 'Standard'}</div>
+                                <div class="text-white/70">Fee: ${formatCurrency(order.shipping_cost || 0)}</div>
+                                ${order.tracking_number ? `<div class="text-white/70">Tracking: ${order.tracking_number}</div>` : ''}
+                                ${order.delivery_code ? `<div class="text-white/70">Code: ${order.delivery_code}</div>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seller Payment Management -->
+                <div class="xl:col-span-12">
+                    <h3 class="text-lg font-semibold text-white mb-4">
+                        <i class="fas fa-money-bill-wave mr-2"></i>Seller Payment Management
+                    </h3>
+                    <div class="bg-white/5 p-4 rounded-lg">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Payment Summary -->
+                            <div>
+                                <h4 class="text-white font-semibold mb-3">Payment Summary</h4>
+                                <div class="space-y-2 text-sm">
+                                    <div class="flex justify-between">
+                                        <span class="text-white/70">Seller Base Amount:</span>
+                                        <span class="text-green-400 font-semibold">${formatCurrency(baseAmount)}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-white/70">Platform Commission (${commissionRate}%):</span>
+                                        <span class="text-yellow-400 font-semibold">${formatCurrency(commission)}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-white/70">Delivery Fee (if seller pays):</span>
+                                        <span class="text-orange-400">${formatCurrency(shippingCost)}</span>
+                                    </div>
+                                    <hr class="border-white/20">
+                                    <div class="flex justify-between text-lg">
+                                        <span class="text-white font-semibold">Net to Seller:</span>
+                                        <span class="text-green-400 font-bold">${formatCurrency(Math.max(0, baseAmount - shippingCost))}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Manual Payment Actions -->
+                            <div>
+                                <h4 class="text-white font-semibold mb-3">Payment Actions</h4>
+                                <div class="space-y-3">
+                                    <button onclick="initiateSellerPayment('${order.id}', '${order.seller_id}', ${Math.max(0, baseAmount - shippingCost)})" 
+                                            class="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition">
+                                        <i class="fas fa-credit-card mr-2"></i>Pay Seller Now (FRW ${Math.max(0, baseAmount - shippingCost).toLocaleString('en-RW')})
+                                    </button>
+                                    <button onclick="generatePaymentReport('${order.id}')" 
+                                            class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">
+                                        <i class="fas fa-file-invoice mr-2"></i>Generate Payment Report
+                                    </button>
+                                    <div class="text-xs text-white/50 p-2 bg-white/5 rounded">
+                                        <i class="fas fa-info-circle mr-1"></i>
+                                        Payment status: ${order.payment_status === 'paid' ? 'Buyer has paid' : 'Payment pending'}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Enhanced Order Actions -->
+                <div class="xl:col-span-12">
+                    <h3 class="text-lg font-semibold text-white mb-4">
+                        <i class="fas fa-cogs mr-2"></i>Order Management Actions
+                    </h3>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Status Management -->
+                        <div class="bg-white/5 p-4 rounded-lg">
+                            <h4 class="text-white font-semibold mb-3">Status Management</h4>
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="block text-white/70 text-sm mb-2">Order Status</label>
+                                    <select id="status-update" class="w-full p-3 rounded-lg form-input">
+                                        <option value="PENDING" ${order.status === 'PENDING' ? 'selected' : ''}>Pending</option>
+                                        <option value="CONFIRMED" ${order.status === 'CONFIRMED' ? 'selected' : ''}>Confirmed</option>
+                                        <option value="PROCESSING" ${order.status === 'PROCESSING' ? 'selected' : ''}>Processing</option>
+                                        <option value="ASSIGNED_TO_PDA" ${order.status === 'ASSIGNED_TO_PDA' ? 'selected' : ''}>Assigned to PDA</option>
+                                        <option value="ASSIGNED_TO_FDA" ${order.status === 'ASSIGNED_TO_FDA' ? 'selected' : ''}>Assigned to FDA</option>
+                                        <option value="PICKED_FROM_SELLER" ${order.status === 'PICKED_FROM_SELLER' ? 'selected' : ''}>Picked from Seller</option>
+                                        <option value="EN_ROUTE_TO_BUYER" ${order.status === 'EN_ROUTE_TO_BUYER' ? 'selected' : ''}>En Route to Buyer</option>
+                                        <option value="DELIVERED" ${order.status === 'DELIVERED' ? 'selected' : ''}>Delivered</option>
+                                        <option value="COMPLETED" ${order.status === 'COMPLETED' ? 'selected' : ''}>Completed</option>
+                                        <option value="CANCELLED" ${order.status === 'CANCELLED' ? 'selected' : ''}>Cancelled</option>
+                                        <option value="DISPUTED" ${order.status === 'DISPUTED' ? 'selected' : ''}>Disputed</option>
+                                        <option value="REFUNDED" ${order.status === 'REFUNDED' ? 'selected' : ''}>Refunded</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-white/70 text-sm mb-2">Payment Status</label>
+                                    <select id="payment-status-update" class="w-full p-3 rounded-lg form-input">
+                                        <option value="pending" ${order.payment_status === 'pending' ? 'selected' : ''}>Pending</option>
+                                        <option value="paid" ${order.payment_status === 'paid' ? 'selected' : ''}>Paid</option>
+                                        <option value="failed" ${order.payment_status === 'failed' ? 'selected' : ''}>Failed</option>
+                                        <option value="refunded" ${order.payment_status === 'refunded' ? 'selected' : ''}>Refunded</option>
+                                        <option value="disputed" ${order.payment_status === 'disputed' ? 'selected' : ''}>Disputed</option>
+                                    </select>
+                                </div>
+                                
+                                <button onclick="saveOrderStatus()" class="w-full bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg transition">
+                                    <i class="fas fa-save mr-2"></i>Update Status
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Admin Notes & Actions -->
+                        <div class="bg-white/5 p-4 rounded-lg">
+                            <h4 class="text-white font-semibold mb-3">Admin Notes & Actions</h4>
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="block text-white/70 text-sm mb-2">Admin Notes</label>
+                                    <textarea id="admin-notes-update" rows="4" 
+                                              class="w-full p-3 rounded-lg form-input resize-none"
+                                              placeholder="Add internal notes about this order...">${order.admin_notes || ''}</textarea>
+                                </div>
+                                
+                                <div class="flex flex-col space-y-2">
+                                    <button onclick="exportOrderDetails()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition">
+                                        <i class="fas fa-download mr-2"></i>Export Order Details
+                                    </button>
+                                    <button onclick="sendOrderNotification('${order.id}')" class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg transition">
+                                        <i class="fas fa-bell mr-2"></i>Notify Stakeholders
+                                    </button>
+                                    <button onclick="viewOrderHistory('${order.id}')" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition">
+                                        <i class="fas fa-history mr-2"></i>View Order History
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // Generate order items HTML with detailed pricing breakdown
+    async function generateOrderItemsHTML(order) {
+        try {
+            // Try to get detailed order items
+            const itemsResponse = await makeAuthenticatedRequest(`/api/admin/orders/${order.id}`);
+            let items = [];
+
+            if (itemsResponse && itemsResponse.success && itemsResponse.order.items) {
+                items = itemsResponse.order.items;
+            }
+
+            if (items.length === 0) {
+                return `
+                    <div class="bg-white/5 p-6 rounded-lg text-center">
+                        <i class="fas fa-box-open text-gray-400 text-3xl mb-4"></i>
+                        <p class="text-white/70">No detailed items information available</p>
+                        <p class="text-white/50 text-sm">This might be due to data migration or order structure changes</p>
+                    </div>
+                `;
+            }
+
+            const itemsHTML = items.map(item => {
+                // FIXED: Use correct pricing structure
+                const sellerBasePrice = parseFloat(item.seller_base_price || 0);
+                const buyerPaidPrice = parseFloat(item.buyer_paid_unit_price || item.product_display_price || 0);
+                const quantity = item.quantity || 1;
+                const commissionPerUnit = buyerPaidPrice - sellerBasePrice;
+                const commissionTotal = commissionPerUnit * quantity;
+                const commissionRate = sellerBasePrice > 0 ? ((commissionPerUnit / sellerBasePrice) * 100).toFixed(1) : '0.0';
+
+                return `
+                    <div class="bg-white/5 p-4 rounded-lg border-l-4 border-blue-400">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between mb-3">
+                            <div class="flex-1">
+                                <h4 class="text-white font-semibold text-lg">${item.product_name || 'Unknown Product'}</h4>
+                                <div class="flex flex-wrap gap-4 mt-1">
+                                    ${item.product_sku ? `<span class="text-white/50 text-sm">SKU: ${item.product_sku}</span>` : ''}
+                                    ${item.brand ? `<span class="text-white/50 text-sm">Brand: ${item.brand}</span>` : ''}
+                                    ${item.product_condition ? `<span class="text-white/50 text-sm">Condition: ${item.product_condition}</span>` : ''}
+                                </div>
+                            </div>
+                            <div class="text-right mt-2 md:mt-0">
+                                <div class="text-white font-bold text-lg">Qty: ${quantity}</div>
+                                ${item.stock_quantity ? `<div class="text-white/50 text-xs">Stock: ${item.stock_quantity}</div>` : ''}
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div class="bg-blue-500/20 p-3 rounded">
+                                <div class="text-blue-300 text-xs font-semibold mb-1">SELLER BASE PRICE</div>
+                                <div class="text-white font-bold">${formatCurrency(sellerBasePrice)}</div>
+                                <div class="text-white/50 text-xs">per unit (what seller gets)</div>
+                            </div>
+
+                            <div class="bg-yellow-500/20 p-3 rounded">
+                                <div class="text-yellow-300 text-xs font-semibold mb-1">PLATFORM COMMISSION</div>
+                                <div class="text-white font-bold">${formatCurrency(commissionPerUnit)}</div>
+                                <div class="text-white/50 text-xs">${commissionRate}% per unit</div>
+                            </div>
+
+                            <div class="bg-green-500/20 p-3 rounded">
+                                <div class="text-green-300 text-xs font-semibold mb-1">BUYER PAID PRICE</div>
+                                <div class="text-white font-bold">${formatCurrency(buyerPaidPrice)}</div>
+                                <div class="text-white/50 text-xs">per unit (what buyer paid)</div>
+                            </div>
+
+                            <div class="bg-purple-500/20 p-3 rounded">
+                                <div class="text-purple-300 text-xs font-semibold mb-1">LINE TOTAL</div>
+                                <div class="text-white font-bold">${formatCurrency(buyerPaidPrice * quantity)}</div>
+                                <div class="text-white/50 text-xs">Commission: ${formatCurrency(commissionTotal)}</div>
+                            </div>
+                        </div>
+
+                        ${item.item_seller_name ? `
+                        <div class="mt-3 pt-3 border-t border-white/10">
+                            <div class="flex items-center">
+                                <i class="fas fa-store text-green-400 mr-2"></i>
+                                <span class="text-white/70 text-sm">Sold by: </span>
+                                <span class="text-white text-sm ml-1">${item.item_seller_name}</span>
+                                ${item.item_seller_email ? `<span class="text-white/50 text-xs ml-2">(${item.item_seller_email})</span>` : ''}
+                            </div>
+                        </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+
+            return `
+                <div class="space-y-4">
+                    ${itemsHTML}
+                </div>
+            `;
+
+        } catch (error) {
+            console.error('Error generating items HTML:', error);
+            return `
+                <div class="bg-red-500/20 p-6 rounded-lg text-center">
+                    <i class="fas fa-exclamation-triangle text-red-400 text-3xl mb-4"></i>
+                    <p class="text-white/70">Error loading item details</p>
+                    <p class="text-white/50 text-sm">${error.message}</p>
+                </div>
+            `;
+        }
+    }
+
+    // Fallback to basic order modal
+    function showBasicOrderModal(order) {
+        const orderDetailsHTML = `
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div>
+                    <h3 class="text-lg font-semibold text-white mb-4">Order Information</h3>
+                            <span class="text-white">#${order.order_number || order.id}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-white/70">Status:</span>
+                            <span class="order-status-badge status-${order.status}">${formatStatus(order.status)}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-white/70">Payment:</span>
+                            <span class="payment-status-badge status-${order.payment_status || 'pending'}">${formatPaymentStatus(order.payment_status || 'pending')}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-white/70">Date Created:</span>
+                            <span class="text-white">${formatDate(order.created_at)}</span>
+                        </div>
+                        ${order.tracking_number ? `
+                        <div class="flex justify-between">
+                            <span class="text-white/70">Tracking:</span>
+                            <span class="text-white">${order.tracking_number}</span>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-semibold text-white mb-4">Stakeholders</h3>
+                    <div class="space-y-3 text-sm">
+                        <div class="bg-white/5 p-3 rounded-lg">
+                            <div class="flex items-center mb-2">
+                                <i class="fas fa-user text-blue-400 mr-2"></i>
+                                <span class="text-white font-semibold">Buyer</span>
+                            </div>
+                            <div class="text-white">${order.buyer_name || order.user_name || 'Unknown Buyer'}</div>
+                            <div class="text-white/70 text-xs">${order.buyer_email || order.user_email || 'No email'}</div>
+                        </div>
+                        
+                        <div class="bg-white/5 p-3 rounded-lg">
+                            <div class="flex items-center mb-2">
+                                <i class="fas fa-store text-green-400 mr-2"></i>
+                                <span class="text-white font-semibold">Seller</span>
+                            </div>
+                            <div class="text-white">${order.seller_name || 'Unknown Seller'}</div>
+                            <div class="text-white/70 text-xs">${order.seller_email || 'No email'}</div>
+                        </div>
+                        
+                        ${order.agent_name ? `
+                        <div class="bg-white/5 p-3 rounded-lg">
+                            <div class="flex items-center mb-2">
+                                <i class="fas fa-headset text-purple-400 mr-2"></i>
+                                <span class="text-white font-semibold">Agent</span>
+                            </div>
+                            <div class="text-white">${order.agent_name}</div>
+                            <div class="text-white/70 text-xs">${order.agent_email || 'No email'}</div>
+                        </div>
+                        ` : `
+                        <div class="bg-white/5 p-3 rounded-lg opacity-50">
+                            <div class="flex items-center mb-2">
+                                <i class="fas fa-headset text-gray-400 mr-2"></i>
+                                <span class="text-white/50 font-semibold">No Agent Assigned</span>
+                            </div>
+                        </div>
+                        `}
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-semibold text-white mb-4">Pricing Breakdown</h3>
+                    <div class="space-y-3 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-white/70">Base Amount:</span>
+                            <span class="text-white">${formatCurrency(order.base_total_amount || order.total_amount)}</span>
+                        </div>
+                        ${order.commission_amount && order.commission_amount > 0 ? `
+                        <div class="flex justify-between">
+                            <span class="text-white/70">Platform Commission:</span>
+                            <span class="text-yellow-400">+${formatCurrency(order.commission_amount)}</span>
+                        </div>
+                        ` : ''}
+                        ${order.shipping_cost > 0 ? `
+                        <div class="flex justify-between">
+                            <span class="text-white/70">Shipping:</span>
+                            <span class="text-white">+${formatCurrency(order.shipping_cost)}</span>
+                        </div>
+                        ` : ''}
+                        ${order.tax_amount > 0 ? `
+                        <div class="flex justify-between">
+                            <span class="text-white/70">Tax:</span>
+                            <span class="text-white">+${formatCurrency(order.tax_amount)}</span>
+                        </div>
+                        ` : ''}
+                        ${order.discount_amount > 0 ? `
+                        <div class="flex justify-between">
+                            <span class="text-white/70">Discount:</span>
+                            <span class="text-green-400">-${formatCurrency(order.discount_amount)}</span>
+                        </div>
+                        ` : ''}
+                        <hr class="border-white/20">
+                        <div class="flex justify-between">
+                            <span class="text-white font-semibold">Final Total:</span>
+                            <span class="text-white font-bold text-lg">${formatCurrency(order.final_total_amount || order.total_amount)}</span>
+                        </div>
+                        ${order.total_quantity ? `
+                        <div class="flex justify-between mt-2 pt-2 border-t border-white/10">
+                            <span class="text-white/70">Total Quantity:</span>
+                            <span class="text-blue-300 font-semibold">${order.total_quantity} items</span>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-6">
+                <h3 class="text-lg font-semibold text-white mb-4">Admin Actions</h3>
+                <div class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-white/70 text-sm mb-2">Order Status:</label>
+                            <select id="status-update" class="w-full p-3 rounded-lg form-input">
+                                <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
+                                <option value="confirmed" ${order.status === 'confirmed' ? 'selected' : ''}>Confirmed</option>
+                                <option value="processing" ${order.status === 'processing' ? 'selected' : ''}>Processing</option>
+                                <option value="shipped" ${order.status === 'shipped' ? 'selected' : ''}>Shipped</option>
+                                <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>Delivered</option>
+                                <option value="completed" ${order.status === 'completed' ? 'selected' : ''}>Completed</option>
+                                <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                                <option value="disputed" ${order.status === 'disputed' ? 'selected' : ''}>Disputed</option>
+                                <option value="refunded" ${order.status === 'refunded' ? 'selected' : ''}>Refunded</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-white/70 text-sm mb-2">Payment Status:</label>
+                            <select id="payment-status-update" class="w-full p-3 rounded-lg form-input">
+                                <option value="pending" ${(order.payment_status || 'pending') === 'pending' ? 'selected' : ''}>Pending</option>
+                                <option value="paid" ${order.payment_status === 'paid' ? 'selected' : ''}>Paid</option>
+                                <option value="failed" ${order.payment_status === 'failed' ? 'selected' : ''}>Failed</option>
+                                <option value="refunded" ${order.payment_status === 'refunded' ? 'selected' : ''}>Refunded</option>
+                                <option value="disputed" ${order.payment_status === 'disputed' ? 'selected' : ''}>Disputed</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-white/70 text-sm mb-2">Admin Notes:</label>
+                        <textarea id="admin-notes-update" 
+                                  class="w-full p-3 rounded-lg form-input" 
+                                  rows="3" 
+                                  placeholder="Add admin notes for this order update...">${order.admin_notes || ''}</textarea>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <button onclick="saveOrderStatus()" class="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg">
+                            <i class="fas fa-save mr-2"></i>Update Order
+                        </button>
+                        <button onclick="exportOrderDetails()" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg">
+                            <i class="fas fa-download mr-2"></i>Export Details
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('order-details').innerHTML = orderDetailsHTML;
+        document.getElementById('order-modal').classList.remove('hidden');
+        document.getElementById('order-modal').classList.add('flex');
+    }
+
+    // Close order modal
+    function closeOrderModal() {
+        document.getElementById('order-modal').classList.add('hidden');
+        document.getElementById('order-modal').classList.remove('flex');
+        selectedOrderId = null;
+    }
+
+    // Save order status and payment status
+    async function saveOrderStatus() {
+        if (!selectedOrderId) return;
+        
+        try {
+            const statusElement = document.getElementById('status-update');
+            const paymentStatusElement = document.getElementById('payment-status-update');
+            const adminNotesElement = document.getElementById('admin-notes-update');
+            
+            if (!statusElement) {
+                throw new Error('Status update element not found');
+            }
+            
+            const newStatus = statusElement.value;
+            const newPaymentStatus = paymentStatusElement ? paymentStatusElement.value : null;
+            const adminNotes = adminNotesElement ? adminNotesElement.value : null;
+            
+            console.log('💾 Updating order:', selectedOrderId, { 
+                status: newStatus, 
+                payment_status: newPaymentStatus,
+                admin_notes: adminNotes 
+            });
+            
+            const updateData = { status: newStatus };
+            if (newPaymentStatus) updateData.payment_status = newPaymentStatus;
+            if (adminNotes) updateData.admin_notes = adminNotes;
+            
+            const response = await makeAuthenticatedRequest(
+                `/api/admin/orders/${selectedOrderId}/status`, 
+                {
+                    method: 'PUT',
+                    body: JSON.stringify(updateData)
+                }
+            );
+            
+            if (response.success) {
+                showToast('Order updated successfully', 'success');
+                closeOrderModal();
+                loadOrders(currentPage);
+                loadOrderStats();
+            } else {
+                throw new Error(response.message || 'Failed to update order');
+            }
+        } catch (error) {
+            console.error('❌ Error updating order:', error);
+            showToast('Failed to update order: ' + error.message, 'error');
+        }
+    }
+
+    // Export single order details
+    function exportOrderDetails() {
+        if (!selectedOrderId) return;
+        
+        const order = currentOrders.find(o => o.id === selectedOrderId);
+        if (!order) {
+            showToast('Order not found for export', 'error');
+            return;
+        }
+
+        const exportData = [{
+            'Order ID': order.id,
+            'Order Number': order.order_number || order.id,
+            'Buyer Name': order.buyer_name || order.user_name || 'N/A',
+            'Buyer Email': order.buyer_email || order.user_email || 'N/A',
+            'Buyer Phone': order.buyer_phone || 'N/A',
+            'Seller Name': order.seller_name || 'N/A',
+            'Seller Email': order.seller_email || 'N/A',
+            'Seller Phone': order.seller_phone || 'N/A',
+            'Agent Name': order.agent_name || 'N/A',
+            'Total Quantity': order.total_quantity || 0,
+            'Item Count': order.item_count || 0,
+            'Base Amount (FRW)': formatCurrencyNumber(order.base_total_amount || order.total_amount),
+            'Platform Commission (FRW)': formatCurrencyNumber(order.commission_amount || order.calculated_commission || 0),
+            'Commission Rate (%)': order.commission_rate || '0.00',
+            'Shipping Cost (FRW)': formatCurrencyNumber(order.shipping_cost || 0),
+            'Tax Amount (FRW)': formatCurrencyNumber(order.tax_amount || 0),
+            'Discount (FRW)': formatCurrencyNumber(order.discount_amount || 0),
+            'Final Amount (FRW)': formatCurrencyNumber(order.final_total_amount || order.total_amount),
+            'Order Status': formatStatus(order.status),
+            'Payment Status': formatPaymentStatus(order.payment_status || 'pending'),
+            'Payment Method': order.payment_method || 'not_specified',
+            'Delivery Method': order.delivery_method || 'N/A',
+            'Marketplace Type': order.marketplace_type || 'N/A',
+            'Tracking Number': order.tracking_number || 'N/A',
+            'Admin Notes': order.admin_notes || 'N/A',
+            'Date Created': new Date(order.created_at).toLocaleDateString(),
+            'Date Updated': new Date(order.updated_at).toLocaleDateString()
+        }];
+        
+        exportToCSV(exportData, `order_${order.order_number || order.id}_details_${new Date().toISOString().split('T')[0]}.csv`);
+        showToast('Order details exported successfully', 'success');
+    }
+
+    // Update order status (direct action)
+    function updateOrderStatus(orderId, currentStatus) {
+        viewOrder(orderId);
+    }
+
+    // Export orders
+    function exportOrders() {
+        if (!currentOrders || currentOrders.length === 0) {
+            showToast('No orders to export', 'warning');
+            return;
+        }
+        
+        const exportData = currentOrders.map(order => ({
+            'Order Number': order.order_number || order.id,
+            'Buyer Name': order.buyer_name || order.user_name || 'N/A',
+            'Buyer Email': order.buyer_email || order.user_email || 'N/A',
+            'Seller Name': order.seller_name || 'N/A',
+            'Seller Email': order.seller_email || 'N/A',
+            'Agent Name': order.agent_name || 'N/A',
+            'Total Quantity': order.total_quantity || 0,
+            'Item Count': order.item_count || 0,
+            'Base Amount (FRW)': formatCurrency(order.base_total_amount || order.total_amount).replace('FRW ', ''),
+            'Platform Commission (FRW)': formatCurrency(order.commission_amount || order.calculated_commission || 0).replace('FRW ', ''),
+            'Shipping Cost (FRW)': formatCurrency(order.shipping_cost || 0).replace('FRW ', ''),
+            'Tax Amount (FRW)': formatCurrency(order.tax_amount || 0).replace('FRW ', ''),
+            'Discount (FRW)': formatCurrency(order.discount_amount || 0).replace('FRW ', ''),
+            'Final Amount (FRW)': formatCurrency(order.final_total_amount || order.total_amount).replace('FRW ', ''),
+            'Order Status': formatStatus(order.status),
+            'Payment Status': formatPaymentStatus(order.payment_status || 'pending'),
+            'Payment Method': order.payment_method || 'not_specified',
+            'Date Created': new Date(order.created_at).toLocaleDateString()
+        }));
+        
+        exportToCSV(exportData, `orders_export_${new Date().toISOString().split('T')[0]}.csv`);
+    }
+
+    // Render pagination
+    function renderPagination(pagination) {
+        const container = document.getElementById('pagination-container');
+        
+        if (!pagination || pagination.total_pages <= 1) {
+            container.innerHTML = '';
+            return;
+        }
+
+        const paginationHTML = `
+            <div class="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
+                <div class="text-white/70 text-sm">
+                    Showing ${pagination.from || 1} to ${pagination.to || 0} of ${pagination.total || 0} orders
+                </div>
+                <div class="flex space-x-2">
+                    <button onclick="loadOrders(${pagination.current_page - 1})" 
+                            ${pagination.current_page <= 1 ? 'disabled' : ''} 
+                            class="px-3 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                        Previous
+                    </button>
+                    <span class="px-3 py-2 bg-blue-600 text-white rounded-lg">
+                        ${pagination.current_page} of ${pagination.total_pages}
+                    </span>
+                    <button onclick="loadOrders(${pagination.current_page + 1})" 
+                            ${pagination.current_page >= pagination.total_pages ? 'disabled' : ''} 
+                            class="px-3 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                        Next
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        container.innerHTML = paginationHTML;
+    }
+
+    // Utility functions - Updated to use dynamic port detection
+    function makeAuthenticatedRequest(url, options = {}) {
+        const token = localStorage.getItem('token') || localStorage.getItem('authToken') || localStorage.getItem('adminToken');
+        
+        if (!token) {
+            throw new Error('No authentication token available');
+        }
+
+        const defaultOptions = {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        };
+
+        // Use window.location.origin to get the current origin, or fall back to checking both ports
+        const baseURL = window.location.origin.includes('3002') ? window.location.origin : 
+                        window.location.protocol + '//' + window.location.hostname + ':3002';
+
+        return fetch(`${baseURL}${url}`, { ...defaultOptions, ...options })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            });
+    }
+
+    function createEmptyState(type, title, description, actions = '') {
+        return `
+            <div class="text-center py-12">
+                <div class="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-shopping-cart text-white/30 text-3xl"></i>
+                </div>
+                <h3 class="text-white text-xl font-semibold mb-2">${title}</h3>
+                <p class="text-white/60 mb-6 max-w-md mx-auto">${description}</p>
+                ${actions}
+            </div>
+        `;
+    }
+
+    function createErrorState(message, retry = null) {
+        return `
+            <div class="text-center py-12">
+                <div class="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-exclamation-triangle text-red-400 text-3xl"></i>
+                </div>
+                <h3 class="text-white text-xl font-semibold mb-2">Error Loading Data</h3>
+                <p class="text-white/60 mb-6 max-w-md mx-auto">${message}</p>
+                ${retry ? `<button onclick="${retry}" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg"><i class="fas fa-refresh mr-2"></i>Try Again</button>` : ''}
+            </div>
+        `;
+    }
+
+    function showToast(message, type = 'info') {
+        // Simple toast implementation
+        console.log(`[${type.toUpperCase()}] ${message}`);
+        
+        // Create toast element
+        const toast = document.createElement('div');
+        toast.className = `fixed top-4 right-4 z-50 px-6 py-4 rounded-lg text-white ${
+            type === 'success' ? 'bg-green-500' : 
+            type === 'error' ? 'bg-red-500' : 
+            type === 'warning' ? 'bg-yellow-500' : 'bg-blue-500'
+        }`;
+        toast.textContent = message;
+        
+        document.body.appendChild(toast);
+        
+        // Remove after 3 seconds
+        setTimeout(() => {
+            toast.remove();
+        }, 3000);
+    }
+
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    function formatDate(dateString) {
+        if (!dateString) return 'N/A';
+        return new Date(dateString).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    // Helper function to safely format currency values in Rwandan Francs (FRW)
+    function formatCurrency(amount, showDecimals = false) {
+        // Handle null, undefined, empty string
+        if (amount === null || amount === undefined || amount === '') return 'FRW 0';
+        
+        // Convert to number first, handling strings from database
+        let numAmount;
+        if (typeof amount === 'string') {
+            // Remove any existing currency symbols and whitespace
+            const cleanAmount = amount.replace(/[$,\s,FRW,Frw]/g, '');
+            numAmount = parseFloat(cleanAmount);
+        } else {
+            numAmount = Number(amount);
+        }
+        
+        // Check if conversion resulted in valid number
+        if (isNaN(numAmount) || !isFinite(numAmount)) return 'FRW 0';
+        
+        // Format with thousands separators using Rwandan locale
+        const formatted = showDecimals ? 
+            numAmount.toLocaleString('en-RW', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) :
+            numAmount.toLocaleString('en-RW', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            
+        return 'FRW ' + formatted;
+    }
+
+    // Helper function to format currency number only (without FRW prefix)
+    function formatCurrencyNumber(amount) {
+        if (amount === null || amount === undefined || amount === '') return '0';
+        
+        let numAmount;
+        if (typeof amount === 'string') {
+            const cleanAmount = amount.replace(/[$,\s,FRW,Frw]/g, '');
+            numAmount = parseFloat(cleanAmount);
+        } else {
+            numAmount = Number(amount);
+        }
+        
+        if (isNaN(numAmount) || !isFinite(numAmount)) return '0';
+        
+        return numAmount.toLocaleString('en-RW', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    }
+
+    // Helper function to format stakeholder information
+    function formatStakeholder(name, username, email, role) {
+        const displayName = name || username || 'N/A';
+        return {
+            name: displayName,
+            email: email || 'N/A',
+            role: role,
+            display: `${displayName}${email ? ` (${email})` : ''}`
+        };
+    }
+
+    // Format order status for display
+    function formatStatus(status) {
+        if (!status) return 'Unknown';
+        
+        const statusMap = {
+            'pending': 'Pending',
+            'confirmed': 'Confirmed',
+            'processing': 'Processing', 
+            'shipped': 'Shipped',
+            'delivered': 'Delivered',
+            'completed': 'Completed',
+            'cancelled': 'Cancelled',
+            'disputed': 'Disputed',
+            'refunded': 'Refunded'
+        };
+        
+        return statusMap[status.toLowerCase()] || status.charAt(0).toUpperCase() + status.slice(1);
+    }
+
+    // Format payment status for display
+    function formatPaymentStatus(paymentStatus) {
+        if (!paymentStatus) return 'Pending';
+        
+        const statusMap = {
+            'pending': 'Pending',
+            'paid': 'Paid',
+            'failed': 'Failed',
+            'refunded': 'Refunded',
+            'disputed': 'Disputed'
+        };
+        
+        return statusMap[paymentStatus.toLowerCase()] || paymentStatus.charAt(0).toUpperCase() + paymentStatus.slice(1);
+    }
+
+    function exportToCSV(data, filename) {
+        const csv = convertToCSV(data);
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        window.URL.revokeObjectURL(url);
+    }
+
+    function convertToCSV(data) {
+        if (!data.length) return '';
+        
+        const headers = Object.keys(data[0]);
+        const csvContent = [
+            headers.join(','),
+            ...data.map(row => 
+                headers.map(header => `"${row[header] || ''}"`).join(',')
+            )
+        ].join('\n');
+        
+        return csvContent;
+    }
+
+    function showNotification(message, type) {
+        showToast(message, type);
+    }
+
+    // Seller Payment Management Functions
+    async function initiateSellerPayment(orderId, sellerId, amount) {
+        try {
+            console.log('💰 Initiating seller payment:', { orderId, sellerId, amount });
+            
+            const confirmation = confirm(`Initiate payment of ${formatCurrency(amount)} to seller?\n\nThis action will mark the seller payment as initiated.`);
+            if (!confirmation) return;
+            
+            const response = await makeAuthenticatedRequest(`/api/admin/orders/${orderId}/pay-seller`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    seller_id: sellerId,
+                    amount: amount,
+                    payment_type: 'manual_admin_payment'
+                })
+            });
+            
+            if (response.success) {
+                showToast('Seller payment initiated successfully', 'success');
+                // Refresh order details
+                viewOrder(orderId);
+            } else {
+                throw new Error(response.message || 'Failed to initiate payment');
+            }
+        } catch (error) {
+            console.error('❌ Error initiating seller payment:', error);
+            showToast('Failed to initiate seller payment: ' + error.message, 'error');
+        }
+    }
+
+    // Generate payment report for order
+    async function generatePaymentReport(orderId) {
+        try {
+            console.log('📊 Generating payment report for order:', orderId);
+            
+            const response = await makeAuthenticatedRequest(`/api/admin/orders/${orderId}/payment-report`);
+            
+            if (response.success) {
+                // Create and download report
+                const reportData = response.report;
+                const csvContent = convertToCSV([reportData]);
+                const blob = new Blob([csvContent], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `payment-report-${orderId}-${new Date().toISOString().split('T')[0]}.csv`;
+                a.click();
+                
+                window.URL.revokeObjectURL(url);
+                showToast('Payment report generated successfully', 'success');
+            } else {
+                throw new Error(response.message || 'Failed to generate payment report');
+            }
+        } catch (error) {
+            console.error('❌ Error generating payment report:', error);
+            showToast('Failed to generate payment report: ' + error.message, 'error');
+        }
+    }
+
+    // Send notifications to stakeholders
+    async function sendOrderNotification(orderId) {
+        try {
+            console.log('📧 Sending order notification for:', orderId);
+            
+            const response = await makeAuthenticatedRequest(`/api/admin/orders/${orderId}/notify`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    notification_type: 'status_update',
+                    send_to: ['buyer', 'seller', 'agent']
+                })
+            });
+            
+            if (response.success) {
+                showToast('Notifications sent successfully', 'success');
+            } else {
+                throw new Error(response.message || 'Failed to send notifications');
+            }
+        } catch (error) {
+            console.error('❌ Error sending notifications:', error);
+            showToast('Failed to send notifications: ' + error.message, 'error');
+        }
+    }
+
+    // View order history
+    async function viewOrderHistory(orderId) {
+        try {
+            console.log('📜 Loading order history for:', orderId);
+            
+            const response = await makeAuthenticatedRequest(`/api/admin/orders/${orderId}/history`);
+            
+            if (response.success) {
+                const history = response.history || [];
+                
+                // Create history modal content
+                const historyHTML = `
+                    <div class="space-y-3">
+                        <h3 class="text-lg font-semibold text-white mb-4">Order History</h3>
+                        ${history.length === 0 ? 
+                            '<div class="text-white/70 p-4">No history records found.</div>' :
+                            history.map(record => `
+                                <div class="bg-white/5 p-3 rounded-lg">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <div class="text-white font-medium">${record.action}</div>
+                                            <div class="text-white/70 text-sm">${record.description || ''}</div>
+                                            ${record.notes ? `<div class="text-white/50 text-xs mt-1">${record.notes}</div>` : ''}
+                                        </div>
+                                        <div class="text-right text-xs text-white/50">
+                                            <div>${formatDate(record.created_at)}</div>
+                                            <div>${record.user_name || 'System'}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')
+                        }
+                    </div>
+                `;
+                
+                // Show history in modal (reuse existing modal)
+                document.getElementById('order-details').innerHTML = historyHTML;
+                document.getElementById('order-modal').classList.remove('hidden');
+                selectedOrderId = orderId;
+                
+            } else {
+                throw new Error(response.message || 'Failed to load order history');
+            }
+        } catch (error) {
+            console.error('❌ Error loading order history:', error);
+            showToast('Failed to load order history: ' + error.message, 'error');
+        }
+    }
+
+    // Make functions globally available
+    window.loadOrders = loadOrders;
+    window.viewOrder = viewOrder;
+    window.updateOrderStatus = updateOrderStatus;
+    window.saveOrderStatus = saveOrderStatus;
+    window.closeOrderModal = closeOrderModal;
+    window.exportOrders = exportOrders;
+    window.exportOrderDetails = exportOrderDetails;
+    window.initiateSellerPayment = initiateSellerPayment;
+    window.generatePaymentReport = generatePaymentReport;
+    window.sendOrderNotification = sendOrderNotification;
+    window.viewOrderHistory = viewOrderHistory;
+
+</script>
+
+</body>
+</html>

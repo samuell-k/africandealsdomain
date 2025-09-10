@@ -1,0 +1,1 @@
+// This file is now a placeholder. All logic is in each HTML file's <script> tag. 

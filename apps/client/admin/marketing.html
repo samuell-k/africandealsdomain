@@ -1,0 +1,1369 @@
+<!DOCTYPE html>
+<html lang="en" class="admin-page">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marketing | Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="admin-auth-check.js"></script>
+    <script src="admin-utils.js"></script>
+    <style>
+        
+        .glass-morphism {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .sidebar {
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .nav-item {
+            transition: all 0.3s ease;
+        }
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+        .nav-item.active {
+            background: rgba(255, 255, 255, 0.2);
+            border-left: 3px solid #3b82f6;
+        }
+        .loading-spinner {
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 2px solid #3b82f6;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .modal {
+            backdrop-filter: blur(10px);
+        }
+        .form-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        .form-input:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #3b82f6;
+            outline: none;
+        }
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        .stat-card {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen">
+    <div class="flex h-screen">
+    
+        
+        <!-- Sidebar -->
+        <div class="sidebar w-64 p-6">
+            <div class="text-white text-2xl font-bold mb-8">
+                <i class="fas fa-shield-alt mr-2"></i>Admin Panel
+            </div>
+            
+            <nav class="space-y-2">
+                <a href="dashboard.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="user-management.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-users"></i>
+                    <span>User Management</span>
+                </a>
+                <a href="manual-payment-approval.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-credit-card"></i>
+                    <span>Payment Approval</span>
+                </a>
+                <a href="products.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-box"></i>
+                    <span>Products</span>
+                </a>
+                <a href="orders.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Orders</span>
+                </a>
+                <a href="agents.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-user-tie"></i>
+                    <span>Agents</span>
+                </a>
+                <a href="reports.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Reports</span>
+                </a>
+                <a href="settings.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+            </nav>
+        </div>
+            
+            <nav class="space-y-2">
+                <a href="dashboard.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="user-management.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-users"></i>
+                    <span>User Management</span>
+                </a>
+                <a href="manual-payment-approval.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-credit-card"></i>
+                    <span>Payment Approval</span>
+                </a>
+                <a href="products.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-box"></i>
+                    <span>Products</span>
+                </a>
+                <a href="orders.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Orders</span>
+                </a>
+                <a href="agents.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-user-tie"></i>
+                    <span>Agents</span>
+                </a>
+                <a href="reports.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Reports</span>
+                </a>
+                <a href="settings.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+            </nav>
+        </div>
+    
+    <!-- Main Content -->
+    <div class="flex-1 p-8 overflow-auto">
+        
+  <!-- Sidebar -->
+  <div class="fixed inset-y-0 left-0 w-64 sidebar z-50">
+    <div class="flex items-center justify-center h-16 px-6">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+          <i class="fas fa-crown text-white text-xl"></i>
+        </div>
+        <div>
+          <h1 class="text-white font-bold text-lg">Admin Panel</h1>
+          <p class="text-white/70 text-xs">ADD Physical Product</p>
+        </div>
+      </div>
+    </div>
+
+    <nav class="mt-8 px-4">
+      <div class="space-y-2">
+        <a href="dashboard.html" class="nav-item flex items-center space-x-3 px-4 py-3 text-white rounded-lg">
+          <i class="fas fa-tachometer-alt w-5"></i>
+          <span>Dashboard</span>
+        </a>
+        
+        <div class="border-t border-white/10 my-4"></div>
+        
+        <div class="text-white/50 text-xs font-semibold px-4 mb-2">USER MANAGEMENT</div>
+        <a href="user-management.html" class="nav-item flex items-center space-x-3 px-4 py-3 text-white rounded-lg">
+          <i class="fas fa-users w-5"></i>
+          <span>Users</span>
+        </a>
+        <a href="agents.html" class="nav-item flex items-center space-x-3 px-4 py-3 text-white rounded-lg">
+          <i class="fas fa-user-tie w-5"></i>
+          <span>Agents</span>
+        </a>
+        <a href="sellers.html" class="nav-item flex items-center space-x-3 px-4 py-3 text-white rounded-lg">
+          <i class="fas fa-store w-5"></i>
+          <span>Sellers</span>
+        </a>
+        
+        <div class="border-t border-white/10 my-4"></div>
+        
+        <div class="text-white/50 text-xs font-semibold px-4 mb-2">CONTENT MANAGEMENT</div>
+        <a href="products.html" class="nav-item flex items-center space-x-3 px-4 py-3 text-white rounded-lg">
+          <i class="fas fa-box w-5"></i>
+          <span>Products</span>
+        </a>
+        <a href="orders.html" class="nav-item flex items-center space-x-3 px-4 py-3 text-white rounded-lg">
+          <i class="fas fa-shopping-cart w-5"></i>
+          <span>Orders</span>
+        </a>
+        <a href="reviews.html" class="nav-item flex items-center space-x-3 px-4 py-3 text-white rounded-lg">
+          <i class="fas fa-star w-5"></i>
+          <span>Reviews</span>
+        </a>
+        
+        <div class="border-t border-white/10 my-4"></div>
+        
+        <div class="text-white/50 text-xs font-semibold px-4 mb-2">FINANCIAL</div>
+        <a href="payments.html" class="nav-item flex items-center space-x-3 px-4 py-3 text-white rounded-lg">
+          <i class="fas fa-credit-card w-5"></i>
+          <span>Payments</span>
+        </a>
+        <a href="shipping.html" class="nav-item flex items-center space-x-3 px-4 py-3 text-white rounded-lg">
+          <i class="fas fa-shipping-fast w-5"></i>
+          <span>Shipping</span>
+        </a>
+        
+        <div class="border-t border-white/10 my-4"></div>
+        
+        <div class="text-white/50 text-xs font-semibold px-4 mb-2">MARKETING</div>
+        <a href="marketing.html" class="nav-item active active flex items-center space-x-3 px-4 py-3 text-white rounded-lg">
+          <i class="fas fa-bullhorn w-5"></i>
+          <span>Marketing</span>
+        </a>
+        <a href="promotions.html" class="nav-item flex items-center space-x-3 px-4 py-3 text-white rounded-lg">
+          <i class="fas fa-gift w-5"></i>
+          <span>Promotions</span>
+        </a>
+        
+        <div class="border-t border-white/10 my-4"></div>
+        
+        <div class="text-white/50 text-xs font-semibold px-4 mb-2">SYSTEM</div>
+        <a href="settings.html" class="nav-item flex items-center space-x-3 px-4 py-3 text-white rounded-lg">
+          <i class="fas fa-cog w-5"></i>
+          <span>Settings</span>
+        </a>
+        <a href="logs.html" class="nav-item flex items-center space-x-3 px-4 py-3 text-white rounded-lg">
+          <i class="fas fa-file-alt mr-3"></i>
+          System Logs
+        </a>
+        <a href="support-tickets.html" class="nav-item flex items-center space-x-3 px-4 py-3 text-white rounded-lg">
+          <i class="fas fa-headset mr-3"></i>
+          Support Tickets
+        </a>
+        <a href="system-errors.html" class="nav-item flex items-center space-x-3 px-4 py-3 text-white rounded-lg">
+          <i class="fas fa-exclamation-triangle w-5"></i>
+          <span>System Errors</span>
+        </a>
+      </div>
+    </nav>
+
+    <div class="absolute bottom-0 left-0 right-0 p-4">
+      <div class="flex items-center space-x-3 px-4 py-3 text-white">
+        <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+          <i class="fas fa-user text-sm"></i>
+        </div>
+        <div class="flex-1">
+          <p class="text-sm font-semibold" id="admin-name">Admin</p>
+          <p class="text-xs text-white/70">Administrator</p>
+        </div>
+        <button onclick="logout()" class="text-white/70 hover:text-white">
+          <i class="fas fa-sign-out-alt"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="ml-64 min-h-screen">
+    <!-- Header -->
+    <header class="glass-morphism border-b border-white/20">
+      <div class="flex items-center justify-between px-8 py-4">
+        <div>
+          <h1 class="text-2xl font-bold text-white">Marketing Management</h1>
+          <p class="text-white/70">Manage campaigns, promotions, and marketing analytics</p>
+        </div>
+        <div class="flex items-center space-x-4">
+          <button onclick="openAddCampaignModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2">
+            <i class="fas fa-plus"></i>
+            <span>New Campaign</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="p-8">
+      <!-- Quick Stats -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="glass-morphism rounded-2xl p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-white/70 text-sm font-medium">Active Campaigns</p>
+              <p id="active-campaigns" class="text-3xl font-bold text-white">8</p>
+              <p class="text-green-400 text-sm">+2 this week</p>
+            </div>
+            <div class="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center">
+              <i class="fas fa-bullhorn text-blue-400 text-xl"></i>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-morphism rounded-2xl p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-white/70 text-sm font-medium">Total Reach</p>
+              <p id="total-reach" class="text-3xl font-bold text-white">45.2K</p>
+              <p class="text-green-400 text-sm">+12% this month</p>
+            </div>
+            <div class="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center">
+              <i class="fas fa-users text-green-400 text-xl"></i>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-morphism rounded-2xl p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-white/70 text-sm font-medium">Conversion Rate</p>
+              <p id="conversion-rate" class="text-3xl font-bold text-white">3.2%</p>
+              <p class="text-green-400 text-sm">+0.5% this week</p>
+            </div>
+            <div class="w-12 h-12 bg-yellow-500/20 rounded-full flex items-center justify-center">
+              <i class="fas fa-chart-line text-yellow-400 text-xl"></i>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-morphism rounded-2xl p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-white/70 text-sm font-medium">Revenue Generated</p>
+              <p id="revenue-generated" class="text-3xl font-bold text-white">$12.5K</p>
+              <p class="text-green-400 text-sm">+8% this month</p>
+            </div>
+            <div class="w-12 h-12 bg-purple-500/20 rounded-full flex items-center justify-center">
+              <i class="fas fa-dollar-sign text-purple-400 text-xl"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Marketing Analytics Chart -->
+      <div class="glass-morphism rounded-2xl p-6 mb-8">
+        <div class="flex justify-between items-center mb-6">
+          <h3 class="text-xl font-bold text-white">Marketing Performance</h3>
+          <div class="flex space-x-2">
+            <select id="chart-period" class="bg-white/10 text-white border border-white/20 rounded-lg px-3 py-2">
+              <option value="7">Last 7 days</option>
+              <option value="30" selected>Last 30 days</option>
+              <option value="90">Last 90 days</option>
+            </select>
+          </div>
+        </div>
+        <div class="h-80">
+          <canvas id="marketingChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="glass-morphism rounded-2xl p-6 mb-8">
+        <div class="flex space-x-1 mb-6">
+          <button onclick="switchTab('campaigns')" id="tab-campaigns" class="tab-btn active px-4 py-2 rounded-lg text-white font-medium">
+            <i class="fas fa-bullhorn mr-2"></i>Campaigns
+          </button>
+          <button onclick="switchTab('promotions')" id="tab-promotions" class="tab-btn px-4 py-2 rounded-lg text-white/70 font-medium">
+            <i class="fas fa-gift mr-2"></i>Promotions
+          </button>
+          <button onclick="switchTab('email')" id="tab-email" class="tab-btn px-4 py-2 rounded-lg text-white/70 font-medium">
+            <i class="fas fa-envelope mr-2"></i>Email Marketing
+          </button>
+          <button onclick="switchTab('analytics')" id="tab-analytics" class="tab-btn px-4 py-2 rounded-lg text-white/70 font-medium">
+            <i class="fas fa-chart-bar mr-2"></i>Analytics
+          </button>
+        </div>
+
+        <!-- Campaigns Tab -->
+        <div id="content-campaigns" class="tab-content">
+          <div class="flex justify-between items-center mb-6">
+            <h3 class="text-xl font-bold text-white">Marketing Campaigns</h3>
+            <div class="flex space-x-2">
+              <select id="campaign-status-filter" class="bg-white/10 text-white border border-white/20 rounded-lg px-3 py-2">
+                <option value="">All Status</option>
+                <option value="active">Active</option>
+                <option value="paused">Paused</option>
+                <option value="completed">Completed</option>
+              </select>
+              <input type="text" id="search-campaigns" placeholder="Search campaigns..." class="bg-white/10 text-white border border-white/20 rounded-lg px-3 py-2">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="campaigns-grid">
+            <!-- Campaigns will be loaded here -->
+          </div>
+        </div>
+
+        <!-- Promotions Tab -->
+        <div id="content-promotions" class="tab-content hidden">
+          <div class="flex justify-between items-center mb-6">
+            <h3 class="text-xl font-bold text-white">Promotions & Discounts</h3>
+            <button onclick="openAddPromotionModal()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">
+              <i class="fas fa-plus mr-2"></i>Add Promotion
+            </button>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-white">
+              <thead>
+                <tr class="border-b border-white/20">
+                  <th class="text-left py-3 px-4">Promotion</th>
+                  <th class="text-left py-3 px-4">Type</th>
+                  <th class="text-left py-3 px-4">Discount</th>
+                  <th class="text-left py-3 px-4">Valid Until</th>
+                  <th class="text-left py-3 px-4">Usage</th>
+                  <th class="text-left py-3 px-4">Status</th>
+                  <th class="text-left py-3 px-4">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="promotions-table-body">
+                <!-- Promotions will be loaded here -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Email Marketing Tab -->
+        <div id="content-email" class="tab-content hidden">
+          <div class="flex justify-between items-center mb-6">
+            <h3 class="text-xl font-bold text-white">Email Marketing</h3>
+            <button onclick="openAddEmailModal()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">
+              <i class="fas fa-plus mr-2"></i>Create Email
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="email-campaigns-grid">
+            <!-- Email campaigns will be loaded here -->
+          </div>
+        </div>
+
+        <!-- Analytics Tab -->
+        <div id="content-analytics" class="tab-content hidden">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="glass-morphism rounded-xl p-6">
+              <h4 class="text-lg font-bold text-white mb-4">Campaign Performance</h4>
+              <canvas id="campaignChart" height="200"></canvas>
+            </div>
+            <div class="glass-morphism rounded-xl p-6">
+              <h4 class="text-lg font-bold text-white mb-4">Audience Demographics</h4>
+              <canvas id="demographicsChart" height="200"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Add Campaign Modal -->
+  <div id="add-campaign-modal" class="fixed inset-0 bg-black/50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+      <div class="bg-white rounded-2xl p-8 max-w-2xl w-full">
+        <div class="flex justify-between items-center mb-6">
+          <h3 class="text-2xl font-bold text-gray-800">Create New Campaign</h3>
+          <button onclick="closeModal('add-campaign-modal')" class="text-gray-500 hover:text-gray-700">
+            <i class="fas fa-times text-xl"></i>
+          </button>
+        </div>
+
+        <form id="add-campaign-form" class="space-y-4" method="POST" action="#">
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Campaign Name</label>
+              <input type="text" name="name" required pattern="[A-Za-z\s]{2,50}" title="Name must be 2-50 characters, letters and spaces only" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Campaign Type</label>
+              <select name="type" required class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                <option value="">Select Type</option>
+                <option value="social">Social Media</option>
+                <option value="email">Email Marketing</option>
+                <option value="banner">Banner Ads</option>
+                <option value="influencer">Influencer</option>
+                <option value="search">Search Ads</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+            <textarea name="description" rows="3" class="w-full border border-gray-300 rounded-lg px-3 py-2"></textarea>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+              <input type="date" name="start_date" required pattern=".{1,}" title="This field is required" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+              <input type="date" name="end_date" required pattern=".{1,}" title="This field is required" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Budget ($)</label>
+              <input type="number" name="budget" step="0.01" required pattern=".{1,}" title="This field is required" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Target Audience</label>
+              <select name="target_audience" required class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                <option value="">Select Audience</option>
+                <option value="all">All Users</option>
+                <option value="buyers">Buyers Only</option>
+                <option value="sellers">Sellers Only</option>
+                <option value="new">New Users</option>
+                <option value="active">Active Users</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="flex space-x-3 pt-4">
+            <button type="submit" class="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">
+              Create Campaign
+            </button>
+            <button type="button" onclick="closeModal('add-campaign-modal')" class="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Tab switching functionality
+    function switchTab(tabName) {
+      // Hide all tab contents
+      document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.add('hidden');
+      });
+      
+      // Remove active class from all tab buttons
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+        btn.classList.add('text-white/70');
+      });
+      
+      // Show selected tab content
+      document.getElementById(`content-${tabName}`).classList.remove('hidden');
+      
+      // Add active class to selected tab button
+      document.getElementById(`tab-${tabName}`).classList.add('active');
+      document.getElementById(`tab-${tabName}`).classList.remove('text-white/70');
+    }
+
+    // Modal functions
+    function openAddCampaignModal() {
+      document.getElementById('add-campaign-modal').classList.remove('hidden');
+    }
+
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.add('hidden');
+    }
+
+    // Initialize charts
+    function initializeCharts() {
+      // Marketing Performance Chart
+      const marketingCtx = document.getElementById('marketingChart').getContext('2d');
+      new Chart(marketingCtx, {
+        type: 'line',
+        data: {
+          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+          datasets: [{
+            label: 'Reach',
+            data: [12000, 19000, 15000, 25000, 22000, 30000],
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            tension: 0.4
+          }, {
+            label: 'Conversions',
+            data: [120, 190, 150, 250, 220, 300],
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            tension: 0.4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              labels: {
+                color: 'white'
+              }
+            }
+          },
+          scales: {
+            y: {
+              ticks: {
+                color: 'white'
+              },
+              grid: {
+                color: 'rgba(255, 255, 255, 0.1)'
+              }
+            },
+            x: {
+              ticks: {
+                color: 'white'
+              },
+              grid: {
+                color: 'rgba(255, 255, 255, 0.1)'
+              }
+            }
+          }
+        }
+      });
+
+      // Campaign Performance Chart
+      const campaignCtx = document.getElementById('campaignChart').getContext('2d');
+      new Chart(campaignCtx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Social Media', 'Email', 'Banner Ads', 'Influencer'],
+          datasets: [{
+            data: [30, 25, 20, 25],
+            backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6']
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              labels: {
+                color: 'white'
+              }
+            }
+          }
+        }
+      });
+
+      // Demographics Chart
+      const demographicsCtx = document.getElementById('demographicsChart').getContext('2d');
+      new Chart(demographicsCtx, {
+        type: 'bar',
+        data: {
+          labels: ['18-24', '25-34', '35-44', '45-54', '55+'],
+          datasets: [{
+            label: 'Age Distribution',
+            data: [25, 35, 20, 15, 5],
+            backgroundColor: '#3b82f6'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              labels: {
+                color: 'white'
+              }
+            }
+          },
+          scales: {
+            y: {
+              ticks: {
+                color: 'white'
+              },
+              grid: {
+                color: 'rgba(255, 255, 255, 0.1)'
+              }
+            },
+            x: {
+              ticks: {
+                color: 'white'
+              },
+              grid: {
+                color: 'rgba(255, 255, 255, 0.1)'
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // Load marketing data
+    async function loadMarketingData() {
+      try {
+        const token = localStorage.getItem('authToken');
+        const response = await 
+                try {
+                    const response = await fetch('${API_BASE_URL}/admin/marketing', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    // Continue with successful response
+                    const data = await response.json();
+                    return data;
+                } catch (error) {
+                    console.error('API call failed:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+                    showNotification('Operation failed. Please try again.', 'error');
+                    throw error;
+                };
+        
+        if (response.ok) {
+          const data = await response.json();
+          updateMarketingStats(data.stats);
+          loadCampaigns(data.campaigns);
+          loadPromotions(data.promotions);
+          loadEmailMarketing(data.emailMarketing);
+          loadBannerCampaigns(data.bannerCampaigns);
+        } else {
+          throw new Error('Failed to fetch marketing data');
+        }
+      } catch (error) {
+        console.error('Error loading marketing data:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+        showNotification('Failed to load marketing data. Please try again later.', 'error');
+        
+        // Show empty state instead of sample data
+        showEmptyMarketingState();
+      }
+    }
+
+    function updateMarketingStats(stats) {
+      document.getElementById('active-campaigns').textContent = stats.active_campaigns || 0;
+      document.getElementById('total-reach').textContent = stats.total_campaigns || 0;
+      document.getElementById('conversion-rate').textContent = stats.email_campaigns || 0;
+      document.getElementById('revenue-generated').textContent = stats.total_budget ? `${stats.total_budget}` : '$0';
+    }
+
+    function loadCampaigns(campaigns) {
+      const tbody = document.getElementById('campaigns-table-body');
+      tbody.innerHTML = campaigns.map(campaign => `
+        <tr class="border-b border-white/10">
+          <td class="py-3 px-4">${campaign.name}</td>
+          <td class="py-3 px-4">${campaign.type}</td>
+          <td class="py-3 px-4">${campaign.description || 'N/A'}</td>
+          <td class="py-3 px-4">${campaign.budget || 0}</td>
+          <td class="py-3 px-4">${campaign.start_date || 'N/A'}</td>
+          <td class="py-3 px-4">${campaign.end_date || 'N/A'}</td>
+          <td class="py-3 px-4">
+            <span class="px-2 py-1 rounded-full text-xs ${campaign.status === 'active' ? 'bg-green-500/20 text-green-400' : campaign.status === 'paused' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400'}">
+              ${campaign.status}
+            </span>
+          </td>
+          <td class="py-3 px-4">
+            <button onclick="editCampaign(${campaign.id})" class="text-blue-400 hover:text-blue-300 mr-2">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button onclick="deleteCampaign(${campaign.id})" class="text-red-400 hover:text-red-300">
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function loadPromotions(promotions) {
+      const tbody = document.getElementById('promotions-table-body');
+      tbody.innerHTML = promotions.map(promotion => `
+        <tr class="border-b border-white/10">
+          <td class="py-3 px-4">${promotion.name}</td>
+          <td class="py-3 px-4">${promotion.type}</td>
+          <td class="py-3 px-4">${promotion.discount_value || promotion.discount_percentage || 0}${promotion.discount_percentage ? '%' : '
+</body>
+</html>}</td>
+          <td class="py-3 px-4">${promotion.start_date || 'N/A'}</td>
+          <td class="py-3 px-4">${promotion.end_date || 'N/A'}</td>
+          <td class="py-3 px-4">${promotion.usage_count || 0}</td>
+          <td class="py-3 px-4">
+            <span class="px-2 py-1 rounded-full text-xs ${promotion.status === 'active' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}">
+              ${promotion.status}
+            </span>
+          </td>
+          <td class="py-3 px-4">
+            <button onclick="editPromotion(${promotion.id})" class="text-blue-400 hover:text-blue-300 mr-2">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button onclick="deletePromotion(${promotion.id})" class="text-red-400 hover:text-red-300">
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function loadEmailMarketing(emailMarketing) {
+      const tbody = document.getElementById('email-table-body');
+      tbody.innerHTML = emailMarketing.map(campaign => `
+        <tr class="border-b border-white/10">
+          <td class="py-3 px-4">${campaign.name}</td>
+          <td class="py-3 px-4">${campaign.subscribers}</td>
+          <td class="py-3 px-4">${campaign.open_rate}%</td>
+          <td class="py-3 px-4">${campaign.click_rate}%</td>
+          <td class="py-3 px-4">
+            <button onclick="editEmailCampaign(${campaign.id})" class="text-blue-400 hover:text-blue-300 mr-2">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button onclick="deleteEmailCampaign(${campaign.id})" class="text-red-400 hover:text-red-300">
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function loadBannerCampaigns(bannerCampaigns) {
+      const tbody = document.getElementById('banner-table-body');
+      tbody.innerHTML = bannerCampaigns.map(campaign => `
+        <tr class="border-b border-white/10">
+          <td class="py-3 px-4">${campaign.name}</td>
+          <td class="py-3 px-4">${campaign.position}</td>
+          <td class="py-3 px-4">${campaign.impressions}</td>
+          <td class="py-3 px-4">${campaign.clicks}</td>
+          <td class="py-3 px-4">${campaign.ctr}%</td>
+          <td class="py-3 px-4">
+            <button onclick="editBannerCampaign(${campaign.id})" class="text-blue-400 hover:text-blue-300 mr-2">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button onclick="deleteBannerCampaign(${campaign.id})" class="text-red-400 hover:text-red-300">
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // CRUD Operations for Marketing Campaigns
+    async function editCampaign(id) {
+      try {
+        const token = localStorage.getItem('authToken');
+        const response = await 
+                try {
+                    const response = await fetch('${API_BASE_URL}/admin/marketing/campaigns/${id}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    // Continue with successful response
+                    const data = await response.json();
+                    return data;
+                } catch (error) {
+                    console.error('API call failed:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+                    showNotification('Operation failed. Please try again.', 'error');
+                    throw error;
+                };
+        
+        if (response.ok) {
+          const campaign = await response.json();
+          // Populate edit form
+          document.getElementById('edit-campaign-id').value = campaign.id;
+          document.getElementById('edit-campaign-name').value = campaign.name;
+          document.getElementById('edit-campaign-type').value = campaign.type;
+          document.getElementById('edit-campaign-description').value = campaign.description;
+          document.getElementById('edit-campaign-budget').value = campaign.budget;
+          document.getElementById('edit-campaign-start-date').value = campaign.start_date;
+          document.getElementById('edit-campaign-end-date').value = campaign.end_date;
+          document.getElementById('edit-campaign-status').value = campaign.status;
+          
+          // Show edit modal
+          document.getElementById('edit-campaign-modal').classList.remove('hidden');
+        }
+      } catch (error) {
+        console.error('Error fetching campaign details:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+        showNotification('Error fetching campaign details', 'error');
+      }
+    }
+
+    async function deleteCampaign(id) {
+      if (!confirm('Are you sure you want to delete this marketing campaign?')) {
+        return;
+      }
+
+      try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch('${API_BASE_URL}/admin/marketing/campaigns/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (response.ok) {
+          showNotification('Marketing campaign deleted successfully', 'success');
+          loadMarketingData();
+        } else {
+          throw new Error('Failed to delete marketing campaign');
+        }
+      } catch (error) {
+        console.error('Error deleting marketing campaign:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+        showNotification('Error deleting marketing campaign', 'error');
+      }
+    }
+
+    // Form submission for adding marketing campaign
+    document.getElementById('add-campaign-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const formData = new FormData(this);
+      const data = Object.fromEntries(formData);
+      
+      try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch('${API_BASE_URL}/admin/marketing/campaigns', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(data)
+        });
+        
+        if (response.ok) {
+          closeModal('add-campaign-modal');
+          this.reset();
+          loadMarketingData();
+          showNotification('Marketing campaign added successfully!', 'success');
+        } else {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to add marketing campaign');
+        }
+      } catch (error) {
+        console.error('Error adding marketing campaign:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+        showNotification(error.message || 'Error adding marketing campaign', 'error');
+      }
+    });
+
+    // Form submission for editing marketing campaign
+    document.getElementById('edit-campaign-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const formData = new FormData(this);
+      const data = Object.fromEntries(formData);
+      const id = data.id;
+      delete data.id;
+      
+      try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch('${API_BASE_URL}/admin/marketing/campaigns/${id}`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(data)
+        });
+        
+        if (response.ok) {
+          closeModal('edit-campaign-modal');
+          loadMarketingData();
+          showNotification('Marketing campaign updated successfully!', 'success');
+        } else {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to update marketing campaign');
+        }
+      } catch (error) {
+        console.error('Error updating marketing campaign:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+        showNotification(error.message || 'Error updating marketing campaign', 'error');
+      }
+    });
+
+    // Email campaign form submission
+    document.getElementById('email-campaign-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const formData = new FormData(this);
+      const data = Object.fromEntries(formData);
+      
+      try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch('${API_BASE_URL}/admin/marketing/email', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(data)
+        });
+        
+        if (response.ok) {
+          closeModal('email-campaign-modal');
+          this.reset();
+          showNotification('Email campaign scheduled successfully!', 'success');
+        } else {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to schedule email campaign');
+        }
+      } catch (error) {
+        console.error('Error scheduling email campaign:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+        showNotification(error.message || 'Error scheduling email campaign', 'error');
+      }
+    });
+
+    // Banner campaign form submission
+    document.getElementById('banner-campaign-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const formData = new FormData(this);
+      const data = Object.fromEntries(formData);
+      
+      try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch('${API_BASE_URL}/admin/marketing/banner', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(data)
+        });
+        
+        if (response.ok) {
+          closeModal('banner-campaign-modal');
+          this.reset();
+          loadMarketingData();
+          showNotification('Banner campaign created successfully!', 'success');
+        } else {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to create banner campaign');
+        }
+      } catch (error) {
+        console.error('Error creating banner campaign:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+        showNotification(error.message || 'Error creating banner campaign', 'error');
+      }
+    });
+
+    // Show empty state when data loading fails
+    function showEmptyMarketingState() {
+      // Reset stats to zero
+      document.getElementById('active-campaigns').textContent = '0';
+      document.getElementById('total-reach').textContent = '0';
+      document.getElementById('conversion-rate').textContent = '0';
+      document.getElementById('revenue-generated').textContent = '$0';
+      
+      // Show empty state messages in tables
+      const campaignsTable = document.getElementById('campaigns-table-body');
+      if (campaignsTable) {
+        campaignsTable.innerHTML = `
+          <tr>
+            <td colspan="8" class="py-8 px-4 text-center text-gray-400">
+              <i class="fas fa-exclamation-triangle text-2xl mb-2"></i>
+              <p>Unable to load marketing data. Please refresh the page or try again later.</p>
+            </td>
+          </tr>
+        `;
+      }
+      
+      const promotionsTable = document.getElementById('promotions-table-body');
+      if (promotionsTable) {
+        promotionsTable.innerHTML = `
+          <tr>
+            <td colspan="6" class="py-8 px-4 text-center text-gray-400">
+              <i class="fas fa-exclamation-triangle text-2xl mb-2"></i>
+              <p>Unable to load promotions data. Please refresh the page or try again later.</p>
+            </td>
+          </tr>
+        `;
+      }
+    }
+
+    // Notification function
+    function showNotification(message, type = 'info') {
+      const notification = document.createElement('div');
+      notification.className = `fixed top-4 right-4 z-50 px-4 py-2 rounded-lg text-white ${
+        type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+      }`;
+      notification.textContent = message;
+      
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.remove();
+      }, 3000);
+    }
+
+    // Logout function
+    function logout() {
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('userData');
+      window.location.href = '/auth/auth-admin.html';
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+      loadMarketingData();
+      initializeCharts();
+    });
+  
+    // Error handling utilities
+    function showError(message) {
+        console.error('Error:', message);
+        if (window.adminAuth && window.adminAuth.showNotification) {
+            window.adminAuth.showNotification(message, 'error');
+        } else {
+            alert('Error: ' + message);
+        }
+    }
+
+    function showSuccess(message) {
+        console.log('Success:', message);
+        if (window.adminAuth && window.adminAuth.showNotification) {
+            window.adminAuth.showNotification(message, 'success');
+        }
+    }
+
+    function showLoading(elementId, message = 'Loading...') {
+        const element = document.getElementById(elementId);
+        if (element) {
+            element.innerHTML = `
+                <div class="text-center py-8">
+                    <div class="loading-spinner mx-auto mb-4"></div>
+                    <p class="text-white/70">${message}</p>
+                </div>
+            `;
+        }
+    }
+</script>
+
+    </div>
+</div>
+
+<script>
+// Unified Admin API Integration for marketing.html
+class AdminAPI {
+    constructor() {
+        this.baseUrl = '/api/admin';
+        this.token = localStorage.getItem('adminToken');
+    }
+    
+    async request(endpoint, options = {}) {
+        const url = this.baseUrl + endpoint;
+        const config = {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + this.token,
+                ...options.headers
+            },
+            ...options
+        };
+        
+        try {
+            showLoading(true);
+            const response = await fetch(url, config);
+            
+            if (!response.ok) {
+                throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            showLoading(false);
+            return data;
+        } catch (error) {
+            showLoading(false);
+            showError('API Error: ' + error.message);
+            throw error;
+        }
+    }
+    
+    // Page-specific methods
+    
+    async getData() {
+        return await this.request('/data');
+    }
+}
+
+// Initialize API
+const adminAPI = new AdminAPI();
+
+// Load data when page loads
+document.addEventListener('DOMContentLoaded', async function() {
+    try {
+        await loadPageData();
+    } catch (error) {
+        console.error('Failed to load page data:', error);
+        showError('Failed to load data. Please refresh the page.');
+    }
+});
+
+async function loadPageData() {
+    // Implement page-specific data loading
+    console.log('Loading data for marketing.html...');
+    
+    
+    // Generic data loading
+    console.log('Loading data for marketing.html...');
+}
+
+function refreshData() {
+    loadPageData();
+}
+</script>
+</body>
+</html>

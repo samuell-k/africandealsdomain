@@ -1,0 +1,418 @@
+/**
+ * Navigation Injector - Automatically injects unified navigation system into all HTML pages
+ * This script should be included in every HTML page to ensure consistent navigation
+ */
+
+(function() {
+  'use strict';
+
+  class NavigationInjector {
+    constructor() {
+      this.isInjected = false;
+      this.systemsLoaded = {
+        router: false,
+        navigation: false,
+        validator: false,
+        journey: false
+      };
+      this.init();
+    }
+
+    init() {
+      // Wait for DOM to be ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => this.inject());
+      } else {
+        this.inject();
+      }
+    }
+
+    inject() {
+      if (this.isInjected) return;
+      
+      this.loadRequiredStyles();
+      this.loadRequiredScripts();
+      this.createNavigationContainer();
+      this.setupGlobalStyles();
+      this.initializeUnifiedSystem();
+      this.isInjected = true;
+    }
+
+    loadRequiredStyles() {
+      // Add Tailwind CSS if not present
+      if (!document.querySelector('script[src*="tailwindcss"]')) {
+        const tailwindScript = document.createElement('script');
+        tailwindScript.src = 'https://cdn.tailwindcss.com';
+        document.head.appendChild(tailwindScript);
+      }
+
+      // Add custom navigation styles
+      const customStyles = document.createElement('style');
+      customStyles.id = 'navigation-injector-styles';
+      customStyles.textContent = `
+        /* Navigation Injector Styles */
+        .nav-injected {
+          padding-top: 80px !important;
+        }
+        
+        .nav-injected.has-breadcrumbs {
+          padding-top: 120px !important;
+        }
+        
+        .nav-injected.has-sidebar {
+          margin-left: 256px !important;
+        }
+        
+        @media (max-width: 768px) {
+          .nav-injected.has-sidebar {
+            margin-left: 0 !important;
+          }
+        }
+        
+        .navigation-container {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          z-index: 1000;
+        }
+        
+        .sidebar-container {
+          position: fixed;
+          top: 80px;
+          left: 0;
+          bottom: 0;
+          width: 256px;
+          z-index: 999;
+          transform: translateX(-100%);
+          transition: transform 0.3s ease;
+        }
+        
+        .sidebar-container.open {
+          transform: translateX(0);
+        }
+        
+        @media (min-width: 768px) {
+          .sidebar-container {
+            transform: translateX(0);
+          }
+        }
+        
+        .breadcrumbs-container {
+          position: fixed;
+          top: 80px;
+          left: 0;
+          right: 0;
+          z-index: 998;
+          background: rgba(249, 250, 251, 0.95);
+          backdrop-filter: blur(10px);
+          border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .quick-actions-container {
+          position: fixed;
+          bottom: 20px;
+          right: 20px;
+          z-index: 997;
+        }
+        
+        .page-loading {
+          position: fixed;
+          inset: 0;
+          background: rgba(255, 255, 255, 0.9);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 9999;
+          opacity: 0;
+          visibility: hidden;
+          transition: all 0.3s ease;
+        }
+        
+        .page-loading.active {
+          opacity: 1;
+          visibility: visible;
+        }
+        
+        .nav-item.active {
+          background-color: #dbeafe !important;
+          color: #2563eb !important;
+          font-weight: 600 !important;
+        }
+        
+        .sidebar-item.active {
+          background-color: #dbeafe !important;
+          color: #2563eb !important;
+          font-weight: 600 !important;
+        }
+        
+        .mobile-menu-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.5);
+          z-index: 998;
+          opacity: 0;
+          visibility: hidden;
+          transition: all 0.3s ease;
+        }
+        
+        .mobile-menu-overlay.active {
+          opacity: 1;
+          visibility: visible;
+        }
+      `;
+      
+      if (!document.getElementById('navigation-injector-styles')) {
+        document.head.appendChild(customStyles);
+      }
+    }
+
+    loadRequiredScripts() {
+      const requiredScripts = [
+        '/shared/unified-router.js',
+        '/shared/navigation-manager.js',
+        '/shared/page-validator.js',
+        '/shared/user-journey-manager.js'
+      ];
+
+      let loadedCount = 0;
+      const totalScripts = requiredScripts.length;
+
+      requiredScripts.forEach(scriptSrc => {
+        if (!document.querySelector(`script[src="${scriptSrc}"]`)) {
+          const script = document.createElement('script');
+          script.src = scriptSrc;
+          script.async = false; // Load in order
+          script.onload = () => {
+            loadedCount++;
+            this.checkSystemReady(scriptSrc, loadedCount, totalScripts);
+          };
+          script.onerror = () => {
+            console.warn(`Failed to load script: ${scriptSrc}`);
+            loadedCount++;
+            this.checkSystemReady(scriptSrc, loadedCount, totalScripts);
+          };
+          document.head.appendChild(script);
+        } else {
+          loadedCount++;
+          this.checkSystemReady(scriptSrc, loadedCount, totalScripts);
+        }
+      });
+    }
+
+    checkSystemReady(scriptSrc, loadedCount, totalScripts) {
+      // Mark system as loaded
+      if (scriptSrc.includes('unified-router')) this.systemsLoaded.router = true;
+      if (scriptSrc.includes('navigation-manager')) this.systemsLoaded.navigation = true;
+      if (scriptSrc.includes('page-validator')) this.systemsLoaded.validator = true;
+      if (scriptSrc.includes('user-journey-manager')) this.systemsLoaded.journey = true;
+
+      // Initialize when all scripts are loaded
+      if (loadedCount === totalScripts) {
+        setTimeout(() => this.initializeUnifiedSystem(), 100);
+      }
+    }
+
+    initializeUnifiedSystem() {
+      console.log('🚀 Initializing Unified Navigation System...');
+      
+      // Check if all systems are available
+      const systems = {
+        router: window.unifiedRouter,
+        navigation: window.navigationManager,
+        validator: window.pageValidator,
+        journey: window.userJourneyManager
+      };
+
+      let readyCount = 0;
+      const totalSystems = Object.keys(systems).length;
+
+      Object.entries(systems).forEach(([name, system]) => {
+        if (system) {
+          readyCount++;
+          console.log(`✅ ${name} system ready`);
+        } else {
+          console.warn(`⚠️ ${name} system not available`);
+        }
+      });
+
+      if (readyCount === totalSystems) {
+        console.log('🎉 All navigation systems initialized successfully!');
+        this.triggerSystemReady();
+      } else {
+        console.warn(`⚠️ Only ${readyCount}/${totalSystems} systems ready`);
+        // Try to initialize with available systems
+        setTimeout(() => this.triggerSystemReady(), 1000);
+      }
+    }
+
+    triggerSystemReady() {
+      // Dispatch system ready event
+      const event = new CustomEvent('navigationSystemReady', {
+        detail: {
+          systems: this.systemsLoaded,
+          timestamp: Date.now()
+        }
+      });
+      window.dispatchEvent(event);
+
+      // Update page body classes
+      document.body.classList.add('navigation-system-ready');
+      
+      // Show system status in console
+      this.showSystemStatus();
+    }
+
+    showSystemStatus() {
+      const status = {
+        'Unified Router': window.unifiedRouter ? '✅' : '❌',
+        'Navigation Manager': window.navigationManager ? '✅' : '❌',
+        'Page Validator': window.pageValidator ? '✅' : '❌',
+        'Journey Manager': window.userJourneyManager ? '✅' : '❌'
+      };
+
+      console.table(status);
+    }
+
+    createNavigationContainer() {
+      // Create main navigation container
+      if (!document.getElementById('navigation-container')) {
+        const navContainer = document.createElement('div');
+        navContainer.id = 'navigation-container';
+        navContainer.className = 'navigation-container';
+        document.body.insertBefore(navContainer, document.body.firstChild);
+      }
+
+      // Create sidebar container
+      if (!document.getElementById('sidebar-container')) {
+        const sidebarContainer = document.createElement('div');
+        sidebarContainer.id = 'sidebar-container';
+        sidebarContainer.className = 'sidebar-container';
+        document.body.appendChild(sidebarContainer);
+      }
+
+      // Create breadcrumbs container
+      if (!document.getElementById('breadcrumbs-container')) {
+        const breadcrumbsContainer = document.createElement('div');
+        breadcrumbsContainer.id = 'breadcrumbs-container';
+        breadcrumbsContainer.className = 'breadcrumbs-container';
+        document.body.appendChild(breadcrumbsContainer);
+      }
+
+      // Create quick actions container
+      if (!document.getElementById('quick-actions-container')) {
+        const quickActionsContainer = document.createElement('div');
+        quickActionsContainer.id = 'quick-actions-container';
+        quickActionsContainer.className = 'quick-actions-container';
+        document.body.appendChild(quickActionsContainer);
+      }
+
+      // Create page loading overlay
+      if (!document.getElementById('page-loading')) {
+        const loadingOverlay = document.createElement('div');
+        loadingOverlay.id = 'page-loading';
+        loadingOverlay.className = 'page-loading';
+        loadingOverlay.innerHTML = `
+          <div class="text-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <p class="text-gray-600 font-medium">Loading...</p>
+          </div>
+        `;
+        document.body.appendChild(loadingOverlay);
+      }
+
+      // Create mobile menu overlay
+      if (!document.getElementById('mobile-menu-overlay')) {
+        const mobileOverlay = document.createElement('div');
+        mobileOverlay.id = 'mobile-menu-overlay';
+        mobileOverlay.className = 'mobile-menu-overlay';
+        document.body.appendChild(mobileOverlay);
+      }
+    }
+
+    setupGlobalStyles() {
+      // Add navigation classes to body
+      document.body.classList.add('nav-injected');
+      
+      // Determine if page needs sidebar
+      const path = window.location.pathname;
+      const isAuthPage = path.includes('/auth/');
+      const isPublicPage = path.includes('/public/') || path === '/' || path === '/index.html';
+      
+      if (!isAuthPage && !isPublicPage) {
+        document.body.classList.add('has-sidebar');
+      }
+
+      // Add breadcrumbs class if needed
+      if (!isAuthPage) {
+        document.body.classList.add('has-breadcrumbs');
+      }
+    }
+
+    // Utility methods for other scripts to use
+    static showLoading() {
+      const loading = document.getElementById('page-loading');
+      if (loading) {
+        loading.classList.add('active');
+      }
+    }
+
+    static hideLoading() {
+      const loading = document.getElementById('page-loading');
+      if (loading) {
+        loading.classList.remove('active');
+      }
+    }
+
+    static toggleMobileMenu() {
+      const sidebar = document.getElementById('sidebar-container');
+      const overlay = document.getElementById('mobile-menu-overlay');
+      
+      if (sidebar && overlay) {
+        sidebar.classList.toggle('open');
+        overlay.classList.toggle('active');
+      }
+    }
+
+    static closeMobileMenu() {
+      const sidebar = document.getElementById('sidebar-container');
+      const overlay = document.getElementById('mobile-menu-overlay');
+      
+      if (sidebar && overlay) {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('active');
+      }
+    }
+  }
+
+  // Initialize navigation injector
+  window.navigationInjector = new NavigationInjector();
+
+  // Global utility functions
+  window.showPageLoading = NavigationInjector.showLoading;
+  window.hidePageLoading = NavigationInjector.hideLoading;
+  window.toggleMobileMenu = NavigationInjector.toggleMobileMenu;
+  window.closeMobileMenu = NavigationInjector.closeMobileMenu;
+
+  // Handle mobile menu overlay clicks
+  document.addEventListener('click', (e) => {
+    if (e.target.id === 'mobile-menu-overlay') {
+      NavigationInjector.closeMobileMenu();
+    }
+  });
+
+  // Handle escape key to close mobile menu
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      NavigationInjector.closeMobileMenu();
+    }
+  });
+
+  // Handle window resize
+  window.addEventListener('resize', () => {
+    if (window.innerWidth >= 768) {
+      NavigationInjector.closeMobileMenu();
+    }
+  });
+
+})();

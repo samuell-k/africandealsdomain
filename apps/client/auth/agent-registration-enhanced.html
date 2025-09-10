@@ -1,0 +1,2393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Registration | African Deals Domain</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .glass-morphism {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .agent-type-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .agent-type-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+        .agent-type-card.selected {
+            background: rgba(59, 130, 246, 0.3);
+            border-color: #3b82f6;
+            transform: translateY(-5px);
+        }
+        .step-indicator {
+            transition: all 0.3s ease;
+        }
+        .step-indicator.active {
+            background: #3b82f6;
+            color: white;
+        }
+        .step-indicator.completed {
+            background: #10b981;
+            color: white;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .map-container {
+            height: 400px;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        /* Optimize map performance */
+        .leaflet-container {
+            background: #1f2937;
+            font-family: inherit;
+        }
+        
+        .leaflet-control-zoom {
+            border: none !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+        }
+        
+        .leaflet-control-zoom a {
+            background: rgba(255, 255, 255, 0.9) !important;
+            color: #374151 !important;
+            border: none !important;
+            width: 32px !important;
+            height: 32px !important;
+            line-height: 30px !important;
+            font-size: 16px !important;
+            font-weight: bold !important;
+            transition: all 0.2s ease !important;
+        }
+        
+        .leaflet-control-zoom a:hover {
+            background: white !important;
+            transform: scale(1.05);
+        }
+        
+        /* Custom marker styles */
+        .custom-marker {
+            background: transparent !important;
+            border: none !important;
+        }
+        
+        /* High-performance marker styles */
+        .custom-marker-fast {
+            background: transparent !important;
+            border: none !important;
+        }
+        
+        .marker-dot {
+            width: 20px;
+            height: 20px;
+            background: #ef4444;
+            border: 3px solid white;
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        
+        .marker-dot::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 6px;
+            height: 6px;
+            background: white;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        /* Loading animations */
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-fade-in {
+            animation: fade-in 0.3s ease-out;
+        }
+        
+        /* High-performance map tile optimization */
+        .leaflet-tile {
+            transition: none !important; /* Remove transitions for faster loading */
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+            image-rendering: pixelated;
+        }
+        
+        .leaflet-tile-loaded {
+            opacity: 1;
+        }
+        
+        .leaflet-tile-container {
+            transform: translate3d(0, 0, 0); /* Hardware acceleration */
+        }
+        
+        /* Optimize map container for performance */
+        .leaflet-container {
+            background: #1f2937;
+            font-family: inherit;
+            transform: translate3d(0, 0, 0); /* Hardware acceleration */
+            will-change: transform; /* Optimize for animations */
+        }
+        
+        /* Disable smooth scrolling for faster zoom */
+        .leaflet-container * {
+            -webkit-transform: translate3d(0, 0, 0);
+            transform: translate3d(0, 0, 0);
+        }
+        
+        /* Responsive map controls */
+        @media (max-width: 768px) {
+            .leaflet-control-zoom {
+                margin-right: 10px !important;
+                margin-top: 10px !important;
+            }
+            
+            .leaflet-control-zoom a {
+                width: 28px !important;
+                height: 28px !important;
+                line-height: 26px !important;
+                font-size: 14px !important;
+            }
+        }
+        
+        /* Improve map popup styling */
+        .leaflet-popup-content-wrapper {
+            border-radius: 8px !important;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2) !important;
+        }
+        
+        .leaflet-popup-tip {
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1) !important;
+        }
+        
+        /* Fix select dropdown visibility issues */
+        select {
+            background-color: rgba(31, 41, 55, 0.95) !important;
+            color: white !important;
+        }
+        
+        select option {
+            background-color: #1f2937 !important;
+            color: white !important;
+            padding: 8px 12px !important;
+            border: none !important;
+        }
+        
+        select option:hover {
+            background-color: #374151 !important;
+            color: #60a5fa !important;
+        }
+        
+        select option:checked {
+            background-color: #3b82f6 !important;
+            color: white !important;
+        }
+        
+        /* Improve select dropdown appearance */
+        select:focus {
+            background-color: rgba(31, 41, 55, 0.98) !important;
+            border-color: #60a5fa !important;
+            box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1) !important;
+        }
+        
+        /* Fix for webkit browsers (Chrome, Safari) */
+        select::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        select::-webkit-scrollbar-track {
+            background: #1f2937;
+        }
+        
+        select::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 4px;
+        }
+        
+        select::-webkit-scrollbar-thumb:hover {
+            background: #6b7280;
+        }
+        
+        /* Enhanced visibility for all form inputs */
+        input[type="text"], input[type="email"], input[type="tel"], input[type="password"], input[type="time"], textarea {
+            background-color: rgba(31, 41, 55, 0.9) !important;
+            color: white !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        }
+        
+        input[type="text"]:focus, input[type="email"]:focus, input[type="tel"]:focus, input[type="password"]:focus, input[type="time"]:focus, textarea:focus {
+            background-color: rgba(31, 41, 55, 0.95) !important;
+            border-color: #60a5fa !important;
+            box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1) !important;
+        }
+        
+        /* Placeholder text visibility */
+        ::placeholder {
+            color: rgba(255, 255, 255, 0.6) !important;
+        }
+        
+        /* Checkbox and radio button improvements */
+        input[type="checkbox"], input[type="radio"] {
+            background-color: rgba(31, 41, 55, 0.9) !important;
+            border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        }
+        
+        input[type="checkbox"]:checked, input[type="radio"]:checked {
+            background-color: #3b82f6 !important;
+            border-color: #3b82f6 !important;
+        }
+        
+        /* Additional select dropdown improvements for better visibility */
+        select {
+            appearance: none !important;
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e") !important;
+            background-repeat: no-repeat !important;
+            background-position: right 12px center !important;
+            background-size: 16px !important;
+            padding-right: 40px !important;
+        }
+        
+        /* Force dark background for select options in all browsers */
+        select option {
+            background: #1f2937 !important;
+            color: #ffffff !important;
+        }
+        
+        /* Firefox specific fixes */
+        @-moz-document url-prefix() {
+            select {
+                background-color: #1f2937 !important;
+                color: white !important;
+            }
+            
+            select option {
+                background-color: #1f2937 !important;
+                color: white !important;
+            }
+        }
+        
+        /* Safari specific fixes */
+        @media screen and (-webkit-min-device-pixel-ratio:0) {
+            select {
+                background-color: rgba(31, 41, 55, 0.95) !important;
+            }
+            
+            select option {
+                background: #1f2937 !important;
+                color: white !important;
+            }
+        }
+        
+        /* Hide all loading indicators completely */
+        #mapLoading {
+            display: none !important; /* Completely hide loading animation */
+        }
+        
+        /* Hide loading indicator completely to prevent any blocking */
+        .map-container #mapLoading {
+            display: none !important; /* Completely hide loading animation */
+        }
+        
+        /* Loading spinner should be visible but not block clicks */
+        #mapLoading > * {
+            pointer-events: none !important;
+        }
+        .file-upload-area {
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+        .file-upload-area:hover {
+            border-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.1);
+        }
+        .file-upload-area.dragover {
+            border-color: #10b981;
+            background: rgba(16, 185, 129, 0.1);
+        }
+        .preview-image {
+            max-width: 150px;
+            max-height: 150px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        
+        /* Mobile-First Specific Enhancements */
+        @media (max-width: 640px) {
+            /* Ensure minimum touch target size (44px) */
+            button, .agent-type-card, input, select, textarea {
+                min-height: 44px;
+            }
+            
+            /* Improve input field visibility on mobile */
+            input, select, textarea {
+                font-size: 16px !important; /* Prevents zoom on iOS */
+                -webkit-appearance: none;
+                border-radius: 8px;
+            }
+            
+            /* Mobile-optimized agent cards */
+            .agent-type-card {
+                padding: 16px !important;
+                margin-bottom: 12px;
+            }
+            
+            /* Better spacing for mobile */
+            .space-y-6 > * + * {
+                margin-top: 1rem !important;
+            }
+            
+            .space-y-4 > * + * {
+                margin-top: 0.75rem !important;
+            }
+            
+            /* Mobile-friendly form sections */
+            .bg-white\/5 {
+                padding: 12px !important;
+                margin-bottom: 16px;
+            }
+            
+            /* Improve text readability on mobile */
+            .text-xs {
+                font-size: 0.75rem;
+            }
+            
+            .text-sm {
+                font-size: 0.875rem;
+            }
+            
+            /* Mobile-specific header adjustments */
+            header {
+                position: -webkit-sticky;
+                position: sticky;
+            }
+            
+            /* Ensure adequate bottom spacing for fixed navigation */
+            main {
+                padding-bottom: 100px !important;
+            }
+        }
+        
+        /* Touch-friendly improvements */
+        .touch-manipulation {
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+        }
+        
+        .agent-type-card.selected {
+            background: rgba(59, 130, 246, 0.2) !important;
+            border-color: #3b82f6 !important;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+        }
+        
+        /* Progressive Web App optimizations */
+        @media (display-mode: standalone) {
+            header {
+                padding-top: env(safe-area-inset-top);
+            }
+            
+            .fixed.bottom-0 {
+                padding-bottom: env(safe-area-inset-bottom);
+            }
+        }
+        
+        /* High contrast mode support */
+        @media (prefers-contrast: high) {
+            .bg-white\/10 {
+                background-color: rgba(255, 255, 255, 0.2) !important;
+            }
+            
+            .border-white\/20 {
+                border-color: rgba(255, 255, 255, 0.4) !important;
+            }
+        }
+        
+        /* Reduced motion support */
+        @media (prefers-reduced-motion: reduce) {
+            .transition-all,
+            .transition-colors,
+            .fade-in {
+                transition: none !important;
+                animation: none !important;
+            }
+        }
+        
+        /* Dark mode optimizations (already implemented but enhanced) */
+        @media (prefers-color-scheme: dark) {
+            .gradient-bg {
+                background: linear-gradient(135deg, #1e3a8a 0%, #581c87 100%);
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen gradient-bg">
+    <!-- Mobile-First Navigation Header -->
+    <header class="sticky top-0 z-50 bg-white/10 backdrop-blur-lg border-b border-white/20">
+        <div class="px-4 py-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                        <i class="fas fa-user-plus text-white text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-bold text-white">Agent Registration</h1>
+                        <p class="text-xs text-white/70">African Deals Domain</p>
+                    </div>
+                </div>
+                <button id="mobileMenuToggle" class="lg:hidden p-2 text-white">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Progress Bar -->
+        <div class="px-4 pb-3">
+            <div class="flex items-center space-x-2">
+                <div class="flex-1 h-1 bg-white/20 rounded">
+                    <div id="progressBar" class="h-full bg-blue-500 rounded transition-all duration-300" style="width: 25%"></div>
+                </div>
+                <span id="stepCounter" class="text-xs text-white/80">Step 1 of 4</span>
+            </div>
+            <div class="mt-2">
+                <span id="stepTitle" class="text-sm font-medium text-white">Choose Agent Type</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Mobile-First Main Container -->
+    <main class="pb-20"> <!-- Bottom padding for fixed navigation -->
+        <!-- Mobile-First Form Container -->
+        <div class="px-4 sm:px-6 lg:max-w-4xl lg:mx-auto">
+            <form id="agentRegistrationForm" class="space-y-4" method="POST" action="#">
+                
+                <!-- Step 1: Agent Type Selection -->
+                <div id="step1" class="step-content">
+                    <div class="glass-morphism rounded-xl p-4 sm:p-6 lg:p-8">
+                        <!-- Mobile-First Hero Section -->
+                        <div class="text-center mb-6">
+                            <div class="hidden lg:block w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i class="fas fa-user-plus text-white text-2xl"></i>
+                            </div>
+                            <h2 class="text-xl sm:text-2xl font-bold text-white mb-2">Join Our Agent Network</h2>
+                            <p class="text-sm sm:text-base text-white/80">Choose your preferred agent role and start earning today</p>
+                        </div>
+                        
+                        <!-- Mobile-First Agent Type Cards -->
+                        <div class="space-y-4 sm:space-y-6">
+                            <!-- Fast Delivery Agent - Mobile First -->
+                            <div class="agent-type-card glass-morphism rounded-xl p-4 sm:p-6 border-2 border-transparent transition-all duration-300 touch-manipulation" data-type="fast_delivery">
+                                <div class="flex items-start space-x-4">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-12 h-12 sm:w-16 sm:h-16 bg-green-500/20 rounded-full flex items-center justify-center">
+                                            <i class="fas fa-running text-green-400 text-lg sm:text-2xl"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <h3 class="text-lg sm:text-xl font-bold text-white">🏃 Fast Delivery</h3>
+                                            <span class="bg-green-500/20 text-green-400 text-xs px-2 py-1 rounded-full font-medium">15% Commission</span>
+                                        </div>
+                                        <p class="text-white/80 text-sm mb-3">Deliver groceries and local market items with real-time tracking</p>
+                                        
+                                        <!-- Mobile-optimized features list -->
+                                        <div class="grid grid-cols-2 gap-2 mb-3">
+                                            <div class="flex items-center text-white/70 text-xs">
+                                                <i class="fas fa-check text-green-400 mr-1 text-xs"></i>
+                                                <span>GPS tracking</span>
+                                            </div>
+                                            <div class="flex items-center text-white/70 text-xs">
+                                                <i class="fas fa-check text-green-400 mr-1 text-xs"></i>
+                                                <span>30-120 min</span>
+                                            </div>
+                                            <div class="flex items-center text-white/70 text-xs">
+                                                <i class="fas fa-check text-green-400 mr-1 text-xs"></i>
+                                                <span>Grocery market</span>
+                                            </div>
+                                            <div class="flex items-center text-white/70 text-xs">
+                                                <i class="fas fa-check text-green-400 mr-1 text-xs"></i>
+                                                <span>Flexible hours</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="bg-green-500/10 rounded-lg p-2">
+                                            <p class="text-green-400 text-xs font-medium">
+                                                <i class="fas fa-info-circle mr-1"></i>
+                                                Required: ID, Location, Phone
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Transport/Delivery Agent - Mobile First -->
+                            <div class="agent-type-card glass-morphism rounded-xl p-4 sm:p-6 border-2 border-transparent transition-all duration-300 touch-manipulation" data-type="pickup_delivery">
+                                <div class="flex items-start space-x-4">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-12 h-12 sm:w-16 sm:h-16 bg-blue-500/20 rounded-full flex items-center justify-center">
+                                            <i class="fas fa-truck text-blue-400 text-lg sm:text-2xl"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <h3 class="text-lg sm:text-xl font-bold text-white">🚚 Transport Agent</h3>
+                                            <span class="bg-blue-500/20 text-blue-400 text-xs px-2 py-1 rounded-full font-medium">12% Commission</span>
+                                        </div>
+                                        <p class="text-white/80 text-sm mb-3">Collect from pickup sites and deliver physical products</p>
+                                        
+                                        <!-- Mobile-optimized features list -->
+                                        <div class="grid grid-cols-2 gap-2 mb-3">
+                                            <div class="flex items-center text-white/70 text-xs">
+                                                <i class="fas fa-check text-blue-400 mr-1 text-xs"></i>
+                                                <span>Route optimize</span>
+                                            </div>
+                                            <div class="flex items-center text-white/70 text-xs">
+                                                <i class="fas fa-check text-blue-400 mr-1 text-xs"></i>
+                                                <span>Multi-order</span>
+                                            </div>
+                                            <div class="flex items-center text-white/70 text-xs">
+                                                <i class="fas fa-check text-blue-400 mr-1 text-xs"></i>
+                                                <span>Physical goods</span>
+                                            </div>
+                                            <div class="flex items-center text-white/70 text-xs">
+                                                <i class="fas fa-check text-blue-400 mr-1 text-xs"></i>
+                                                <span>Bulk delivery</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="bg-blue-500/10 rounded-lg p-2">
+                                            <p class="text-blue-400 text-xs font-medium">
+                                                <i class="fas fa-info-circle mr-1"></i>
+                                                Required: ID, Vehicle, Location
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Site Manager Agent - Mobile First -->
+                            <div class="agent-type-card glass-morphism rounded-xl p-4 sm:p-6 border-2 border-transparent transition-all duration-300 touch-manipulation" data-type="pickup_site_manager">
+                                <div class="flex items-start space-x-4">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-12 h-12 sm:w-16 sm:h-16 bg-purple-500/20 rounded-full flex items-center justify-center">
+                                            <i class="fas fa-store text-purple-400 text-lg sm:text-2xl"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <h3 class="text-lg sm:text-xl font-bold text-white">🏢 Site Manager</h3>
+                                            <span class="bg-purple-500/20 text-purple-400 text-xs px-2 py-1 rounded-full font-medium">10% Commission</span>
+                                        </div>
+                                        <p class="text-white/80 text-sm mb-3">Manage pickup sites and assist walk-in customers</p>
+                                        
+                                        <!-- Mobile-optimized features list -->
+                                        <div class="grid grid-cols-2 gap-2 mb-3">
+                                            <div class="flex items-center text-white/70 text-xs">
+                                                <i class="fas fa-check text-purple-400 mr-1 text-xs"></i>
+                                                <span>Walk-in orders</span>
+                                            </div>
+                                            <div class="flex items-center text-white/70 text-xs">
+                                                <i class="fas fa-check text-purple-400 mr-1 text-xs"></i>
+                                                <span>PDF receipts</span>
+                                            </div>
+                                            <div class="flex items-center text-white/70 text-xs">
+                                                <i class="fas fa-check text-purple-400 mr-1 text-xs"></i>
+                                                <span>Both markets</span>
+                                            </div>
+                                            <div class="flex items-center text-white/70 text-xs">
+                                                <i class="fas fa-check text-purple-400 mr-1 text-xs"></i>
+                                                <span>Fixed location</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="bg-purple-500/10 rounded-lg p-2">
+                                            <p class="text-purple-400 text-xs font-medium">
+                                                <i class="fas fa-info-circle mr-1"></i>
+                                                Required: Site Location, Hours
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <input type="hidden" name="selectedAgentType" id="selectedAgentType" required pattern=".{1,}" title="This field is required">
+                        
+                        <!-- Mobile-First Selection Indicator -->
+                        <div id="selectionStatus" class="hidden mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                            <div class="flex items-center text-blue-400">
+                                <i class="fas fa-check-circle mr-2"></i>
+                                <span id="selectedTypeText" class="text-sm font-medium">Agent type selected</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Personal Information - Mobile First -->
+                <div id="step2" class="step-content hidden">
+                    <div class="glass-morphism rounded-xl p-4 sm:p-6 lg:p-8">
+                        <div class="text-center mb-6">
+                            <h2 class="text-xl sm:text-2xl font-bold text-white mb-2">Personal Information</h2>
+                            <p class="text-sm sm:text-base text-white/80">Tell us about yourself</p>
+                        </div>
+                        
+                        <!-- Mobile-First Form Layout -->
+                        <div class="space-y-6">
+                            <!-- Basic Information Section -->
+                            <div class="bg-white/5 rounded-lg p-4">
+                                <h3 class="text-lg font-semibold text-white mb-4 flex items-center">
+                                    <i class="fas fa-user mr-2 text-blue-400"></i>
+                                    Basic Information
+                                </h3>
+                                
+                                <div class="space-y-4">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-white font-medium mb-2 text-sm">First Name *</label>
+                                            <input type="text" name="first_name" required 
+                                                   pattern="[A-Za-z\s]{2,50}" 
+                                                   title="Name must be 2-50 characters, letters and spaces only"
+                                                   class="w-full px-4 py-4 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400 text-base"
+                                                   placeholder="John">
+                                        </div>
+                                        <div>
+                                            <label class="block text-white font-medium mb-2 text-sm">Last Name *</label>
+                                            <input type="text" name="last_name" required 
+                                                   pattern="[A-Za-z\s]{2,50}" 
+                                                   title="Name must be 2-50 characters, letters and spaces only"
+                                                   class="w-full px-4 py-4 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400 text-base"
+                                                   placeholder="Doe">
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-white font-medium mb-2 text-sm">Date of Birth *</label>
+                                            <input type="date" name="date_of_birth" required 
+                                                   class="w-full px-4 py-4 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400 text-base">
+                                        </div>
+                                        <div>
+                                            <label class="block text-white font-medium mb-2 text-sm">Gender *</label>
+                                            <select name="gender" required
+                                                    class="w-full px-4 py-4 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400 text-base">
+                                                <option value="">Select Gender</option>
+                                                <option value="male">Male</option>
+                                                <option value="female">Female</option>
+                                                <option value="other">Other</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Contact Information Section -->
+                            <div class="bg-white/5 rounded-lg p-4">
+                                <h3 class="text-lg font-semibold text-white mb-4 flex items-center">
+                                    <i class="fas fa-phone mr-2 text-green-400"></i>
+                                    Contact Information
+                                </h3>
+                                
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-white font-medium mb-2 text-sm">Email Address *</label>
+                                        <input type="email" name="email" required 
+                                               pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" 
+                                               title="Please enter a valid email address"
+                                               class="w-full px-4 py-4 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400 text-base"
+                                               placeholder="john.doe@example.com">
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-white font-medium mb-2 text-sm">Phone Number *</label>
+                                        <input type="tel" name="phone" required 
+                                               pattern="[+]?[0-9]{10,15}" 
+                                               title="Please enter a valid phone number (10-15 digits)"
+                                               class="w-full px-4 py-4 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400 text-base"
+                                               placeholder="+250 788 123 456">
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-white font-medium mb-2 text-sm">Alternative Phone</label>
+                                            <input type="tel" name="alt_phone"
+                                                   class="w-full px-4 py-4 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400 text-base"
+                                                   placeholder="+250 788 123 456">
+                                        </div>
+                                        <div>
+                                            <label class="block text-white font-medium mb-2 text-sm">Emergency Contact *</label>
+                                            <input type="tel" name="emergency_contact" required 
+                                                   pattern="[+]?[0-9]{10,15}" 
+                                                   title="Please enter a valid phone number (10-15 digits)"
+                                                   class="w-full px-4 py-4 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400 text-base"
+                                                   placeholder="+250 788 123 456">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Location Information Section -->
+                            <div class="bg-white/5 rounded-lg p-4">
+                                <h3 class="text-lg font-semibold text-white mb-4 flex items-center">
+                                    <i class="fas fa-map-marker-alt mr-2 text-red-400"></i>
+                                    Location Information
+                                </h3>
+                                
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-white font-medium mb-2 text-sm">Country *</label>
+                                        <select name="country" id="countrySelect" required
+                                                class="w-full px-4 py-4 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400 text-base">
+                                            <option value="">Select Country</option>
+                                            <option value="Rwanda" selected>Rwanda</option>
+                                            <option value="Kenya">Kenya</option>
+                                            <option value="Uganda">Uganda</option>
+                                            <option value="Tanzania">Tanzania</option>
+                                            <option value="Burundi">Burundi</option>
+                                            <option value="DRC">Democratic Republic of Congo</option>
+                                            <option value="South Sudan">South Sudan</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-white font-medium mb-2 text-sm">Province/State *</label>
+                                            <select name="province" id="provinceSelect" required
+                                                    class="w-full px-4 py-4 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400 text-base">
+                                                <option value="">Select Province</option>
+                                                <option value="Kigali City">Kigali City</option>
+                                                <option value="Eastern Province">Eastern Province</option>
+                                                <option value="Northern Province">Northern Province</option>
+                                                <option value="Southern Province">Southern Province</option>
+                                                <option value="Western Province">Western Province</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-white font-medium mb-2 text-sm">District/City *</label>
+                                            <select name="district" id="districtSelect" required
+                                                    class="w-full px-4 py-4 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400 text-base">
+                                                <option value="">Select District</option>
+                                                <option value="Gasabo">Gasabo</option>
+                                                <option value="Kicukiro">Kicukiro</option>
+                                                <option value="Nyarugenge">Nyarugenge</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-white font-medium mb-2 text-sm">Street Address / Landmark *</label>
+                                        <textarea name="street_address" required rows="3"
+                                                  class="w-full px-4 py-4 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400 text-base resize-none"
+                                                  placeholder="Enter your detailed street address or describe nearby landmarks"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Steps 3 & 4 (Simplified for mobile-first) -->
+                <div id="step3" class="step-content hidden">
+                    <div class="glass-morphism rounded-xl p-4 sm:p-6 lg:p-8">
+                        <div class="text-center mb-6">
+                            <h2 class="text-xl sm:text-2xl font-bold text-white mb-2">Document Verification</h2>
+                            <p class="text-sm sm:text-base text-white/80">Upload required documents for verification</p>
+                        </div>
+                        
+                        <div class="space-y-6">
+                            <!-- National ID Section -->
+                            <div class="bg-white/5 rounded-lg p-4">
+                                <h3 class="text-lg font-semibold text-white mb-4 flex items-center">
+                                    <i class="fas fa-id-card mr-2 text-blue-400"></i>
+                                    National ID Card *
+                                </h3>
+                                
+                                <div class="space-y-4">
+                                    <div class="border-2 border-dashed border-white/30 rounded-lg p-6 text-center bg-white/5 transition-colors hover:border-blue-400 hover:bg-blue-400/5">
+                                        <i class="fas fa-camera text-3xl text-white/50 mb-2"></i>
+                                        <p class="text-white/80 text-sm mb-2">Take photo or upload ID front</p>
+                                        <input type="file" name="id_front" accept="image/*" capture="camera" 
+                                               class="hidden" id="idFrontInput">
+                                        <button type="button" onclick="document.getElementById('idFrontInput').click()" 
+                                                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
+                                            <i class="fas fa-camera mr-2"></i>Choose File
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Additional Documents (Role-specific) -->
+                            <div class="bg-white/5 rounded-lg p-4">
+                                <h3 class="text-lg font-semibold text-white mb-4 flex items-center">
+                                    <i class="fas fa-file-alt mr-2 text-green-400"></i>
+                                    Additional Documents
+                                </h3>
+                                <p class="text-white/70 text-sm mb-4">Upload any additional documents if required for your agent type</p>
+                                
+                                <div class="border-2 border-dashed border-white/30 rounded-lg p-6 text-center bg-white/5">
+                                    <i class="fas fa-upload text-2xl text-white/50 mb-2"></i>
+                                    <p class="text-white/80 text-sm mb-2">Optional: Driver's license, vehicle registration, etc.</p>
+                                    <input type="file" name="additional_docs" accept="image/*,application/pdf" multiple
+                                           class="hidden" id="additionalDocsInput">
+                                    <button type="button" onclick="document.getElementById('additionalDocsInput').click()" 
+                                            class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
+                                        <i class="fas fa-upload mr-2"></i>Choose Files
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="step4" class="step-content hidden">
+                    <div class="glass-morphism rounded-xl p-4 sm:p-6 lg:p-8">
+                        <div class="text-center mb-6">
+                            <h2 class="text-xl sm:text-2xl font-bold text-white mb-2">Review & Submit</h2>
+                            <p class="text-sm sm:text-base text-white/80">Review your information before submitting</p>
+                        </div>
+                        
+                        <div class="bg-green-500/10 border border-green-500/20 rounded-lg p-4 mb-6">
+                            <div class="flex items-start">
+                                <i class="fas fa-info-circle text-green-400 mt-1 mr-3"></i>
+                                <div>
+                                    <h3 class="text-green-400 font-semibold mb-1">Application Review</h3>
+                                    <p class="text-green-300 text-sm">Your application will be reviewed within 24-48 hours. You'll receive an email notification once approved.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between py-3 border-b border-white/20">
+                                <span class="text-white/70">Agent Type</span>
+                                <span id="reviewAgentType" class="text-white font-medium">Not selected</span>
+                            </div>
+                            <div class="flex items-center justify-between py-3 border-b border-white/20">
+                                <span class="text-white/70">Full Name</span>
+                                <span id="reviewFullName" class="text-white font-medium">Not provided</span>
+                            </div>
+                            <div class="flex items-center justify-between py-3 border-b border-white/20">
+                                <span class="text-white/70">Email</span>
+                                <span id="reviewEmail" class="text-white font-medium">Not provided</span>
+                            </div>
+                            <div class="flex items-center justify-between py-3 border-b border-white/20">
+                                <span class="text-white/70">Phone</span>
+                                <span id="reviewPhone" class="text-white font-medium">Not provided</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6">
+                            <label class="flex items-start text-sm text-white/80">
+                                <input type="checkbox" name="terms" required class="mr-3 mt-1 rounded border-white/20 text-blue-600 focus:ring-blue-500">
+                                <span>I agree to the <a href="#" class="text-blue-400 underline">Terms of Service</a> and <a href="#" class="text-blue-400 underline">Privacy Policy</a></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Mobile-First Fixed Bottom Navigation -->
+        <div class="fixed bottom-0 left-0 right-0 bg-white/10 backdrop-blur-lg border-t border-white/20 p-4 z-40">
+            <div class="max-w-lg mx-auto">
+                <div class="flex items-center justify-between">
+                    <!-- Previous Button -->
+                    <button type="button" id="prevButton" 
+                            class="flex items-center px-4 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed" 
+                            disabled>
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        <span class="hidden sm:inline">Previous</span>
+                    </button>
+                    
+                    <!-- Step Dots (Mobile) -->
+                    <div class="flex items-center space-x-2">
+                        <div class="w-2 h-2 rounded-full bg-blue-500" id="dot1"></div>
+                        <div class="w-2 h-2 rounded-full bg-white/30" id="dot2"></div>
+                        <div class="w-2 h-2 rounded-full bg-white/30" id="dot3"></div>
+                        <div class="w-2 h-2 rounded-full bg-white/30" id="dot4"></div>
+                    </div>
+                    
+                    <!-- Next/Submit Button -->
+                    <button type="button" id="nextButton" 
+                            class="flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed" 
+                            disabled>
+                        <span id="nextButtonText">Continue</span>
+                        <i class="fas fa-arrow-right ml-2" id="nextButtonIcon"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Mobile-First JavaScript -->
+    <script>
+        // Mobile-first form navigation
+        let currentStep = 1;
+        const totalSteps = 4;
+        
+        // Step titles for mobile header
+        const stepTitles = {
+            1: 'Choose Agent Type',
+            2: 'Personal Information', 
+            3: 'Document Verification',
+            4: 'Review & Submit'
+        };
+        
+        // Agent type selection
+        document.querySelectorAll('.agent-type-card').forEach(card => {
+            card.addEventListener('click', function() {
+                // Remove previous selections
+                document.querySelectorAll('.agent-type-card').forEach(c => {
+                    c.classList.remove('selected', 'border-blue-500');
+                    c.classList.add('border-transparent');
+                });
+                
+                // Add selection
+                this.classList.add('selected', 'border-blue-500');
+                this.classList.remove('border-transparent');
+                
+                // Update hidden input
+                const agentType = this.dataset.type;
+                document.getElementById('selectedAgentType').value = agentType;
+                
+                // Show selection status
+                const statusEl = document.getElementById('selectionStatus');
+                const textEl = document.getElementById('selectedTypeText');
+                statusEl.classList.remove('hidden');
+                
+                const typeNames = {
+                    'fast_delivery': '🏃 Fast Delivery Agent',
+                    'pickup_delivery': '🚚 Transport/Delivery Agent', 
+                    'pickup_site_manager': '🏢 Site Manager Agent'
+                };
+                textEl.textContent = typeNames[agentType] + ' selected';
+                
+                // Enable next button
+                document.getElementById('nextButton').disabled = false;
+            });
+        });
+        
+        // Navigation functions
+        function updateUI() {
+            // Update progress bar
+            const progressBar = document.getElementById('progressBar');
+            const stepCounter = document.getElementById('stepCounter');
+            const stepTitle = document.getElementById('stepTitle');
+            
+            const progress = (currentStep / totalSteps) * 100;
+            progressBar.style.width = progress + '%';
+            stepCounter.textContent = `Step ${currentStep} of ${totalSteps}`;
+            stepTitle.textContent = stepTitles[currentStep];
+            
+            // Update step dots
+            for (let i = 1; i <= totalSteps; i++) {
+                const dot = document.getElementById(`dot${i}`);
+                if (i === currentStep) {
+                    dot.className = 'w-2 h-2 rounded-full bg-blue-500';
+                } else if (i < currentStep) {
+                    dot.className = 'w-2 h-2 rounded-full bg-green-500';
+                } else {
+                    dot.className = 'w-2 h-2 rounded-full bg-white/30';
+                }
+            }
+            
+            // Update buttons
+            const prevButton = document.getElementById('prevButton');
+            const nextButton = document.getElementById('nextButton');
+            const nextButtonText = document.getElementById('nextButtonText');
+            const nextButtonIcon = document.getElementById('nextButtonIcon');
+            
+            prevButton.disabled = currentStep === 1;
+            
+            if (currentStep === totalSteps) {
+                nextButtonText.textContent = 'Submit Application';
+                nextButtonIcon.className = 'fas fa-paper-plane ml-2';
+                nextButton.className = nextButton.className.replace('bg-blue-600 hover:bg-blue-700', 'bg-green-600 hover:bg-green-700');
+            } else {
+                nextButtonText.textContent = 'Continue';
+                nextButtonIcon.className = 'fas fa-arrow-right ml-2';
+                nextButton.className = nextButton.className.replace('bg-green-600 hover:bg-green-700', 'bg-blue-600 hover:bg-blue-700');
+            }
+            
+            // Show/hide steps
+            for (let i = 1; i <= totalSteps; i++) {
+                const step = document.getElementById(`step${i}`);
+                if (i === currentStep) {
+                    step.classList.remove('hidden');
+                    step.classList.add('fade-in');
+                } else {
+                    step.classList.add('hidden');
+                    step.classList.remove('fade-in');
+                }
+            }
+        }
+        
+        // Navigation event listeners
+        document.getElementById('prevButton').addEventListener('click', () => {
+            if (currentStep > 1) {
+                currentStep--;
+                updateUI();
+            }
+        });
+        
+        document.getElementById('nextButton').addEventListener('click', () => {
+            if (currentStep < totalSteps) {
+                if (validateCurrentStep()) {
+                    currentStep++;
+                    updateUI();
+                    // Reset next button state for new step
+                    if (currentStep === 2) {
+                        document.getElementById('nextButton').disabled = false;
+                    }
+                }
+            } else {
+                submitForm();
+            }
+        });
+        
+        // Simple validation
+        function validateCurrentStep() {
+            const currentStepEl = document.getElementById(`step${currentStep}`);
+            const requiredInputs = currentStepEl.querySelectorAll('[required]');
+            
+            for (let input of requiredInputs) {
+                if (!input.value.trim()) {
+                    input.focus();
+                    input.classList.add('border-red-500');
+                    setTimeout(() => input.classList.remove('border-red-500'), 3000);
+                    return false;
+                }
+            }
+            return true;
+        }
+        
+        // Form submission
+        function submitForm() {
+            // Simple demo notification
+            alert('🎉 Application submitted successfully! You will receive a confirmation email shortly.');
+        }
+        
+        // Form change listeners for validation
+        document.getElementById('agentRegistrationForm').addEventListener('input', (e) => {
+            if (currentStep === 2) {
+                // Enable next if basic required fields are filled
+                const requiredFields = ['first_name', 'last_name', 'email', 'phone'];
+                const allFilled = requiredFields.every(field => {
+                    const input = document.querySelector(`[name="${field}"]`);
+                    return input && input.value.trim();
+                });
+                document.getElementById('nextButton').disabled = !allFilled;
+            }
+        });
+        
+        // Initialize
+        updateUI();
+        
+        // Mobile menu toggle (placeholder)
+        document.getElementById('mobileMenuToggle').addEventListener('click', () => {
+            console.log('Mobile menu toggle - placeholder for future implementation');
+        });
+        
+        // Touch-friendly improvements
+        document.querySelectorAll('.touch-manipulation').forEach(el => {
+            el.style.cursor = 'pointer';
+        });
+    </script>
+</body>
+</html>
+                                    
+                                    <div>
+                                        <label class="block text-white font-medium mb-2">
+                                            District *
+                                            <i class="fas fa-info-circle text-white/50 ml-1" title="Select your district"></i>
+                                        </label>
+                                        <select name="district" id="districtSelect" required
+                                                class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400">
+                                            <option value="">Select District</option>
+                                            <!-- Kigali City -->
+                                            <option value="Gasabo">Gasabo</option>
+                                            <option value="Kicukiro">Kicukiro</option>
+                                            <option value="Nyarugenge">Nyarugenge</option>
+                                            <!-- Eastern Province -->
+                                            <option value="Bugesera">Bugesera</option>
+                                            <option value="Gatsibo">Gatsibo</option>
+                                            <option value="Kayonza">Kayonza</option>
+                                            <option value="Kirehe">Kirehe</option>
+                                            <option value="Ngoma">Ngoma</option>
+                                            <option value="Nyagatare">Nyagatare</option>
+                                            <option value="Rwamagana">Rwamagana</option>
+                                            <!-- Northern Province -->
+                                            <option value="Burera">Burera</option>
+                                            <option value="Gakenke">Gakenke</option>
+                                            <option value="Gicumbi">Gicumbi</option>
+                                            <option value="Musanze">Musanze</option>
+                                            <option value="Rulindo">Rulindo</option>
+                                            <!-- Southern Province -->
+                                            <option value="Gisagara">Gisagara</option>
+                                            <option value="Huye">Huye</option>
+                                            <option value="Kamonyi">Kamonyi</option>
+                                            <option value="Muhanga">Muhanga</option>
+                                            <option value="Nyamagabe">Nyamagabe</option>
+                                            <option value="Nyanza">Nyanza</option>
+                                            <option value="Nyaruguru">Nyaruguru</option>
+                                            <option value="Ruhango">Ruhango</option>
+                                            <!-- Western Province -->
+                                            <option value="Karongi">Karongi</option>
+                                            <option value="Ngororero">Ngororero</option>
+                                            <option value="Nyabihu">Nyabihu</option>
+                                            <option value="Nyamasheke">Nyamasheke</option>
+                                            <option value="Rubavu">Rubavu</option>
+                                            <option value="Rusizi">Rusizi</option>
+                                            <option value="Rutsiro">Rutsiro</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-white font-medium mb-2">
+                                            Sector *
+                                            <i class="fas fa-info-circle text-white/50 ml-1" title="Enter your sector name"></i>
+                                        </label>
+                                        <input type="text" name="sector" required pattern=".{1,}" title="This field is required"
+                                               class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                               placeholder="Enter your sector name (e.g., Kimisagara, Nyamirambo, etc.)">
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-white font-medium mb-2">
+                                            Village/Cell *
+                                            <i class="fas fa-info-circle text-white/50 ml-1" title="Enter your village or cell name"></i>
+                                        </label>
+                                        <input type="text" name="village" required pattern=".{1,}" title="This field is required"
+                                               class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                               placeholder="Enter your village or cell name">
+                                    </div>
+                                </div>
+                                
+                                <!-- Generic fields for other countries -->
+                                <div id="genericFields" class="contents hidden">
+                                    <div>
+                                        <label class="block text-white font-medium mb-2">State/Province *</label>
+                                        <input type="text" name="state"
+                                               class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                               placeholder="Enter your state/province">
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-white font-medium mb-2">City *</label>
+                                        <input type="text" name="city"
+                                               class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                               placeholder="Enter your city">
+                                    </div>
+                                </div>
+                                
+                                <div class="md:col-span-2">
+                                    <label class="block text-white font-medium mb-2">
+                                        Street Address / Landmark *
+                                        <i class="fas fa-info-circle text-white/50 ml-1" title="Provide detailed address or nearby landmark"></i>
+                                    </label>
+                                    <textarea name="street_address" required rows="2"
+                                              class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                              placeholder="Enter your detailed street address or describe nearby landmarks"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Role-Specific Information -->
+                        <div id="roleSpecificInfo" class="mt-8 hidden">
+                            <!-- Fast Delivery Agent Specific Fields -->
+                            <div id="fastDeliveryFields" class="hidden">
+                                <h3 class="text-lg font-semibold text-white mb-4">
+                                    <i class="fas fa-running mr-2"></i>Fast Delivery Agent Information
+                                </h3>
+                                <p class="text-white/70 text-sm mb-4">Provide your work zone and delivery preferences for grocery and local market deliveries</p>
+                                
+                                <div class="bg-green-500/10 border border-green-500/20 rounded-lg p-4 mb-6">
+                                    <h4 class="text-green-400 font-semibold mb-2">
+                                        <i class="fas fa-info-circle mr-2"></i>Fast Delivery Requirements
+                                    </h4>
+                                    <ul class="text-green-300 text-sm space-y-1">
+                                        <li>• <strong>Required:</strong> National ID, GPS location, working phone number</li>
+                                        <li>• <strong>Optional:</strong> Vehicle details (you can work on foot or use any transport)</li>
+                                        <li>• <strong>Work Area:</strong> Define your preferred delivery zones</li>
+                                        <li>• <strong>Availability:</strong> Set your working hours and days</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label class="block text-white font-medium mb-2">
+                                            Preferred Work Zone *
+                                            <i class="fas fa-info-circle text-white/50 ml-1" title="Area where you prefer to make deliveries"></i>
+                                        </label>
+                                        <select name="work_zone" class="role-required-fast-delivery w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400">
+                                            <option value="">Select Work Zone</option>
+                                            <option value="Kigali City Center">Kigali City Center</option>
+                                            <option value="Gasabo District">Gasabo District</option>
+                                            <option value="Kicukiro District">Kicukiro District</option>
+                                            <option value="Nyarugenge District">Nyarugenge District</option>
+                                            <option value="Kimihurura Area">Kimihurura Area</option>
+                                            <option value="Remera Area">Remera Area</option>
+                                            <option value="Nyamirambo Area">Nyamirambo Area</option>
+                                            <option value="Gikondo Area">Gikondo Area</option>
+                                            <option value="Kimisagara Area">Kimisagara Area</option>
+                                            <option value="All Kigali Areas">All Kigali Areas</option>
+                                            <option value="Other">Other (specify in notes)</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-white font-medium mb-2">
+                                            Maximum Delivery Distance (km) *
+                                            <i class="fas fa-info-circle text-white/50 ml-1" title="Maximum distance you're willing to travel for deliveries"></i>
+                                        </label>
+                                        <select name="max_delivery_distance" class="role-required-fast-delivery w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400">
+                                            <option value="">Select Distance</option>
+                                            <option value="5">Up to 5 km</option>
+                                            <option value="10">Up to 10 km</option>
+                                            <option value="15">Up to 15 km</option>
+                                            <option value="20">Up to 20 km</option>
+                                            <option value="unlimited">No Limit</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                                    <div>
+                                        <label class="block text-white font-medium mb-2">
+                                            Available Days *
+                                            <i class="fas fa-info-circle text-white/50 ml-1" title="Days you're available for deliveries"></i>
+                                        </label>
+                                        <div class="space-y-2">
+                                            <label class="flex items-center text-white/80">
+                                                <input type="checkbox" name="available_days[]" value="monday" class="mr-3 rounded border-white/20 text-green-600 focus:ring-green-500 bg-white/10">
+                                                <span>Monday</span>
+                                            </label>
+                                            <label class="flex items-center text-white/80">
+                                                <input type="checkbox" name="available_days[]" value="tuesday" class="mr-3 rounded border-white/20 text-green-600 focus:ring-green-500 bg-white/10">
+                                                <span>Tuesday</span>
+                                            </label>
+                                            <label class="flex items-center text-white/80">
+                                                <input type="checkbox" name="available_days[]" value="wednesday" class="mr-3 rounded border-white/20 text-green-600 focus:ring-green-500 bg-white/10">
+                                                <span>Wednesday</span>
+                                            </label>
+                                            <label class="flex items-center text-white/80">
+                                                <input type="checkbox" name="available_days[]" value="thursday" class="mr-3 rounded border-white/20 text-green-600 focus:ring-green-500 bg-white/10">
+                                                <span>Thursday</span>
+                                            </label>
+                                            <label class="flex items-center text-white/80">
+                                                <input type="checkbox" name="available_days[]" value="friday" class="mr-3 rounded border-white/20 text-green-600 focus:ring-green-500 bg-white/10">
+                                                <span>Friday</span>
+                                            </label>
+                                            <label class="flex items-center text-white/80">
+                                                <input type="checkbox" name="available_days[]" value="saturday" class="mr-3 rounded border-white/20 text-green-600 focus:ring-green-500 bg-white/10">
+                                                <span>Saturday</span>
+                                            </label>
+                                            <label class="flex items-center text-white/80">
+                                                <input type="checkbox" name="available_days[]" value="sunday" class="mr-3 rounded border-white/20 text-green-600 focus:ring-green-500 bg-white/10">
+                                                <span>Sunday</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-white font-medium mb-2">
+                                            Working Hours *
+                                            <i class="fas fa-info-circle text-white/50 ml-1" title="Your typical working hours"></i>
+                                        </label>
+                                        <div class="space-y-3">
+                                            <div>
+                                                <label class="block text-white/70 text-sm mb-1">Start Time</label>
+                                                <input type="time" name="work_start_time" class="role-required pattern=".{1,}" title="This field is required"-fast-delivery w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400">
+                                            </div>
+                                            <div>
+                                                <label class="block text-white/70 text-sm mb-1">End Time</label>
+                                                <input type="time" name="work_end_time" class="role-required pattern=".{1,}" title="This field is required"-fast-delivery w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Transport/Delivery Agent Specific Fields -->
+                            <div id="transportDeliveryFields" class="hidden">
+                                <h3 class="text-lg font-semibold text-white mb-4">
+                                    <i class="fas fa-truck mr-2"></i>Transport/Delivery Agent Information
+                                </h3>
+                                <p class="text-white/70 text-sm mb-4">Provide your delivery capabilities and work area for physical product deliveries</p>
+                                
+                                <div class="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4 mb-6">
+                                    <h4 class="text-blue-400 font-semibold mb-2">
+                                        <i class="fas fa-info-circle mr-2"></i>Transport/Delivery Requirements
+                                    </h4>
+                                    <ul class="text-blue-300 text-sm space-y-1">
+                                        <li>• <strong>Required:</strong> National ID, GPS location, phone number</li>
+                                        <li>• <strong>Optional:</strong> Vehicle details and driver's license (if you have a vehicle)</li>
+                                        <li>• <strong>Work Area:</strong> Define your pickup and delivery zones</li>
+                                        <li>• <strong>Capacity:</strong> Specify your carrying/transport capacity</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label class="block text-white font-medium mb-2">
+                                            Pickup Zone *
+                                            <i class="fas fa-info-circle text-white/50 ml-1" title="Area where you can collect packages"></i>
+                                        </label>
+                                        <select name="pickup_zone" class="role-required-transport-delivery w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400">
+                                            <option value="">Select Pickup Zone</option>
+                                            <option value="Kigali City Center">Kigali City Center</option>
+                                            <option value="Gikondo Industrial Zone">Gikondo Industrial Zone</option>
+                                            <option value="Masoro Industrial Park">Masoro Industrial Park</option>
+                                            <option value="Kigali Special Economic Zone">Kigali Special Economic Zone</option>
+                                            <option value="Kimisagara Commercial Area">Kimisagara Commercial Area</option>
+                                            <option value="Nyabugogo Commercial Area">Nyabugogo Commercial Area</option>
+                                            <option value="Airport Area">Airport Area</option>
+                                            <option value="All Kigali Areas">All Kigali Areas</option>
+                                            <option value="Other Districts">Other Districts</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-white font-medium mb-2">
+                                            Delivery Zone *
+                                            <i class="fas fa-info-circle text-white/50 ml-1" title="Area where you can deliver packages"></i>
+                                        </label>
+                                        <select name="delivery_zone" class="role-required-transport-delivery w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400">
+                                            <option value="">Select Delivery Zone</option>
+                                            <option value="Kigali City Center">Kigali City Center</option>
+                                            <option value="Gasabo District">Gasabo District</option>
+                                            <option value="Kicukiro District">Kicukiro District</option>
+                                            <option value="Nyarugenge District">Nyarugenge District</option>
+                                            <option value="Residential Areas">Residential Areas</option>
+                                            <option value="Business Districts">Business Districts</option>
+                                            <option value="All Kigali Areas">All Kigali Areas</option>
+                                            <option value="Other Districts">Other Districts</option>
+                                            <option value="Nationwide">Nationwide</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                                    <div>
+                                        <label class="block text-white font-medium mb-2">
+                                            Transport Capacity *
+                                            <i class="fas fa-info-circle text-white/50 ml-1" title="Maximum weight/volume you can handle"></i>
+                                        </label>
+                                        <select name="transport_capacity" class="role-required-transport-delivery w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400">
+                                            <option value="">Select Capacity</option>
+                                            <option value="small">Small (up to 10kg, backpack/bag)</option>
+                                            <option value="medium">Medium (up to 50kg, bicycle/motorcycle)</option>
+                                            <option value="large">Large (up to 200kg, car/van)</option>
+                                            <option value="extra_large">Extra Large (200kg+, truck)</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-white font-medium mb-2">
+                                            Maximum Orders per Trip *
+                                            <i class="fas fa-info-circle text-white/50 ml-1" title="How many orders can you handle in one trip"></i>
+                                        </label>
+                                        <select name="max_orders_per_trip" class="role-required-transport-delivery w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400">
+                                            <option value="">Select Number</option>
+                                            <option value="1">1 order</option>
+                                            <option value="2-3">2-3 orders</option>
+                                            <option value="4-5">4-5 orders</option>
+                                            <option value="6-10">6-10 orders</option>
+                                            <option value="10+">10+ orders</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Site Manager Specific Fields -->
+                            <div id="siteManagerFields" class="hidden">
+                                <h3 class="text-lg font-semibold text-white mb-4">
+                                    <i class="fas fa-store mr-2"></i>Site Manager Information
+                                </h3>
+                                <p class="text-white/70 text-sm mb-4">Provide details about your pickup site location and operations</p>
+                                
+                                <div class="bg-purple-500/10 border border-purple-500/20 rounded-lg p-4 mb-6">
+                                    <h4 class="text-purple-400 font-semibold mb-2">
+                                        <i class="fas fa-info-circle mr-2"></i>Site Manager Requirements
+                                    </h4>
+                                    <ul class="text-purple-300 text-sm space-y-1">
+                                        <li>• <strong>Required:</strong> Site name, exact location, opening hours, phone</li>
+                                        <li>• <strong>Optional:</strong> National ID, logo/shop photo</li>
+                                        <li>• <strong>Location:</strong> Must pin exact site location on map</li>
+                                        <li>• <strong>Operations:</strong> Define your service hours and capabilities</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label class="block text-white font-medium mb-2">
+                                            Site Name *
+                                            <i class="fas fa-info-circle text-white/50 ml-1" title="Name of your pickup site or business"></i>
+                                        </label>
+                                        <input type="text" name="site_name" class="role-required pattern="[A-Za-z\s]{2,50}" title="Name must be 2-50 characters, letters and spaces only"-site-manager w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                               placeholder="Enter your site or business name">
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-white font-medium mb-2">
+                                            Site Type
+                                            <i class="fas fa-info-circle text-white/50 ml-1" title="Type of your pickup location"></i>
+                                        </label>
+                                        <select name="site_type"
+                                                class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400">
+                                            <option value="">Select Site Type</option>
+                                            <option value="shop">Shop/Store</option>
+                                            <option value="kiosk">Kiosk</option>
+                                            <option value="office">Office</option>
+                                            <option value="home_based">Home-based</option>
+                                            <option value="other">Other</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                                    <div>
+                                        <label class="block text-white font-medium mb-2">
+                                            Opening Hours *
+                                            <i class="fas fa-info-circle text-white/50 ml-1" title="When is your site open for customers"></i>
+                                        </label>
+                                        <input type="time" name="opening_hours" class="role-required pattern=".{1,}" title="This field is required"-site-manager w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400">
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-white font-medium mb-2">
+                                            Closing Hours *
+                                            <i class="fas fa-info-circle text-white/50 ml-1" title="When does your site close"></i>
+                                        </label>
+                                        <input type="time" name="closing_hours" class="role-required pattern=".{1,}" title="This field is required"-site-manager w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400">
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-4">
+                                    <label class="block text-white font-medium mb-2">
+                                        Operating Days
+                                        <i class="fas fa-info-circle text-white/50 ml-1" title="Select days when your site is operational"></i>
+                                    </label>
+                                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                        <label class="flex items-center text-white/80">
+                                            <input type="checkbox" name="operating_days[]" value="monday" class="mr-2 rounded border-white/20 text-blue-600 focus:ring-blue-500 bg-white/10">
+                                            Monday
+                                        </label>
+                                        <label class="flex items-center text-white/80">
+                                            <input type="checkbox" name="operating_days[]" value="tuesday" class="mr-2 rounded border-white/20 text-blue-600 focus:ring-blue-500 bg-white/10">
+                                            Tuesday
+                                        </label>
+                                        <label class="flex items-center text-white/80">
+                                            <input type="checkbox" name="operating_days[]" value="wednesday" class="mr-2 rounded border-white/20 text-blue-600 focus:ring-blue-500 bg-white/10">
+                                            Wednesday
+                                        </label>
+                                        <label class="flex items-center text-white/80">
+                                            <input type="checkbox" name="operating_days[]" value="thursday" class="mr-2 rounded border-white/20 text-blue-600 focus:ring-blue-500 bg-white/10">
+                                            Thursday
+                                        </label>
+                                        <label class="flex items-center text-white/80">
+                                            <input type="checkbox" name="operating_days[]" value="friday" class="mr-2 rounded border-white/20 text-blue-600 focus:ring-blue-500 bg-white/10">
+                                            Friday
+                                        </label>
+                                        <label class="flex items-center text-white/80">
+                                            <input type="checkbox" name="operating_days[]" value="saturday" class="mr-2 rounded border-white/20 text-blue-600 focus:ring-blue-500 bg-white/10">
+                                            Saturday
+                                        </label>
+                                        <label class="flex items-center text-white/80">
+                                            <input type="checkbox" name="operating_days[]" value="sunday" class="mr-2 rounded border-white/20 text-blue-600 focus:ring-blue-500 bg-white/10">
+                                            Sunday
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                        </div>
+
+                        <!-- Location on Map (Required for All Agent Types) -->
+                        <div class="mt-8">
+                            <h3 class="text-lg font-semibold text-white mb-4">
+                                <i class="fas fa-map-marker-alt mr-2"></i>Location Selection *
+                            </h3>
+                            <p class="text-white/70 text-sm mb-4">
+                                <span id="locationDescription">Click on the map to pin your exact location. This helps us match you with nearby customers and optimize delivery routes.</span>
+                            </p>
+                            
+                            <div class="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4 mb-6">
+                                <h4 class="text-yellow-400 font-semibold mb-2">
+                                    <i class="fas fa-exclamation-triangle mr-2"></i>Location Requirements by Agent Type
+                                </h4>
+                                <div id="locationRequirements">
+                                    <div class="fast-delivery-location hidden">
+                                        <p class="text-yellow-300 text-sm">📍 <strong>Fast Delivery:</strong> Pin your home base or preferred starting location for deliveries</p>
+                                    </div>
+                                    <div class="transport-delivery-location hidden">
+                                        <p class="text-yellow-300 text-sm">📍 <strong>Transport/Delivery:</strong> Pin your base location or where you typically start your delivery routes</p>
+                                    </div>
+                                    <div class="site-manager-location hidden">
+                                        <p class="text-yellow-300 text-sm">📍 <strong>Site Manager:</strong> Pin the exact location of your pickup site - this must be precise for customers to find you</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="map-container bg-white/10 rounded-lg border border-white/20 mb-4 relative overflow-hidden">
+                                <div id="locationMap" class="w-full h-96 rounded-lg"></div>
+                                <div id="mapLoading" class="absolute inset-0 bg-gray-900/80 flex items-center justify-center rounded-lg">
+                                    <div class="text-center">
+                                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mx-auto mb-2"></div>
+                                        <p class="text-white/80 text-sm">Loading map...</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-white font-medium mb-2">
+                                        Latitude *
+                                        <i class="fas fa-info-circle text-white/50 ml-1" title="Automatically filled when you click on the map"></i>
+                                    </label>
+                                    <input type="number" name="latitude" id="latitudeInput" step="any" required pattern=".{1,}" title="This field is required" readonly
+                                           class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                           placeholder="Click on map to set latitude">
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-white font-medium mb-2">
+                                        Longitude *
+                                        <i class="fas fa-info-circle text-white/50 ml-1" title="Automatically filled when you click on the map"></i>
+                                    </label>
+                                    <input type="number" name="longitude" id="longitudeInput" step="any" required pattern=".{1,}" title="This field is required" readonly
+                                           class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                           placeholder="Click on map to set longitude">
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4 flex items-center justify-between">
+                                <button type="button" id="getCurrentLocation" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors" onclick="showNotification('Feature in development', 'info')">
+                                    i class="fas fa-crosshairs mr-2"></i>Use My Current Location
+                                </button>
+                                
+                                <div class="text-right">
+                                    <p class="text-white/60 text-xs">Location accuracy is important for:</p>
+                                    <p class="text-white/80 text-xs">• Customer-agent matching</p>
+                                    <p class="text-white/80 text-xs">• Route optimization</p>
+                                    <p class="text-white/80 text-xs">• Service area mapping</p>
+                                </div>
+                            </div>
+                        </div>
+
+
+
+                        <!-- Account Security -->
+                        <div class="mt-8">
+                            <h3 class="text-lg font-semibold text-white mb-4">Account Security</h3>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-white font-medium mb-2">Password *</label>
+                                    <input type="password" name="password" required pattern=".{8,}" title="Password must be at least 8 characters long" minlength="8"
+                                           class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                           placeholder="Enter a strong password">
+                                    <p class="text-white/60 text-xs mt-1">Minimum 8 characters with letters, numbers, and symbols</p>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-white font-medium mb-2">Confirm Password *</label>
+                                    <input type="password" name="confirm_password" required pattern=".{8,}" title="Password must be at least 8 characters long"
+                                           class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                           placeholder="Confirm your password">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between mt-8">
+                            <button type="button" id="prevStep2" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors" onclick="showNotification('Feature in development', 'info')">
+                                <i class="fas fa-arrow-left mr-2"></i>Previous
+                            </button>
+                            <button type="button" id="nextStep2" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors" onclick="showNotification('Feature in development', 'info')">
+                                Continue to Verification
+                                <i class="fas fa-arrow-right ml-2"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Verification Documents -->
+                <div id="step3" class="step-content hidden">
+                    <div class="glass-morphism rounded-2xl p-8">
+                        <h2 class="text-2xl font-bold text-white mb-6 text-center">Verification Documents</h2>
+                        <p class="text-white/80 text-center mb-8">Upload required documents to verify your identity and eligibility</p>
+                        
+                        <div class="space-y-8">
+                            <!-- Profile Photo -->
+                            <div>
+                                <h3 class="text-lg font-semibold text-white mb-4">Profile Photo *</h3>
+                                <div class="file-upload-area rounded-lg p-6 text-center" data-upload="profile_photo">
+                                    <i class="fas fa-camera text-white/50 text-3xl mb-4"></i>
+                                    <p class="text-white mb-2">Upload your profile photo</p>
+                                    <p class="text-white/60 text-sm mb-4">Clear, recent photo of yourself (JPG, PNG, max 5MB)</p>
+                                    <input type="file" name="profile_photo" accept="image/*" required pattern=".{1,}" title="This field is required" class="hidden">
+                                    <button type="button" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm" onclick="showNotification('Feature in development', 'info')">
+                                        Choose File
+                                    /button>
+                                    <div class="preview-container mt-4 hidden">
+                                        <img class="preview-image mx-auto" alt="Profile preview">
+                                        <button type="button" class="remove-file text-red-400 hover:text-red-300 text-sm mt-2" onclick="showNotification('Feature in development', 'info')">
+                                            i class="fas fa-times mr-1"></i>Remove
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ID Document -->
+                            <div>
+                                <h3 class="text-lg font-semibold text-white mb-4">Government ID Document *</h3>
+                                <div class="mb-4">
+                                    <select name="id_type" required
+                                            class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400">
+                                        <option value="">Select ID Type</option>
+                                        <option value="national_id">National ID Card</option>
+                                        <option value="passport">Passport</option>
+                                        <option value="driving_license">Driving License</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <!-- Front of ID -->
+                                    <div class="file-upload-area rounded-lg p-6 text-center" data-upload="id_front">
+                                        <i class="fas fa-id-card text-white/50 text-2xl mb-3"></i>
+                                        <p class="text-white mb-2">Front of ID</p>
+                                        <p class="text-white/60 text-sm mb-4">Clear photo of ID front</p>
+                                        <input type="file" name="id_front" accept="image/*" required pattern=".{1,}" title="This field is required" class="hidden">
+                                        <button type="button" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm" onclick="showNotification('Feature in development', 'info')">
+                                            Choose File
+                                        /button>
+                                        <div class="preview-container mt-4 hidden">
+                                            <img class="preview-image mx-auto" alt="ID front preview">
+                                            <button type="button" class="remove-file text-red-400 hover:text-red-300 text-sm mt-2" onclick="showNotification('Feature in development', 'info')">
+                                                i class="fas fa-times mr-1"></i>Remove
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Back of ID -->
+                                    <div class="file-upload-area rounded-lg p-6 text-center" data-upload="id_back">
+                                        <i class="fas fa-id-card text-white/50 text-2xl mb-3"></i>
+                                        <p class="text-white mb-2">Back of ID</p>
+                                        <p class="text-white/60 text-sm mb-4">Clear photo of ID back</p>
+                                        <input type="file" name="id_back" accept="image/*" required pattern=".{1,}" title="This field is required" class="hidden">
+                                        <button type="button" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm" onclick="showNotification('Feature in development', 'info')">
+                                            Choose File
+                                        /button>
+                                        <div class="preview-container mt-4 hidden">
+                                            <img class="preview-image mx-auto" alt="ID back preview">
+                                            <button type="button" class="remove-file text-red-400 hover:text-red-300 text-sm mt-2" onclick="showNotification('Feature in development', 'info')">
+                                                i class="fas fa-times mr-1"></i>Remove
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Agent Type Specific Documents -->
+                            <div id="agentSpecificDocs">
+                                <!-- Vehicle Documents (for delivery agents) -->
+                                <div id="vehicleDocs" class="hidden">
+                                    <h3 class="text-lg font-semibold text-white mb-4">
+                                        <i class="fas fa-car mr-2"></i>Vehicle Information (Optional)
+                                    </h3>
+                                    
+                                    <div class="bg-green-500/10 border border-green-500/20 rounded-lg p-4 mb-6">
+                                        <h4 class="text-green-400 font-semibold mb-2">
+                                            <i class="fas fa-info-circle mr-2"></i>Vehicle Requirements
+                                        </h4>
+                                        <ul class="text-green-300 text-sm space-y-1">
+                                            <li>• Vehicle ownership is <strong>optional</strong> - you can work on foot or use other transport</li>
+                                            <li>• If you have a vehicle, providing details helps with better order matching</li>
+                                            <li>• Driver's license is only required if you own/operate a motor vehicle</li>
+                                            <li>• You can update vehicle information later in your dashboard</li>
+                                        </ul>
+                                    </div>
+                                    
+                                    <div class="mb-4">
+                                        <label class="flex items-center text-white/80">
+                                            <input type="checkbox" id="hasVehicle" name="has_vehicle" class="mr-3 rounded border-white/20 text-blue-600 focus:ring-blue-500 bg-white/10">
+                                            <span class="font-medium">I have a vehicle for deliveries</span>
+                                        </label>
+                                    </div>
+                                    
+                                    <div id="vehicleDetails" class="hidden">
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                            <div>
+                                                <label class="block text-white font-medium mb-2">
+                                                    Vehicle Type
+                                                    <i class="fas fa-info-circle text-white/50 ml-1" title="Type of vehicle you use for deliveries"></i>
+                                                </label>
+                                                <select name="vehicle_type"
+                                                        class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400">
+                                                    <option value="">Select Vehicle Type</option>
+                                                    <option value="motorcycle">Motorcycle</option>
+                                                    <option value="bicycle">Bicycle</option>
+                                                    <option value="car">Car</option>
+                                                    <option value="van">Van</option>
+                                                    <option value="truck">Truck</option>
+                                                    <option value="scooter">Scooter</option>
+                                                    <option value="other">Other</option>
+                                                </select>
+                                            </div>
+                                            
+                                            <div>
+                                                <label class="block text-white font-medium mb-2">
+                                                    License Plate Number
+                                                    <i class="fas fa-info-circle text-white/50 ml-1" title="Vehicle registration plate number"></i>
+                                                </label>
+                                                <input type="text" name="license_plate"
+                                                       class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                                       placeholder="Enter license plate (if applicable)">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <!-- Vehicle Registration -->
+                                        <div class="file-upload-area rounded-lg p-6 text-center" data-upload="vehicle_registration">
+                                            <i class="fas fa-file-alt text-white/50 text-2xl mb-3"></i>
+                                            <p class="text-white mb-2">Vehicle Registration</p>
+                                            <p class="text-white/60 text-sm mb-4">Registration document</p>
+                                            <input type="file" name="vehicle_registration" accept="image/*,application/pdf" class="hidden">
+                                            <button type="button" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm" onclick="showNotification('Feature in development', 'info')">
+                                                Choose File
+                                            /button>
+                                            <div class="preview-container mt-4 hidden">
+                                                <img class="preview-image mx-auto" alt="Registration preview">
+                                                <button type="button" class="remove-file text-red-400 hover:text-red-300 text-sm mt-2" onclick="showNotification('Feature in development', 'info')">
+                                                    i class="fas fa-times mr-1"></i>Remove
+                                                </button>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Driver's License -->
+                                        <div class="file-upload-area rounded-lg p-6 text-center" data-upload="drivers_license">
+                                            <i class="fas fa-id-badge text-white/50 text-2xl mb-3"></i>
+                                            <p class="text-white mb-2">Driver's License</p>
+                                            <p class="text-white/60 text-sm mb-4">Valid driver's license</p>
+                                            <input type="file" name="drivers_license" accept="image/*,application/pdf" class="hidden">
+                                            <button type="button" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm" onclick="showNotification('Feature in development', 'info')">
+                                                Choose File
+                                            /button>
+                                            <div class="preview-container mt-4 hidden">
+                                                <img class="preview-image mx-auto" alt="License preview">
+                                                <button type="button" class="remove-file text-red-400 hover:text-red-300 text-sm mt-2" onclick="showNotification('Feature in development', 'info')">
+                                                    i class="fas fa-times mr-1"></i>Remove
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Business License (for site managers) -->
+                                <div id="businessDocs" class="hidden">
+                                    <h3 class="text-lg font-semibold text-white mb-4">Business Documents</h3>
+                                    
+                                    <div class="mb-4">
+                                        <label class="block text-white font-medium mb-2">Business Name</label>
+                                        <input type="text" name="business_name"
+                                               class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                               placeholder="Enter business name">
+                                    </div>
+                                    
+                                    <div class="file-upload-area rounded-lg p-6 text-center" data-upload="business_license">
+                                        <i class="fas fa-certificate text-white/50 text-2xl mb-3"></i>
+                                        <p class="text-white mb-2">Business License</p>
+                                        <p class="text-white/60 text-sm mb-4">Valid business registration</p>
+                                        <input type="file" name="business_license" accept="image/*,application/pdf" class="hidden">
+                                        <button type="button" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm" onclick="showNotification('Feature in development', 'info')">
+                                            Choose File
+                                        /button>
+                                        <div class="preview-container mt-4 hidden">
+                                            <img class="preview-image mx-auto" alt="Business license preview">
+                                            <button type="button" class="remove-file text-red-400 hover:text-red-300 text-sm mt-2" onclick="showNotification('Feature in development', 'info')">
+                                                i class="fas fa-times mr-1"></i>Remove
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Payment Information -->
+                            <div>
+                                <h3 class="text-lg font-semibold text-white mb-4">
+                                    <i class="fas fa-credit-card mr-2"></i>Payment Information (Optional)
+                                </h3>
+                                <p class="text-white/70 text-sm mb-4">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    Provide payment details for commission payments. You can add this information later if needed.
+                                </p>
+                                
+                                <div class="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4 mb-6">
+                                    <h4 class="text-blue-400 font-semibold mb-2">
+                                        <i class="fas fa-lightbulb mr-2"></i>Payment Options
+                                    </h4>
+                                    <ul class="text-blue-300 text-sm space-y-1">
+                                        <li>• Bank account for direct transfers</li>
+                                        <li>• Mobile money for instant payments</li>
+                                        <li>• You can update payment details anytime in your dashboard</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-white font-medium mb-2">
+                                            Bank Name
+                                            <i class="fas fa-info-circle text-white/50 ml-1" title="Name of your bank (optional)"></i>
+                                        </label>
+                                        <select name="bank_name"
+                                                class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400">
+                                            <option value="">Select Bank (Optional)</option>
+                                            <option value="Bank of Kigali (BK)">Bank of Kigali (BK)</option>
+                                            <option value="Banque Populaire du Rwanda (BPR)">Banque Populaire du Rwanda (BPR)</option>
+                                            <option value="I&M Bank Rwanda">I&M Bank Rwanda</option>
+                                            <option value="Equity Bank Rwanda">Equity Bank Rwanda</option>
+                                            <option value="Cogebanque">Cogebanque</option>
+                                            <option value="Access Bank Rwanda">Access Bank Rwanda</option>
+                                            <option value="GT Bank Rwanda">GT Bank Rwanda</option>
+                                            <option value="KCB Bank Rwanda">KCB Bank Rwanda</option>
+                                            <option value="Urwego Opportunity Bank">Urwego Opportunity Bank</option>
+                                            <option value="AB Bank Rwanda">AB Bank Rwanda</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-white font-medium mb-2">
+                                            Account Number
+                                            <i class="fas fa-info-circle text-white/50 ml-1" title="Your bank account number (optional)"></i>
+                                        </label>
+                                        <input type="text" name="account_number"
+                                               class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                               placeholder="Enter account number (optional)">
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-white font-medium mb-2">
+                                            Account Holder Name
+                                            <i class="fas fa-info-circle text-white/50 ml-1" title="Name on the bank account (optional)"></i>
+                                        </label>
+                                        <input type="text" name="account_holder"
+                                               class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                               placeholder="Enter account holder name (optional)">
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-white font-medium mb-2">
+                                            Mobile Money Number
+                                            <i class="fas fa-info-circle text-white/50 ml-1" title="Your mobile money number for payments"></i>
+                                        </label>
+                                        <input type="tel" name="mobile_money"
+                                               class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                               placeholder="+250 788 123 456 (optional)">
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-4 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                                    <p class="text-yellow-400 text-sm">
+                                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                                        <strong>Note:</strong> While payment information is optional during registration, 
+                                        you'll need to provide it before receiving your first commission payment.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between mt-8">
+                            <button type="button" id="prevStep3" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors" onclick="showNotification('Feature in development', 'info')">
+                                <i class="fas fa-arrow-left mr-2"></i>Previous
+                            </button>
+                            <button type="button" id="nextStep3" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors" onclick="showNotification('Feature in development', 'info')">
+                                Review Application
+                                <i class="fas fa-arrow-right ml-2"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 4: Review and Submit -->
+                <div id="step4" class="step-content hidden">
+                    <div class="glass-morphism rounded-2xl p-8">
+                        <h2 class="text-2xl font-bold text-white mb-6 text-center">Review Your Application</h2>
+                        <p class="text-white/80 text-center mb-8">Please review all information before submitting</p>
+                        
+                        <div id="reviewContent" class="space-y-6">
+                            <!-- Review content will be populated by JavaScript -->
+                        </div>
+
+                        <!-- Terms and Conditions -->
+                        <div class="mt-8 p-6 bg-white/5 rounded-lg">
+                            <h3 class="text-lg font-semibold text-white mb-4">Terms and Conditions</h3>
+                            
+                            <div class="space-y-3">
+                                <label class="flex items-start">
+                                    <input type="checkbox" name="agree_terms" required pattern=".{1,}" title="This field is required" class="mt-1 mr-3 rounded border-white/20 text-blue-600 focus:ring-blue-500 bg-white/10">
+                                    <span class="text-white/80 text-sm">I agree to the <a href="javascript:void(0)" onclick="showNotification('Navigation feature available', 'info')" class="text-blue-400 hover:text-blue-300">Terms of Service</a> and <a href="javascript:void(0)" onclick="showNotification('Navigation feature available', 'info')" class="text-blue-400 hover:text-blue-300">Privacy Policy</a></span>
+                                </label>
+                                
+                                <label class="flex items-start">
+                                    <input type="checkbox" name="agree_background_check" required pattern=".{1,}" title="This field is required" class="mt-1 mr-3 rounded border-white/20 text-blue-600 focus:ring-blue-500 bg-white/10">
+                                    <span class="text-white/80 text-sm">I consent to background verification and document authentication</span>
+                                </label>
+                                
+                                <label class="flex items-start">
+                                    <input type="checkbox" name="agree_commission" required pattern=".{1,}" title="This field is required" class="mt-1 mr-3 rounded border-white/20 text-blue-600 focus:ring-blue-500 bg-white/10">
+                                    <span class="text-white/80 text-sm">I understand the commission structure and payment terms</span>
+                                </label>
+                                
+                                <label class="flex items-start">
+                                    <input type="checkbox" name="agree_data_processing" required pattern=".{1,}" title="This field is required" class="mt-1 mr-3 rounded border-white/20 text-blue-600 focus:ring-blue-500 bg-white/10">
+                                    <span class="text-white/80 text-sm">I consent to the processing of my personal data for verification purposes</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between mt-8">
+                            <button type="button" id="prevStep4" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors" onclick="showNotification('Feature in development', 'info')">
+                                <i class="fas fa-arrow-left mr-2"></i>Previous
+                            </button>
+                            <button type="submit" id="submitApplication" class="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors">
+                                <i class="fas fa-paper-plane mr-2"></i>Submit Application
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+
+        <!-- Success Modal -->
+        <div id="successModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+            <div class="glass-morphism rounded-2xl p-8 max-w-md mx-4 text-center">
+                <div class="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-check text-green-400 text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-4">Application Submitted!</h3>
+                <p class="text-white/80 mb-6">Your agent application has been submitted successfully. You will receive an email confirmation shortly.</p>
+                <p class="text-white/70 text-sm mb-6">Our team will review your application within 2-3 business days. You'll be notified via email and SMS about the status.</p>
+                <button onclick="window.location.href='/auth/account-pending.html'" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors">
+                    Check Application Status
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let map, marker, tileLayer;
+        let currentStep = 1;
+        let selectedAgentType = null;
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeMap();
+            setupEventListeners();
+            setupFileUploads();
+            loadAgentTypesConfig();
+        });
+
+        // Initialize map with high-performance settings
+        function initializeMap() {
+            // Wait for the DOM to be ready and the map container to exist
+            setTimeout(() => {
+                const mapContainer = document.getElementById('locationMap');
+                const loadingIndicator = document.getElementById('mapLoading');
+                
+                if (mapContainer) {
+                    try {
+                        // Initialize map with high-performance settings
+                        map = L.map('locationMap', {
+                            center: [-1.9441, 30.0619], // Kigali, Rwanda
+                            zoom: 13,
+                            zoomControl: true,
+                            scrollWheelZoom: true,
+                            doubleClickZoom: true,
+                            boxZoom: false, // Disable for better performance
+                            keyboard: true,
+                            dragging: true,
+                            touchZoom: true,
+                            zoomAnimation: false, // Disable for faster zoom
+                            fadeAnimation: false, // Disable for faster loading
+                            markerZoomAnimation: false, // Disable for better performance
+                            maxZoom: 18,
+                            minZoom: 8,
+                            zoomSnap: 1,
+                            zoomDelta: 1,
+                            wheelPxPerZoomLevel: 60,
+                            preferCanvas: true // Use canvas for better performance
+                        });
+                        
+                        // Ultra-fast tile layer with multiple providers for speed
+                        const tileProviders = [
+                            // Fast CDN provider - CartoDB Light (fastest)
+                            {
+                                url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+                                options: {
+                                    attribution: '© OpenStreetMap contributors © CARTO',
+                                    subdomains: 'abcd',
+                                    maxZoom: 19
+                                }
+                            },
+                            // Fallback - OpenStreetMap
+                            {
+                                url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                options: {
+                                    attribution: '© OpenStreetMap contributors',
+                                    subdomains: ['a', 'b', 'c']
+                                }
+                            },
+                            // Alternative fast provider
+                            {
+                                url: 'https://tiles.stadiamaps.com/tiles/osm_bright/{z}/{x}/{y}{r}.png',
+                                options: {
+                                    attribution: '© Stadia Maps © OpenStreetMap contributors',
+                                    maxZoom: 20
+                                }
+                            }
+                        ];
+
+                        let providerIndex = 0;
+
+                        function createTileLayer(providerIndex = 0) {
+                            const provider = tileProviders[providerIndex];
+                            return L.tileLayer(provider.url, {
+                                ...provider.options,
+                                maxZoom: 18,
+                                minZoom: 8,
+                                tileSize: 256,
+                                zoomOffset: 0,
+                                // Ultra-performance optimizations
+                                keepBuffer: 3, // Keep more tiles in buffer for ultra-smooth panning
+                                maxNativeZoom: 18,
+                                detectRetina: false, // Disable retina for faster loading
+                                updateWhenIdle: false, // Update tiles while panning
+                                updateWhenZooming: false, // Don't update while zooming
+                                crossOrigin: true,
+                                // Aggressive preloading
+                                bounds: [[-3, 28], [0, 32]], // Rwanda bounds for preloading
+                                // Fast loading settings
+                                errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+                                timeout: 3000, // 3 second timeout
+                                // Performance callbacks
+                                loading: function() {
+                                    console.log(`Loading tiles from provider ${providerIndex + 1}...`);
+                                },
+                                load: function() {
+                                    console.log(`Tiles loaded from provider ${providerIndex + 1}`);
+                                    if (loadingIndicator) loadingIndicator.style.display = 'none';
+                                }
+                            });
+                        }
+
+                        // Simple tile layer initialization
+                        function initializeTileLayer() {
+                            tileLayer = createTileLayer(providerIndex);
+                            
+                            tileLayer.on('tileerror', function(e) {
+                                console.warn(`Tile provider ${providerIndex + 1} failed, trying next...`);
+                                if (providerIndex < tileProviders.length - 1) {
+                                    map.removeLayer(tileLayer);
+                                    providerIndex++;
+                                    initializeTileLayer();
+                                }
+                            });
+                            
+                            tileLayer.addTo(map);
+                            console.log('Tile layer initialized');
+                        }
+
+                        initializeTileLayer();
+
+                        // Ultra-fast zoom optimization
+                        let zoomTimeout;
+                        map.on('zoomstart', function() {
+                            // Clear any pending zoom operations
+                            if (zoomTimeout) clearTimeout(zoomTimeout);
+                            
+                            // Temporarily reduce tile quality for faster zoom
+                            if (tileLayer) {
+                                tileLayer.options.updateWhenZooming = false;
+                            }
+                        });
+
+                        map.on('zoom', function() {
+                            // Throttle zoom updates for performance
+                            if (zoomTimeout) clearTimeout(zoomTimeout);
+                            zoomTimeout = setTimeout(() => {
+                                map.invalidateSize(false);
+                            }, 50);
+                        });
+
+                        map.on('zoomend', function() {
+                            // Re-enable tile updates after zoom completes
+                            if (tileLayer) {
+                                tileLayer.options.updateWhenZooming = false; // Keep disabled for performance
+                            }
+                            
+                            // Force tile refresh after zoom
+                            setTimeout(() => {
+                                if (tileLayer) {
+                                    tileLayer.redraw();
+                                }
+                            }, 100);
+                        });
+
+                        // Add click event for location selection
+                        map.on('click', function(e) {
+                            // Ensure loading is hidden when user interacts with map
+                            hideLoadingIndicator();
+                            setLocation(e.latlng.lat, e.latlng.lng);
+                        });
+
+                        // Hide loading on any map interaction
+                        map.on('drag', hideLoadingIndicator);
+                        map.on('zoom', hideLoadingIndicator);
+                        map.on('movestart', hideLoadingIndicator);
+
+                        // Simple and reliable loading detection
+                        let isMapReady = false;
+
+                        function hideLoadingIndicator() {
+                            if (loadingIndicator && !isMapReady) {
+                                loadingIndicator.style.display = 'none';
+                                isMapReady = true;
+                                console.log('✅ Map loading complete - map is interactive');
+                            }
+                        }
+
+                        // Simple timeout-based loading (most reliable)
+                        setTimeout(() => {
+                            hideLoadingIndicator();
+                        }, 1500); // Hide loading after 1.5 seconds
+
+                        // Additional check when first tiles load
+                        let firstTileLoaded = false;
+                        tileLayer.on('tileload', function() {
+                            if (!firstTileLoaded) {
+                                firstTileLoaded = true;
+                                setTimeout(() => {
+                                    hideLoadingIndicator();
+                                }, 500);
+                            }
+                        });
+
+                        // Position zoom controls
+                        map.zoomControl.setPosition('topright');
+                        
+                        // Add custom zoom controls for better performance
+                        const customZoomControl = L.control.zoom({
+                            position: 'topright',
+                            zoomInText: '+',
+                            zoomOutText: '−',
+                            zoomInTitle: 'Zoom in',
+                            zoomOutTitle: 'Zoom out'
+                        });
+                        
+                        // Remove default zoom control and add custom one
+                        map.removeControl(map.zoomControl);
+                        map.addControl(customZoomControl);
+                        
+                        console.log('✅ High-performance map initialized successfully');
+                        
+                        // Trigger initial tile load and preload surrounding tiles
+                        map.invalidateSize();
+                        
+                        // Preload tiles for common zoom levels for ultra-fast zooming
+                        setTimeout(() => {
+                            preloadTiles();
+                        }, 2000);
+                        
+                    } catch (error) {
+                        console.error('❌ Error initializing map:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+                        if (loadingIndicator) {
+                            loadingIndicator.innerHTML = `
+                                <div class="text-center">
+                                    <i class="fas fa-exclamation-triangle text-red-400 text-2xl mb-2"></i>
+                                    <p class="text-red-400 text-sm">Map failed to load</p>
+                                    <button onclick="initializeMap()" class="mt-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs">
+                                        Retry
+                                    </button>
+                                </div>
+                            `;
+                        }
+                    }
+                }
+            }, 50); // Reduced timeout for faster initialization
+        }
+
+        // Set location on map with ultra-fast performance
+        function setLocation(lat, lng) {
+            if (!map) return;
+            
+            try {
+                // Remove existing marker efficiently
+                if (marker) {
+                    map.removeLayer(marker);
+                }
+                
+                // Create high-performance marker (simple circle, no complex HTML)
+                const customIcon = L.divIcon({
+                    className: 'custom-marker-fast',
+                    html: '<div class="marker-dot"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10]
+                });
+                
+                marker = L.marker([lat, lng], { 
+                    icon: customIcon,
+                    riseOnHover: false, // Disable for performance
+                    riseOffset: 0
+                }).addTo(map);
+                
+                // Add popup with location info (bind but don't open immediately for performance)
+                const popupContent = getLocationPopupContent(lat, lng);
+                marker.bindPopup(popupContent, {
+                    closeButton: true,
+                    autoClose: true,
+                    closeOnEscapeKey: true,
+                    maxWidth: 250
+                });
+                
+                // Update input fields efficiently
+                const latInput = document.getElementById('latitudeInput') || document.getElementById('latitude');
+                const lngInput = document.getElementById('longitudeInput') || document.getElementById('longitude');
+                
+                const latValue = lat.toFixed(6);
+                const lngValue = lng.toFixed(6);
+                
+                if (latInput && latInput.value !== latValue) {
+                    latInput.value = latValue;
+                    latInput.classList.remove('border-red-500');
+                    latInput.classList.add('border-green-500');
+                }
+                if (lngInput && lngInput.value !== lngValue) {
+                    lngInput.value = lngValue;
+                    lngInput.classList.remove('border-red-500');
+                    lngInput.classList.add('border-green-500');
+                }
+                
+                // Update location feedback
+                updateLocationFeedback(lat, lng);
+                
+                // Fast pan to location (no animation for better performance)
+                map.setView([lat, lng], map.getZoom(), { animate: false });
+                
+            } catch (error) {
+                console.error('Error setting location:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+            }
+        }
+
+        // Get location popup content based on agent type
+        function getLocationPopupContent(lat, lng) {
+            let title = 'Location Selected';
+            let description = 'Your location has been set.';
+            
+            switch(selectedAgentType) {
+                case 'fast_delivery':
+                    title = '🏃 Fast Delivery Base';
+                    description = 'This will be your starting point for grocery deliveries.';
+                    break;
+                case 'pickup_delivery':
+                    title = '🚚 Transport Base';
+                    description = 'This will help optimize your pickup and delivery routes.';
+                    break;
+                case 'pickup_site':
+                    title = '🏢 Pickup Site Location';
+                    description = 'Customers will use this exact location to find your site.';
+                    break;
+            }
+            
+            return `
+                <div class="text-center p-2">
+                    <h4 class="font-semibold text-gray-800 mb-1">${title}</h4>
+                    <p class="text-sm text-gray-600 mb-2">${description}</p>
+                    <div class="text-xs text-gray-500">
+                        <div>Lat: ${lat.toFixed(6)}</div>
+                        <div>Lng: ${lng.toFixed(6)}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Update location feedback with better UX
+        function updateLocationFeedback(lat, lng) {
+            // Remove any existing feedback
+            const existingFeedback = document.querySelector('.location-feedback');
+            if (existingFeedback) {
+                existingFeedback.remove();
+            }
+            
+            const feedback = document.createElement('div');
+            feedback.className = 'location-feedback mt-3 p-3 bg-green-500/10 border border-green-500/20 rounded-lg text-green-400 text-sm animate-fade-in';
+            
+            let message = '';
+            let icon = '';
+            
+            switch(selectedAgentType) {
+                case 'fast_delivery':
+                    icon = '🏃';
+                    message = 'Home base location set! This will be your starting point for grocery deliveries.';
+                    break;
+                case 'pickup_delivery':

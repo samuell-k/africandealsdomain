@@ -1,0 +1,20 @@
+{
+  "name": "ADD Physical Products",
+  "short_name": "ADD Products",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#f9fafb",
+  "theme_color": "#111",
+  "icons": [
+    {
+      "src": "public/images/logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "public/images/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+} 

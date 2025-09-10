@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delivery Confirmation - Agent Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .delivery-card {
+            transition: all 0.3s ease;
+        }
+        .delivery-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        .code-input {
+            font-family: 'Courier New', monospace;
+            font-size: 1.5rem;
+            text-align: center;
+            letter-spacing: 0.2em;
+        }
+        .photo-preview {
+            max-width: 200px;
+            max-height: 200px;
+            object-fit: cover;
+        }
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        .status-pending { background-color: #fef3c7; color: #92400e; }
+        .status-verified { background-color: #d1fae5; color: #065f46; }
+        .status-delivered { background-color: #dbeafe; color: #1e40af; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation Header -->
+    <nav class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <button onclick="goBack()" class="mr-4 p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <h1 class="text-xl font-semibold text-gray-900">
+                        <i class="fas fa-truck text-blue-600 mr-2"></i>
+                        Delivery Confirmation
+                    </h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm text-gray-500" id="agent-name">Loading...</span>
+                    <button onclick="logout()" class="text-red-600 hover:text-red-700">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <!-- Page Header -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-bold text-gray-900 mb-2">Delivery Confirmation</h2>
+            <p class="text-gray-600">Verify delivery codes and confirm deliveries with photo proof</p>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-2 bg-blue-100 rounded-lg">
+                        <i class="fas fa-truck text-blue-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Pending Deliveries</p>
+                        <p class="text-2xl font-semibold text-gray-900" id="pending-count">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-2 bg-green-100 rounded-lg">
+                        <i class="fas fa-check-circle text-green-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Completed Today</p>
+                        <p class="text-2xl font-semibold text-gray-900" id="completed-count">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-2 bg-yellow-100 rounded-lg">
+                        <i class="fas fa-clock text-yellow-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">En Route</p>
+                        <p class="text-2xl font-semibold text-gray-900" id="enroute-count">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-2 bg-purple-100 rounded-lg">
+                        <i class="fas fa-star text-purple-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Success Rate</p>
+                        <p class="text-2xl font-semibold text-gray-900" id="success-rate">100%</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Orders List -->
+        <div class="bg-white shadow rounded-lg">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">
+                    <i class="fas fa-list-alt mr-2"></i>
+                    Orders Ready for Delivery
+                </h3>
+            </div>
+            <div class="p-6">
+                <div id="orders-loading" class="text-center py-8">
+                    <i class="fas fa-spinner fa-spin text-2xl text-gray-400 mb-4"></i>
+                    <p class="text-gray-500">Loading orders...</p>
+                </div>
+                <div id="orders-container" class="space-y-6" style="display: none;"></div>
+                <div id="no-orders" class="text-center py-8" style="display: none;">
+                    <i class="fas fa-truck text-4xl text-gray-300 mb-4"></i>
+                    <p class="text-gray-500">No orders ready for delivery</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delivery Confirmation Modal -->
+    <div id="delivery-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">
+                        <i class="fas fa-check-circle text-green-600 mr-2"></i>
+                        Confirm Delivery
+                    </h3>
+                    <button onclick="closeDeliveryModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <form id="delivery-form" class="space-y-6">
+                    <input type="hidden" id="modal-order-id">
+                    
+                    <!-- Order Information -->
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h4 class="font-medium text-gray-900 mb-2">Order Details</h4>
+                        <p class="text-sm text-gray-600" id="modal-order-info">Order #12345 - John Doe</p>
+                    </div>
+
+                    <!-- Step 1: Verify Delivery Code -->
+                    <div id="step-verify-code">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-key mr-1"></i>
+                                Enter Delivery Code from Buyer
+                            </label>
+                            <input 
+                                type="text" 
+                                id="delivery-code-input"
+                                class="code-input w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="000000"
+                                maxlength="6"
+                                pattern="[0-9]{6}"
+                                required
+                            >
+                            <p class="mt-2 text-sm text-gray-500">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Ask the buyer to provide their 6-digit delivery code
+                            </p>
+                        </div>
+                        <button 
+                            type="button" 
+                            onclick="verifyDeliveryCode()"
+                            class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-500"
+                        >
+                            <i class="fas fa-check mr-2"></i>
+                            Verify Code
+                        </button>
+                    </div>
+
+                    <!-- Step 2: Delivery Confirmation -->
+                    <div id="step-confirm-delivery" style="display: none;">
+                        <div class="mb-4">
+                            <div class="flex items-center text-green-600 mb-4">
+                                <i class="fas fa-check-circle mr-2"></i>
+                                <span class="font-medium">Code Verified Successfully!</span>
+                            </div>
+                        </div>
+
+                        <!-- Photo Upload -->
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-camera mr-1"></i>
+                                Delivery Photo (Required)
+                            </label>
+                            <input 
+                                type="file" 
+                                id="delivery-photo"
+                                accept="image/*"
+                                capture="environment"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                required
+                            >
+                            <div id="photo-preview" class="mt-2" style="display: none;">
+                                <img id="preview-image" class="photo-preview rounded-md border">
+                            </div>
+                        </div>
+
+                        <!-- GPS Location -->
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-map-marker-alt mr-1"></i>
+                                Location
+                            </label>
+                            <button 
+                                type="button" 
+                                onclick="getCurrentLocation()"
+                                class="w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-200 focus:ring-2 focus:ring-gray-500"
+                            >
+                                <i class="fas fa-crosshairs mr-2"></i>
+                                <span id="location-text">Get Current Location</span>
+                            </button>
+                            <input type="hidden" id="latitude">
+                            <input type="hidden" id="longitude">
+                        </div>
+
+                        <!-- Delivery Notes -->
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-sticky-note mr-1"></i>
+                                Delivery Notes (Optional)
+                            </label>
+                            <textarea 
+                                id="delivery-notes"
+                                rows="3"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="Any additional notes about the delivery..."
+                            ></textarea>
+                        </div>
+
+                        <button 
+                            type="submit"
+                            class="w-full bg-green-600 text-white py-3 px-4 rounded-md hover:bg-green-700 focus:ring-2 focus:ring-green-500 font-medium"
+                        >
+                            <i class="fas fa-check-double mr-2"></i>
+                            Confirm Delivery
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="success-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3 text-center">
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
+                    <i class="fas fa-check text-green-600 text-xl"></i>
+                </div>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">Delivery Confirmed!</h3>
+                <p class="text-sm text-gray-500 mb-4">The delivery has been successfully confirmed and recorded.</p>
+                <button 
+                    onclick="closeSuccessModal()"
+                    class="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 focus:ring-2 focus:ring-green-500"
+                >
+                    Continue
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../shared/auth-utils.js"></script>
+    <script src="../shared/api-client.js"></script>
+    <script>
+        let currentOrders = [];
+        let currentOrderId = null;
+        let currentDeliveryCode = null;
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuthentication();
+            loadAgentInfo();
+            loadOrders();
+            setupEventListeners();
+        });
+
+        function checkAuthentication() {
+            const token = localStorage.getItem('token');
+            const userRole = localStorage.getItem('userRole');
+            
+            if (!token || userRole !== 'agent') {
+                window.location.href = '../auth/auth-agent.html';
+                return;
+            }
+        }
+
+        function loadAgentInfo() {
+            const userName = localStorage.getItem('userName') || 'Agent';
+            document.getElementById('agent-name').textContent = userName;
+        }
+
+        async function loadOrders() {
+            try {
+                const response = await makeAuthenticatedRequest('/api/delivery-confirmation-otp/agent/orders');
+                
+                if (response.success) {
+                    currentOrders = response.orders;
+                    displayOrders(response.orders);
+                    updateStatistics(response.orders);
+                } else {
+                    showError('Failed to load orders: ' + response.message);
+                }
+            } catch (error) {
+                console.error('Error loading orders:', error);
+                showError('Failed to load orders');
+            } finally {
+                document.getElementById('orders-loading').style.display = 'none';
+            }
+        }
+
+        function displayOrders(orders) {
+            const container = document.getElementById('orders-container');
+            
+            if (orders.length === 0) {
+                document.getElementById('no-orders').style.display = 'block';
+                return;
+            }
+
+            container.style.display = 'block';
+            container.innerHTML = orders.map(order => `
+                <div class="delivery-card bg-white border border-gray-200 rounded-lg p-6">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h4 class="text-lg font-semibold text-gray-900">${order.order_number}</h4>
+                            <p class="text-sm text-gray-600">${order.buyer_name} • ${order.buyer_phone || 'No phone'}</p>
+                        </div>
+                        <span class="status-badge ${getStatusClass(order.status)}">
+                            <i class="fas ${getStatusIcon(order.status)}"></i>
+                            ${formatStatus(order.status)}
+                        </span>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <p class="text-sm font-medium text-gray-700">Items:</p>
+                            <p class="text-sm text-gray-600">${order.items || 'No items listed'}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-700">Delivery Address:</p>
+                            <p class="text-sm text-gray-600">${order.delivery_address || order.shipping_address || 'No address'}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-between items-center">
+                        <div class="text-sm text-gray-500">
+                            <i class="fas fa-key mr-1"></i>
+                            Delivery Code: <span class="font-mono font-bold">${order.delivery_code || 'Generating...'}</span>
+                        </div>
+                        <button 
+                            onclick="openDeliveryModal(${order.id})"
+                            class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-500"
+                        >
+                            <i class="fas fa-check mr-2"></i>
+                            Confirm Delivery
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateStatistics(orders) {
+            const pending = orders.filter(o => o.status !== 'DELIVERED').length;
+            const completed = orders.filter(o => o.status === 'DELIVERED').length;
+            const enroute = orders.filter(o => o.status.includes('EN_ROUTE')).length;
+            
+            document.getElementById('pending-count').textContent = pending;
+            document.getElementById('completed-count').textContent = completed;
+            document.getElementById('enroute-count').textContent = enroute;
+        }
+
+        function openDeliveryModal(orderId) {
+            const order = currentOrders.find(o => o.id === orderId);
+            if (!order) return;
+
+            currentOrderId = orderId;
+            document.getElementById('modal-order-id').value = orderId;
+            document.getElementById('modal-order-info').textContent = 
+                `${order.order_number} - ${order.buyer_name}`;
+            
+            // Reset modal state
+            document.getElementById('step-verify-code').style.display = 'block';
+            document.getElementById('step-confirm-delivery').style.display = 'none';
+            document.getElementById('delivery-code-input').value = '';
+            
+            document.getElementById('delivery-modal').classList.remove('hidden');
+        }
+
+        function closeDeliveryModal() {
+            document.getElementById('delivery-modal').classList.add('hidden');
+            currentOrderId = null;
+            currentDeliveryCode = null;
+        }
+
+        async function verifyDeliveryCode() {
+            const code = document.getElementById('delivery-code-input').value.trim();
+            
+            if (!code || code.length !== 6) {
+                showError('Please enter a valid 6-digit delivery code');
+                return;
+            }
+
+            try {
+                const response = await makeAuthenticatedRequest('/api/delivery-confirmation-otp/verify-code', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        order_id: currentOrderId,
+                        delivery_code: code
+                    })
+                });
+
+                if (response.success) {
+                    currentDeliveryCode = code;
+                    document.getElementById('step-verify-code').style.display = 'none';
+                    document.getElementById('step-confirm-delivery').style.display = 'block';
+                } else {
+                    showError(response.message || 'Invalid delivery code');
+                }
+            } catch (error) {
+                console.error('Error verifying code:', error);
+                showError('Failed to verify delivery code');
+            }
+        }
+
+        function setupEventListeners() {
+            // Photo preview
+            document.getElementById('delivery-photo').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        document.getElementById('preview-image').src = e.target.result;
+                        document.getElementById('photo-preview').style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // Form submission
+            document.getElementById('delivery-form').addEventListener('submit', confirmDelivery);
+        }
+
+        function getCurrentLocation() {
+            const button = document.querySelector('[onclick="getCurrentLocation()"]');
+            const locationText = document.getElementById('location-text');
+            
+            button.disabled = true;
+            locationText.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Getting location...';
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        document.getElementById('latitude').value = position.coords.latitude;
+                        document.getElementById('longitude').value = position.coords.longitude;
+                        locationText.innerHTML = '<i class="fas fa-check mr-2"></i>Location captured';
+                        button.classList.add('bg-green-100', 'text-green-700');
+                        button.disabled = false;
+                    },
+                    function(error) {
+                        locationText.innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i>Location unavailable';
+                        button.disabled = false;
+                        console.error('Geolocation error:', error);
+                    }
+                );
+            } else {
+                locationText.innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i>Geolocation not supported';
+                button.disabled = false;
+            }
+        }
+
+        async function confirmDelivery(e) {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            formData.append('order_id', currentOrderId);
+            formData.append('delivery_code', currentDeliveryCode);
+            formData.append('delivery_notes', document.getElementById('delivery-notes').value);
+            formData.append('latitude', document.getElementById('latitude').value);
+            formData.append('longitude', document.getElementById('longitude').value);
+            
+            const photoFile = document.getElementById('delivery-photo').files[0];
+            if (photoFile) {
+                formData.append('delivery_photo', photoFile);
+            }
+
+            try {
+                const response = await fetch('/api/delivery-confirmation-otp/confirm-delivery', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    closeDeliveryModal();
+                    showSuccessModal();
+                    loadOrders(); // Refresh orders list
+                } else {
+                    showError(result.message || 'Failed to confirm delivery');
+                }
+            } catch (error) {
+                console.error('Error confirming delivery:', error);
+                showError('Failed to confirm delivery');
+            }
+        }
+
+        function showSuccessModal() {
+            document.getElementById('success-modal').classList.remove('hidden');
+        }
+
+        function closeSuccessModal() {
+            document.getElementById('success-modal').classList.add('hidden');
+        }
+
+        // Utility functions
+        function getStatusClass(status) {
+            if (status === 'DELIVERED') return 'status-delivered';
+            if (status.includes('EN_ROUTE')) return 'status-pending';
+            return 'status-verified';
+        }
+
+        function getStatusIcon(status) {
+            if (status === 'DELIVERED') return 'fa-check-circle';
+            if (status.includes('EN_ROUTE')) return 'fa-truck';
+            return 'fa-clock';
+        }
+
+        function formatStatus(status) {
+            return status.replace(/_/g, ' ').toLowerCase()
+                .replace(/\b\w/g, l => l.toUpperCase());
+        }
+
+        function showError(message) {
+            alert('Error: ' + message);
+        }
+
+        function goBack() {
+            window.history.back();
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = '../auth/auth-agent.html';
+        }
+    </script>
+</body>
+</html>

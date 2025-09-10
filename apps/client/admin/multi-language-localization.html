@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="en" class="admin-page">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-language & Localization | Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="admin-auth-check.js"></script>
+    <style>
+        :root {
+            --primary-color: #080b3b;
+            --secondary-color: #1e40af;
+            --accent-color: #3b82f6;
+        }
+        .glass-morphism {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        }
+        .sidebar {
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .nav-item {
+            transition: all 0.3s ease;
+        }
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+        .nav-item.active {
+            background: rgba(255, 255, 255, 0.2);
+            border-left: 3px solid #3b82f6;
+        }
+        .language-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+        .language-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
+        }
+        .language-flag {
+            width: 32px;
+            height: 24px;
+            border-radius: 4px;
+            background-size: cover;
+            background-position: center;
+            display: inline-block;
+            margin-right: 12px;
+        }
+        .flag-en { background: linear-gradient(to right, #012169 0%, #012169 33%, white 33%, white 66%, #C8102E 66%); }
+        .flag-fr { background: linear-gradient(to right, #002654 0%, #002654 33%, white 33%, white 66%, #ED2939 66%); }
+        .flag-ar { background: linear-gradient(to bottom, #CE1126 0%, #CE1126 33%, white 33%, white 66%, #000000 66%); }
+        .flag-sw { background: linear-gradient(45deg, #009639 0%, #009639 25%, #FCDC00 25%, #FCDC00 50%, #CE1126 50%); }
+        .flag-ha { background: linear-gradient(to bottom, #009639 0%, #009639 33%, white 33%, white 66%, #009639 66%); }
+        .flag-yo { background: linear-gradient(to bottom, #009639 0%, #009639 50%, white 50%); }
+        .flag-rw { background: linear-gradient(to bottom, #00A1DE 0%, #00A1DE 50%, #FAD201 50%, #FAD201 75%, #009639 75%); }
+        .completion-bar {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            height: 8px;
+        }
+        .completion-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+        .completion-excellent { background: linear-gradient(90deg, #22c55e, #16a34a); }
+        .completion-good { background: linear-gradient(90deg, #f59e0b, #d97706); }
+        .completion-poor { background: linear-gradient(90deg, #ef4444, #dc2626); }
+        .translation-status {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .status-complete { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
+        .status-in-progress { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+        .status-pending { background: rgba(107, 114, 128, 0.2); color: #9ca3af; }
+        .status-needs-review { background: rgba(168, 85, 247, 0.2); color: #a855f7; }
+        .tab-btn {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .tab-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .tab-btn.active {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: var(--accent-color);
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .form-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            transition: all 0.3s ease;
+        }
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+            background: rgba(255, 255, 255, 0.15);
+        }
+        .translation-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            transition: all 0.3s ease;
+        }
+        .translation-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .locale-selector {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .locale-selector:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        .locale-selector.active {
+            border-color: var(--accent-color);
+            background: rgba(59, 130, 246, 0.2);
+        }
+        .currency-symbol {
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-right: 0.5rem;
+        }
+        .region-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+        .region-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-1px);
+        }
+        .metric-card {
+            text-align: center;
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+        .metric-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
+        }
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        .metric-label {
+            font-size: 0.875rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        .ai-suggestion {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(16, 185, 129, 0.1));
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+        }
+    </style>
+</head>
+
+<body class="gradient-bg min-h-screen">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <div class="sidebar w-64 lg:w-80 flex-shrink-0 hidden md:flex flex-col">
+            <div class="p-6 border-b border-white/10">
+                <h2 class="text-xl font-bold text-white">Admin Panel</h2>
+            </div>
+            
+            <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+                <a href="dashboard.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="multi-language-localization.html" class="nav-item active flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-globe"></i>
+                    <span>Multi-language & Localization</span>
+                </a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
+            
+            <!-- Header -->
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 space-y-4 sm:space-y-0">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-white mb-2 flex items-center">
+                        Multi-language & Localization
+                        <i class="fas fa-globe text-blue-400 ml-3"></i>
+                    </h1>
+                    <p class="text-white/70">Manage translations, currencies, and regional settings across 7 languages</p>
+                </div>
+                <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                    <button onclick="addLanguage()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition text-sm">
+                        <i class="fas fa-plus mr-2"></i>Add Language
+                    </button>
+                    <button onclick="bulkTranslate()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition text-sm">
+                        <i class="fas fa-language mr-2"></i>Bulk Translate
+                    </button>
+                    <button onclick="exportTranslations()" class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg transition text-sm">
+                        <i class="fas fa-download mr-2"></i>Export
+                    </button>
+                </div>
+            </div>
+
+            <!-- Localization Overview -->
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-6 mb-6">
+                <div class="metric-card">
+                    <div class="metric-value text-blue-400" id="total-languages">7</div>
+                    <div class="metric-label">Active Languages</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-value text-green-400" id="translation-completion">94.2%</div>
+                    <div class="metric-label">Overall Completion</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-value text-yellow-400" id="pending-translations">156</div>
+                    <div class="metric-label">Pending Translations</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-value text-purple-400" id="supported-currencies">12</div>
+                    <div class="metric-label">Currencies</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-value text-red-400" id="regions-covered">24</div>
+                    <div class="metric-label">Regions</div>
+                </div>
+            </div>
+
+            <!-- Tab Navigation -->
+            <div class="flex flex-wrap gap-2 mb-6">
+                <div class="tab-btn active" data-tab="languages" onclick="switchTab('languages')">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-language"></i>
+                        <span class="text-white font-medium">Languages</span>
+                        <span class="text-white/50 text-sm">(7)</span>
+                    </div>
+                </div>
+                <div class="tab-btn" data-tab="translations" onclick="switchTab('translations')">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-comments"></i>
+                        <span class="text-white font-medium">Translations</span>
+                        <span class="text-white/50 text-sm">(2,847)</span>
+                    </div>
+                </div>
+                <div class="tab-btn" data-tab="currencies" onclick="switchTab('currencies')">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-coins"></i>
+                        <span class="text-white font-medium">Currencies</span>
+                        <span class="text-white/50 text-sm">(12)</span>
+                    </div>
+                </div>
+                <div class="tab-btn" data-tab="regions" onclick="switchTab('regions')">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-map"></i>
+                        <span class="text-white font-medium">Regions</span>
+                        <span class="text-white/50 text-sm">(24)</span>
+                    </div>
+                </div>
+                <div class="tab-btn" data-tab="ai-tools" onclick="switchTab('ai-tools')">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-robot"></i>
+                        <span class="text-white font-medium">AI Tools</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Contents -->
+
+            <!-- Languages Tab -->
+            <div id="languages-tab" class="tab-content active">
+                <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                    
+                    <!-- Active Languages -->
+                    <div class="xl:col-span-2">
+                        <div class="glass-morphism rounded-xl overflow-hidden">
+                            <div class="p-6 border-b border-white/10">
+                                <div class="flex justify-between items-center">
+                                    <h3 class="text-xl font-bold text-white">Active Languages</h3>
+                                    <div class="flex space-x-2">
+                                        <select id="language-filter" class="form-input px-3 py-2 rounded-lg text-sm" onchange="filterLanguages()">
+                                            <option value="">All Languages</option>
+                                            <option value="complete">Complete (≥95%)</option>
+                                            <option value="in-progress">In Progress</option>
+                                            <option value="needs-work">Needs Work (<80%)</option>
+                                        </select>
+                                        <button onclick="bulkUpdate()" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded-lg text-sm">
+                                            <i class="fas fa-tasks mr-2"></i>Bulk Update
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="languages-container" class="p-6">
+                                <!-- Languages will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Language Settings -->
+                    <div>
+                        <div class="glass-morphism rounded-xl p-6 mb-6">
+                            <h3 class="text-xl font-bold text-white mb-4">Language Settings</h3>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-white/70 text-sm mb-2">Default Language</label>
+                                    <select id="default-language" class="w-full p-3 rounded-lg form-input">
+                                        <option value="en" selected>English (en)</option>
+                                        <option value="fr">Français (fr)</option>
+                                        <option value="ar">العربية (ar)</option>
+                                        <option value="sw">Kiswahili (sw)</option>
+                                        <option value="ha">Hausa (ha)</option>
+                                        <option value="yo">Yoruba (yo)</option>
+                                        <option value="rw">Kinyarwanda (rw)</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-white/70 text-sm mb-2">Fallback Language</label>
+                                    <select id="fallback-language" class="w-full p-3 rounded-lg form-input">
+                                        <option value="en" selected>English (en)</option>
+                                        <option value="fr">Français (fr)</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="border-t border-white/10 pt-4">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <span class="text-white">Auto-detection</span>
+                                        <label class="relative inline-flex items-center cursor-pointer">
+                                            <input type="checkbox" id="auto-detection" class="sr-only peer" checked>
+                                            <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                        </label>
+                                    </div>
+                                    <p class="text-white/50 text-xs">Automatically detect user language from browser</p>
+                                </div>
+
+                                <div class="flex items-center justify-between">
+                                    <span class="text-white">RTL Support</span>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" id="rtl-support" class="sr-only peer" checked>
+                                        <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Translation Statistics -->
+                        <div class="glass-morphism rounded-xl p-6">
+                            <h3 class="text-lg font-bold text-white mb-4">Translation Statistics</h3>
+                            
+                            <div class="space-y-3 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-white/70">Total Strings:</span>
+                                    <span class="text-white font-semibold">2,847</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-white/70">Translated:</span>
+                                    <span class="text-green-400 font-semibold">2,684</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-white/70">Pending:</span>
+                                    <span class="text-yellow-400 font-semibold">156</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-white/70">Needs Review:</span>
+                                    <span class="text-purple-400 font-semibold">23</span>
+                                </div>
+                                <div class="flex justify-between border-t border-white/10 pt-3">
+                                    <span class="text-white/70">Completion:</span>
+                                    <span class="text-blue-400 font-semibold">94.2%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Translations Tab -->
+            <div id="translations-tab" class="tab-content">
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                    
+                    <!-- Translation Management -->
+                    <div>
+                        <div class="glass-morphism rounded-xl p-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-xl font-bold text-white">Translation Strings</h3>
+                                <div class="flex space-x-2">
+                                    <select id="translation-language" class="form-input px-3 py-2 rounded-lg text-sm">
+                                        <option value="fr">Français (fr)</option>
+                                        <option value="ar">العربية (ar)</option>
+                                        <option value="sw">Kiswahili (sw)</option>
+                                        <option value="ha">Hausa (ha)</option>
+                                        <option value="yo">Yoruba (yo)</option>
+                                        <option value="rw">Kinyarwanda (rw)</option>
+                                    </select>
+                                    <input type="text" id="translation-search" placeholder="Search translations..." 
+                                           class="form-input px-3 py-2 rounded-lg text-sm">
+                                </div>
+                            </div>
+
+                            <div id="translations-container" class="max-h-96 overflow-y-auto">
+                                <!-- Translation strings will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Translation Tools -->
+                    <div>
+                        <div class="glass-morphism rounded-xl p-6 mb-6">
+                            <h3 class="text-xl font-bold text-white mb-4">Quick Translate</h3>
+                            
+                            <div class="space-y-4">
+                                <div class="grid grid-cols-2 gap-3">
+                                    <select id="source-lang" class="form-input p-2 rounded text-sm">
+                                        <option value="en">English</option>
+                                        <option value="fr">Français</option>
+                                    </select>
+                                    <select id="target-lang" class="form-input p-2 rounded text-sm">
+                                        <option value="fr">Français</option>
+                                        <option value="ar">العربية</option>
+                                        <option value="sw">Kiswahili</option>
+                                    </select>
+                                </div>
+                                
+                                <textarea id="source-text" rows="3" 
+                                          class="w-full p-3 rounded-lg form-input resize-none"
+                                          placeholder="Enter text to translate..."></textarea>
+                                
+                                <button onclick="quickTranslate()" class="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">
+                                    <i class="fas fa-language mr-2"></i>Translate
+                                </button>
+                                
+                                <textarea id="translated-text" rows="3" 
+                                          class="w-full p-3 rounded-lg form-input resize-none"
+                                          placeholder="Translation will appear here..." readonly></textarea>
+                            </div>
+                        </div>
+
+                        <div class="glass-morphism rounded-xl p-6">
+                            <h3 class="text-lg font-bold text-white mb-4">Recent Activity</h3>
+                            
+                            <div class="space-y-3">
+                                <div class="flex items-center space-x-3 text-sm">
+                                    <i class="fas fa-plus-circle text-green-400"></i>
+                                    <div class="flex-1">
+                                        <span class="text-white">Added 12 new strings for French</span>
+                                        <div class="text-white/50 text-xs">2 hours ago</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center space-x-3 text-sm">
+                                    <i class="fas fa-edit text-blue-400"></i>
+                                    <div class="flex-1">
+                                        <span class="text-white">Updated Arabic product descriptions</span>
+                                        <div class="text-white/50 text-xs">4 hours ago</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center space-x-3 text-sm">
+                                    <i class="fas fa-check-circle text-green-400"></i>
+                                    <div class="flex-1">
+                                        <span class="text-white">Completed Swahili email templates</span>
+                                        <div class="text-white/50 text-xs">1 day ago</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Other tabs content abbreviated for brevity -->
+            <div id="currencies-tab" class="tab-content">
+                <!-- Currencies content -->
+            </div>
+
+            <div id="regions-tab" class="tab-content">
+                <!-- Regions content -->
+            </div>
+
+            <div id="ai-tools-tab" class="tab-content">
+                <!-- AI Tools content -->
+            </div>
+        </div>
+    </div>
+
+<script>
+    // Global variables
+    let currentTab = 'languages';
+    let languages = [];
+    let translations = [];
+    let currencies = [];
+    let regions = [];
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('🌐 Multi-language & Localization initializing...');
+        
+        // Check authentication
+        if (!checkAuthentication()) return;
+        
+        // Load localization data
+        loadLocalizationData();
+        setupEventListeners();
+        
+        console.log('✅ Multi-language & Localization initialized');
+    });
+
+    // Check authentication
+    function checkAuthentication() {
+        const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
+        const userRole = localStorage.getItem('userRole');
+        
+        if (!token || userRole !== 'admin') {
+            console.log('❌ Authentication failed');
+            window.location.href = '/auth/auth-admin.html';
+            return false;
+        }
+        
+        return true;
+    }
+
+    // Setup event listeners
+    function setupEventListeners() {
+        // Auto-save translation changes
+        document.addEventListener('change', function(e) {
+            if (e.target.matches('.translation-input')) {
+                autoSaveTranslation(e.target);
+            }
+        });
+    }
+
+    // Load all localization data
+    async function loadLocalizationData() {
+        try {
+            await Promise.all([
+                loadLanguages(),
+                loadTranslations(),
+                loadCurrencies(),
+                loadRegions()
+            ]);
+        } catch (error) {
+            console.error('❌ Error loading localization data:', error);
+            showToast('Error loading localization data', 'error');
+        }
+    }
+
+    // Load languages
+    async function loadLanguages() {
+        try {
+            console.log('🗣️ Loading languages...');
+            
+            languages = [
+                {
+                    code: 'en',
+                    name: 'English',
+                    native_name: 'English',
+                    flag: 'flag-en',
+                    completion: 100,
+                    total_strings: 2847,
+                    translated: 2847,
+                    pending: 0,
+                    needs_review: 0,
+                    status: 'complete',
+                    is_default: true,
+                    is_rtl: false,
+                    translators: 5,
+                    last_updated: new Date(Date.now() - 2 * 60 * 60 * 1000)
+                },
+                {
+                    code: 'fr',
+                    name: 'French',
+                    native_name: 'Français',
+                    flag: 'flag-fr',
+                    completion: 96.8,
+                    total_strings: 2847,
+                    translated: 2756,
+                    pending: 67,
+                    needs_review: 24,
+                    status: 'in-progress',
+                    is_default: false,
+                    is_rtl: false,
+                    translators: 3,
+                    last_updated: new Date(Date.now() - 4 * 60 * 60 * 1000)
+                },
+                {
+                    code: 'ar',
+                    name: 'Arabic',
+                    native_name: 'العربية',
+                    flag: 'flag-ar',
+                    completion: 89.4,
+                    total_strings: 2847,
+                    translated: 2545,
+                    pending: 201,
+                    needs_review: 101,
+                    status: 'in-progress',
+                    is_default: false,
+                    is_rtl: true,
+                    translators: 2,
+                    last_updated: new Date(Date.now() - 8 * 60 * 60 * 1000)
+                },
+                {
+                    code: 'sw',
+                    name: 'Swahili',
+                    native_name: 'Kiswahili',
+                    flag: 'flag-sw',
+                    completion: 92.1,
+                    total_strings: 2847,
+                    translated: 2622,
+                    pending: 156,
+                    needs_review: 69,
+                    status: 'in-progress',
+                    is_default: false,
+                    is_rtl: false,
+                    translators: 4,
+                    last_updated: new Date(Date.now() - 12 * 60 * 60 * 1000)
+                },
+                {
+                    code: 'ha',
+                    name: 'Hausa',
+                    native_name: 'Hausa',
+                    flag: 'flag-ha',
+                    completion: 78.3,
+                    total_strings: 2847,
+                    translated: 2229,
+                    pending: 456,
+                    needs_review: 162,
+                    status: 'needs-work',
+                    is_default: false,
+                    is_rtl: false,
+                    translators: 2,
+                    last_updated: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
+                },
+                {
+                    code: 'yo',
+                    name: 'Yoruba',
+                    native_name: 'Yoruba',
+                    flag: 'flag-yo',
+                    completion: 83.7,
+                    total_strings: 2847,
+                    translated: 2383,
+                    pending: 312,
+                    needs_review: 152,
+                    status: 'in-progress',
+                    is_default: false,
+                    is_rtl: false,
+                    translators: 3,
+                    last_updated: new Date(Date.now() - 18 * 60 * 60 * 1000)
+                },
+                {
+                    code: 'rw',
+                    name: 'Kinyarwanda',
+                    native_name: 'Kinyarwanda',
+                    flag: 'flag-rw',
+                    completion: 95.2,
+                    total_strings: 2847,
+                    translated: 2710,
+                    pending: 89,
+                    needs_review: 48,
+                    status: 'in-progress',
+                    is_default: false,
+                    is_rtl: false,
+                    translators: 2,
+                    last_updated: new Date(Date.now() - 6 * 60 * 60 * 1000)
+                }
+            ];
+
+            renderLanguages();
+            
+        } catch (error) {
+            console.error('❌ Error loading languages:', error);
+        }
+    }
+
+    // Load translations
+    async function loadTranslations() {
+        try {
+            console.log('📝 Loading translations...');
+            
+            translations = [
+                {
+                    key: 'welcome_message',
+                    english: 'Welcome to African Deals!',
+                    french: 'Bienvenue sur African Deals!',
+                    arabic: 'مرحباً بك في أفريقيان ديلز!',
+                    swahili: 'Karibu African Deals!',
+                    hausa: 'Maraba da zuwa African Deals!',
+                    yoruba: 'Kaabo si African Deals!',
+                    kinyarwanda: 'Murakaza neza kuri African Deals!',
+                    category: 'general',
+                    status: 'complete'
+                },
+                {
+                    key: 'add_to_cart',
+                    english: 'Add to Cart',
+                    french: 'Ajouter au panier',
+                    arabic: 'أضف إلى السلة',
+                    swahili: 'Ongeza kwenye cart',
+                    hausa: 'Saka cikin kanti',
+                    yoruba: 'Fi kun agolo',
+                    kinyarwanda: 'Shyira muri cart',
+                    category: 'ecommerce',
+                    status: 'complete'
+                },
+                {
+                    key: 'product_description',
+                    english: 'Product Description',
+                    french: 'Description du produit',
+                    arabic: 'وصف المنتج',
+                    swahili: 'Maelezo ya bidhaa',
+                    hausa: 'Bayanin kaya',
+                    yoruba: 'Apejuwe oja',
+                    kinyarwanda: 'Ibisobanuro bya Product',
+                    category: 'products',
+                    status: 'needs-review'
+                }
+            ];
+
+            renderTranslations();
+            
+        } catch (error) {
+            console.error('❌ Error loading translations:', error);
+        }
+    }
+
+    // Load currencies
+    async function loadCurrencies() {
+        try {
+            currencies = [
+                { code: 'USD', symbol: '$', name: 'US Dollar', rate: 1.00, regions: ['Global'] },
+                { code: 'EUR', symbol: '€', name: 'Euro', rate: 0.85, regions: ['Europe'] },
+                { code: 'NGN', symbol: '₦', name: 'Nigerian Naira', rate: 460.00, regions: ['Nigeria'] },
+                { code: 'KES', symbol: 'KSh', name: 'Kenyan Shilling', rate: 108.50, regions: ['Kenya'] },
+                { code: 'GHS', symbol: '₵', name: 'Ghanaian Cedi', rate: 6.20, regions: ['Ghana'] },
+                { code: 'ZAR', symbol: 'R', name: 'South African Rand', rate: 15.80, regions: ['South Africa'] },
+                { code: 'EGP', symbol: 'E£', name: 'Egyptian Pound', rate: 30.90, regions: ['Egypt'] },
+                { code: 'MAD', symbol: 'د.م.', name: 'Moroccan Dirham', rate: 10.20, regions: ['Morocco'] },
+                { code: 'TND', symbol: 'د.ت', name: 'Tunisian Dinar', rate: 3.10, regions: ['Tunisia'] },
+                { code: 'ETB', symbol: 'Br', name: 'Ethiopian Birr', rate: 55.20, regions: ['Ethiopia'] },
+                { code: 'UGX', symbol: 'USh', name: 'Ugandan Shilling', rate: 3650.00, regions: ['Uganda'] },
+                { code: 'RWF', symbol: 'FRw', name: 'Rwandan Franc', rate: 1050.00, regions: ['Rwanda'] }
+            ];
+            
+        } catch (error) {
+            console.error('❌ Error loading currencies:', error);
+        }
+    }
+
+    // Load regions
+    async function loadRegions() {
+        try {
+            regions = [
+                { name: 'West Africa', countries: ['Nigeria', 'Ghana', 'Senegal', 'Mali'], languages: ['en', 'fr', 'ha', 'yo'] },
+                { name: 'East Africa', countries: ['Kenya', 'Tanzania', 'Uganda', 'Rwanda'], languages: ['en', 'sw', 'rw'] },
+                { name: 'North Africa', countries: ['Egypt', 'Morocco', 'Tunisia', 'Algeria'], languages: ['ar', 'fr', 'en'] },
+                { name: 'Southern Africa', countries: ['South Africa', 'Botswana', 'Namibia'], languages: ['en'] },
+                { name: 'Central Africa', countries: ['Cameroon', 'Chad', 'CAR'], languages: ['fr', 'en'] }
+            ];
+            
+        } catch (error) {
+            console.error('❌ Error loading regions:', error);
+        }
+    }
+
+    // Render functions
+    function renderLanguages() {
+        const container = document.getElementById('languages-container');
+        
+        const languagesHTML = languages.map(lang => `
+            <div class="language-card">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="language-flag ${lang.flag}"></div>
+                        <div>
+                            <div class="flex items-center space-x-2 mb-1">
+                                <h4 class="text-white font-semibold">${lang.name}</h4>
+                                <span class="text-white/60 text-sm">(${lang.code})</span>
+                                ${lang.is_default ? '<span class="px-2 py-1 bg-blue-500/20 text-blue-400 text-xs rounded-full">Default</span>' : ''}
+                                ${lang.is_rtl ? '<span class="px-2 py-1 bg-purple-500/20 text-purple-400 text-xs rounded-full">RTL</span>' : ''}
+                            </div>
+                            <div class="text-white/70 text-sm">${lang.native_name}</div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-white font-bold">${lang.completion.toFixed(1)}%</div>
+                        <div class="text-white/50 text-xs">complete</div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <div class="flex justify-between text-xs text-white/60 mb-1">
+                        <span>Progress</span>
+                        <span>${lang.translated}/${lang.total_strings}</span>
+                    </div>
+                    <div class="completion-bar">
+                        <div class="completion-fill ${getCompletionClass(lang.completion)}" 
+                             style="width: ${lang.completion}%"></div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
+                    <div class="text-center">
+                        <div class="text-green-400 font-bold">${lang.translated}</div>
+                        <div class="text-white/50 text-xs">Translated</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-yellow-400 font-bold">${lang.pending}</div>
+                        <div class="text-white/50 text-xs">Pending</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-purple-400 font-bold">${lang.needs_review}</div>
+                        <div class="text-white/50 text-xs">Review</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-blue-400 font-bold">${lang.translators}</div>
+                        <div class="text-white/50 text-xs">Translators</div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between mb-4">
+                    <span class="translation-status status-${lang.status.replace('-', '')}">
+                        ${formatStatus(lang.status)}
+                    </span>
+                    <div class="text-white/50 text-xs">
+                        Updated ${formatTimeAgo(lang.last_updated)}
+                    </div>
+                </div>
+
+                <div class="flex space-x-2">
+                    <button onclick="editLanguage('${lang.code}')" 
+                            class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-sm">
+                        <i class="fas fa-edit mr-1"></i>Edit
+                    </button>
+                    <button onclick="translateLanguage('${lang.code}')" 
+                            class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm">
+                        <i class="fas fa-language mr-1"></i>Translate
+                    </button>
+                    <button onclick="exportLanguage('${lang.code}')" 
+                            class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded text-sm">
+                        <i class="fas fa-download mr-1"></i>Export
+                    </button>
+                    ${!lang.is_default ? `
+                        <button onclick="removeLanguage('${lang.code}')" 
+                                class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded text-sm">
+                            <i class="fas fa-trash mr-1"></i>Remove
+                        </button>
+                    ` : ''}
+                </div>
+            </div>
+        `).join('');
+        
+        container.innerHTML = languagesHTML;
+    }
+
+    function renderTranslations() {
+        const container = document.getElementById('translations-container');
+        
+        const translationsHTML = translations.map(translation => `
+            <div class="translation-item">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex-1">
+                        <div class="flex items-center space-x-2 mb-1">
+                            <h4 class="text-white font-medium font-mono text-sm">${translation.key}</h4>
+                            <span class="px-2 py-1 bg-gray-500/20 text-gray-400 text-xs rounded-full">
+                                ${translation.category}
+                            </span>
+                            <span class="translation-status status-${translation.status.replace('-', '')}">
+                                ${formatStatus(translation.status)}
+                            </span>
+                        </div>
+                    </div>
+                    <button onclick="editTranslation('${translation.key}')" 
+                            class="text-blue-400 hover:text-blue-300">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                </div>
+
+                <div class="space-y-2 text-sm">
+                    <div class="flex">
+                        <div class="w-20 text-white/50 text-xs">EN:</div>
+                        <div class="flex-1 text-white">${translation.english}</div>
+                    </div>
+                    <div class="flex">
+                        <div class="w-20 text-white/50 text-xs">FR:</div>
+                        <div class="flex-1 text-white">${translation.french}</div>
+                    </div>
+                    <div class="flex">
+                        <div class="w-20 text-white/50 text-xs">AR:</div>
+                        <div class="flex-1 text-white text-right">${translation.arabic}</div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+        
+        container.innerHTML = translationsHTML;
+    }
+
+    // Tab switching
+    function switchTab(tab) {
+        currentTab = tab;
+        
+        // Update active tab
+        document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+        document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+        
+        // Show/hide tab content
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.remove('active');
+        });
+        document.getElementById(`${tab}-tab`).classList.add('active');
+    }
+
+    // Utility functions
+    function getCompletionClass(completion) {
+        if (completion >= 95) return 'completion-excellent';
+        if (completion >= 80) return 'completion-good';
+        return 'completion-poor';
+    }
+
+    function formatStatus(status) {
+        const statusMap = {
+            'complete': 'Complete',
+            'in-progress': 'In Progress',
+            'pending': 'Pending',
+            'needs-work': 'Needs Work',
+            'needs-review': 'Needs Review'
+        };
+        return statusMap[status] || status;
+    }
+
+    function formatTimeAgo(date) {
+        const now = new Date();
+        const diffInSeconds = Math.floor((now - new Date(date)) / 1000);
+        
+        if (diffInSeconds < 60) return 'just now';
+        if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+        if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+        return `${Math.floor(diffInSeconds / 86400)}d ago`;
+    }
+
+    function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `fixed top-4 right-4 z-50 px-6 py-4 rounded-lg text-white ${
+            type === 'success' ? 'bg-green-500' : 
+            type === 'error' ? 'bg-red-500' : 
+            type === 'warning' ? 'bg-yellow-500' : 'bg-blue-500'
+        }`;
+        toast.textContent = message;
+        
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+
+    // Action functions
+    function addLanguage() {
+        showToast('Add language modal would open here', 'info');
+    }
+
+    function bulkTranslate() {
+        showToast('Bulk translation process initiated...', 'info');
+        setTimeout(() => {
+            showToast('Bulk translation completed for 156 strings!', 'success');
+        }, 3000);
+    }
+
+    function exportTranslations() {
+        showToast('Exporting all translations...', 'info');
+        setTimeout(() => {
+            showToast('Translations exported successfully!', 'success');
+        }, 2000);
+    }
+
+    function quickTranslate() {
+        const sourceText = document.getElementById('source-text').value;
+        if (sourceText.trim()) {
+            showToast('Translating...', 'info');
+            setTimeout(() => {
+                document.getElementById('translated-text').value = 'Sample translation: ' + sourceText;
+                showToast('Translation completed!', 'success');
+            }, 1500);
+        } else {
+            showToast('Please enter text to translate', 'warning');
+        }
+    }
+
+    function autoSaveTranslation(input) {
+        clearTimeout(input.saveTimeout);
+        input.saveTimeout = setTimeout(() => {
+            showToast('Translation auto-saved', 'success');
+        }, 1000);
+    }
+
+    function editLanguage(code) {
+        showToast(`Opening editor for ${code} language`, 'info');
+    }
+
+    function translateLanguage(code) {
+        showToast(`Starting translation process for ${code}...`, 'info');
+    }
+
+    function exportLanguage(code) {
+        showToast(`Exporting ${code} translations...`, 'info');
+    }
+
+    function removeLanguage(code) {
+        if (confirm(`Remove ${code} language? This will delete all translations.`)) {
+            showToast(`${code} language removed`, 'warning');
+        }
+    }
+
+    function editTranslation(key) {
+        showToast(`Opening translation editor for: ${key}`, 'info');
+    }
+
+    function filterLanguages() {
+        const filter = document.getElementById('language-filter').value;
+        showToast(`Filtering languages by: ${filter || 'all'}`, 'info');
+    }
+
+    function bulkUpdate() {
+        showToast('Bulk update interface would open here', 'info');
+    }
+
+    // Make functions globally available
+    window.switchTab = switchTab;
+    window.addLanguage = addLanguage;
+    window.bulkTranslate = bulkTranslate;
+    window.exportTranslations = exportTranslations;
+    window.quickTranslate = quickTranslate;
+    window.editLanguage = editLanguage;
+    window.translateLanguage = translateLanguage;
+    window.exportLanguage = exportLanguage;
+    window.removeLanguage = removeLanguage;
+    window.editTranslation = editTranslation;
+    window.filterLanguages = filterLanguages;
+    window.bulkUpdate = bulkUpdate;
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPS Tracking - Fast Delivery Agent</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=geometry"></script>
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen">
+        <!-- Header -->
+        <header class="bg-blue-600 text-white p-4">
+            <div class="flex items-center justify-between">
+                <h1 class="text-xl font-bold">GPS Tracking</h1>
+                <div class="flex items-center space-x-4">
+                    <span id="connection-status" class="px-2 py-1 bg-green-500 rounded text-sm">Connected</span>
+                    <button onclick="toggleTracking()" id="tracking-btn" class="px-4 py-2 bg-green-500 hover:bg-green-600 rounded">
+                        Start Tracking
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <div class="flex h-screen">
+            <!-- Map Container -->
+            <div class="flex-1">
+                <div id="map" class="w-full h-full"></div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="w-80 bg-white shadow-lg overflow-y-auto">
+                <!-- Current Delivery -->
+                <div class="p-4 border-b">
+                    <h2 class="font-bold text-lg mb-3">Current Delivery</h2>
+                    <div id="current-delivery" class="space-y-2">
+                        <div class="text-sm text-gray-600">No active delivery</div>
+                    </div>
+                </div>
+
+                <!-- Route Information -->
+                <div class="p-4 border-b">
+                    <h3 class="font-semibold mb-2">Route Information</h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span>Distance:</span>
+                            <span id="route-distance">--</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>ETA:</span>
+                            <span id="route-eta">--</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Speed:</span>
+                            <span id="current-speed">-- km/h</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Delivery Queue -->
+                <div class="p-4">
+                    <h3 class="font-semibold mb-2">Delivery Queue</h3>
+                    <div id="delivery-queue" class="space-y-2">
+                        <!-- Queue items will be populated here -->
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="p-4 border-t">
+                    <h3 class="font-semibold mb-2">Quick Actions</h3>
+                    <div class="space-y-2">
+                        <button onclick="markPickedUp()" class="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                            Mark as Picked Up
+                        </button>
+                        <button onclick="markDelivered()" class="w-full px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
+                            Mark as Delivered
+                        </button>
+                        <button onclick="reportIssue()" class="w-full px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
+                            Report Issue
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let map;
+        let currentLocationMarker;
+        let deliveryMarkers = [];
+        let routePolyline;
+        let isTracking = false;
+        let watchId;
+
+        // Initialize map
+        function initMap() {
+            map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 15,
+                center: { lat: -1.2921, lng: 36.8219 }, // Nairobi default
+                mapTypeId: 'roadmap'
+            });
+
+            // Get current location
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const pos = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        };
+                        map.setCenter(pos);
+                        updateCurrentLocation(pos);
+                    },
+                    () => {
+                        console.error('Error: The Geolocation service failed.');
+                    }
+                );
+            }
+
+            loadActiveDeliveries();
+        }
+
+        // Update current location
+        function updateCurrentLocation(position) {
+            if (currentLocationMarker) {
+                currentLocationMarker.setMap(null);
+            }
+
+            currentLocationMarker = new google.maps.Marker({
+                position: position,
+                map: map,
+                title: 'Your Location',
+                icon: {
+                    url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="10" cy="10" r="8" fill="#3B82F6" stroke="white" stroke-width="2"/>
+                            <circle cx="10" cy="10" r="3" fill="white"/>
+                        </svg>
+                    `),
+                    scaledSize: new google.maps.Size(20, 20)
+                }
+            });
+        }
+
+        // Toggle GPS tracking
+        function toggleTracking() {
+            const btn = document.getElementById('tracking-btn');
+            
+            if (!isTracking) {
+                startTracking();
+                btn.textContent = 'Stop Tracking';
+                btn.className = 'px-4 py-2 bg-red-500 hover:bg-red-600 rounded';
+                isTracking = true;
+            } else {
+                stopTracking();
+                btn.textContent = 'Start Tracking';
+                btn.className = 'px-4 py-2 bg-green-500 hover:bg-green-600 rounded';
+                isTracking = false;
+            }
+        }
+
+        // Start GPS tracking
+        function startTracking() {
+            if (navigator.geolocation) {
+                watchId = navigator.geolocation.watchPosition(
+                    (position) => {
+                        const pos = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        };
+                        
+                        updateCurrentLocation(pos);
+                        updateSpeed(position.coords.speed);
+                        sendLocationUpdate(pos);
+                        
+                        // Update route if there's an active delivery
+                        updateRouteToDestination();
+                    },
+                    (error) => {
+                        console.error('GPS tracking error:', error);
+                        document.getElementById('connection-status').textContent = 'GPS Error';
+                        document.getElementById('connection-status').className = 'px-2 py-1 bg-red-500 rounded text-sm';
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    }
+                );
+            }
+        }
+
+        // Stop GPS tracking
+        function stopTracking() {
+            if (watchId) {
+                navigator.geolocation.clearWatch(watchId);
+                watchId = null;
+            }
+        }
+
+        // Update speed display
+        function updateSpeed(speed) {
+            const speedKmh = speed ? Math.round(speed * 3.6) : 0;
+            document.getElementById('current-speed').textContent = speedKmh + ' km/h';
+        }
+
+        // Send location update to server
+        async function sendLocationUpdate(position) {
+            try {
+                const response = await fetch('/api/fast-delivery-agent/location-update', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({
+                        latitude: position.lat,
+                        longitude: position.lng,
+                        timestamp: new Date().toISOString()
+                    })
+                });
+
+                if (response.ok) {
+                    document.getElementById('connection-status').textContent = 'Connected';
+                    document.getElementById('connection-status').className = 'px-2 py-1 bg-green-500 rounded text-sm';
+                } else {
+                    throw new Error('Failed to update location');
+                }
+            } catch (error) {
+                console.error('Location update error:', error);
+                document.getElementById('connection-status').textContent = 'Offline';
+                document.getElementById('connection-status').className = 'px-2 py-1 bg-yellow-500 rounded text-sm';
+            }
+        }
+
+        // Load active deliveries
+        async function loadActiveDeliveries() {
+            try {
+                const response = await fetch('/api/fast-delivery-agent/active-deliveries', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    displayActiveDeliveries(data.deliveries);
+                }
+            } catch (error) {
+                console.error('Error loading deliveries:', error);
+            }
+        }
+
+        // Display active deliveries on map
+        function displayActiveDeliveries(deliveries) {
+            // Clear existing markers
+            deliveryMarkers.forEach(marker => marker.setMap(null));
+            deliveryMarkers = [];
+
+            deliveries.forEach((delivery, index) => {
+                const marker = new google.maps.Marker({
+                    position: { lat: delivery.latitude, lng: delivery.longitude },
+                    map: map,
+                    title: `Delivery #${delivery.order_number}`,
+                    label: (index + 1).toString()
+                });
+
+                deliveryMarkers.push(marker);
+
+                // Add info window
+                const infoWindow = new google.maps.InfoWindow({
+                    content: `
+                        <div class="p-2">
+                            <h3 class="font-bold">Order #${delivery.order_number}</h3>
+                            <p class="text-sm">${delivery.customer_name}</p>
+                            <p class="text-sm">${delivery.address}</p>
+                            <p class="text-sm">Phone: ${delivery.phone}</p>
+                        </div>
+                    `
+                });
+
+                marker.addListener('click', () => {
+                    infoWindow.open(map, marker);
+                });
+            });
+
+            // Update sidebar
+            updateDeliveryQueue(deliveries);
+            if (deliveries.length > 0) {
+                updateCurrentDelivery(deliveries[0]);
+            }
+        }
+
+        // Update delivery queue in sidebar
+        function updateDeliveryQueue(deliveries) {
+            const queueContainer = document.getElementById('delivery-queue');
+            queueContainer.innerHTML = '';
+
+            deliveries.forEach((delivery, index) => {
+                const item = document.createElement('div');
+                item.className = 'p-2 border rounded ' + (index === 0 ? 'bg-blue-50 border-blue-200' : 'bg-gray-50');
+                item.innerHTML = `
+                    <div class="font-semibold text-sm">#${delivery.order_number}</div>
+                    <div class="text-xs text-gray-600">${delivery.customer_name}</div>
+                    <div class="text-xs text-gray-600">${delivery.address}</div>
+                `;
+                queueContainer.appendChild(item);
+            });
+        }
+
+        // Update current delivery info
+        function updateCurrentDelivery(delivery) {
+            const container = document.getElementById('current-delivery');
+            container.innerHTML = `
+                <div class="font-semibold">Order #${delivery.order_number}</div>
+                <div class="text-sm text-gray-600">${delivery.customer_name}</div>
+                <div class="text-sm text-gray-600">${delivery.address}</div>
+                <div class="text-sm text-gray-600">Phone: ${delivery.phone}</div>
+                <div class="text-sm font-medium text-blue-600">Status: ${delivery.status}</div>
+            `;
+        }
+
+        // Update route to destination
+        function updateRouteToDestination() {
+            // Implementation for route calculation and display
+            // This would integrate with Google Maps Directions API
+        }
+
+        // Quick action functions
+        async function markPickedUp() {
+            // Implementation for marking order as picked up
+            console.log('Marking as picked up...');
+        }
+
+        async function markDelivered() {
+            // Implementation for marking order as delivered
+            console.log('Marking as delivered...');
+        }
+
+        async function reportIssue() {
+            // Implementation for reporting delivery issues
+            console.log('Reporting issue...');
+        }
+
+        // Initialize map when page loads
+        window.onload = initMap;
+    </script>
+</body>
+</html>

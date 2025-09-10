@@ -1,0 +1,292 @@
+/**
+ * Reusable Admin Navigation Component
+ * This component can be injected into any admin page to provide consistent navigation
+ */
+
+class AdminNavigation {
+  constructor(options = {}) {
+    this.currentPage = options.currentPage || '';
+    this.userName = options.userName || 'Admin';
+    this.showSidebar = options.showSidebar !== false; // Default to true
+  }
+
+  /**
+   * Generate the navigation HTML
+   */
+  generateHTML() {
+    return `
+      <!-- Admin Navigation -->
+      <div class="flex h-screen bg-gray-100">
+        ${this.showSidebar ? this.generateSidebar() : ''}
+        <div class="flex-1 flex flex-col overflow-hidden">
+          ${this.generateTopBar()}
+          <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100">
+            <div id="admin-content-area" class="container mx-auto px-6 py-8">
+              <!-- Page content will be injected here -->
+            </div>
+          </main>
+        </div>
+      </div>
+    `;
+  }
+
+  generateSidebar() {
+    return `
+      <!-- Sidebar -->
+      <div class="bg-gray-800 text-white w-64 space-y-6 py-7 px-2 absolute inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition duration-200 ease-in-out" id="sidebar">
+        <!-- Logo -->
+        <div class="flex items-center space-x-2 px-4">
+          <img src="/public/images/logo.png" alt="ADD Logo" class="h-8 w-8 rounded-lg" />
+          <span class="text-2xl font-extrabold">ADD Admin</span>
+        </div>
+
+        <!-- Navigation Links -->
+        <nav class="space-y-2">
+          <div class="px-4 py-2 text-gray-400 text-xs uppercase tracking-wider">Dashboard</div>
+          <a href="/admin/dashboard.html" class="nav-link ${this.currentPage === 'dashboard' ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'} group flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors">
+            <i class="fas fa-tachometer-alt mr-3 text-gray-400 group-hover:text-gray-300"></i>
+            Dashboard
+          </a>
+
+          <div class="px-4 py-2 text-gray-400 text-xs uppercase tracking-wider mt-6">Orders & Sales</div>
+          <a href="/admin/order-management.html" class="nav-link ${this.currentPage === 'orders' ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'} group flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors">
+            <i class="fas fa-shopping-cart mr-3 text-gray-400 group-hover:text-gray-300"></i>
+            Order Management
+          </a>
+          <a href="/admin/orders.html" class="nav-link ${this.currentPage === 'order-list' ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'} group flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors">
+            <i class="fas fa-list mr-3 text-gray-400 group-hover:text-gray-300"></i>
+            All Orders
+          </a>
+
+          <div class="px-4 py-2 text-gray-400 text-xs uppercase tracking-wider mt-6">Products & Inventory</div>
+          <a href="/admin/products.html" class="nav-link ${this.currentPage === 'products' ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'} group flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors">
+            <i class="fas fa-box mr-3 text-gray-400 group-hover:text-gray-300"></i>
+            Products
+          </a>
+          <a href="/admin/category-management.html" class="nav-link ${this.currentPage === 'categories' ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'} group flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors">
+            <i class="fas fa-tags mr-3 text-gray-400 group-hover:text-gray-300"></i>
+            Categories
+          </a>
+          <a href="/admin/product-management.html" class="nav-link ${this.currentPage === 'product-management' ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'} group flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors">
+            <i class="fas fa-cogs mr-3 text-gray-400 group-hover:text-gray-300"></i>
+            Product Management
+          </a>
+
+          <div class="px-4 py-2 text-gray-400 text-xs uppercase tracking-wider mt-6">Users & Accounts</div>
+          <a href="/admin/users.html" class="nav-link ${this.currentPage === 'users' ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'} group flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors">
+            <i class="fas fa-users mr-3 text-gray-400 group-hover:text-gray-300"></i>
+            User Management
+          </a>
+          <a href="/admin/reviews.html" class="nav-link ${this.currentPage === 'reviews' ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'} group flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors">
+            <i class="fas fa-star mr-3 text-gray-400 group-hover:text-gray-300"></i>
+            Reviews
+          </a>
+
+          <div class="px-4 py-2 text-gray-400 text-xs uppercase tracking-wider mt-6">System & Settings</div>
+          <a href="/admin/shipping-management.html" class="nav-link ${this.currentPage === 'shipping' ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'} group flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors">
+            <i class="fas fa-truck mr-3 text-gray-400 group-hover:text-gray-300"></i>
+            Shipping
+          </a>
+          <a href="/admin/multi-currency-settings.html" class="nav-link ${this.currentPage === 'currency' ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'} group flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors">
+            <i class="fas fa-dollar-sign mr-3 text-gray-400 group-hover:text-gray-300"></i>
+            Currency Settings
+          </a>
+          <a href="/admin/policies-management/policies.html" class="nav-link ${this.currentPage === 'policies' ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'} group flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors">
+            <i class="fas fa-file-contract mr-3 text-gray-400 group-hover:text-gray-300"></i>
+            Policies
+          </a>
+
+          <div class="px-4 py-2 text-gray-400 text-xs uppercase tracking-wider mt-6">Analytics & Reports</div>
+          <a href="/admin/dashboard-stats.html" class="nav-link ${this.currentPage === 'stats' ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'} group flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors">
+            <i class="fas fa-chart-bar mr-3 text-gray-400 group-hover:text-gray-300"></i>
+            Statistics
+          </a>
+          <a href="/admin/location-dashboard.html" class="nav-link ${this.currentPage === 'locations' ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'} group flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors">
+            <i class="fas fa-map-marker-alt mr-3 text-gray-400 group-hover:text-gray-300"></i>
+            Locations
+          </a>
+
+          <div class="px-4 py-2 text-gray-400 text-xs uppercase tracking-wider mt-6">Communication</div>
+          <a href="/admin/email-sms-templates.html" class="nav-link ${this.currentPage === 'templates' ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'} group flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors">
+            <i class="fas fa-envelope mr-3 text-gray-400 group-hover:text-gray-300"></i>
+            Email/SMS Templates
+          </a>
+          <a href="/admin/live-chat-monitoring.html" class="nav-link ${this.currentPage === 'chat' ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'} group flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors">
+            <i class="fas fa-comments mr-3 text-gray-400 group-hover:text-gray-300"></i>
+            Live Chat
+          </a>
+          <a href="/admin/blog-announcement-publishing.html" class="nav-link ${this.currentPage === 'blog' ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'} group flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors">
+            <i class="fas fa-blog mr-3 text-gray-400 group-hover:text-gray-300"></i>
+            Blog & Announcements
+          </a>
+        </nav>
+      </div>
+    `;
+  }
+
+  generateTopBar() {
+    return `
+      <!-- Top Bar -->
+      <header class="bg-white shadow-lg border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="flex justify-between items-center py-6">
+            <div class="flex items-center">
+              <button class="text-gray-500 focus:outline-none focus:text-gray-700 md:hidden" id="sidebar-toggle">
+                <i class="fas fa-bars text-xl"></i>
+              </button>
+              <div class="ml-4 md:ml-0">
+                <h1 class="text-2xl font-bold text-gray-900" id="page-title">Admin Dashboard</h1>
+                <p class="text-sm text-gray-600" id="page-subtitle">Manage your platform</p>
+              </div>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+              <!-- Notifications -->
+              <div class="relative">
+                <button class="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors">
+                  <i class="fas fa-bell text-gray-600"></i>
+                  <span class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
+                </button>
+              </div>
+              
+              <!-- Quick Actions -->
+              <div class="hidden md:flex space-x-2">
+                <button class="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
+                  <i class="fas fa-plus mr-1"></i>New Order
+                </button>
+                <button class="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm">
+                  <i class="fas fa-download mr-1"></i>Export
+                </button>
+              </div>
+              
+              <!-- Profile Dropdown -->
+              <div class="relative">
+                <button id="profile-dropdown-btn" class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                  <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face" 
+                       alt="Admin" class="w-8 h-8 rounded-full">
+                  <span class="hidden md:block font-medium text-gray-700" id="admin-name">${this.userName}</span>
+                  <i class="fas fa-chevron-down text-gray-400 text-sm"></i>
+                </button>
+                
+                <!-- Dropdown Menu -->
+                <div id="profile-dropdown-menu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                  <div class="py-2">
+                    <div class="px-4 py-2 border-b border-gray-100">
+                      <div class="font-semibold text-sm text-gray-800" id="profile-greeting">Hello, ${this.userName}</div>
+                      <div class="text-xs text-gray-500">Administrator</div>
+                    </div>
+                    <a href="/admin/profile.html" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 ${this.currentPage === 'profile' ? 'text-blue-600 font-semibold bg-blue-50' : ''}">
+                      <i class="fas fa-user mr-2"></i>Profile
+                    </a>
+                    <a href="/admin/settings.html" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                      <i class="fas fa-cog mr-2"></i>Settings
+                    </a>
+                    <a href="/admin/system-testing.html" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                      <i class="fas fa-vial mr-2"></i>System Testing
+                    </a>
+                    <hr class="my-2">
+                    <button onclick="AdminNavigation.logout()" class="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-50">
+                      <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+    `;
+  }
+
+  /**
+   * Initialize the navigation functionality
+   */
+  initialize() {
+    // Profile dropdown toggle
+    const profileButton = document.getElementById('profile-dropdown-btn');
+    const profileDropdown = document.getElementById('profile-dropdown-menu');
+    
+    if (profileButton && profileDropdown) {
+      profileButton.addEventListener('click', function(e) {
+        e.stopPropagation();
+        profileDropdown.classList.toggle('hidden');
+      });
+      
+      // Close dropdown when clicking outside
+      document.addEventListener('click', function() {
+        profileDropdown.classList.add('hidden');
+      });
+    }
+
+    // Sidebar toggle for mobile
+    const sidebarToggle = document.getElementById('sidebar-toggle');
+    const sidebar = document.getElementById('sidebar');
+    
+    if (sidebarToggle && sidebar) {
+      sidebarToggle.addEventListener('click', function() {
+        sidebar.classList.toggle('-translate-x-full');
+      });
+    }
+    
+    // Load user info from localStorage
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    if (user.name) {
+      const adminNameElement = document.getElementById('admin-name');
+      const profileGreetingElement = document.getElementById('profile-greeting');
+      
+      if (adminNameElement) {
+        adminNameElement.textContent = user.name;
+      }
+      if (profileGreetingElement) {
+        profileGreetingElement.textContent = `Hello, ${user.name}`;
+      }
+    }
+  }
+
+  /**
+   * Set page title and subtitle
+   */
+  setPageInfo(title, subtitle = '') {
+    const titleElement = document.getElementById('page-title');
+    const subtitleElement = document.getElementById('page-subtitle');
+    
+    if (titleElement) titleElement.textContent = title;
+    if (subtitleElement) subtitleElement.textContent = subtitle;
+  }
+
+  /**
+   * Static method to inject navigation into a page
+   */
+  static inject(containerId, options = {}) {
+    const container = document.getElementById(containerId);
+    if (!container) {
+      console.error(`Container with ID '${containerId}' not found`);
+      return null;
+    }
+
+    const navigation = new AdminNavigation(options);
+    container.innerHTML = navigation.generateHTML();
+    
+    // Initialize after DOM is ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => navigation.initialize());
+    } else {
+      navigation.initialize();
+    }
+
+    return navigation;
+  }
+
+  /**
+   * Static logout method
+   */
+  static logout() {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    window.location.href = '/auth/auth-admin.html';
+  }
+}
+
+// Make it globally available
+window.AdminNavigation = AdminNavigation;

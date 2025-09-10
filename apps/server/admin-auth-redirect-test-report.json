@@ -1,0 +1,48 @@
+{
+  "startedAt": "2025-09-03T16:14:02.361Z",
+  "baseUrl": "http://localhost:3001",
+  "results": [
+    {
+      "name": "No token redirects to login",
+      "ok": true,
+      "info": {
+        "url": "http://localhost:3001/auth/login.html"
+      }
+    },
+    {
+      "name": "Verify 500 does not redirect",
+      "ok": false,
+      "info": {
+        "verifyHitCount": 0,
+        "refreshHitCount": 0,
+        "url": "http://localhost:3001/auth/login.html"
+      }
+    },
+    {
+      "name": "401 -> silent refresh -> verify OK, no redirect",
+      "ok": false,
+      "info": {
+        "verifyHitCount": 0,
+        "refreshHitCount": 0,
+        "url": "http://localhost:3001/auth/auth-admin.html?redirect=http%3A%2F%2Flocalhost%3A3001%2Fadmin%2Fdashboard.html"
+      }
+    },
+    {
+      "name": "Non-admin verification does not redirect",
+      "ok": false,
+      "info": {
+        "verifyHitCount": 0,
+        "url": "http://localhost:3001/admin/dashboard.html"
+      }
+    },
+    {
+      "name": "Logout redirects to login",
+      "ok": false,
+      "info": {
+        "url": "http://localhost:3001/admin/dashboard.html"
+      }
+    }
+  ],
+  "successRate": 20,
+  "finishedAt": "2025-09-03T16:14:17.991Z"
+}

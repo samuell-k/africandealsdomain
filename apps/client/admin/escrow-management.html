@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en" class="admin-page">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escrow Management | Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="admin-auth-check.js"></script>
+    <script src="admin-utils.js"></script>
+    <style>
+        :root {
+            --primary-color: #080b3b;
+            --secondary-color: #1e40af;
+            --accent-color: #3b82f6;
+        }
+        
+        .glass-morphism {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        }
+        
+        .sidebar {
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .nav-item {
+            transition: all 0.3s ease;
+        }
+        
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+        
+        .nav-item.active {
+            background: rgba(255, 255, 255, 0.2);
+            border-left: 3px solid var(--accent-color);
+        }
+        
+        .escrow-card {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .escrow-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        .status-badge {
+            @apply px-3 py-1 rounded-full text-xs font-medium;
+        }
+        
+        .status-held { @apply bg-yellow-500/20 text-yellow-400; }
+        .status-released { @apply bg-green-500/20 text-green-400; }
+        .status-disputed { @apply bg-red-500/20 text-red-400; }
+        .status-refunded { @apply bg-blue-500/20 text-blue-400; }
+        
+        .form-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        
+        .form-input:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: var(--accent-color);
+            outline: none;
+        }
+        
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .loading-spinner {
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 2px solid var(--accent-color);
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .modal {
+            backdrop-filter: blur(10px);
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <div class="sidebar w-64 p-6">
+            <div class="text-white text-2xl font-bold mb-8">
+                <i class="fas fa-shield-alt mr-2"></i>Admin Panel
+            </div>
+            
+            <nav class="space-y-2">
+                <a href="dashboard.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="user-management.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-users"></i>
+                    <span>User Management</span>
+                </a>
+                <a href="manual-payment-approval.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-credit-card"></i>
+                    <span>Payment Approval</span>
+                </a>
+                <a href="escrow-management.html" class="nav-item active flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-lock"></i>
+                    <span>Escrow Management</span>
+                </a>
+                <a href="products.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-box"></i>
+                    <span>Products</span>
+                </a>
+                <a href="orders.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Orders</span>
+                </a>
+                <a href="agents.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-user-tie"></i>
+                    <span>Agents</span>
+                </a>
+                <a href="analytics.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Analytics</span>
+                </a>
+                <a href="settings.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+            </nav>
+            
+            <div class="mt-auto pt-6">
+                <button onclick="logout()" class="w-full flex items-center space-x-3 p-3 rounded-lg text-white hover:bg-red-500/20 transition-colors">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 p-8 overflow-auto">
+            <!-- Header -->
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <h1 class="text-3xl font-bold text-white mb-2">Escrow Management</h1>
+                    <p class="text-gray-300">Manage payment escrow and fund releases</p>
+                </div>
+                <div class="flex space-x-4">
+                    <button onclick="refreshEscrowData()" class="glass-morphism px-4 py-2 rounded-lg text-white hover:bg-white/20 transition-colors">
+                        <i class="fas fa-sync-alt mr-2"></i>Refresh
+                    </button>
+                    <button onclick="exportEscrowReport()" class="glass-morphism px-4 py-2 rounded-lg text-white hover:bg-white/20 transition-colors">
+                        <i class="fas fa-download mr-2"></i>Export Report
+                    </button>
+                </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="glass-morphism p-6 rounded-xl">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-300 text-sm">Total Held</p>
+                            <p class="text-2xl font-bold text-white" id="totalHeld">$0.00</p>
+                        </div>
+                        <div class="bg-yellow-500/20 p-3 rounded-lg">
+                            <i class="fas fa-lock text-yellow-400 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-morphism p-6 rounded-xl">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-300 text-sm">Released Today</p>
+                            <p class="text-2xl font-bold text-white" id="releasedToday">$0.00</p>
+                        </div>
+                        <div class="bg-green-500/20 p-3 rounded-lg">
+                            <i class="fas fa-unlock text-green-400 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-morphism p-6 rounded-xl">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-300 text-sm">Disputed</p>
+                            <p class="text-2xl font-bold text-white" id="disputedCount">0</p>
+                        </div>
+                        <div class="bg-red-500/20 p-3 rounded-lg">
+                            <i class="fas fa-exclamation-triangle text-red-400 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-morphism p-6 rounded-xl">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-300 text-sm">Pending Release</p>
+                            <p class="text-2xl font-bold text-white" id="pendingRelease">0</p>
+                        </div>
+                        <div class="bg-blue-500/20 p-3 rounded-lg">
+                            <i class="fas fa-clock text-blue-400 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="glass-morphism p-6 rounded-xl mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-gray-300 text-sm font-medium mb-2">Status</label>
+                        <select id="statusFilter" class="form-input w-full p-3 rounded-lg">
+                            <option value="">All Statuses</option>
+                            <option value="held">Held</option>
+                            <option value="released">Released</option>
+                            <option value="disputed">Disputed</option>
+                            <option value="refunded">Refunded</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-300 text-sm font-medium mb-2">Date Range</label>
+                        <select id="dateFilter" class="form-input w-full p-3 rounded-lg">
+                            <option value="today">Today</option>
+                            <option value="week">This Week</option>
+                            <option value="month">This Month</option>
+                            <option value="custom">Custom Range</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-300 text-sm font-medium mb-2">Amount Range</label>
+                        <select id="amountFilter" class="form-input w-full p-3 rounded-lg">
+                            <option value="">All Amounts</option>
+                            <option value="0-100">$0 - $100</option>
+                            <option value="100-500">$100 - $500</option>
+                            <option value="500-1000">$500 - $1,000</option>
+                            <option value="1000+">$1,000+</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-300 text-sm font-medium mb-2">Search</label>
+                        <input type="text" id="searchInput" placeholder="Order ID, User..." class="form-input w-full p-3 rounded-lg">
+                    </div>
+                </div>
+                
+                <div class="flex justify-end mt-4 space-x-3">
+                    <button onclick="clearFilters()" class="px-4 py-2 text-gray-300 hover:text-white transition-colors">
+                        Clear Filters
+                    </button>
+                    <button onclick="applyFilters()" class="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg text-white transition-colors">
+                        Apply Filters
+                    </button>
+                </div>
+            </div>
+
+            <!-- Escrow Transactions Table -->
+            <div class="glass-morphism rounded-xl overflow-hidden">
+                <div class="p-6 border-b border-white/10">
+                    <h2 class="text-xl font-semibold text-white">Escrow Transactions</h2>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-black/20">
+                            <tr>
+                                <th class="px-6 py-4 text-left text-gray-300 font-medium">Order ID</th>
+                                <th class="px-6 py-4 text-left text-gray-300 font-medium">Buyer</th>
+                                <th class="px-6 py-4 text-left text-gray-300 font-medium">Seller</th>
+                                <th class="px-6 py-4 text-left text-gray-300 font-medium">Amount</th>
+                                <th class="px-6 py-4 text-left text-gray-300 font-medium">Status</th>
+                                <th class="px-6 py-4 text-left text-gray-300 font-medium">Date</th>
+                                <th class="px-6 py-4 text-left text-gray-300 font-medium">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="escrowTableBody" class="divide-y divide-white/10">
+                            <!-- Dynamic content will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Loading State -->
+                <div id="loadingState" class="p-8 text-center">
+                    <div class="loading-spinner mx-auto mb-4"></div>
+                    <p class="text-gray-300">Loading escrow transactions...</p>
+                </div>
+                
+                <!-- Empty State -->
+                <div id="emptyState" class="p-8 text-center hidden">
+                    <i class="fas fa-lock text-gray-400 text-4xl mb-4"></i>
+                    <p class="text-gray-300 mb-2">No escrow transactions found</p>
+                    <p class="text-gray-500 text-sm">Escrow transactions will appear here when orders are placed</p>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="flex justify-between items-center mt-6">
+                <div class="text-gray-300">
+                    Showing <span id="showingStart">0</span> to <span id="showingEnd">0</span> of <span id="totalRecords">0</span> transactions
+                </div>
+                <div class="flex space-x-2" id="paginationControls">
+                    <!-- Pagination buttons will be generated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Release Escrow Modal -->
+    <div id="releaseModal" class="fixed inset-0 bg-black/50 modal hidden items-center justify-center z-50">
+        <div class="glass-morphism p-8 rounded-xl max-w-md w-full mx-4">
+            <h3 class="text-xl font-semibold text-white mb-4">Release Escrow</h3>
+            <p class="text-gray-300 mb-6">Are you sure you want to release the escrow funds for this order?</p>
+            
+            <div class="mb-6">
+                <label class="block text-gray-300 text-sm font-medium mb-2">Release Reason</label>
+                <textarea id="releaseReason" class="form-input w-full p-3 rounded-lg h-24" placeholder="Enter reason for release..."></textarea>
+            </div>
+            
+            <div class="flex justify-end space-x-3">
+                <button onclick="closeReleaseModal()" class="px-4 py-2 text-gray-300 hover:text-white transition-colors">
+                    Cancel
+                </button>
+                <button onclick="confirmRelease()" class="bg-green-600 hover:bg-green-700 px-6 py-2 rounded-lg text-white transition-colors">
+                    Release Funds
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dispute Modal -->
+    <div id="disputeModal" class="fixed inset-0 bg-black/50 modal hidden items-center justify-center z-50">
+        <div class="glass-morphism p-8 rounded-xl max-w-md w-full mx-4">
+            <h3 class="text-xl font-semibold text-white mb-4">Handle Dispute</h3>
+            <p class="text-gray-300 mb-6">Review and resolve the escrow dispute.</p>
+            
+            <div class="mb-6">
+                <label class="block text-gray-300 text-sm font-medium mb-2">Resolution Action</label>
+                <select id="disputeAction" class="form-input w-full p-3 rounded-lg">
+                    <option value="">Select Action</option>
+                    <option value="release_to_seller">Release to Seller</option>
+                    <option value="refund_to_buyer">Refund to Buyer</option>
+                    <option value="partial_refund">Partial Refund</option>
+                    <option value="escalate">Escalate to Senior Admin</option>
+                </select>
+            </div>
+            
+            <div class="mb-6">
+                <label class="block text-gray-300 text-sm font-medium mb-2">Resolution Notes</label>
+                <textarea id="disputeNotes" class="form-input w-full p-3 rounded-lg h-24" placeholder="Enter resolution details..."></textarea>
+            </div>
+            
+            <div class="flex justify-end space-x-3">
+                <button onclick="closeDisputeModal()" class="px-4 py-2 text-gray-300 hover:text-white transition-colors">
+                    Cancel
+                </button>
+                <button onclick="resolveDispute()" class="bg-red-600 hover:bg-red-700 px-6 py-2 rounded-lg text-white transition-colors">
+                    Resolve Dispute
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPage = 1;
+        let totalPages = 1;
+        let currentEscrowId = null;
+        let escrowData = [];
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadEscrowData();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            // Filter change events
+            document.getElementById('statusFilter').addEventListener('change', applyFilters);
+            document.getElementById('dateFilter').addEventListener('change', applyFilters);
+            document.getElementById('amountFilter').addEventListener('change', applyFilters);
+            
+            // Search input
+            document.getElementById('searchInput').addEventListener('input', debounce(applyFilters, 500));
+        }
+
+        async function loadEscrowData(page = 1) {
+            try {
+                showLoading();
+                
+                const filters = getFilters();
+                const queryParams = new URLSearchParams({
+                    page: page,
+                    limit: 20,
+                    ...filters
+                });
+
+                const response = await fetch(`/api/admin/escrow?${queryParams}`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to load escrow data');
+                }
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    escrowData = data.escrow || [];
+                    updateStatistics(data.statistics);
+                    renderEscrowTable(escrowData);
+                    updatePagination(data.pagination);
+                } else {
+                    throw new Error(data.message || 'Failed to load escrow data');
+                }
+                
+            } catch (error) {
+                console.error('Error loading escrow data:', error);
+                showError('Failed to load escrow data: ' + error.message);
+                showEmptyState();
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function updateStatistics(stats) {
+            if (stats) {
+                document.getElementById('totalHeld').textContent = formatCurrency(stats.totalHeld || 0);
+                document.getElementById('releasedToday').textContent = formatCurrency(stats.releasedToday || 0);
+                document.getElementById('disputedCount').textContent = stats.disputedCount || 0;
+                document.getElementById('pendingRelease').textContent = stats.pendingRelease || 0;
+            }
+        }
+
+        function renderEscrowTable(escrow) {
+            const tbody = document.getElementById('escrowTableBody');
+            
+            if (!escrow || escrow.length === 0) {
+                showEmptyState();
+                return;
+            }
+
+            tbody.innerHTML = escrow.map(item => `
+                <tr class="hover:bg-white/5 transition-colors">
+                    <td class="px-6 py-4">
+                        <div class="text-white font-medium">#${item.order_number}</div>
+                        <div class="text-gray-400 text-sm">${item.order_id}</div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-white">${item.buyer_name}</div>
+                        <div class="text-gray-400 text-sm">${item.buyer_email}</div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-white">${item.seller_name}</div>
+                        <div class="text-gray-400 text-sm">${item.seller_email}</div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-white font-medium">${formatCurrency(item.amount)}</div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="status-badge status-${item.status}">${formatStatus(item.status)}</span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-white">${formatDate(item.created_at)}</div>
+                        <div class="text-gray-400 text-sm">${formatTime(item.created_at)}</div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex space-x-2">
+                            ${item.status === 'held' ? `
+                                <button onclick="openReleaseModal(${item.id})" class="text-green-400 hover:text-green-300 transition-colors" title="Release Escrow">
+                                    <i class="fas fa-unlock"></i>
+                                </button>
+                            ` : ''}
+                            ${item.status === 'disputed' ? `
+                                <button onclick="openDisputeModal(${item.id})" class="text-red-400 hover:text-red-300 transition-colors" title="Handle Dispute">
+                                    <i class="fas fa-gavel"></i>
+                                </button>
+                            ` : ''}
+                            <button onclick="viewEscrowDetails(${item.id})" class="text-blue-400 hover:text-blue-300 transition-colors" title="View Details">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function getFilters() {
+            return {
+                status: document.getElementById('statusFilter').value,
+                dateRange: document.getElementById('dateFilter').value,
+                amountRange: document.getElementById('amountFilter').value,
+                search: document.getElementById('searchInput').value
+            };
+        }
+
+        function applyFilters() {
+            currentPage = 1;
+            loadEscrowData(currentPage);
+        }
+
+        function clearFilters() {
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('dateFilter').value = 'today';
+            document.getElementById('amountFilter').value = '';
+            document.getElementById('searchInput').value = '';
+            applyFilters();
+        }
+
+        function openReleaseModal(escrowId) {
+            currentEscrowId = escrowId;
+            document.getElementById('releaseModal').classList.remove('hidden');
+            document.getElementById('releaseModal').classList.add('flex');
+        }
+
+        function closeReleaseModal() {
+            document.getElementById('releaseModal').classList.add('hidden');
+            document.getElementById('releaseModal').classList.remove('flex');
+            document.getElementById('releaseReason').value = '';
+            currentEscrowId = null;
+        }
+
+        async function confirmRelease() {
+            if (!currentEscrowId) return;
+            
+            const reason = document.getElementById('releaseReason').value.trim();
+            if (!reason) {
+                showError('Please provide a reason for releasing the escrow');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/admin/escrow/${currentEscrowId}/release`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ reason })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    showSuccess('Escrow funds released successfully');
+                    closeReleaseModal();
+                    loadEscrowData(currentPage);
+                } else {
+                    throw new Error(data.message || 'Failed to release escrow');
+                }
+                
+            } catch (error) {
+                console.error('Error releasing escrow:', error);
+                showError('Failed to release escrow: ' + error.message);
+            }
+        }
+
+        function openDisputeModal(escrowId) {
+            currentEscrowId = escrowId;
+            document.getElementById('disputeModal').classList.remove('hidden');
+            document.getElementById('disputeModal').classList.add('flex');
+        }
+
+        function closeDisputeModal() {
+            document.getElementById('disputeModal').classList.add('hidden');
+            document.getElementById('disputeModal').classList.remove('flex');
+            document.getElementById('disputeAction').value = '';
+            document.getElementById('disputeNotes').value = '';
+            currentEscrowId = null;
+        }
+
+        async function resolveDispute() {
+            if (!currentEscrowId) return;
+            
+            const action = document.getElementById('disputeAction').value;
+            const notes = document.getElementById('disputeNotes').value.trim();
+            
+            if (!action) {
+                showError('Please select a resolution action');
+                return;
+            }
+            
+            if (!notes) {
+                showError('Please provide resolution notes');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/admin/escrow/${currentEscrowId}/resolve-dispute`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ action, notes })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    showSuccess('Dispute resolved successfully');
+                    closeDisputeModal();
+                    loadEscrowData(currentPage);
+                } else {
+                    throw new Error(data.message || 'Failed to resolve dispute');
+                }
+                
+            } catch (error) {
+                console.error('Error resolving dispute:', error);
+                showError('Failed to resolve dispute: ' + error.message);
+            }
+        }
+
+        function refreshEscrowData() {
+            loadEscrowData(currentPage);
+        }
+
+        async function exportEscrowReport() {
+            try {
+                const filters = getFilters();
+                const queryParams = new URLSearchParams(filters);
+                
+                const response = await fetch(`/api/admin/escrow/export?${queryParams}`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                    }
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `escrow-report-${new Date().toISOString().split('T')[0]}.csv`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                    showSuccess('Report exported successfully');
+                } else {
+                    throw new Error('Failed to export report');
+                }
+                
+            } catch (error) {
+                console.error('Error exporting report:', error);
+                showError('Failed to export report: ' + error.message);
+            }
+        }
+
+        // Utility functions
+        function showLoading() {
+            document.getElementById('loadingState').classList.remove('hidden');
+            document.getElementById('emptyState').classList.add('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingState').classList.add('hidden');
+        }
+
+        function showEmptyState() {
+            document.getElementById('emptyState').classList.remove('hidden');
+            document.getElementById('escrowTableBody').innerHTML = '';
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD'
+            }).format(amount);
+        }
+
+        function formatStatus(status) {
+            const statusMap = {
+                'held': 'Held',
+                'released': 'Released',
+                'disputed': 'Disputed',
+                'refunded': 'Refunded'
+            };
+            return statusMap[status] || status;
+        }
+
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleDateString();
+        }
+
+        function formatTime(dateString) {
+            return new Date(dateString).toLocaleTimeString();
+        }
+
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        function updatePagination(pagination) {
+            if (!pagination) return;
+            
+            currentPage = pagination.currentPage;
+            totalPages = pagination.totalPages;
+            
+            document.getElementById('showingStart').textContent = pagination.start;
+            document.getElementById('showingEnd').textContent = pagination.end;
+            document.getElementById('totalRecords').textContent = pagination.total;
+            
+            // Generate pagination controls
+            const controls = document.getElementById('paginationControls');
+            controls.innerHTML = generatePaginationHTML(pagination);
+        }
+
+        function generatePaginationHTML(pagination) {
+            let html = '';
+            
+            // Previous button
+            if (pagination.currentPage > 1) {
+                html += `<button onclick="loadEscrowData(${pagination.currentPage - 1})" class="px-3 py-2 text-gray-300 hover:text-white transition-colors">Previous</button>`;
+            }
+            
+            // Page numbers
+            for (let i = Math.max(1, pagination.currentPage - 2); i <= Math.min(pagination.totalPages, pagination.currentPage + 2); i++) {
+                const isActive = i === pagination.currentPage;
+                html += `<button onclick="loadEscrowData(${i})" class="px-3 py-2 ${isActive ? 'bg-blue-600 text-white' : 'text-gray-300 hover:text-white'} transition-colors rounded">${i}</button>`;
+            }
+            
+            // Next button
+            if (pagination.currentPage < pagination.totalPages) {
+                html += `<button onclick="loadEscrowData(${pagination.currentPage + 1})" class="px-3 py-2 text-gray-300 hover:text-white transition-colors">Next</button>`;
+            }
+            
+            return html;
+        }
+
+        // Import utility functions from admin-utils.js
+        function showSuccess(message) {
+            // Implementation depends on your notification system
+            console.log('Success:', message);
+        }
+
+        function showError(message) {
+            // Implementation depends on your notification system
+            console.error('Error:', message);
+        }
+
+        function logout() {
+            localStorage.removeItem('adminToken');
+            window.location.href = '/auth/auth-admin.html';
+        }
+    </script>
+</body>
+</html>

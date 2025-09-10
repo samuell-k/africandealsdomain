@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment | ADD Physical Products</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" href="/public/images/logo.png">
+  <style>
+    .payment-tab { transition: all 0.3s ease; }
+    .payment-tab.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+    .payment-tab:hover:not(.active) { background: #f8fafc; }
+    .form-field { transition: all 0.2s ease; }
+    .form-field:focus-within { transform: translateY(-1px); }
+    .card-input { background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); }
+    .loading-spinner { animation: spin 1s linear infinite; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .success-checkmark { animation: checkmark 0.5s ease-in-out; }
+    @keyframes checkmark { 0% { transform: scale(0); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+    .payment-logo { width: 32px; height: 32px; object-fit: contain; }
+    .provider-option { transition: all 0.2s ease; }
+    .provider-option:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    .provider-option.selected { border-color: #3b82f6; background-color: #eff6ff; }
+  </style>
+  <script src="/shared/auth-utils.js"></script>
+  
+  <script src="/shared/enhanced-navigation.js"></script>
+</head>
+<body class="bg-gradient-to-br from-blue-50 via-white to-purple-50 min-h-screen">
+  <!-- Navigation Container -->
+  <div id="navigation-container"></div>
+
+  <main class="pt-20 pb-8">
+    <div class="max-w-6xl mx-auto px-4">
+      <!-- Page Header -->
+      <div class="mb-8 text-center">
+        <h1 class="text-4xl font-bold text-gray-900 mb-2">Complete Your Payment</h1>
+        <p class="text-gray-600 text-lg">Choose your preferred payment method</p>
+      </div>
+
+      <!-- Payment Content -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Payment Methods -->
+        <div class="lg:col-span-2">
+          <div class="bg-white rounded-2xl shadow-xl p-8">
+            <!-- Payment Method Tabs -->
+            <div class="mb-8">
+              <h2 class="text-2xl font-bold text-gray-900 mb-6">Select Payment Method</h2>
+              
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+                <button class="payment-tab active p-4 rounded-xl border-2 border-gray-200 flex flex-col items-center gap-2" data-method="credit-card">
+                  <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                    <line x1="1" y1="10" x2="23" y2="10"/>
+                  </svg>
+                  <span class="text-sm font-medium">Card</span>
+                </button>
+                
+                <button class="payment-tab p-4 rounded-xl border-2 border-gray-200 flex flex-col items-center gap-2" data-method="paypal">
+                  <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M7 12l3-3 3 3 4-4M8 21l4-7h3a3 3 0 0 0 0-6h-3l-4 7-4 7z"/>
+                  </svg>
+                  <span class="text-sm font-medium">PayPal</span>
+                </button>
+                
+                <button class="payment-tab p-4 rounded-xl border-2 border-gray-200 flex flex-col items-center gap-2" data-method="mobile-money">
+                  <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+                    <line x1="12" y1="18" x2="12.01" y2="18"/>
+                  </svg>
+                  <span class="text-sm font-medium">Mobile</span>
+                </button>
+                
+                <button class="payment-tab p-4 rounded-xl border-2 border-gray-200 flex flex-col items-center gap-2" data-method="bank-transfer">
+                  <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 21h18"/>
+                    <path d="M3 10h18"/>
+                    <path d="M5 6l7-3 7 3"/>
+                    <path d="M4 10v11"/>
+                    <path d="M20 10v11"/>
+                    <path d="M8 14v3"/>
+                    <path d="M12 14v3"/>
+                    <path d="M16 14v3"/>
+                  </svg>
+                  <span class="text-sm font-medium">Bank</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Payment Forms -->
+            <div id="payment-forms">
+              <!-- Credit/Debit Card Form -->
+              <div id="credit-card-form" class="payment-form">
+                <div class="card-input p-6 rounded-xl border-2 border-gray-200 mb-6">
+                  <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Credit/Debit Card</h3>
+                    <div class="flex items-center gap-2">
+                      <svg class="w-8 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                        <line x1="1" y1="10" x2="23" y2="10"/>
+                      </svg>
+                    </div>
+                  </div>
+                  
+                  <form id="credit-card-payment" class="space-y-4">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-2">Cardholder Name *</label>
+                      <input type="text" name="cardholderName" placeholder="John Doe" required
+                             class="form-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-2">Card Number *</label>
+                      <input type="text" name="cardNumber" placeholder="1234 5678 9012 3456" required maxlength="19"
+                             class="form-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Expiry Date *</label>
+                        <input type="text" name="expiryDate" placeholder="MM/YY" required maxlength="5"
+                               class="form-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                      </div>
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">CVV *</label>
+                        <input type="text" name="cvv" placeholder="123" required maxlength="4"
+                               class="form-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                      </div>
+                    </div>
+                  </form>
+                </div>
+              </div>
+
+              <!-- PayPal Form -->
+              <div id="paypal-form" class="payment-form hidden">
+                <div class="bg-blue-50 p-6 rounded-xl border-2 border-blue-200 mb-6">
+                  <div class="flex items-center gap-3 mb-4">
+                    <svg class="w-8 h-8 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M7 12l3-3 3 3 4-4M8 21l4-7h3a3 3 0 0 0 0-6h-3l-4 7-4 7z"/>
+                    </svg>
+                    <h3 class="text-lg font-semibold text-gray-900">PayPal</h3>
+                  </div>
+                  
+                  <form id="paypal-payment" class="space-y-4">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-2">PayPal Email *</label>
+                      <input type="email" name="paypalEmail" placeholder="your@email.com" required
+                             class="form-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    
+                    <div class="bg-blue-100 p-4 rounded-lg">
+                      <p class="text-sm text-blue-800">
+                        <strong>Note:</strong> You will be redirected to PayPal to complete your payment securely.
+                      </p>
+                    </div>
+                  </form>
+                </div>
+              </div>
+
+              <!-- Mobile Money Form -->
+              <div id="mobile-money-form" class="payment-form hidden">
+                <div class="bg-green-50 p-6 rounded-xl border-2 border-green-200 mb-6">
+                  <div class="flex items-center gap-3 mb-4">
+                    <svg class="w-8 h-8 text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+                      <line x1="12" y1="18" x2="12.01" y2="18"/>
+                    </svg>
+                    <h3 class="text-lg font-semibold text-gray-900">Mobile Money</h3>
+                  </div>
+                  
+                  <form id="mobile-money-payment" class="space-y-4">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-3">Select Provider *</label>
+                      <div class="grid grid-cols-2 gap-3">
+                        <label class="provider-option flex items-center p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                          <input type="radio" name="mobileProvider" value="mtn" class="mr-3" required>
+                          <div class="flex items-center gap-2">
+                            <div class="w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center">
+                              <span class="text-xs font-bold text-black">M</span>
+                            </div>
+                            <span class="font-medium">MTN</span>
+                          </div>
+                        </label>
+                        <label class="provider-option flex items-center p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                          <input type="radio" name="mobileProvider" value="airtel" class="mr-3">
+                          <div class="flex items-center gap-2">
+                            <div class="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+                              <span class="text-xs font-bold text-white">A</span>
+                            </div>
+                            <span class="font-medium">Airtel</span>
+                          </div>
+                        </label>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number *</label>
+                      <input type="tel" name="phoneNumber" placeholder="+250 78 123 4567" required
+                             class="form-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    
+                    <div class="bg-green-100 p-4 rounded-lg">
+                      <p class="text-sm text-green-800">
+                        <strong>Note:</strong> You will receive a payment request on your mobile phone. Please confirm the payment to complete your order.
+                      </p>
+                    </div>
+                  </form>
+                </div>
+              </div>
+
+              <!-- Bank Transfer Form -->
+              <div id="bank-transfer-form" class="payment-form hidden">
+                <div class="bg-purple-50 p-6 rounded-xl border-2 border-purple-200 mb-6">
+                  <div class="flex items-center gap-3 mb-4">
+                    <svg class="w-8 h-8 text-purple-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M3 21h18"/>
+                      <path d="M3 10h18"/>
+                      <path d="M5 6l7-3 7 3"/>
+                      <path d="M4 10v11"/>
+                      <path d="M20 10v11"/>
+                      <path d="M8 14v3"/>
+                      <path d="M12 14v3"/>
+                      <path d="M16 14v3"/>
+                    </svg>
+                    <h3 class="text-lg font-semibold text-gray-900">Bank Transfer</h3>
+                  </div>
+                  
+                  <form id="bank-transfer-payment" class="space-y-4">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-2">Select Bank *</label>
+                      <select name="bank" required
+                              class="form-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">Choose your bank</option>
+                        <option value="equity">Equity Bank</option>
+                        <option value="kcb">KCB Bank</option>
+                        <option value="cooperative">Cooperative Bank</option>
+                        <option value="barclays">Barclays Bank</option>
+                        <option value="stanbic">Stanbic Bank</option>
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-2">Account Number *</label>
+                      <input type="text" name="accountNumber" placeholder="1234567890" required
+                             class="form-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    
+                    <div class="bg-purple-100 p-4 rounded-lg">
+                      <p class="text-sm text-purple-800">
+                        <strong>Note:</strong> Please transfer the exact amount to the provided account details. Your order will be processed once payment is confirmed.
+                      </p>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+            <!-- Payment Button -->
+            <div class="mt-8">
+              <button id="process-payment-btn" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 rounded-xl font-semibold text-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed">
+                <span id="payment-btn-text">Complete Payment</span>
+                <div id="payment-btn-spinner" class="hidden inline-block ml-2">
+                  <div class="loading-spinner w-5 h-5 border-2 border-white border-t-transparent rounded-full"></div>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="lg:col-span-1">
+          <div class="bg-white rounded-2xl shadow-xl p-6 sticky top-20">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6">Order Summary</h2>
+            
+            <!-- Order Items -->
+            <div id="order-items" class="space-y-4 mb-6">
+              <!-- Items will be loaded here -->
+            </div>
+            
+            <!-- Order Totals -->
+            <div class="border-t pt-6 space-y-3">
+              <div class="flex justify-between text-sm">
+                <span class="text-gray-600">Subtotal</span>
+                <span id="subtotal" class="font-medium">$0.00</span>
+              </div>
+              <div class="flex justify-between text-sm">
+                <span class="text-gray-600">Shipping</span>
+                <span id="shipping" class="font-medium">$0.00</span>
+              </div>
+              <div class="flex justify-between text-sm">
+                <span class="text-gray-600">Tax</span>
+                <span id="tax" class="font-medium">$0.00</span>
+              </div>
+              <div class="border-t pt-3">
+                <div class="flex justify-between font-bold text-xl">
+                  <span>Total</span>
+                  <span id="total" class="text-blue-600">$0.00</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Security Badge -->
+            <div class="mt-6 p-4 bg-gray-50 rounded-lg">
+              <div class="flex items-center gap-2 text-sm text-gray-600">
+                <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                </svg>
+                <span>Your payment information is secure and encrypted</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Success Modal -->
+  <div id="success-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 text-center">
+      <div class="success-checkmark w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        </svg>
+      </div>
+      <h3 class="text-2xl font-bold text-gray-900 mb-2">Payment Successful!</h3>
+      <p class="text-gray-600 mb-6">Your order has been placed successfully. You will receive a confirmation email shortly.</p>
+      <div class="space-y-3">
+        <button onclick="goToOrders()" class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors">
+          View My Orders
+        </button>
+        <button onclick="continueShopping()" class="w-full bg-gray-100 text-gray-700 py-3 rounded-lg hover:bg-gray-200 transition-colors">
+          Continue Shopping
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error Modal -->
+  <div id="error-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 text-center">
+      <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </div>
+      <h3 class="text-2xl font-bold text-gray-900 mb-2">Payment Failed</h3>
+      <p id="error-message" class="text-gray-600 mb-6">There was an error processing your payment. Please try again.</p>
+      <button onclick="closeErrorModal()" class="w-full bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 transition-colors">
+        Try Again
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // Load header component
+    async function loadHeader() {
+      try {
+        const response = await fetch('/buyer/components/header.html');
+        const headerHTML = await response.text();
+        document.getElementById('buyer-header').innerHTML = headerHTML;
+      } catch (error) {
+        console.error('Error loading header:', error);
+      }
+    }
+
+    // Global variables
+    let currentOrder = null;
+    let selectedPaymentMethod = 'credit-card';
+    const authToken = localStorage.getItem('authToken');
+    const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+
+    // Check authentication
+    if (!authToken) {
+      window.location.href = '/auth/auth-buyer.html';
+    }
+
+    // Load header component
+    fetch('/buyer/components/header.html')
+      .then(res => res.text())
+      .then(html => {
+        document.getElementById('buyer-header').innerHTML = html;
+      });
+
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', function() {
+      loadHeader();
+      loadOrderData();
+      setupPaymentTabs();
+      setupFormValidation();
+    });
+
+    // Load order data
+    async function loadOrderData() {
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const orderId = urlParams.get('orderId');
+        
+        if (!orderId) {
+          // Try to get from localStorage
+          const pendingOrder = localStorage.getItem('pendingOrder');
+          if (pendingOrder) {
+            currentOrder = JSON.parse(pendingOrder);
+            displayOrderSummary();
+          } else {
+            window.location.href = '/buyer/cart.html';
+          }
+          return;
+        }
+
+        // Fetch order details from backend
+        const response = await fetch(`/api/orders/${orderId}`, {
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          currentOrder = data.order;
+          displayOrderSummary();
+        } else {
+          throw new Error('Failed to load order details');
+        }
+      } catch (error) {
+        console.error('Error loading order:', error);
+        showError('Failed to load order details. Please try again.');
+      }
+    }
+
+    // Display order summary
+    function displayOrderSummary() {
+      if (!currentOrder) return;
+
+      const itemsContainer = document.getElementById('order-items');
+      const subtotal = currentOrder.subtotal || currentOrder.total_amount || 0;
+      const shipping = currentOrder.shipping_fee || currentOrder.delivery_fee || 0;
+      const tax = currentOrder.tax || 0;
+      const total = currentOrder.total_amount || (subtotal + shipping + tax);
+
+      // Display items
+      if (currentOrder.items && currentOrder.items.length > 0) {
+        itemsContainer.innerHTML = currentOrder.items.map(item => `
+          <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+            <img src="${item.main_image || item.product_image || '/public/images/placeholder.jpg'}" 
+                 alt="${item.product_name || item.name}" 
+                 class="w-12 h-12 object-cover rounded-lg">
+            <div class="flex-1">
+              <h4 class="font-medium text-gray-900 text-sm">${item.product_name || item.name}</h4>
+              <p class="text-gray-600 text-xs">Qty: ${item.quantity}</p>
+            </div>
+            <div class="text-right">
+              <p class="font-semibold text-gray-900 text-sm">$${((item.unit_price || item.price) * item.quantity).toFixed(2)}</p>
+            </div>
+          </div>
+        `).join('');
+      } else {
+        itemsContainer.innerHTML = '<p class="text-gray-500 text-center py-4">No items found</p>';
+      }
+
+      // Update totals
+      document.getElementById('subtotal').textContent = `$${subtotal.toFixed(2)}`;
+      document.getElementById('shipping').textContent = `$${shipping.toFixed(2)}`;
+      document.getElementById('tax').textContent = `$${tax.toFixed(2)}`;
+      document.getElementById('total').textContent = `$${total.toFixed(2)}`;
+    }
+
+    // Setup payment method tabs
+    function setupPaymentTabs() {
+      const tabs = document.querySelectorAll('.payment-tab');
+      const forms = document.querySelectorAll('.payment-form');
+
+      tabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+          const method = this.dataset.method;
+          
+          // Update active tab
+          tabs.forEach(t => t.classList.remove('active'));
+          this.classList.add('active');
+          
+          // Show corresponding form
+          forms.forEach(form => form.classList.add('hidden'));
+          document.getElementById(`${method}-form`).classList.remove('hidden');
+          
+          selectedPaymentMethod = method;
+        });
+      });
+    }
+
+    // Setup form validation
+    function setupFormValidation() {
+      // Card number formatting
+      const cardNumberInput = document.querySelector('input[name="cardNumber"]');
+      if (cardNumberInput) {
+        cardNumberInput.addEventListener('input', function(e) {
+          let value = e.target.value.replace(/\s/g, '').replace(/[^0-9]/gi, '');
+          let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
+          e.target.value = formattedValue;
+        });
+      }
+
+      // Expiry date formatting
+      const expiryInput = document.querySelector('input[name="expiryDate"]');
+      if (expiryInput) {
+        expiryInput.addEventListener('input', function(e) {
+          let value = e.target.value.replace(/\D/g, '');
+          if (value.length >= 2) {
+            value = value.substring(0, 2) + '/' + value.substring(2, 4);
+          }
+          e.target.value = value;
+        });
+      }
+
+      // CVV validation
+      const cvvInput = document.querySelector('input[name="cvv"]');
+      if (cvvInput) {
+        cvvInput.addEventListener('input', function(e) {
+          e.target.value = e.target.value.replace(/\D/g, '');
+        });
+      }
+    }
+
+    // Process payment
+    document.getElementById('process-payment-btn').addEventListener('click', async function() {
+      if (!validatePaymentForm()) {
+        return;
+      }
+
+      const btn = this;
+      const btnText = document.getElementById('payment-btn-text');
+      const btnSpinner = document.getElementById('payment-btn-spinner');
+
+      // Show loading state
+      btn.disabled = true;
+      btnText.textContent = 'Processing...';
+      btnSpinner.classList.remove('hidden');
+
+      try {
+        const paymentData = collectPaymentData();
+        
+        const response = await fetch(`/api/orders/${currentOrder.id}/payment`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+          },
+          body: JSON.stringify(paymentData)
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          
+          // Clear pending order from localStorage
+          localStorage.removeItem('pendingOrder');
+          
+          // Show success modal
+          showSuccess();
+        } else {
+          const error = await response.json();
+          throw new Error(error.error || 'Payment failed');
+        }
+      } catch (error) {
+        console.error('Payment error:', error);
+        showError(error.message || 'Payment failed. Please try again.');
+      } finally {
+        // Reset button state
+        btn.disabled = false;
+        btnText.textContent = 'Complete Payment';
+        btnSpinner.classList.add('hidden');
+      }
+    });
+
+    // Validate payment form
+    function validatePaymentForm() {
+      const activeForm = document.querySelector(`#${selectedPaymentMethod}-form form`);
+      if (!activeForm) return false;
+
+      const requiredFields = activeForm.querySelectorAll('[required]');
+      let isValid = true;
+
+      requiredFields.forEach(field => {
+        if (!field.value.trim()) {
+          field.classList.add('border-red-500');
+          isValid = false;
+        } else {
+          field.classList.remove('border-red-500');
+        }
+      });
+
+      if (!isValid) {
+        showError('Please fill in all required fields.');
+      }
+
+      return isValid;
+    }
+
+    // Collect payment data
+    function collectPaymentData() {
+      const activeForm = document.querySelector(`#${selectedPaymentMethod}-form form`);
+      const formData = new FormData(activeForm);
+      
+      const paymentData = {
+        method: selectedPaymentMethod,
+        orderId: currentOrder.id,
+        amount: currentOrder.total_amount
+      };
+
+      // Add method-specific data
+      switch (selectedPaymentMethod) {
+        case 'credit-card':
+          paymentData.cardData = {
+            cardholderName: formData.get('cardholderName'),
+            cardNumber: formData.get('cardNumber').replace(/\s/g, ''),
+            expiryDate: formData.get('expiryDate'),
+            cvv: formData.get('cvv')
+          };
+          break;
+        case 'paypal':
+          paymentData.paypalEmail = formData.get('paypalEmail');
+          break;
+        case 'mobile-money':
+          paymentData.mobileData = {
+            provider: formData.get('mobileProvider'),
+            phoneNumber: formData.get('phoneNumber')
+          };
+          break;
+        case 'bank-transfer':
+          paymentData.bankData = {
+            bank: formData.get('bank'),
+            accountNumber: formData.get('accountNumber')
+          };
+          break;
+      }
+
+      return paymentData;
+    }
+
+    // Show success modal
+    function showSuccess() {
+      document.getElementById('success-modal').classList.remove('hidden');
+    }
+
+    // Show error modal
+    function showError(message) {
+      document.getElementById('error-message').textContent = message;
+      document.getElementById('error-modal').classList.remove('hidden');
+    }
+
+    // Close error modal
+    function closeErrorModal() {
+      document.getElementById('error-modal').classList.add('hidden');
+    }
+
+    // Navigate to orders page
+    function goToOrders() {
+      window.location.href = '/buyer/orders.html';
+    }
+
+    // Continue shopping
+    function continueShopping() {
+      window.location.href = '/buyer/products.html';
+    }
+
+    // Initialize navigation
+    document.addEventListener('DOMContentLoaded', function() {
+      BuyerNavigation.inject('navigation-container', {
+        currentPage: 'payment',
+        userName: 'Account'
+      });
+    });
+  </script>
+</body>
+</html>

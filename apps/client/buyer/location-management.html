@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Location Management - ADD Physical Products</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <a href="buyers-home.html" class="text-blue-600 hover:text-blue-800">
+                        <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+                    </a>
+                </div>
+                <h1 class="text-xl font-semibold text-gray-900">Location Management</h1>
+                <div class="flex items-center space-x-4">
+                    <button id="shareLocationBtn" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                        <i class="fas fa-share-alt mr-2"></i>Share Location
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Map Section -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-lg shadow-sm border">
+                    <div class="p-6 border-b">
+                        <div class="flex justify-between items-center">
+                            <h2 class="text-lg font-semibold text-gray-900">Interactive Map</h2>
+                            <div class="flex space-x-2">
+                                <button id="getCurrentLocationBtn" class="bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm">
+                                    <i class="fas fa-crosshairs mr-1"></i>Current Location
+                                </button>
+                                <button id="addLocationBtn" class="bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm">
+                                    <i class="fas fa-plus mr-1"></i>Add Location
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <div id="map" class="h-96 rounded-lg border"></div>
+                    </div>
+                </div>
+
+                <!-- Real-time Location Sharing -->
+                <div class="bg-white rounded-lg shadow-sm border mt-6">
+                    <div class="p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900">Real-time Location Sharing</h3>
+                                <p class="text-gray-600 mt-1">Allow agents to track your location during delivery</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="locationSharingToggle" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                        </div>
+                        <div id="locationSharingStatus" class="mt-4 p-3 rounded-lg bg-gray-50 hidden">
+                            <div class="flex items-center">
+                                <div class="animate-pulse w-3 h-3 bg-green-500 rounded-full mr-3"></div>
+                                <span class="text-sm text-gray-700">Location sharing is active</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Saved Locations -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-lg shadow-sm border">
+                    <div class="p-6 border-b">
+                        <h2 class="text-lg font-semibold text-gray-900">Saved Locations</h2>
+                    </div>
+                    <div class="p-6">
+                        <div id="savedLocationsList" class="space-y-4">
+                            <!-- Saved locations will be loaded here -->
+                        </div>
+                        <div id="noLocationsMessage" class="text-center py-8 text-gray-500 hidden">
+                            <i class="fas fa-map-marker-alt text-4xl mb-4"></i>
+                            <p>No saved locations yet</p>
+                            <p class="text-sm">Click on the map to add your first location</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Location Modal -->
+    <div id="addLocationModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+                <div class="p-6 border-b">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-lg font-semibold text-gray-900">Add New Location</h3>
+                        <button id="closeModalBtn" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                <form id="addLocationForm" class="p-6">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Location Name</label>
+                            <input type="text" id="locationName" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., Home, Office, etc." required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Address</label>
+                            <textarea id="locationAddress" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" rows="3" placeholder="Full address" required></textarea>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">City</label>
+                                <input type="text" id="locationCity" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Country</label>
+                                <input type="text" id="locationCountry" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="flex items-center">
+                                <input type="checkbox" id="setPrimaryLocation" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                <span class="ml-2 text-sm text-gray-700">Set as primary location</span>
+                            </label>
+                        </div>
+                        <input type="hidden" id="locationLat">
+                        <input type="hidden" id="locationLng">
+                    </div>
+                    <div class="flex justify-end space-x-3 mt-6">
+                        <button type="button" id="cancelLocationBtn" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors">Cancel</button>
+                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">Save Location</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg p-6 flex items-center space-x-3">
+            <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+            <span class="text-gray-700">Loading...</span>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let map;
+        let currentLocationMarker;
+        let savedLocationMarkers = [];
+        let selectedLocation = null;
+        let watchId = null;
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeMap();
+            loadSavedLocations();
+            setupEventListeners();
+            checkLocationSharingStatus();
+        });
+
+        // Initialize Leaflet map
+        function initializeMap() {
+            map = L.map('map').setView([-1.2921, 36.8219], 13); // Default to Nairobi
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            // Add click event to map
+            map.on('click', function(e) {
+                selectedLocation = {
+                    lat: e.latlng.lat,
+                    lng: e.latlng.lng
+                };
+                showAddLocationModal();
+            });
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Get current location
+            document.getElementById('getCurrentLocationBtn').addEventListener('click', getCurrentLocation);
+
+            // Location sharing toggle
+            document.getElementById('locationSharingToggle').addEventListener('change', toggleLocationSharing);
+
+            // Modal controls
+            document.getElementById('addLocationBtn').addEventListener('click', () => {
+                selectedLocation = map.getCenter();
+                showAddLocationModal();
+            });
+            document.getElementById('closeModalBtn').addEventListener('click', hideAddLocationModal);
+            document.getElementById('cancelLocationBtn').addEventListener('click', hideAddLocationModal);
+
+            // Form submission
+            document.getElementById('addLocationForm').addEventListener('submit', saveLocation);
+        }
+
+        // Get user's current location
+        function getCurrentLocation() {
+            if (navigator.geolocation) {
+                showLoading();
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        hideLoading();
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        
+                        map.setView([lat, lng], 15);
+                        
+                        if (currentLocationMarker) {
+                            map.removeLayer(currentLocationMarker);
+                        }
+                        
+                        currentLocationMarker = L.marker([lat, lng])
+                            .addTo(map)
+                            .bindPopup('Your current location')
+                            .openPopup();
+                    },
+                    function(error) {
+                        hideLoading();
+                        showNotification('Unable to get your location: ' + error.message, 'error');
+                    }
+                );
+            } else {
+                showNotification('Geolocation is not supported by this browser', 'error');
+            }
+        }
+
+        // Toggle location sharing
+        function toggleLocationSharing() {
+            const isEnabled = document.getElementById('locationSharingToggle').checked;
+            const statusDiv = document.getElementById('locationSharingStatus');
+            
+            if (isEnabled) {
+                startLocationSharing();
+                statusDiv.classList.remove('hidden');
+            } else {
+                stopLocationSharing();
+                statusDiv.classList.add('hidden');
+            }
+            
+            // Update server
+            fetch('/api/user-locations/sharing', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({ enabled: isEnabled })
+            });
+        }
+
+        // Start real-time location sharing
+        function startLocationSharing() {
+            if (navigator.geolocation) {
+                watchId = navigator.geolocation.watchPosition(
+                    function(position) {
+                        const locationData = {
+                            latitude: position.coords.latitude,
+                            longitude: position.coords.longitude,
+                            accuracy: position.coords.accuracy,
+                            speed: position.coords.speed,
+                            heading: position.coords.heading
+                        };
+                        
+                        // Send to server
+                        fetch('/api/user-locations/realtime', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                            },
+                            body: JSON.stringify(locationData)
+                        });
+                    },
+                    function(error) {
+                        console.error('Location sharing error:', error);
+                        stopLocationSharing();
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 60000
+                    }
+                );
+            }
+        }
+
+        // Stop location sharing
+        function stopLocationSharing() {
+            if (watchId) {
+                navigator.geolocation.clearWatch(watchId);
+                watchId = null;
+            }
+        }
+
+        // Check location sharing status
+        function checkLocationSharingStatus() {
+            fetch('/api/auth/me', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.user.location_sharing) {
+                    document.getElementById('locationSharingToggle').checked = true;
+                    document.getElementById('locationSharingStatus').classList.remove('hidden');
+                    startLocationSharing();
+                }
+            });
+        }
+
+        // Load saved locations
+        function loadSavedLocations() {
+            showLoading();
+            fetch('/api/user-locations', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                hideLoading();
+                if (data.success) {
+                    displaySavedLocations(data.locations);
+                } else {
+                    showNotification('Failed to load locations', 'error');
+                }
+            })
+            .catch(error => {
+                hideLoading();
+                console.error('Error loading locations:', error);
+                showNotification('Failed to load locations', 'error');
+            });
+        }
+
+        // Display saved locations
+        function displaySavedLocations(locations) {
+            const container = document.getElementById('savedLocationsList');
+            const noLocationsMsg = document.getElementById('noLocationsMessage');
+            
+            // Clear existing markers
+            savedLocationMarkers.forEach(marker => map.removeLayer(marker));
+            savedLocationMarkers = [];
+            
+            if (locations.length === 0) {
+                container.innerHTML = '';
+                noLocationsMsg.classList.remove('hidden');
+                return;
+            }
+            
+            noLocationsMsg.classList.add('hidden');
+            container.innerHTML = '';
+            
+            locations.forEach(location => {
+                // Add marker to map
+                const marker = L.marker([location.latitude, location.longitude])
+                    .addTo(map)
+                    .bindPopup(`
+                        <strong>${location.address}</strong><br>
+                        ${location.city}, ${location.country}
+                        ${location.is_primary ? '<br><span class="text-blue-600">Primary Location</span>' : ''}
+                    `);
+                savedLocationMarkers.push(marker);
+                
+                // Add to list
+                const locationElement = document.createElement('div');
+                locationElement.className = `p-4 border rounded-lg hover:bg-gray-50 cursor-pointer ${location.is_primary ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}`;
+                locationElement.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <div class="flex items-center">
+                                <i class="fas fa-map-marker-alt text-gray-500 mr-2"></i>
+                                <span class="font-medium text-gray-900">${location.address}</span>
+                                ${location.is_primary ? '<span class="ml-2 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">Primary</span>' : ''}
+                            </div>
+                            <p class="text-sm text-gray-600 mt-1">${location.city}, ${location.country}</p>
+                            <p class="text-xs text-gray-500 mt-1">${location.location_type === 'manual' ? 'Manual' : 'Real-time'}</p>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="centerMapOnLocation(${location.latitude}, ${location.longitude})" class="text-blue-600 hover:text-blue-800">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button onclick="deleteLocation(${location.id})" class="text-red-600 hover:text-red-800">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(locationElement);
+            });
+        }
+
+        // Center map on location
+        function centerMapOnLocation(lat, lng) {
+            map.setView([lat, lng], 15);
+        }
+
+        // Delete location
+        function deleteLocation(locationId) {
+            if (confirm('Are you sure you want to delete this location?')) {
+                fetch(`/api/user-locations/${locationId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showNotification('Location deleted successfully', 'success');
+                        loadSavedLocations();
+                    } else {
+                        showNotification('Failed to delete location', 'error');
+                    }
+                });
+            }
+        }
+
+        // Show add location modal
+        function showAddLocationModal() {
+            if (selectedLocation) {
+                document.getElementById('locationLat').value = selectedLocation.lat;
+                document.getElementById('locationLng').value = selectedLocation.lng;
+            }
+            document.getElementById('addLocationModal').classList.remove('hidden');
+        }
+
+        // Hide add location modal
+        function hideAddLocationModal() {
+            document.getElementById('addLocationModal').classList.add('hidden');
+            document.getElementById('addLocationForm').reset();
+        }
+
+        // Save location
+        function saveLocation(e) {
+            e.preventDefault();
+            
+            const formData = {
+                latitude: parseFloat(document.getElementById('locationLat').value),
+                longitude: parseFloat(document.getElementById('locationLng').value),
+                address: document.getElementById('locationAddress').value,
+                city: document.getElementById('locationCity').value,
+                country: document.getElementById('locationCountry').value,
+                is_primary: document.getElementById('setPrimaryLocation').checked
+            };
+            
+            showLoading();
+            fetch('/api/user-locations', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                hideLoading();
+                if (data.success) {
+                    showNotification('Location saved successfully', 'success');
+                    hideAddLocationModal();
+                    loadSavedLocations();
+                } else {
+                    showNotification(data.message || 'Failed to save location', 'error');
+                }
+            })
+            .catch(error => {
+                hideLoading();
+                console.error('Error saving location:', error);
+                showNotification('Failed to save location', 'error');
+            });
+        }
+
+        // Utility functions
+        function showLoading() {
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.add('hidden');
+        }
+
+        function showNotification(message, type = 'info') {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
+                type === 'success' ? 'bg-green-500 text-white' :
+                type === 'error' ? 'bg-red-500 text-white' :
+                'bg-blue-500 text-white'
+            }`;
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas ${
+                        type === 'success' ? 'fa-check-circle' :
+                        type === 'error' ? 'fa-exclamation-circle' :
+                        'fa-info-circle'
+                    } mr-2"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

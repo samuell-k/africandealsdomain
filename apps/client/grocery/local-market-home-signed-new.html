@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Local Market | African Deals Domain</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="icon" href="/public/images/logo.png">
+    
+    <style>
+        .glass { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+        .fade-in { animation: fadeIn 0.6s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .slide-in { animation: slideIn 0.5s ease-out; }
+        @keyframes slideIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+        .bounce-in { animation: bounceIn 0.8s ease-out; }
+        @keyframes bounceIn { 0% { transform: scale(0.3); opacity: 0; } 50% { transform: scale(1.05); } 70% { transform: scale(0.9); } 100% { transform: scale(1); opacity: 1; } }
+        .gradient-bg { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+        .product-card { transition: all 0.3s ease; }
+        .product-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
+        .loading-spinner { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .shimmer { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+        .cart-badge { animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+        .sticky-cart { position: sticky; top: 6rem; }
+        .notification { transition: all 0.3s ease; }
+        .notification.show { transform: translateX(0); }
+        .notification.hide { transform: translateX(100%); }
+    </style>
+</head>
+<body class="bg-green-50 min-h-screen">
+    <!-- Notification System -->
+    <div id="notification" class="fixed top-4 right-4 z-50 transform translate-x-full notification">
+        <div id="notification-content" class="px-4 py-3 rounded-lg shadow-lg text-white font-medium flex items-center">
+            <i id="notification-icon" class="mr-2"></i>
+            <span id="notification-message"></span>
+        </div>
+    </div>
+
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
+        <div class="text-center">
+            <div class="loading-spinner w-12 h-12 border-4 border-green-200 border-t-green-500 rounded-full mx-auto mb-4"></div>
+            <p class="text-gray-600">Loading Local Market...</p>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="glass bg-white/95 shadow-lg sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo & Brand -->
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-store text-white text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-gray-900">Local Market</h1>
+                        <p class="text-xs text-gray-500">Fresh • Fast • Local</p>
+                    </div>
+                </div>
+
+                <!-- Search Bar -->
+                <div class="hidden md:flex flex-1 max-w-md mx-8">
+                    <div class="relative w-full">
+                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" 
+                               id="search-input" 
+                               placeholder="Search fresh products..." 
+                               class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex items-center gap-4">
+                    <!-- Switch to Physical Products -->
+                    <button onclick="switchToPhysical()" 
+                            class="hidden md:flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-sm transition-colors">
+                        <i class="fas fa-box"></i>
+                        <span>Physical Products</span>
+                    </button>
+
+                    <!-- Cart -->
+                    <button onclick="toggleCart()" 
+                            class="relative p-2 text-gray-600 hover:text-green-600 transition-colors">
+                        <i class="fas fa-shopping-cart text-xl"></i>
+                        <span id="cart-badge" 
+                              class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center hidden">0</span>
+                    </button>
+
+                    <!-- User Menu -->
+                    <div class="relative">
+                        <button id="user-menu-btn" 
+                                class="flex items-center gap-2 p-2 rounded-lg hover:bg-green-50 transition-colors">
+                            <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-user text-green-600 text-sm"></i>
+                            </div>
+                            <span id="user-name" class="hidden md:block text-sm font-medium text-gray-700">Loading...</span>
+                            <i class="fas fa-chevron-down text-xs text-gray-400"></i>
+                        </button>
+                        
+                        <!-- User Dropdown -->
+                        <div id="user-dropdown" 
+                             class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 hidden">
+                            <div class="py-2">
+                                <button onclick="openOrdersModal()" 
+                                        class="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-green-50 w-full text-left">
+                                    <i class="fas fa-receipt text-green-600"></i>
+                                    <span>My Orders</span>
+                                </button>
+                                <button onclick="openProfileModal()" 
+                                        class="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-green-50 w-full text-left">
+                                    <i class="fas fa-user text-green-600"></i>
+                                    <span>Profile</span>
+                                </button>
+                                <hr class="my-2">
+                                <button onclick="logout()" 
+                                        class="flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 w-full text-left">
+                                    <i class="fas fa-sign-out-alt"></i>
+                                    <span>Logout</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto p-4 lg:p-8">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            
+            <!-- Left Column: Filters & Categories -->
+            <div class="lg:col-span-1 space-y-6">
+                <!-- Location Card -->
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                            <i class="fas fa-map-marker-alt text-green-600"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-900">Delivery Zone</h3>
+                            <p id="location-text" class="text-sm text-gray-600">Detecting location...</p>
+                        </div>
+                    </div>
+                    <button onclick="updateLocation()" 
+                            class="w-full bg-green-100 hover:bg-green-200 text-green-800 py-2 px-4 rounded-lg transition-colors">
+                        <i class="fas fa-location-crosshairs mr-2"></i>Update Location
+                    </button>
+                </div>
+
+                <!-- Categories -->
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h3 class="font-semibold text-gray-900 mb-4">Categories</h3>
+                    <div id="categories-list" class="space-y-2">
+                        <!-- Categories will be loaded here -->
+                        <div class="animate-pulse space-y-2">
+                            <div class="h-8 bg-gray-200 rounded"></div>
+                            <div class="h-8 bg-gray-200 rounded"></div>
+                            <div class="h-8 bg-gray-200 rounded"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h3 class="font-semibold text-gray-900 mb-4">Filters</h3>
+                    <div class="space-y-4">
+                        <!-- Price Range -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Price Range</label>
+                            <input type="range" 
+                                   id="price-range" 
+                                   min="0" 
+                                   max="10000" 
+                                   value="10000" 
+                                   class="w-full">
+                            <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                <span>RWF 0</span>
+                                <span id="price-range-value">RWF 10,000</span>
+                            </div>
+                        </div>
+
+                        <!-- Availability -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Availability</label>
+                            <select id="availability-filter" class="w-full p-2 border border-gray-300 rounded-lg">
+                                <option value="">All Products</option>
+                                <option value="in_stock">In Stock Only</option>
+                                <option value="low_stock">Low Stock</option>
+                            </select>
+                        </div>
+
+                        <!-- Sort By -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
+                            <select id="sort-filter" class="w-full p-2 border border-gray-300 rounded-lg">
+                                <option value="name">Name (A-Z)</option>
+                                <option value="price_low">Price (Low to High)</option>
+                                <option value="price_high">Price (High to Low)</option>
+                                <option value="rating">Highest Rated</option>
+                                <option value="newest">Newest First</option>
+                            </select>
+                        </div>
+
+                        <button onclick="clearFilters()" 
+                                class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded-lg transition-colors">
+                            <i class="fas fa-times mr-2"></i>Clear Filters
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Products -->
+            <div class="lg:col-span-3 space-y-6">
+                <!-- Products Header -->
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-900">Fresh Products</h2>
+                        <p id="products-count" class="text-gray-600">Loading products...</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button id="grid-view-btn" 
+                                class="p-2 bg-green-100 text-green-600 rounded-lg">
+                            <i class="fas fa-th-large"></i>
+                        </button>
+                        <button id="list-view-btn" 
+                                class="p-2 text-gray-400 hover:bg-gray-100 rounded-lg">
+                            <i class="fas fa-list"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Mobile Search -->
+                <div class="md:hidden">
+                    <div class="relative">
+                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" 
+                               id="mobile-search" 
+                               placeholder="Search products..." 
+                               class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                    </div>
+                </div>
+
+                <!-- Products Grid -->
+                <div id="products-container">
+                    <!-- Loading State -->
+                    <div id="products-loading" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                        <!-- Loading Skeletons -->
+                        <div class="bg-white rounded-lg shadow-sm overflow-hidden animate-pulse">
+                            <div class="h-48 bg-gray-200"></div>
+                            <div class="p-4 space-y-3">
+                                <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+                                <div class="h-3 bg-gray-200 rounded w-1/2"></div>
+                                <div class="h-6 bg-gray-200 rounded w-1/4"></div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-lg shadow-sm overflow-hidden animate-pulse">
+                            <div class="h-48 bg-gray-200"></div>
+                            <div class="p-4 space-y-3">
+                                <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+                                <div class="h-3 bg-gray-200 rounded w-1/2"></div>
+                                <div class="h-6 bg-gray-200 rounded w-1/4"></div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-lg shadow-sm overflow-hidden animate-pulse">
+                            <div class="h-48 bg-gray-200"></div>
+                            <div class="p-4 space-y-3">
+                                <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+                                <div class="h-3 bg-gray-200 rounded w-1/2"></div>
+                                <div class="h-6 bg-gray-200 rounded w-1/4"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Products Grid (will be populated by JavaScript) -->
+                    <div id="products-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 hidden">
+                        <!-- Products will be loaded here -->
+                    </div>
+
+                    <!-- Empty State -->
+                    <div id="products-empty" class="text-center py-12 hidden">
+                        <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-search text-3xl text-gray-400"></i>
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">No products found</h3>
+                        <p class="text-gray-600 mb-4">Try adjusting your search or filters</p>
+                        <button onclick="clearFilters()" 
+                                class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg">
+                            Clear Filters
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shopping Cart Sidebar -->
+    <div id="cart-sidebar" class="fixed right-0 top-0 h-full w-96 bg-white shadow-2xl transform translate-x-full transition-transform duration-300 z-50">
+        <div class="flex flex-col h-full">
+            <!-- Cart Header -->
+            <div class="flex items-center justify-between p-6 border-b">
+                <h3 class="text-lg font-semibold text-gray-900">Shopping Cart</h3>
+                <button onclick="toggleCart()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Cart Items -->
+            <div id="cart-items" class="flex-1 overflow-y-auto p-6">
+                <!-- Cart items will be loaded here -->
+                <div id="cart-empty" class="text-center py-12">
+                    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-shopping-cart text-2xl text-gray-400"></i>
+                    </div>
+                    <p class="text-gray-600">Your cart is empty</p>
+                </div>
+            </div>
+
+            <!-- Cart Footer -->
+            <div id="cart-footer" class="border-t p-6 hidden">
+                <div class="space-y-4">
+                    <div class="flex justify-between text-lg font-semibold">
+                        <span>Total:</span>
+                        <span id="cart-total">RWF 0</span>
+                    </div>
+                    <button onclick="proceedToCheckout()" 
+                            class="w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-lg font-medium transition-colors">
+                        Proceed to Checkout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cart Overlay -->
+    <div id="cart-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden" onclick="toggleCart()"></div>
+
+    <!-- Orders Modal -->
+    <div id="orders-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between p-6 border-b">
+                <h2 class="text-xl font-bold text-gray-900">My Orders</h2>
+                <button onclick="closeOrdersModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div id="orders-content" class="p-6">
+                <!-- Orders will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div id="profile-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between p-6 border-b">
+                <h2 class="text-xl font-bold text-gray-900">My Profile</h2>
+                <button onclick="closeProfileModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div id="profile-content" class="p-6">
+                <!-- Profile will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== GLOBAL VARIABLES =====
+        let currentUser = null;
+        let products = [];
+        let filteredProducts = [];
+        let categories = [];
+        let cart = [];
+        let currentLocation = null;
+        let isLoading = false;
+
+        // ===== INITIALIZATION =====
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Local Market Loading...');
+            initializeApp();
+        });
+
+        async function initializeApp() {
+            try {
+                showLoading();
+                
+                // Check authentication
+                if (!isAuthenticated()) {
+                    redirectToLogin();
+                    return;
+                }
+
+                // Load user data
+                await loadUserData();
+                
+                // Initialize components
+                await Promise.all([
+                    loadCategories(),
+                    loadProducts(),
+                    loadCart(),
+                    initializeLocation()
+                ]);
+
+                // Setup event listeners
+                setupEventListeners();
+                
+                hideLoading();
+                showNotification('Welcome to Local Market!', 'success');
+                
+            } catch (error) {
+                console.error('❌ Initialization error:', error);
+                hideLoading();
+                showNotification('Failed to load Local Market. Please refresh the page.', 'error');
+            }
+        }
+
+        // ===== AUTHENTICATION =====
+        function isAuthenticated() {
+            const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+            return token && token !== 'null' && token !== 'undefined';
+        }
+
+        function getAuthToken() {
+            return localStorage.getItem('authToken') || localStorage.getItem('token');
+        }
+
+        function redirectToLogin() {
+            localStorage.clear();
+            window.location.href = '/auth/login.html';
+        }
+
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.clear();
+                sessionStorage.clear();
+                window.location.href = '/auth/login.html';
+            }
+        }
+
+        // ===== USER DATA =====
+        async function loadUserData() {
+            try {
+                const userData = localStorage.getItem('userData');
+                if (userData) {
+                    currentUser = JSON.parse(userData);
+                    updateUserDisplay();
+                } else {
+                    // Fetch user data from API
+                    const token = getAuthToken();
+                    const response = await fetch('/api/auth/me', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        currentUser = data.user;
+                        localStorage.setItem('userData', JSON.stringify(currentUser));
+                        updateUserDisplay();
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading user data:', error);
+            }
+        }
+
+        function updateUserDisplay() {
+            if (currentUser) {
+                const userNameEl = document.getElementById('user-name');
+                if (userNameEl) {
+                    userNameEl.textContent = currentUser.name || currentUser.username || 'User';
+                }
+            }
+        }
+
+        // ===== CATEGORIES =====
+        async function loadCategories() {
+            try {
+                const response = await fetch('/api/local-market/categories');
+                const data = await response.json();
+                
+                if (data.success) {
+                    categories = data.categories;
+                    renderCategories();
+                }
+            } catch (error) {
+                console.error('Error loading categories:', error);
+            }
+        }
+
+        function renderCategories() {
+            const container = document.getElementById('categories-list');
+            if (!container) return;
+
+            container.innerHTML = categories.map(category => `
+                <button onclick="filterByCategory('${category.id}')" 
+                        class="flex items-center gap-3 w-full p-2 text-left rounded-lg hover:bg-green-50 transition-colors category-btn"
+                        data-category="${category.id}">
+                    <i class="${category.icon || 'fas fa-tag'} text-green-600"></i>
+                    <span class="text-gray-700">${category.name}</span>
+                    <span class="ml-auto text-xs text-gray-500">${category.product_count || 0}</span>
+                </button>
+            `).join('');
+        }
+
+        // ===== PRODUCTS =====
+        async function loadProducts() {
+            try {
+                isLoading = true;
+                showProductsLoading();
+                
+                const response = await fetch('/api/local-market/products');
+                const data = await response.json();
+                
+                if (data.success) {
+                    products = data.products;
+                    filteredProducts = [...products];
+                    renderProducts();
+                    updateProductsCount();
+                } else {
+                    throw new Error(data.message || 'Failed to load products');
+                }
+            } catch (error) {
+                console.error('Error loading products:', error);
+                showProductsError();
+            } finally {
+                isLoading = false;
+                hideProductsLoading();
+            }
+        }
+
+        function renderProducts() {
+            const container = document.getElementById('products-grid');
+            const emptyState = document.getElementById('products-empty');
+            
+            if (!container) return;
+
+            if (filteredProducts.length === 0) {
+                container.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            container.classList.remove('hidden');
+            emptyState.classList.add('hidden');
+
+            container.innerHTML = filteredProducts.map(product => `
+                <div class="bg-white rounded-lg shadow-sm overflow-hidden product-card">
+                    <div class="relative">
+                        <img src="${product.main_image || '/public/images/placeholder-product.jpg'}" 
+                             alt="${product.product_name}" 
+                             class="w-full h-48 object-cover"
+                             onerror="this.src='/public/images/placeholder-product.jpg'">
+                        ${product.stock_quantity <= 5 ? '<div class="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-1 rounded">Low Stock</div>' : ''}
+                        ${product.is_organic ? '<div class="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded">Organic</div>' : ''}
+                    </div>
+                    <div class="p-4">
+                        <h3 class="font-semibold text-gray-900 mb-1">${product.product_name}</h3>
+                        <p class="text-sm text-gray-600 mb-2">${product.seller_name}</p>
+                        <div class="flex items-center justify-between mb-3">
+                            <div>
+                                <span class="text-lg font-bold text-green-600">RWF ${formatPrice(product.price)}</span>
+                                <span class="text-sm text-gray-500">/${product.unit_type}</span>
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <i class="fas fa-star text-yellow-400 text-xs"></i>
+                                <span class="text-sm text-gray-600">${product.seller_rating || '4.5'}</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-500">Stock: ${product.stock_quantity}</span>
+                            <button onclick="addToCart(${product.id})" 
+                                    class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm transition-colors">
+                                <i class="fas fa-plus mr-1"></i>Add to Cart
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function showProductsLoading() {
+            document.getElementById('products-loading').classList.remove('hidden');
+            document.getElementById('products-grid').classList.add('hidden');
+            document.getElementById('products-empty').classList.add('hidden');
+        }
+
+        function hideProductsLoading() {
+            document.getElementById('products-loading').classList.add('hidden');
+        }
+
+        function showProductsError() {
+            const container = document.getElementById('products-grid');
+            container.innerHTML = `
+                <div class="col-span-full text-center py-12">
+                    <div class="w-24 h-24 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-exclamation-triangle text-3xl text-red-500"></i>
+                    </div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">Failed to load products</h3>
+                    <p class="text-gray-600 mb-4">Please check your connection and try again</p>
+                    <button onclick="loadProducts()" 
+                            class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg">
+                        Try Again
+                    </button>
+                </div>
+            `;
+            container.classList.remove('hidden');
+        }
+
+        function updateProductsCount() {
+            const countEl = document.getElementById('products-count');
+            if (countEl) {
+                countEl.textContent = `${filteredProducts.length} products available`;
+            }
+        }
+
+        // ===== CART FUNCTIONALITY =====
+        function loadCart() {
+            const savedCart = localStorage.getItem('localMarketCart');
+            if (savedCart) {
+                cart = JSON.parse(savedCart);
+                updateCartDisplay();
+            }
+        }
+
+        function saveCart() {
+            localStorage.setItem('localMarketCart', JSON.stringify(cart));
+        }
+
+        function addToCart(productId) {
+            const product = products.find(p => p.id === productId);
+            if (!product) return;
+
+            const existingItem = cart.find(item => item.id === productId);
+            
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({
+                    id: product.id,
+                    name: product.product_name,
+                    price: product.price,
+                    unit_type: product.unit_type,
+                    seller_name: product.seller_name,
+                    image: product.main_image,
+                    quantity: 1,
+                    max_stock: product.stock_quantity
+                });
+            }
+
+            saveCart();
+            updateCartDisplay();
+            showNotification(`${product.product_name} added to cart!`, 'success');
+        }
+
+        function removeFromCart(productId) {
+            cart = cart.filter(item => item.id !== productId);
+            saveCart();
+            updateCartDisplay();
+        }
+
+        function updateCartQuantity(productId, quantity) {
+            const item = cart.find(item => item.id === productId);
+            if (item) {
+                if (quantity <= 0) {
+                    removeFromCart(productId);
+                } else if (quantity <= item.max_stock) {
+                    item.quantity = quantity;
+                    saveCart();
+                    updateCartDisplay();
+                } else {
+                    showNotification(`Only ${item.max_stock} items available in stock`, 'warning');
+                }
+            }
+        }
+
+        function updateCartDisplay() {
+            const badge = document.getElementById('cart-badge');
+            const itemsContainer = document.getElementById('cart-items');
+            const emptyState = document.getElementById('cart-empty');
+            const footer = document.getElementById('cart-footer');
+            const totalEl = document.getElementById('cart-total');
+
+            // Update badge
+            if (cart.length > 0) {
+                badge.textContent = cart.reduce((sum, item) => sum + item.quantity, 0);
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+
+            // Update cart items
+            if (cart.length === 0) {
+                emptyState.classList.remove('hidden');
+                footer.classList.add('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            footer.classList.remove('hidden');
+
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            totalEl.textContent = `RWF ${formatPrice(total)}`;
+
+            itemsContainer.innerHTML = cart.map(item => `
+                <div class="flex items-center gap-4 p-4 border-b border-gray-100">
+                    <img src="${item.image || '/public/images/placeholder-product.jpg'}" 
+                         alt="${item.name}" 
+                         class="w-16 h-16 object-cover rounded-lg">
+                    <div class="flex-1">
+                        <h4 class="font-medium text-gray-900">${item.name}</h4>
+                        <p class="text-sm text-gray-600">${item.seller_name}</p>
+                        <p class="text-sm font-medium text-green-600">RWF ${formatPrice(item.price)}/${item.unit_type}</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="updateCartQuantity(${item.id}, ${item.quantity - 1})" 
+                                class="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center">
+                            <i class="fas fa-minus text-xs"></i>
+                        </button>
+                        <span class="w-8 text-center font-medium">${item.quantity}</span>
+                        <button onclick="updateCartQuantity(${item.id}, ${item.quantity + 1})" 
+                                class="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center">
+                            <i class="fas fa-plus text-xs"></i>
+                        </button>
+                    </div>
+                    <button onclick="removeFromCart(${item.id})" 
+                            class="text-red-500 hover:text-red-700 p-2">
+                        <i class="fas fa-trash text-sm"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function toggleCart() {
+            const sidebar = document.getElementById('cart-sidebar');
+            const overlay = document.getElementById('cart-overlay');
+            
+            if (sidebar.classList.contains('translate-x-full')) {
+                sidebar.classList.remove('translate-x-full');
+                overlay.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('translate-x-full');
+                overlay.classList.add('hidden');
+            }
+        }
+
+        function proceedToCheckout() {
+            if (cart.length === 0) {
+                showNotification('Your cart is empty', 'warning');
+                return;
+            }
+            
+            // Save cart and redirect to checkout
+            localStorage.setItem('checkoutCart', JSON.stringify(cart));
+            window.location.href = '/grocery/local-market-checkout.html';
+        }
+
+        // ===== FILTERING & SEARCH =====
+        function setupEventListeners() {
+            // Search functionality
+            const searchInputs = ['search-input', 'mobile-search'];
+            searchInputs.forEach(id => {
+                const input = document.getElementById(id);
+                if (input) {
+                    input.addEventListener('input', debounce(handleSearch, 300));
+                }
+            });
+
+            // Filter changes
+            const filters = ['category-filter', 'availability-filter', 'sort-filter'];
+            filters.forEach(id => {
+                const filter = document.getElementById(id);
+                if (filter) {
+                    filter.addEventListener('change', applyFilters);
+                }
+            });
+
+            // Price range
+            const priceRange = document.getElementById('price-range');
+            if (priceRange) {
+                priceRange.addEventListener('input', function() {
+                    document.getElementById('price-range-value').textContent = `RWF ${formatPrice(this.value)}`;
+                    debounce(applyFilters, 300)();
+                });
+            }
+
+            // User menu toggle
+            const userMenuBtn = document.getElementById('user-menu-btn');
+            const userDropdown = document.getElementById('user-dropdown');
+            if (userMenuBtn && userDropdown) {
+                userMenuBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    userDropdown.classList.toggle('hidden');
+                });
+
+                document.addEventListener('click', function() {
+                    userDropdown.classList.add('hidden');
+                });
+            }
+        }
+
+        function handleSearch(event) {
+            const query = event.target.value.toLowerCase().trim();
+            
+            if (query === '') {
+                filteredProducts = [...products];
+            } else {
+                filteredProducts = products.filter(product => 
+                    product.product_name.toLowerCase().includes(query) ||
+                    product.seller_name.toLowerCase().includes(query) ||
+                    (product.category_name && product.category_name.toLowerCase().includes(query))
+                );
+            }
+            
+            renderProducts();
+            updateProductsCount();
+        }
+
+        function filterByCategory(categoryId) {
+            // Update active category button
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('bg-green-100', 'text-green-800');
+                btn.classList.add('text-gray-700');
+            });
+            
+            const activeBtn = document.querySelector(`[data-category="${categoryId}"]`);
+            if (activeBtn) {
+                activeBtn.classList.add('bg-green-100', 'text-green-800');
+                activeBtn.classList.remove('text-gray-700');
+            }
+
+            // Apply filter
+            if (categoryId === '' || categoryId === 'all') {
+                filteredProducts = [...products];
+            } else {
+                filteredProducts = products.filter(product => product.category_id == categoryId);
+            }
+            
+            renderProducts();
+            updateProductsCount();
+        }
+
+        function applyFilters() {
+            let filtered = [...products];
+            
+            // Apply availability filter
+            const availability = document.getElementById('availability-filter')?.value;
+            if (availability === 'in_stock') {
+                filtered = filtered.filter(p => p.stock_quantity > 0);
+            } else if (availability === 'low_stock') {
+                filtered = filtered.filter(p => p.stock_quantity <= 5 && p.stock_quantity > 0);
+            }
+            
+            // Apply price range filter
+            const maxPrice = document.getElementById('price-range')?.value;
+            if (maxPrice) {
+                filtered = filtered.filter(p => p.price <= maxPrice);
+            }
+            
+            // Apply sorting
+            const sortBy = document.getElementById('sort-filter')?.value;
+            switch (sortBy) {
+                case 'price_low':
+                    filtered.sort((a, b) => a.price - b.price);
+                    break;
+                case 'price_high':
+                    filtered.sort((a, b) => b.price - a.price);
+                    break;
+                case 'rating':
+                    filtered.sort((a, b) => (b.seller_rating || 0) - (a.seller_rating || 0));
+                    break;
+                case 'newest':
+                    filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                    break;
+                default: // name
+                    filtered.sort((a, b) => a.product_name.localeCompare(b.product_name));
+            }
+            
+            filteredProducts = filtered;
+            renderProducts();
+            updateProductsCount();
+        }
+
+        function clearFilters() {
+            // Reset all filters
+            const filters = ['availability-filter', 'sort-filter'];
+            filters.forEach(id => {
+                const filter = document.getElementById(id);
+                if (filter) filter.value = '';
+            });
+            
+            const priceRange = document.getElementById('price-range');
+            if (priceRange) {
+                priceRange.value = priceRange.max;
+                document.getElementById('price-range-value').textContent = `RWF ${formatPrice(priceRange.max)}`;
+            }
+            
+            // Clear search
+            const searchInputs = ['search-input', 'mobile-search'];
+            searchInputs.forEach(id => {
+                const input = document.getElementById(id);
+                if (input) input.value = '';
+            });
+            
+            // Clear category selection
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('bg-green-100', 'text-green-800');
+                btn.classList.add('text-gray-700');
+            });
+            
+            // Reset products
+            filteredProducts = [...products];
+            renderProducts();
+            updateProductsCount();
+        }
+
+        // ===== LOCATION =====
+        async function initializeLocation() {
+            try {
+                const savedLocation = localStorage.getItem('userLocation');
+                if (savedLocation) {
+                    currentLocation = JSON.parse(savedLocation);
+                    updateLocationDisplay();
+                } else {
+                    await getCurrentLocation();
+                }
+            } catch (error) {
+                console.error('Error initializing location:', error);
+                document.getElementById('location-text').textContent = 'Location not available';
+            }
+        }
+
+        async function getCurrentLocation() {
+            if (!navigator.geolocation) {
+                document.getElementById('location-text').textContent = 'Geolocation not supported';
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                async (position) => {
+                    currentLocation = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude,
+                        address: 'Current Location'
+                    };
+                    
+                    // Try to get address from coordinates
+                    try {
+                        const address = await reverseGeocode(currentLocation.lat, currentLocation.lng);
+                        currentLocation.address = address;
+                    } catch (error) {
+                        console.error('Reverse geocoding failed:', error);
+                    }
+                    
+                    localStorage.setItem('userLocation', JSON.stringify(currentLocation));
+                    updateLocationDisplay();
+                },
+                (error) => {
+                    console.error('Geolocation error:', error);
+                    document.getElementById('location-text').textContent = 'Location access denied';
+                }
+            );
+        }
+
+        async function reverseGeocode(lat, lng) {
+            // This would typically use a geocoding service
+            // For now, return a placeholder
+            return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+        }
+
+        function updateLocationDisplay() {
+            if (currentLocation) {
+                document.getElementById('location-text').textContent = currentLocation.address;
+            }
+        }
+
+        function updateLocation() {
+            document.getElementById('location-text').textContent = 'Updating location...';
+            getCurrentLocation();
+        }
+
+        // ===== MODALS =====
+        async function openOrdersModal() {
+            const modal = document.getElementById('orders-modal');
+            const content = document.getElementById('orders-content');
+            
+            modal.classList.remove('hidden');
+            content.innerHTML = '<div class="text-center py-8"><i class="fas fa-spinner loading-spinner text-2xl text-gray-400 mb-2"></i><p>Loading your orders...</p></div>';
+            
+            try {
+                const token = getAuthToken();
+                const response = await fetch('/api/local-market/orders/my-orders', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success && data.orders.length > 0) {
+                    content.innerHTML = data.orders.map(order => `
+                        <div class="border border-gray-200 rounded-lg p-4 mb-4">
+                            <div class="flex justify-between items-start mb-3">
+                                <div>
+                                    <h4 class="font-semibold text-gray-800">Order #${order.id}</h4>
+                                    <p class="text-sm text-gray-600">${formatDate(order.created_at)}</p>
+                                </div>
+                                <span class="px-3 py-1 rounded-full text-xs font-medium ${getOrderStatusClass(order.status)}">
+                                    ${order.status.toUpperCase()}
+                                </span>
+                            </div>
+                            <div class="space-y-2 text-sm">
+                                <p><strong>Total:</strong> RWF ${formatPrice(order.total_amount)}</p>
+                                <p><strong>Items:</strong> ${order.items_count || 0} products</p>
+                                <p><strong>Delivery:</strong> ${order.delivery_address}</p>
+                            </div>
+                            <div class="mt-3 flex gap-2">
+                                <button onclick="viewOrderDetails(${order.id})" 
+                                        class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                    View Details
+                                </button>
+                                ${order.status === 'confirmed' ? `
+                                    <button onclick="trackOrder(${order.id})" 
+                                            class="text-green-600 hover:text-green-800 text-sm font-medium">
+                                        Track Order
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    content.innerHTML = `
+                        <div class="text-center py-12">
+                            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i class="fas fa-receipt text-2xl text-gray-400"></i>
+                            </div>
+                            <p class="text-gray-600">No orders found</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading orders:', error);
+                content.innerHTML = `
+                    <div class="text-center py-12">
+                        <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-exclamation-triangle text-2xl text-red-500"></i>
+                        </div>
+                        <p class="text-gray-600">Failed to load orders</p>
+                        <button onclick="openOrdersModal()" class="mt-4 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg">
+                            Try Again
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        function closeOrdersModal() {
+            document.getElementById('orders-modal').classList.add('hidden');
+        }
+
+        async function openProfileModal() {
+            const modal = document.getElementById('profile-modal');
+            const content = document.getElementById('profile-content');
+            
+            modal.classList.remove('hidden');
+            
+            if (currentUser) {
+                content.innerHTML = `
+                    <div class="space-y-6">
+                        <div class="text-center">
+                            <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i class="fas fa-user text-2xl text-green-600"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold text-gray-900">${currentUser.name || 'User'}</h3>
+                            <p class="text-gray-600">${currentUser.email}</p>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <h4 class="font-medium text-gray-900 mb-2">Phone</h4>
+                                <p class="text-gray-600">${currentUser.phone || 'Not provided'}</p>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <h4 class="font-medium text-gray-900 mb-2">City</h4>
+                                <p class="text-gray-600">${currentUser.city || 'Not provided'}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-medium text-gray-900 mb-2">Address</h4>
+                            <p class="text-gray-600">${currentUser.address || 'Not provided'}</p>
+                        </div>
+                        
+                        <div class="flex gap-3">
+                            <button onclick="editProfile()" 
+                                    class="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg">
+                                Edit Profile
+                            </button>
+                            <button onclick="changePassword()" 
+                                    class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded-lg">
+                                Change Password
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function closeProfileModal() {
+            document.getElementById('profile-modal').classList.add('hidden');
+        }
+
+        // ===== UTILITY FUNCTIONS =====
+        function formatPrice(price) {
+            return new Intl.NumberFormat('en-RW').format(price);
+        }
+
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        }
+
+        function getOrderStatusClass(status) {
+            const classes = {
+                'pending': 'bg-yellow-100 text-yellow-800',
+                'confirmed': 'bg-blue-100 text-blue-800',
+                'preparing': 'bg-purple-100 text-purple-800',
+                'ready': 'bg-green-100 text-green-800',
+                'delivered': 'bg-green-100 text-green-800',
+                'cancelled': 'bg-red-100 text-red-800'
+            };
+            return classes[status] || 'bg-gray-100 text-gray-800';
+        }
+
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        function showLoading() {
+            document.getElementById('loading-screen').classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading-screen').classList.add('hidden');
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.getElementById('notification');
+            const content = document.getElementById('notification-content');
+            const icon = document.getElementById('notification-icon');
+            const messageEl = document.getElementById('notification-message');
+            
+            const types = {
+                success: { bg: 'bg-green-500', icon: 'fas fa-check-circle' },
+                error: { bg: 'bg-red-500', icon: 'fas fa-exclamation-circle' },
+                warning: { bg: 'bg-yellow-500', icon: 'fas fa-exclamation-triangle' },
+                info: { bg: 'bg-blue-500', icon: 'fas fa-info-circle' }
+            };
+            
+            const config = types[type] || types.info;
+            
+            content.className = `px-4 py-3 rounded-lg shadow-lg text-white font-medium flex items-center ${config.bg}`;
+            icon.className = `mr-2 ${config.icon}`;
+            messageEl.textContent = message;
+            
+            notification.classList.remove('translate-x-full');
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.add('translate-x-full');
+                notification.classList.remove('show');
+            }, 5000);
+        }
+
+        // ===== NAVIGATION =====
+        function switchToPhysical() {
+            window.location.href = '/buyer/buyers-home.html';
+        }
+
+        function viewOrderDetails(orderId) {
+            window.location.href = `/grocery/local-market-order-details.html?id=${orderId}`;
+        }
+
+        function trackOrder(orderId) {
+            window.location.href = `/grocery/local-market-tracking.html?id=${orderId}`;
+        }
+
+        function editProfile() {
+            showNotification('Profile editing feature coming soon!', 'info');
+        }
+
+        function changePassword() {
+            showNotification('Password change feature coming soon!', 'info');
+        }
+
+        console.log('✅ Local Market Script Loaded Successfully');
+    </script>
+</body>
+</html>

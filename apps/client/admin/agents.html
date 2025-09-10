@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en" class="admin-page">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agents Management | Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="admin-auth-check.js"></script>
+    <script src="admin-utils.js"></script>
+    <style>
+        :root {
+            --primary-color: #080b3b;
+            --secondary-color: #1e40af;
+            --accent-color: #3b82f6;
+        }
+        
+        .glass-morphism {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        }
+        .sidebar {
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .nav-item {
+            transition: all 0.3s ease;
+        }
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+        .nav-item.active {
+            background: rgba(255, 255, 255, 0.2);
+            border-left: 3px solid #3b82f6;
+        }
+        .loading-spinner {
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 2px solid #3b82f6;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .form-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+        }
+        .agent-status-badge {
+            @apply px-2 py-1 rounded-full text-xs font-medium;
+        }
+        .status-active { @apply bg-green-500/20 text-green-400; }
+        .status-inactive { @apply bg-red-500/20 text-red-400; }
+        .status-pending { @apply bg-yellow-500/20 text-yellow-400; }
+        .status-approved { @apply bg-green-500/20 text-green-400; }
+        .status-rejected { @apply bg-red-500/20 text-red-400; }
+        .agent-avatar {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            background: var(--accent-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body class="gradient-bg min-h-screen">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <div class="sidebar w-64 lg:w-80 flex-shrink-0 hidden md:flex flex-col">
+            <div class="p-6 border-b border-white/10">
+                <h2 class="text-xl font-bold text-white">Admin Panel</h2>
+            </div>
+            
+            <nav class="flex-1 p-4 space-y-2">
+                <a href="dashboard.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="user-management.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-users"></i>
+                    <span>User Management</span>
+                </a>
+                <a href="manual-payment-approval.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-credit-card"></i>
+                    <span>Payment Approval</span>
+                </a>
+                <a href="products.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-box"></i>
+                    <span>Products</span>
+                </a>
+                <a href="order-management.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Orders</span>
+                </a>
+                <a href="agents.html" class="nav-item active flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-user-tie"></i>
+                    <span>Agents</span>
+                </a>
+                <a href="categories.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-tags"></i>
+                    <span>Categories</span>
+                </a>
+                <a href="reports.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Reports</span>
+                </a>
+                <a href="settings.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
+            
+            <!-- Header -->
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 space-y-4 sm:space-y-0">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-white mb-2">Agents Management</h1>
+                    <p class="text-white/70">Manage delivery agents and their territories</p>
+                </div>
+                <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                    <button onclick="loadAgents()" class="bg-gray-500 hover:bg-gray-600 text-white px-3 sm:px-4 py-2 rounded-lg transition text-sm flex items-center justify-center">
+                        <i class="fas fa-sync-alt mr-2"></i>Refresh
+                    </button>
+                    <button onclick="exportAgents()" class="bg-green-500 hover:bg-green-600 text-white px-3 sm:px-4 py-2 rounded-lg transition text-sm flex items-center justify-center">
+                        <i class="fas fa-download mr-2"></i>Export
+                    </button>
+                </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
+                <div class="glass-morphism rounded-xl p-4 sm:p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-white/70 text-xs sm:text-sm">Total Agents</p>
+                            <p class="text-white text-lg sm:text-2xl font-bold" id="total-agents">0</p>
+                        </div>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-user-tie text-blue-400 text-lg sm:text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-morphism rounded-xl p-4 sm:p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-white/70 text-xs sm:text-sm">Active</p>
+                            <p class="text-white text-lg sm:text-2xl font-bold" id="active-agents">0</p>
+                        </div>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-check-circle text-green-400 text-lg sm:text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-morphism rounded-xl p-4 sm:p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-white/70 text-xs sm:text-sm">Pending</p>
+                            <p class="text-white text-lg sm:text-2xl font-bold" id="pending-agents">0</p>
+                        </div>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-clock text-yellow-400 text-lg sm:text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-morphism rounded-xl p-4 sm:p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-white/70 text-xs sm:text-sm">Inactive</p>
+                            <p class="text-white text-lg sm:text-2xl font-bold" id="inactive-agents">0</p>
+                        </div>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-red-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-times-circle text-red-400 text-lg sm:text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="glass-morphism rounded-xl p-4 sm:p-6 mb-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="sm:col-span-2 lg:col-span-1">
+                        <label class="block text-white/70 text-sm mb-2">Search Agents</label>
+                        <input type="text" id="search-agents" placeholder="Agent name, email..." 
+                               class="w-full p-3 rounded-lg form-input text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-white/70 text-sm mb-2">Status</label>
+                        <select id="status-filter" class="w-full p-3 rounded-lg form-input text-sm">
+                            <option value="">All Status</option>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                            <option value="pending">Pending</option>
+                            <option value="approved">Approved</option>
+                            <option value="rejected">Rejected</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-white/70 text-sm mb-2">Date Range</label>
+                        <select id="date-filter" class="w-full p-3 rounded-lg form-input text-sm">
+                            <option value="all">All Time</option>
+                            <option value="today">Today</option>
+                            <option value="week">This Week</option>
+                            <option value="month">This Month</option>
+                        </select>
+                    </div>
+                    <div class="flex items-end sm:col-span-2 lg:col-span-1">
+                        <button onclick="loadAgents()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg text-sm font-medium">
+                            <i class="fas fa-search mr-2"></i>Apply Filters
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Agents List -->
+            <div class="glass-morphism rounded-xl overflow-hidden">
+                <div class="p-4 sm:p-6 border-b border-white/10">
+                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-3 sm:space-y-0">
+                        <h3 class="text-lg sm:text-xl font-bold text-white">Agents List</h3>
+                        <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                            <button onclick="exportAgents()" class="bg-gray-500 hover:bg-gray-600 text-white px-3 sm:px-4 py-2 rounded-lg text-sm flex items-center justify-center">
+                                <i class="fas fa-download mr-2"></i>Export
+                            </button>
+                            <button onclick="loadAgents()" class="bg-blue-500 hover:bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-lg text-sm flex items-center justify-center">
+                                <i class="fas fa-refresh mr-2"></i>Refresh
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="agents-container" class="overflow-x-auto">
+                    <div class="text-center py-8">
+                        <div class="loading-spinner mx-auto mb-4"></div>
+                        <p class="text-white/70">Loading agents...</p>
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                <div id="pagination-container" class="p-4 sm:p-6 border-t border-white/10">
+                    <!-- Pagination will be inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Agent Action Modal -->
+    <div id="agent-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+        <div class="glass-morphism p-6 sm:p-8 rounded-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 id="modal-title" class="text-xl sm:text-2xl font-bold text-white">Agent Details</h2>
+                <button onclick="closeAgentModal()" class="text-white/70 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <div id="agent-details">
+                <!-- Agent details will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+<script>
+    // Global variables
+    let currentAgents = [];
+    let currentPage = 1;
+    let totalPages = 1;
+    let selectedAgentId = null;
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('🚀 Agents Management page initializing...');
+        
+        // Check authentication first
+        if (!checkAuthentication()) return;
+        
+        // Load data
+        loadAgents();
+        setupEventListeners();
+    });
+
+    // Check authentication
+    function checkAuthentication() {
+        const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
+        const userRole = localStorage.getItem('userRole');
+        
+        if (!token) {
+            console.log('❌ No authentication token found');
+            window.location.href = '/auth/auth-admin.html';
+            return false;
+        }
+        
+        if (userRole !== 'admin') {
+            console.log('❌ Insufficient permissions');
+            window.location.href = '/auth/auth-admin.html';
+            return false;
+        }
+        
+        console.log('✅ Authentication verified');
+        return true;
+    }
+
+    // Setup event listeners
+    function setupEventListeners() {
+        // Filter events
+        document.getElementById('status-filter').addEventListener('change', loadAgents);
+        document.getElementById('date-filter').addEventListener('change', loadAgents);
+        document.getElementById('search-agents').addEventListener('input', debounce(loadAgents, 500));
+    }
+
+    // Load agents from API
+    async function loadAgents(page = 1) {
+        try {
+            console.log('📊 Loading agents...');
+            
+            const searchTerm = document.getElementById('search-agents')?.value || '';
+            const statusFilter = document.getElementById('status-filter')?.value || '';
+            const dateFilter = document.getElementById('date-filter')?.value || '';
+
+            const params = new URLSearchParams({
+                page: page,
+                limit: 20,
+                search: searchTerm,
+                status: statusFilter,
+                date_range: dateFilter
+            });
+
+            const response = await makeAuthenticatedRequest(
+                `/api/admin/agents?${params.toString()}`
+            );
+
+            if (response.success) {
+                currentAgents = response.agents || response.data || [];
+                currentPage = response.pagination?.current_page || 1;
+                totalPages = response.pagination?.total_pages || 1;
+                
+                renderAgentsTable(currentAgents);
+                renderPagination(response.pagination);
+                updateStatistics(currentAgents);
+                
+                console.log('✅ Agents loaded successfully');
+            } else {
+                throw new Error(response.message || 'Failed to load agents');
+            }
+
+        } catch (error) {
+            console.error('❌ Error loading agents:', error);
+            document.getElementById('agents-container').innerHTML = 
+                createErrorState(error.message, 'loadAgents()');
+            showToast('Failed to load agents: ' + error.message, 'error');
+        }
+    }
+
+    // Render agents table (mobile-first responsive)
+    function renderAgentsTable(agents) {
+        const container = document.getElementById('agents-container');
+        
+        if (!agents || agents.length === 0) {
+            container.innerHTML = createEmptyState(
+                'agents', 
+                'No Agents Found', 
+                'No agents match your current filters.',
+                '<button onclick="loadAgents()" class="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"><i class="fas fa-refresh mr-2"></i>Refresh Agents</button>'
+            );
+            return;
+        }
+
+        // Mobile-first: Cards on mobile, table on desktop
+        const mobileCardsHTML = `
+            <div class="block lg:hidden space-y-3 p-4">
+                ${agents.map(agent => `
+                    <div class="bg-white/5 rounded-lg p-4 hover:bg-white/10 transition-colors">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex items-center space-x-3">
+                                <div class="agent-avatar">
+                                    ${getAgentInitials(agent.first_name, agent.last_name)}
+                                </div>
+                                <div>
+                                    <div class="text-white font-semibold">${agent.first_name || ''} ${agent.last_name || ''}</div>
+                                    <div class="text-white/50 text-sm">${agent.email}</div>
+                                    <div class="text-white/70 text-xs">${formatDate(agent.created_at)}</div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <span class="agent-status-badge status-${getAgentStatus(agent)}">${formatStatus(getAgentStatus(agent))}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                            <button onclick="viewAgent(${agent.id})" 
+                                    class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-sm flex items-center justify-center">
+                                <i class="fas fa-eye mr-1"></i>View
+                            </button>
+                            <button onclick="approveAgent(${agent.id})" 
+                                    class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm flex items-center justify-center">
+                                <i class="fas fa-check mr-1"></i>Approve
+                            </button>
+                            <button onclick="rejectAgent(${agent.id})" 
+                                    class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded text-sm flex items-center justify-center">
+                                <i class="fas fa-times mr-1"></i>Reject
+                            </button>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+
+        // Desktop table
+        const desktopTableHTML = `
+            <div class="hidden lg:block">
+                <table class="w-full">
+                    <thead class="bg-white/5">
+                        <tr>
+                            <th class="text-left p-4 text-white/70 font-semibold">Agent</th>
+                            <th class="text-left p-4 text-white/70 font-semibold">Contact</th>
+                            <th class="text-left p-4 text-white/70 font-semibold">Status</th>
+                            <th class="text-left p-4 text-white/70 font-semibold">Joined</th>
+                            <th class="text-left p-4 text-white/70 font-semibold">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${agents.map(agent => `
+                            <tr class="border-t border-white/10 hover:bg-white/5">
+                                <td class="p-4">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="agent-avatar">
+                                            ${getAgentInitials(agent.first_name, agent.last_name)}
+                                        </div>
+                                        <div>
+                                            <div class="text-white font-semibold">${agent.first_name || ''} ${agent.last_name || ''}</div>
+                                            <div class="text-white/50 text-sm">@${agent.username}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="p-4">
+                                    <div class="text-white">${agent.email}</div>
+                                    <div class="text-white/50 text-sm">${agent.phone || 'N/A'}</div>
+                                </td>
+                                <td class="p-4">
+                                    <span class="agent-status-badge status-${getAgentStatus(agent)}">${formatStatus(getAgentStatus(agent))}</span>
+                                </td>
+                                <td class="p-4 text-white/70 text-sm">
+                                    ${formatDate(agent.created_at)}
+                                </td>
+                                <td class="p-4">
+                                    <div class="flex space-x-2">
+                                        <button onclick="viewAgent(${agent.id})" 
+                                                class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-xs">
+                                            <i class="fas fa-eye mr-1"></i>View
+                                        </button>
+                                        <button onclick="approveAgent(${agent.id})" 
+                                                class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-xs">
+                                            <i class="fas fa-check mr-1"></i>Approve
+                                        </button>
+                                        <button onclick="rejectAgent(${agent.id})" 
+                                                class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs">
+                                            <i class="fas fa-times mr-1"></i>Reject
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+        
+        container.innerHTML = mobileCardsHTML + desktopTableHTML;
+    }
+
+    // Get agent initials for avatar
+    function getAgentInitials(firstName, lastName) {
+        const first = (firstName || '').charAt(0).toUpperCase();
+        const last = (lastName || '').charAt(0).toUpperCase();
+        return first + last || '??';
+    }
+
+    // Get agent status
+    function getAgentStatus(agent) {
+        if (agent.is_active) return 'active';
+        if (agent.is_verified === false) return 'pending';
+        return 'inactive';
+    }
+
+    // Format status
+    function formatStatus(status) {
+        const statusMap = {
+            'active': 'Active',
+            'inactive': 'Inactive',
+            'pending': 'Pending',
+            'approved': 'Approved',
+            'rejected': 'Rejected'
+        };
+        return statusMap[status] || status;
+    }
+
+    // Update statistics
+    function updateStatistics(agents) {
+        const totalAgents = agents.length;
+        const activeAgents = agents.filter(agent => agent.is_active).length;
+        const pendingAgents = agents.filter(agent => !agent.is_verified).length;
+        const inactiveAgents = agents.filter(agent => !agent.is_active).length;
+
+        document.getElementById('total-agents').textContent = totalAgents;
+        document.getElementById('active-agents').textContent = activeAgents;
+        document.getElementById('pending-agents').textContent = pendingAgents;
+        document.getElementById('inactive-agents').textContent = inactiveAgents;
+    }
+
+    // View agent details
+    async function viewAgent(agentId) {
+        try {
+            console.log('🔍 Loading agent details:', agentId);
+            
+            const agent = currentAgents.find(a => a.id === agentId);
+            if (!agent) {
+                throw new Error('Agent not found');
+            }
+
+            selectedAgentId = agentId;
+            showAgentModal(agent);
+            
+        } catch (error) {
+            console.error('❌ Error loading agent details:', error);
+            showToast('Failed to load agent details: ' + error.message, 'error');
+        }
+    }
+
+    // Show agent modal
+    function showAgentModal(agent) {
+        const agentDetailsHTML = `
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="text-lg font-semibold text-white mb-4">Agent Information</h3>
+                    <div class="space-y-3 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-white/70">Name:</span>
+                            <span class="text-white">${agent.first_name || ''} ${agent.last_name || ''}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-white/70">Username:</span>
+                            <span class="text-white">@${agent.username}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-white/70">Email:</span>
+                            <span class="text-white">${agent.email}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-white/70">Phone:</span>
+                            <span class="text-white">${agent.phone || 'N/A'}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-white/70">Status:</span>
+                            <span class="agent-status-badge status-${getAgentStatus(agent)}">${formatStatus(getAgentStatus(agent))}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-white/70">Joined:</span>
+                            <span class="text-white">${formatDate(agent.created_at)}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-semibold text-white mb-4">Actions</h3>
+                    <div class="space-y-3">
+                        <textarea id="action-reason" rows="3" placeholder="Reason for action..." 
+                                  class="w-full p-3 rounded-lg form-input text-sm"></textarea>
+                        <div class="flex flex-col space-y-2">
+                            <button onclick="approveAgentWithReason()" class="w-full bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg">
+                                <i class="fas fa-check mr-2"></i>Approve Agent
+                            </button>
+                            <button onclick="rejectAgentWithReason()" class="w-full bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg">
+                                <i class="fas fa-times mr-2"></i>Reject Agent
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('agent-details').innerHTML = agentDetailsHTML;
+        document.getElementById('agent-modal').classList.remove('hidden');
+        document.getElementById('agent-modal').classList.add('flex');
+    }
+
+    // Close agent modal
+    function closeAgentModal() {
+        document.getElementById('agent-modal').classList.add('hidden');
+        document.getElementById('agent-modal').classList.remove('flex');
+        selectedAgentId = null;
+    }
+
+    // Approve agent
+    async function approveAgent(agentId) {
+        try {
+            console.log('✅ Approving agent:', agentId);
+            
+            const response = await makeAuthenticatedRequest(
+                `/api/admin/agents/${agentId}/approve`, 
+                {
+                    method: 'POST',
+                    body: JSON.stringify({ reason: 'Approved by admin' })
+                }
+            );
+            
+            if (response.success) {
+                showToast('Agent approved successfully', 'success');
+                loadAgents(currentPage);
+            } else {
+                throw new Error(response.message || 'Failed to approve agent');
+            }
+        } catch (error) {
+            console.error('❌ Error approving agent:', error);
+            showToast('Failed to approve agent: ' + error.message, 'error');
+        }
+    }
+
+    // Reject agent
+    async function rejectAgent(agentId) {
+        if (!confirm('Are you sure you want to reject this agent?')) {
+            return;
+        }
+
+        try {
+            console.log('❌ Rejecting agent:', agentId);
+            
+            const response = await makeAuthenticatedRequest(
+                `/api/admin/agents/${agentId}/reject`, 
+                {
+                    method: 'POST',
+                    body: JSON.stringify({ reason: 'Rejected by admin' })
+                }
+            );
+            
+            if (response.success) {
+                showToast('Agent rejected successfully', 'success');
+                loadAgents(currentPage);
+            } else {
+                throw new Error(response.message || 'Failed to reject agent');
+            }
+        } catch (error) {
+            console.error('❌ Error rejecting agent:', error);
+            showToast('Failed to reject agent: ' + error.message, 'error');
+        }
+    }
+
+    // Approve agent with reason (from modal)
+    async function approveAgentWithReason() {
+        if (!selectedAgentId) return;
+        
+        const reason = document.getElementById('action-reason').value.trim() || 'Approved by admin';
+        
+        try {
+            const response = await makeAuthenticatedRequest(
+                `/api/admin/agents/${selectedAgentId}/approve`, 
+                {
+                    method: 'POST',
+                    body: JSON.stringify({ reason })
+                }
+            );
+            
+            if (response.success) {
+                showToast('Agent approved successfully', 'success');
+                closeAgentModal();
+                loadAgents(currentPage);
+            } else {
+                throw new Error(response.message || 'Failed to approve agent');
+            }
+        } catch (error) {
+            console.error('❌ Error approving agent:', error);
+            showToast('Failed to approve agent: ' + error.message, 'error');
+        }
+    }
+
+    // Reject agent with reason (from modal)
+    async function rejectAgentWithReason() {
+        if (!selectedAgentId) return;
+        
+        const reason = document.getElementById('action-reason').value.trim() || 'Rejected by admin';
+        
+        try {
+            const response = await makeAuthenticatedRequest(
+                `/api/admin/agents/${selectedAgentId}/reject`, 
+                {
+                    method: 'POST',
+                    body: JSON.stringify({ reason })
+                }
+            );
+            
+            if (response.success) {
+                showToast('Agent rejected successfully', 'success');
+                closeAgentModal();
+                loadAgents(currentPage);
+            } else {
+                throw new Error(response.message || 'Failed to reject agent');
+            }
+        } catch (error) {
+            console.error('❌ Error rejecting agent:', error);
+            showToast('Failed to reject agent: ' + error.message, 'error');
+        }
+    }
+
+    // Export agents
+    function exportAgents() {
+        if (!currentAgents || currentAgents.length === 0) {
+            showToast('No agents to export', 'warning');
+            return;
+        }
+        
+        const exportData = currentAgents.map(agent => ({
+            'Name': `${agent.first_name || ''} ${agent.last_name || ''}`,
+            'Username': agent.username,
+            'Email': agent.email,
+            'Phone': agent.phone || 'N/A',
+            'Status': formatStatus(getAgentStatus(agent)),
+            'Joined Date': new Date(agent.created_at).toLocaleDateString()
+        }));
+        
+        exportToCSV(exportData, `agents_export_${new Date().toISOString().split('T')[0]}.csv`);
+    }
+
+    // Render pagination
+    function renderPagination(pagination) {
+        const container = document.getElementById('pagination-container');
+        
+        if (!pagination || pagination.total_pages <= 1) {
+            container.innerHTML = '';
+            return;
+        }
+
+        const paginationHTML = `
+            <div class="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
+                <div class="text-white/70 text-sm">
+                    Showing ${pagination.from || 1} to ${pagination.to || 0} of ${pagination.total || 0} agents
+                </div>
+                <div class="flex space-x-2">
+                    <button onclick="loadAgents(${pagination.current_page - 1})" 
+                            ${pagination.current_page <= 1 ? 'disabled' : ''} 
+                            class="px-3 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                        Previous
+                    </button>
+                    <span class="px-3 py-2 bg-blue-600 text-white rounded-lg">
+                        ${pagination.current_page} of ${pagination.total_pages}
+                    </span>
+                    <button onclick="loadAgents(${pagination.current_page + 1})" 
+                            ${pagination.current_page >= pagination.total_pages ? 'disabled' : ''} 
+                            class="px-3 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                        Next
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        container.innerHTML = paginationHTML;
+    }
+
+    // Utility functions
+    function makeAuthenticatedRequest(url, options = {}) {
+        const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+        
+        if (!token) {
+            throw new Error('No authentication token available');
+        }
+
+        const defaultOptions = {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        };
+
+        return fetch(`http://localhost:3001${url}`, { ...defaultOptions, ...options })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            });
+    }
+
+    function createEmptyState(type, title, description, actions = '') {
+        return `
+            <div class="text-center py-12">
+                <div class="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-user-tie text-white/30 text-3xl"></i>
+                </div>
+                <h3 class="text-white text-xl font-semibold mb-2">${title}</h3>
+                <p class="text-white/60 mb-6 max-w-md mx-auto">${description}</p>
+                ${actions}
+            </div>
+        `;
+    }
+
+    function createErrorState(message, retry = null) {
+        return `
+            <div class="text-center py-12">
+                <div class="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-exclamation-triangle text-red-400 text-3xl"></i>
+                </div>
+                <h3 class="text-white text-xl font-semibold mb-2">Error Loading Data</h3>
+                <p class="text-white/60 mb-6 max-w-md mx-auto">${message}</p>
+                ${retry ? `<button onclick="${retry}" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg"><i class="fas fa-refresh mr-2"></i>Try Again</button>` : ''}
+            </div>
+        `;
+    }
+
+    function showToast(message, type = 'info') {
+        console.log(`[${type.toUpperCase()}] ${message}`);
+        
+        const toast = document.createElement('div');
+        toast.className = `fixed top-4 right-4 z-50 px-6 py-4 rounded-lg text-white ${
+            type === 'success' ? 'bg-green-500' : 
+            type === 'error' ? 'bg-red-500' : 
+            type === 'warning' ? 'bg-yellow-500' : 'bg-blue-500'
+        }`;
+        toast.textContent = message;
+        
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    function formatDate(dateString) {
+        if (!dateString) return 'N/A';
+        return new Date(dateString).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
+    }
+
+    function exportToCSV(data, filename) {
+        const csv = convertToCSV(data);
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        window.URL.revokeObjectURL(url);
+    }
+
+    function convertToCSV(data) {
+        if (!data.length) return '';
+        
+        const headers = Object.keys(data[0]);
+        const csvContent = [
+            headers.join(','),
+            ...data.map(row => 
+                headers.map(header => `"${row[header] || ''}"`).join(',')
+            )
+        ].join('\n');
+        
+        return csvContent;
+    }
+
+    // Make functions globally available
+    window.loadAgents = loadAgents;
+    window.viewAgent = viewAgent;
+    window.approveAgent = approveAgent;
+    window.rejectAgent = rejectAgent;
+    window.approveAgentWithReason = approveAgentWithReason;
+    window.rejectAgentWithReason = rejectAgentWithReason;
+    window.closeAgentModal = closeAgentModal;
+    window.exportAgents = exportAgents;
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manual Order Creation - PSM Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    .delivery-map { height: 300px; width: 100%; border-radius: 8px; border: 2px solid #e5e7eb; }
+    .delivery-option { transition: all 0.2s ease; cursor: pointer; }
+    .delivery-option:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    .delivery-option.selected { border-color: #3b82f6; background-color: #eff6ff; }
+    .pickup-site-option { transition: all 0.2s ease; cursor: pointer; }
+    .pickup-site-option:hover { background-color: #f3f4f6; }
+    .pickup-site-option.selected { background-color: #dbeafe; border-color: #3b82f6; }
+    .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  </style>
+</head>
+<body class="bg-gray-50">
+  <!-- Navigation -->
+  <nav class="bg-blue-600 text-white p-4">
+    <div class="container mx-auto flex justify-between items-center">
+      <div class="flex items-center space-x-4">
+        <button id="backBtn" class="text-white hover:text-gray-200" title="Back">
+          <i class="fas fa-arrow-left text-xl"></i>
+        </button>
+        <i class="fas fa-shopping-cart text-2xl"></i>
+        <h1 class="text-xl font-bold">Manual Order Creation</h1>
+      </div>
+      <div class="flex items-center space-x-4">
+        <span id="siteName" class="text-sm opacity-75">Loading...</span>
+        <button id="logoutBtn" class="bg-red-500 hover:bg-red-600 px-3 py-1 rounded text-sm">
+          <i class="fas fa-sign-out-alt mr-1"></i> Logout
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Notifications -->
+  <div id="notifications" class="container mx-auto p-4"></div>
+
+  <!-- Main Content -->
+  <div class="container mx-auto p-6">
+    <!-- Progress Steps -->
+    <div class="mb-6">
+      <div class="flex items-center justify-center space-x-4">
+        <div id="step1-ind" class="flex items-center space-x-2">
+          <div class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">1</div>
+          <span class="text-sm font-medium">Select Products</span>
+        </div>
+        <div class="w-16 h-1 bg-gray-300"></div>
+        <div id="step2-ind" class="flex items-center space-x-2 opacity-60">
+          <div class="w-8 h-8 bg-gray-300 text-gray-600 rounded-full flex items-center justify-center text-sm font-bold">2</div>
+          <span class="text-sm font-medium text-gray-600">Customer Info</span>
+        </div>
+        <div class="w-16 h-1 bg-gray-300"></div>
+        <div id="step3-ind" class="flex items-center space-x-2 opacity-60">
+          <div class="w-8 h-8 bg-gray-300 text-gray-600 rounded-full flex items-center justify-center text-sm font-bold">3</div>
+          <span class="text-sm font-medium text-gray-600">Payment & Receipt</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 1: Product Selection -->
+    <section id="step1" class="bg-white rounded-lg shadow p-6">
+      <h3 class="text-lg font-semibold mb-6">Select Products for Customer</h3>
+
+      <!-- Toolbar -->
+      <div class="mb-4">
+        <div class="flex flex-wrap gap-2 items-center">
+          <button id="switchToPhysicalBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg">
+            <i class="fas fa-box mr-1"></i> Physical Products
+          </button>
+          <button id="switchToLocalBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg">
+            <i class="fas fa-store mr-1"></i> Local Market
+          </button>
+          <div class="flex-1 min-w-[220px]">
+            <input id="productSearch" type="text" placeholder="Type to search products (min 2 chars)" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+          </div>
+          <select id="categoryFilter" class="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <option value="">All Categories</option>
+          </select>
+          <select id="distanceFilter" class="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent hidden">
+            <option value="">All Distances</option>
+            <option value="3">Within 3 KM</option>
+            <option value="5">Within 5 KM</option>
+            <option value="10">Within 10 KM</option>
+            <option value="15">Within 15 KM</option>
+            <option value="25">Within 25 KM</option>
+          </select>
+          <button id="searchBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg">
+            <i class="fas fa-search"></i>
+          </button>
+          <button id="locationBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg hidden">
+            <i class="fas fa-location-arrow mr-1"></i> Get Location
+          </button>
+        </div>
+      </div>
+
+      <!-- Cart -->
+      <div class="mb-6">
+        <h4 class="font-semibold mb-4"><span id="cartTitle">Shopping Cart</span> (<span id="cartCount">0</span>)</h4>
+        <div id="selectedProducts" class="space-y-2 max-h-40 overflow-y-auto">
+          <p class="text-gray-500 text-sm">No products selected yet</p>
+        </div>
+        <div class="mt-4 p-4 bg-gray-50 rounded-lg">
+          <div class="flex justify-between items-center">
+            <span class="font-semibold">Total Amount:</span>
+            <span id="totalAmount" class="font-bold text-lg text-blue-600">FRW 0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Products List -->
+      <div id="productsContainer">
+        <div class="flex justify-between items-center mb-4">
+          <h4 class="font-semibold">Available Products</h4>
+          <div id="paginationInfo" class="text-sm text-gray-600"></div>
+        </div>
+        <div id="productsList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4 min-h-96"></div>
+        <div id="paginationControls" class="flex justify-center items-center space-x-1 mt-6" style="display:none;"></div>
+      </div>
+
+      <div class="mt-6 flex justify-end">
+        <button id="goToStep2Btn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg" disabled>
+          Next: Customer Information <i class="fas fa-arrow-right ml-2"></i>
+        </button>
+      </div>
+    </section>
+
+    <!-- Step 2: Customer Information -->
+    <section id="step2" class="bg-white rounded-lg shadow p-6 hidden">
+      <h3 class="text-lg font-semibold mb-6">Customer Information & Delivery Details</h3>
+
+      <!-- Basic Info -->
+      <div class="mb-8">
+        <h4 class="font-medium mb-4 text-gray-800">Customer Details</h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Customer Name *</label>
+            <input id="customerName" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter customer's full name" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number *</label>
+            <input id="customerPhone" type="tel" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="+250 XXX XXX XXX" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Email (Optional)</label>
+            <input id="customerEmail" type="email" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="customer@example.com" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">National ID (Optional)</label>
+            <input id="customerNationalId" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter national ID" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Delivery Method -->
+      <div class="mb-8">
+        <h4 class="font-medium mb-4 text-gray-800">Delivery Method</h4>
+        <div class="bg-blue-50 border-2 border-blue-500 rounded-lg p-6">
+          <div class="flex items-center mb-3">
+            <div class="w-6 h-6 border-2 border-blue-500 rounded-full mr-3 flex items-center justify-center">
+              <div class="w-3 h-3 bg-blue-600 rounded-full"></div>
+            </div>
+            <div class="flex items-center">
+              <i class="fas fa-home text-blue-600 text-xl mr-2"></i>
+              <h5 class="font-semibold text-gray-800">Home Delivery (Only Available Option)</h5>
+            </div>
+          </div>
+          <p class="text-sm text-gray-600 mb-2">All orders will be delivered directly to customer's location</p>
+          <div class="flex items-center text-green-600 font-semibold">
+            <i class="fas fa-check-circle mr-1"></i>
+            <span id="deliveryFeeText">FREE Home Delivery</span>
+          </div>
+          <div class="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <div class="flex items-center text-yellow-800">
+              <i class="fas fa-info-circle mr-2"></i>
+              <span class="text-sm font-medium">Pickup delivery is currently disabled. All orders use home delivery.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+
+      <!-- Home delivery details -->
+      <div id="homeDeliverySection" class="mb-8">
+        <h4 class="font-medium mb-4 text-gray-800">Delivery Location</h4>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Delivery Address *</label>
+          <textarea id="customerAddress" rows="3" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter detailed delivery address"></textarea>
+        </div>
+        <div class="mb-2">
+          <div id="deliveryMap" class="delivery-map"></div>
+        </div>
+        <div class="text-sm text-gray-600 mb-2">
+          <span>Selected: </span>
+          <span id="selectedLocationText">No location selected</span>
+        </div>
+        <div class="text-xs text-gray-500 mb-2">
+          Click on the map to select delivery location, or use the button below to get your current location.
+        </div>
+        <div class="flex gap-2 mb-2">
+          <button type="button" id="locationBtn" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm">
+            <i class="fas fa-location-arrow mr-1"></i>Use My Location
+          </button>
+          <button type="button" id="manualLocationBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm">
+            <i class="fas fa-edit mr-1"></i>Enter Coordinates
+          </button>
+        </div>
+        
+        <!-- Manual coordinate input (hidden by default) -->
+        <div id="manualLocationInput" class="hidden bg-gray-50 p-3 rounded border mb-2">
+          <div class="grid grid-cols-2 gap-2 mb-2">
+            <div>
+              <label class="block text-xs text-gray-600 mb-1">Latitude</label>
+              <input type="number" id="manualLat" step="any" class="w-full border rounded px-2 py-1 text-sm" placeholder="-1.9441">
+            </div>
+            <div>
+              <label class="block text-xs text-gray-600 mb-1">Longitude</label>
+              <input type="number" id="manualLng" step="any" class="w-full border rounded px-2 py-1 text-sm" placeholder="30.0619">
+            </div>
+          </div>
+          <div class="flex gap-2">
+            <button type="button" id="setManualLocationBtn" class="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded text-xs">
+              Set Location
+            </button>
+            <button type="button" id="cancelManualLocationBtn" class="bg-gray-500 hover:bg-gray-600 text-white px-2 py-1 rounded text-xs">
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6 flex justify-between">
+        <button id="backToStep1Btn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg">
+          <i class="fas fa-arrow-left mr-2"></i>Back
+        </button>
+        <button id="goToStep3Btn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg">
+          Next: Payment & Receipt <i class="fas fa-arrow-right ml-2"></i>
+        </button>
+      </div>
+    </section>
+
+    <!-- Step 3: Payment & Receipt -->
+    <section id="step3" class="bg-white rounded-lg shadow p-6 hidden">
+      <h3 class="text-lg font-semibold mb-6">Payment & Receipt</h3>
+
+      <!-- Order summary -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2">
+          <div class="bg-gray-50 rounded-lg p-4 mb-4">
+            <h4 class="font-semibold mb-3">Order Summary</h4>
+            <div class="grid grid-cols-2 gap-3 text-sm">
+              <div class="text-gray-600">Customer Name</div>
+              <div id="summaryCustomerName" class="font-medium">-</div>
+              <div class="text-gray-600">Phone</div>
+              <div id="summaryCustomerPhone" class="font-medium">-</div>
+              <div class="text-gray-600">Items</div>
+              <div id="summaryItemCount" class="font-medium">0</div>
+              <div class="text-gray-600">Subtotal</div>
+              <div id="summarySubtotal" class="font-medium">FRW 0</div>
+              <div class="text-gray-600">Delivery</div>
+              <div id="summaryDeliveryMethod" class="font-medium">Home Delivery - FREE</div>
+              <div class="text-gray-600">Delivery Fee</div>
+              <div id="summaryDeliveryFee" class="font-medium">FREE</div>
+              <div class="text-gray-600">Total</div>
+              <div id="summaryTotal" class="font-bold text-blue-600">FRW 0</div>
+            </div>
+          </div>
+
+          <div class="bg-gray-50 rounded-lg p-4">
+            <h4 class="font-semibold mb-3">Optional: Upload Payment Proof</h4>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Payment Method</label>
+                <select id="paymentMethod" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                  <option value="cash">Cash</option>
+                  <option value="momo">Mobile Money</option>
+                  <option value="bank">Bank Transfer</option>
+                </select>
+              </div>
+              <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Payment Proof (Image/PDF)</label>
+                <input id="paymentProof" type="file" accept="image/*,application/pdf" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="bg-white border rounded-lg p-4 shadow-sm">
+            <h4 class="font-semibold mb-3">Actions</h4>
+            <button id="createOrderBtn" class="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded mb-3">
+              <i class="fas fa-check mr-2"></i>Create Manual Order
+            </button>
+            <div id="postCreateActions" class="hidden space-y-2">
+              <div class="text-sm text-gray-600">Order Number: <span id="createdOrderNumber" class="font-semibold">-</span></div>
+              <button id="downloadReceiptBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+                <i class="fas fa-file-download mr-2"></i>Download Receipt
+              </button>
+              <button id="regenerateReceiptBtn" class="w-full bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded">
+                <i class="fas fa-sync-alt mr-2"></i>Regenerate Receipt
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6 flex justify-between">
+        <button id="backToStep2Btn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg">
+          <i class="fas fa-arrow-left mr-2"></i>Back
+        </button>
+        <button id="newOrderBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg hidden">
+          <i class="fas fa-plus mr-2"></i>Create Another Order
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <!-- Product Detail Modal -->
+  <div id="productModal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black bg-opacity-50"></div>
+    <div class="absolute inset-0 flex items-center justify-center p-4">
+      <div class="bg-white rounded-lg shadow-lg w-full max-w-3xl overflow-hidden">
+        <div class="flex justify-between items-center px-4 py-2 border-b">
+          <h4 id="productModalTitle" class="font-semibold">Product Details</h4>
+          <button id="closeProductModal" class="text-gray-600 hover:text-gray-900"><i class="fas fa-times"></i></button>
+        </div>
+        <div id="productModalBody" class="p-4 space-y-4"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // -------------------------
+    // Global State
+    // -------------------------
+    let token = null;
+    let currentProductType = 'physical'; // 'physical' | 'local'
+    let allProducts = [];
+    let products = [];
+    let selectedProducts = [];
+    let itemsPerPage = 24;
+    let currentPage = 1;
+    let userLocation = null;
+
+    // Delivery state
+    let selectedDeliveryMethod = 'home'; // Force home delivery only
+    let selectedPickupSite = null;
+    let deliveryLocation = null; // { lat, lng }
+    let deliveryMap = null;
+    let deliveryMarker = null;
+
+    // Created order state
+    let createdOrderId = null;
+    let createdOrderNumber = null;
+
+    // -------------------------
+    // Utilities
+    // -------------------------
+    function showMessage(message, type = 'info') {
+      const colors = {
+        success: 'bg-green-50 text-green-800 border-green-200',
+        error: 'bg-red-50 text-red-800 border-red-200',
+        warning: 'bg-yellow-50 text-yellow-800 border-yellow-200',
+        info: 'bg-blue-50 text-blue-800 border-blue-200'
+      };
+      const container = document.getElementById('notifications');
+      const el = document.createElement('div');
+      el.className = `border ${colors[type] || colors.info} rounded p-3 mb-2`;
+      el.textContent = message;
+      container.appendChild(el);
+      setTimeout(() => el.remove(), 5000);
+    }
+
+    function formatFRW(value) {
+      const n = Number(value) || 0;
+      return `FRW ${Math.round(n).toLocaleString()}`;
+    }
+
+    function authHeader() {
+      return { Authorization: `Bearer ${token}` };
+    }
+
+    function ensureAuth() {
+      token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = '/auth/auth-agent.html';
+      }
+    }
+
+    function logError(error, ctx = {}) {
+      console.error('[CLIENT ERROR]', error, ctx);
+      
+      // Log additional details for debugging
+      if (error instanceof TypeError && error.message.includes('Cannot read properties of null')) {
+        console.error('[DEBUG] Null reference error - check if DOM elements exist');
+        console.error('[DEBUG] Context:', ctx);
+        console.error('[DEBUG] Stack:', error.stack);
+      }
+    }
+
+    // -------------------------
+    // Init
+    // -------------------------
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        ensureAuth();
+        bindUIEvents();
+        await loadSiteInfo();
+        await loadCategories();
+        await loadProducts();
+        updateProductTypeUI();
+        updateCartDisplay();
+        // Force Home Delivery only
+        selectDeliveryMethod('home');
+        showMessage('Manual Order Creation is ready', 'success');
+      } catch (e) {
+        logError(e);
+        showMessage('Initialization failed', 'error');
+      }
+    });
+
+    function bindUIEvents() {
+      // Helper function to safely add event listeners
+      const safeAddEventListener = (id, event, handler) => {
+        const element = document.getElementById(id);
+        if (element) {
+          element.addEventListener(event, handler);
+        } else {
+          console.warn(`[UI] Element with ID '${id}' not found`);
+        }
+      };
+
+      safeAddEventListener('backBtn', 'click', () => history.back());
+      safeAddEventListener('logoutBtn', 'click', () => { localStorage.removeItem('token'); window.location.href = '/auth/auth-agent.html'; });
+
+      safeAddEventListener('switchToPhysicalBtn', 'click', () => switchToPhysical());
+      safeAddEventListener('switchToLocalBtn', 'click', () => switchToLocal());
+      safeAddEventListener('searchBtn', 'click', () => searchProducts());
+      safeAddEventListener('productSearch', 'keyup', (e) => { if (e.key === 'Enter') searchProducts(); });
+      safeAddEventListener('locationBtn', 'click', () => getUserLocation());
+      safeAddEventListener('manualLocationBtn', 'click', () => toggleManualLocationInput());
+      safeAddEventListener('setManualLocationBtn', 'click', () => setManualLocation());
+      safeAddEventListener('cancelManualLocationBtn', 'click', () => toggleManualLocationInput());
+
+      safeAddEventListener('goToStep2Btn', 'click', () => showStep(2));
+      safeAddEventListener('backToStep1Btn', 'click', () => showStep(1));
+      safeAddEventListener('goToStep3Btn', 'click', () => { if (validateStep2()) { updateOrderSummary(); showStep(3); } });
+      safeAddEventListener('backToStep2Btn', 'click', () => showStep(2));
+
+      // Force Home Delivery only - no UI interaction needed since it's the only option
+
+      safeAddEventListener('createOrderBtn', 'click', () => createManualOrder());
+      safeAddEventListener('downloadReceiptBtn', 'click', () => downloadReceipt());
+      safeAddEventListener('regenerateReceiptBtn', 'click', () => regenerateReceipt());
+      safeAddEventListener('newOrderBtn', 'click', () => window.location.reload());
+
+      safeAddEventListener('closeProductModal', 'click', closeProductModal);
+    }
+
+    // -------------------------
+    // Step control
+    // -------------------------
+    function showStep(n) {
+      const s1 = document.getElementById('step1');
+      const s2 = document.getElementById('step2');
+      const s3 = document.getElementById('step3');
+      const ind1 = document.getElementById('step1-ind');
+      const ind2 = document.getElementById('step2-ind');
+      const ind3 = document.getElementById('step3-ind');
+
+      s1.classList.toggle('hidden', n !== 1);
+      s2.classList.toggle('hidden', n !== 2);
+      s3.classList.toggle('hidden', n !== 3);
+
+      ind1.classList.toggle('opacity-60', n !== 1);
+      ind2.classList.toggle('opacity-60', n !== 2);
+      ind3.classList.toggle('opacity-60', n !== 3);
+    }
+
+    function validateStep2() {
+      const name = document.getElementById('customerName').value.trim();
+      const phone = document.getElementById('customerPhone').value.trim();
+      if (!name || !phone) {
+        showMessage('Please fill customer name and phone', 'warning');
+        return false;
+      }
+      // Home delivery validation only (pickup is disabled)
+      if (selectedDeliveryMethod === 'home') {
+        const addr = document.getElementById('customerAddress').value.trim();
+        if (!addr) {
+          showMessage('Please provide delivery address', 'warning');
+          return false;
+        }
+        
+        if (!deliveryLocation) {
+          // If no location is selected, try to use default Kigali location
+          console.warn('[VALIDATION] No delivery location selected, using default Kigali coordinates');
+          deliveryLocation = { lat: -1.9441, lng: 30.0619 };
+          setDeliveryMarker(deliveryLocation.lat, deliveryLocation.lng);
+          showMessage('Using default location (Kigali). Please update if needed.', 'warning');
+        }
+      }
+      return true;
+    }
+
+    // -------------------------
+    // Site info
+    // -------------------------
+    async function loadSiteInfo() {
+      try {
+        const res = await fetch('/api/pickup-site-manager/site-info', { headers: authHeader() });
+        if (!res.ok) {
+          console.warn(`[SITE-INFO] HTTP ${res.status} - ${res.statusText}`);
+          // If 401/403, might be authentication issue
+          if (res.status === 401 || res.status === 403) {
+            console.warn('[SITE-INFO] Authentication issue - using default site name');
+          }
+          throw new Error(`HTTP ${res.status}`);
+        }
+        const site = await res.json();
+        const siteNameEl = document.getElementById('siteName');
+        if (siteNameEl) {
+          siteNameEl.textContent = site.name || site.site_name || 'Pickup Site';
+        }
+        console.log('[SITE-INFO] Site info loaded successfully:', site.name || site.site_name);
+      } catch (e) {
+        console.warn('[SITE-INFO] Failed to load site info:', e.message);
+        const siteNameEl = document.getElementById('siteName');
+        if (siteNameEl) {
+          siteNameEl.textContent = 'Pickup Site Manager - Home Delivery';
+        }
+      }
+    }
+
+    // -------------------------
+    // Categories & Products
+    // -------------------------
+    async function loadCategories() {
+      try {
+        const res = await fetch('/api/categories');
+        if (!res.ok) {
+          console.warn(`[CATEGORIES] HTTP ${res.status} - ${res.statusText}`);
+          return;
+        }
+        const data = await res.json();
+        const cats = data.categories || [];
+        const sel = document.getElementById('categoryFilter');
+        if (sel) {
+          cats.forEach(c => { 
+            const o = document.createElement('option'); 
+            o.value = c.id; 
+            o.textContent = c.name; 
+            sel.appendChild(o); 
+          });
+        }
+      } catch (e) { 
+        console.warn('[CATEGORIES] Failed to load categories:', e.message);
+      }
+    }
+
+    async function loadProducts(resetPagination = true) {
+      try {
+        if (resetPagination) { currentPage = 1; allProducts = []; products = []; }
+        let apiUrl;
+        const headers = authHeader();
+        if (currentProductType === 'local') {
+          apiUrl = '/api/grocery/products?limit=200';
+          if (userLocation) {
+            apiUrl += `&lat=${userLocation.latitude}&lng=${userLocation.longitude}`;
+            const radius = document.getElementById('distanceFilter').value;
+            if (radius) apiUrl += `&radius=${radius}`;
+          }
+        } else {
+          apiUrl = '/api/products?limit=250&offset=0';
+        }
+        const res = await fetch(apiUrl, { headers });
+        if (!res.ok) {
+          console.warn(`[PRODUCTS] HTTP ${res.status} - ${res.statusText} for ${apiUrl}`);
+          throw new Error(`HTTP ${res.status}`);
+        }
+        const data = await res.json();
+        allProducts = data.products || data.data || [];
+        products = [...allProducts];
+        displayProductsWithPagination();
+        updatePaginationInfo();
+      } catch (e) {
+        logError(e);
+        document.getElementById('productsList').innerHTML = `<div class="col-span-full text-center py-8 text-red-600">Failed to load products</div>`;
+      }
+    }
+
+    function switchToPhysical() {
+      currentProductType = 'physical';
+      updateProductTypeUI();
+      loadProducts();
+    }
+    function switchToLocal() {
+      currentProductType = 'local';
+      updateProductTypeUI();
+      if (!userLocation) getUserLocation().then(() => loadProducts()); else loadProducts();
+    }
+    function updateProductTypeUI() {
+      const physicalBtn = document.getElementById('switchToPhysicalBtn');
+      const localBtn = document.getElementById('switchToLocalBtn');
+      const distanceFilter = document.getElementById('distanceFilter');
+      const locationBtn = document.getElementById('locationBtn');
+      const cartTitle = document.getElementById('cartTitle');
+      if (currentProductType === 'physical') {
+        physicalBtn.className = 'bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg';
+        localBtn.className = 'bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg';
+        distanceFilter.classList.add('hidden');
+        locationBtn.classList.add('hidden');
+        cartTitle.textContent = 'Shopping Cart';
+      } else {
+        physicalBtn.className = 'bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg';
+        localBtn.className = 'bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg';
+        distanceFilter.classList.remove('hidden');
+        locationBtn.classList.remove('hidden');
+        cartTitle.textContent = 'Order Menu';
+      }
+    }
+
+    async function getUserLocation() {
+      try {
+        if (!navigator.geolocation) throw new Error('Geolocation not supported');
+        showMessage('Getting your location...', 'info');
+        const position = await new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 });
+        });
+        userLocation = { latitude: position.coords.latitude, longitude: position.coords.longitude };
+        
+        // Set as delivery location and update map
+        setDeliveryMarker(userLocation.latitude, userLocation.longitude);
+        
+        // Center map on user location if map exists
+        if (deliveryMap) {
+          deliveryMap.setView([userLocation.latitude, userLocation.longitude], 15);
+        }
+        
+        showMessage('Location obtained and set as delivery location', 'success');
+      } catch (e) {
+        showMessage('Failed to get location. Using Kigali default.', 'warning');
+        userLocation = { latitude: -1.9441, longitude: 30.0619 };
+        
+        // Set default location as delivery location
+        setDeliveryMarker(userLocation.latitude, userLocation.longitude);
+        
+        if (deliveryMap) {
+          deliveryMap.setView([userLocation.latitude, userLocation.longitude], 13);
+        }
+      }
+    }
+
+    function toggleManualLocationInput() {
+      const manualInput = document.getElementById('manualLocationInput');
+      if (manualInput) {
+        manualInput.classList.toggle('hidden');
+      }
+    }
+
+    function setManualLocation() {
+      try {
+        const latInput = document.getElementById('manualLat');
+        const lngInput = document.getElementById('manualLng');
+        
+        if (!latInput || !lngInput) {
+          showMessage('Manual location inputs not found', 'error');
+          return;
+        }
+        
+        const lat = parseFloat(latInput.value);
+        const lng = parseFloat(lngInput.value);
+        
+        if (isNaN(lat) || isNaN(lng)) {
+          showMessage('Please enter valid latitude and longitude values', 'warning');
+          return;
+        }
+        
+        if (lat < -90 || lat > 90) {
+          showMessage('Latitude must be between -90 and 90', 'warning');
+          return;
+        }
+        
+        if (lng < -180 || lng > 180) {
+          showMessage('Longitude must be between -180 and 180', 'warning');
+          return;
+        }
+        
+        // Set the delivery marker
+        setDeliveryMarker(lat, lng);
+        
+        // Center map if it exists
+        if (deliveryMap) {
+          deliveryMap.setView([lat, lng], 15);
+        }
+        
+        // Hide manual input
+        toggleManualLocationInput();
+        
+        showMessage('Manual location set successfully', 'success');
+        
+      } catch (error) {
+        console.error('[MANUAL-LOCATION] Error setting manual location:', error);
+        showMessage('Failed to set manual location', 'error');
+      }
+    }
+
+    function displayProductsWithPagination() {
+      const start = (currentPage - 1) * itemsPerPage;
+      const end = start + itemsPerPage;
+      const subset = allProducts.slice(start, end);
+      displayProducts(subset);
+      updatePaginationControls();
+    }
+
+    function updatePaginationInfo() {
+      const el = document.getElementById('paginationInfo');
+      const startItem = ((currentPage - 1) * itemsPerPage) + 1;
+      const endItem = Math.min(currentPage * itemsPerPage, allProducts.length);
+      el.textContent = allProducts.length ? `Showing ${startItem}-${endItem} of ${allProducts.length} products` : '';
+    }
+
+    function updatePaginationControls() {
+      const totalPages = Math.ceil(allProducts.length / itemsPerPage);
+      const container = document.getElementById('paginationControls');
+      if (totalPages <= 1) { container.style.display = 'none'; return; }
+      container.style.display = 'flex';
+      let html = '';
+      html += `<button onclick="changePage(${currentPage - 1})" class="px-3 py-2 text-sm border border-gray-300 rounded-l-md hover:bg-gray-50 ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}" ${currentPage === 1 ? 'disabled' : ''}><i class="fas fa-chevron-left"></i> Previous</button>`;
+      let startPage = Math.max(1, currentPage - 2);
+      let endPage = Math.min(totalPages, startPage + 4);
+      if (endPage - startPage < 4) startPage = Math.max(1, endPage - 4);
+      for (let i = startPage; i <= endPage; i++) {
+        html += `<button onclick="changePage(${i})" class="px-3 py-2 text-sm border-t border-b border-r border-gray-300 hover:bg-gray-50 ${i === currentPage ? 'bg-blue-600 text-white hover:bg-blue-700' : ''}">${i}</button>`;
+      }
+      html += `<button onclick="changePage(${currentPage + 1})" class="px-3 py-2 text-sm border border-gray-300 rounded-r-md hover:bg-gray-50 ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''}" ${currentPage === totalPages ? 'disabled' : ''}>Next <i class="fas fa-chevron-right"></i></button>`;
+      container.innerHTML = html;
+    }
+
+    function changePage(n) {
+      const totalPages = Math.ceil(allProducts.length / itemsPerPage);
+      if (n < 1 || n > totalPages) return;
+      currentPage = n;
+      displayProductsWithPagination();
+      updatePaginationInfo();
+      document.getElementById('productsContainer').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function createPlaceholderImage(name) {
+      const initial = name ? name.charAt(0).toUpperCase() : 'P';
+      return `data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"200\" height=\"150\" viewBox=\"0 0 200 150\"><defs><linearGradient id=\"grad\" x1=\"0%\" y1=\"0%\" x2=\"100%\" y2=\"100%\"><stop offset=\"0%\" style=\"stop-color:%23667eea;stop-opacity:1\" /><stop offset=\"100%\" style=\"stop-color:%23764ba2;stop-opacity:1\" /></linearGradient></defs><rect width=\"200\" height=\"150\" fill=\"url(%23grad)\"/><text x=\"100\" y=\"85\" font-family=\"Arial,sans-serif\" font-size=\"48\" font-weight=\"bold\" text-anchor=\"middle\" fill=\"white\">${initial}</text></svg>`;
+    }
+
+    function handleImageError(img, productName) {
+      if (img.src.includes('placeholder')) return;
+      img.onerror = null;
+      img.src = createPlaceholderImage(productName);
+    }
+
+    function displayProducts(list) {
+      const container = document.getElementById('productsList');
+      if (!list.length) {
+        const hint = currentProductType === 'local' && !userLocation ? '<br><small class="text-blue-600">Tip: Click "Get Location" to find nearby products</small>' : '';
+        container.innerHTML = `<p class="text-gray-500 col-span-full text-center">No ${currentProductType} products found${hint}</p>`;
+        return;
+      }
+      container.innerHTML = list.map(p => {
+        let productName, productPrice, productDescription, productId, stockQuantity, category, seller, unitType;
+        if (currentProductType === 'local') {
+          productName = p.product_name || 'Unnamed Product';
+          productPrice = p.unit_price || 0;
+          productDescription = p.product_description || 'No description available';
+          productId = p.id;
+          stockQuantity = p.available_stock || 0;
+          category = p.category_name || 'Uncategorized';
+          seller = p.seller_name || 'Unknown Seller';
+          unitType = p.unit || 'units';
+        } else {
+          productName = p.name || p.product_name || 'Unnamed Product';
+          productPrice = p.price || 0;
+          productDescription = p.description || p.product_description || 'No description available';
+          productId = p.id;
+          stockQuantity = parseFloat(p.stock_quantity || p.quantity_available || 0);
+          category = p.category_name || p.category || 'Uncategorized';
+          seller = p.seller_name || p.store_name || 'Unknown Seller';
+          unitType = p.unit || 'pieces';
+        }
+        if ((stockQuantity || 0) <= 0) return '';
+        let imageUrl = createPlaceholderImage(productName);
+        const fields = currentProductType === 'local' ? ['main_image','image_url','image'] : ['main_image','image_url','product_image_url','image','photo_url'];
+        for (const f of fields) {
+          if (p[f] && String(p[f]).trim() && p[f] !== 'null') {
+            const img = String(p[f]).trim();
+            imageUrl = img.startsWith('http') ? img : (img.startsWith('/') ? img : `/uploads/${img}`);
+            break;
+          }
+        }
+        const addBtnText = currentProductType === 'local' ? 'Add to Menu' : 'Add to Cart';
+        const distanceInfo = currentProductType === 'local' && p.distance_km ? `<span class=\"text-xs text-green-600\">${parseFloat(p.distance_km).toFixed(1)} km away</span>` : '';
+        return `
+          <div class=\"border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow\">
+            <div class=\"mb-3\"><img src=\"${imageUrl}\" alt=\"${productName}\" class=\"w-full h-32 object-cover rounded\" onerror=\"handleImageError(this, '${productName.replace(/'/g, "\\'")}')\" loading=\"lazy\"></div>
+            <h5 class=\"font-semibold text-sm mb-2\" title=\"${productName}\">${productName.length > 30 ? productName.substring(0,30)+'...' : productName}</h5>
+            <p class=\"text-xs text-gray-600 mb-2 line-clamp-2\" title=\"${productDescription}\">${productDescription.length > 60 ? productDescription.substring(0,60)+'...' : productDescription}</p>
+            <div class=\"flex justify-between items-center mb-2\">
+              <span class=\"font-bold text-blue-600\">${formatFRW(productPrice)}${currentProductType==='local' ? '/'+unitType : ''}</span>
+              <span class=\"text-xs text-gray-500\">Stock: ${stockQuantity % 1 === 0 ? Math.floor(stockQuantity) : stockQuantity.toFixed(2)} ${unitType}</span>
+            </div>
+            <div class=\"flex justify-between items-center mb-3\">
+              <span class=\"text-xs text-gray-600\">${category}</span>
+              ${distanceInfo}
+            </div>
+            <div class=\"text-xs text-gray-500 mb-3\">Seller: ${seller}</div>
+            <div class=\"flex space-x-2\">
+              <button onclick=\"viewProductDetail(${productId})\" class=\"flex-1 bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded text-xs\"><i class=\"fas fa-eye\"></i> Details</button>
+              <button onclick=\"addToCart(${productId})\" class=\"flex-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs\"><i class=\"fas fa-plus\"></i> ${addBtnText}</button>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    async function viewProductDetail(productId) {
+      try {
+        showMessage('Loading product details...', 'info');
+        let apiUrl = `/api/products/${productId}`;
+        if (currentProductType === 'local') {
+          apiUrl = `/api/grocery/product/${productId}`;
+          if (userLocation) apiUrl += `?lat=${userLocation.latitude}&lng=${userLocation.longitude}`;
+        }
+        const res = await fetch(apiUrl, { headers: authHeader() });
+        if (!res.ok) throw new Error('Failed to load product');
+        const data = await res.json();
+        const p = data.product || data.data || data;
+        showProductModal(p);
+      } catch (e) {
+        showMessage('Failed to load product details', 'error');
+      }
+    }
+
+    function showProductModal(p) {
+      const body = document.getElementById('productModalBody');
+      let name = p.name || p.product_name || 'Unnamed Product';
+      let price = p.price || p.unit_price || 0;
+      let desc = p.description || p.product_description || 'No description available';
+      let stock = p.stock_quantity || p.available_stock || p.quantity_available || 0;
+      let unitType = p.unit || 'pieces';
+      let imageUrl = createPlaceholderImage(name);
+      const imageFields = ['image_url','main_image','grocery_image_url','product_image_url','image','photo_url'];
+      for (const f of imageFields) {
+        if (p[f] && String(p[f]).trim() && p[f] !== 'null') {
+          const img = String(p[f]).trim();
+          imageUrl = img.startsWith('http') ? img : (img.startsWith('/') ? img : `/uploads/${img}`);
+          break;
+        }
+      }
+      document.getElementById('productModalTitle').textContent = 'Product Details';
+      body.innerHTML = `
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <img src="${imageUrl}" class="w-full h-64 object-cover rounded" onerror="this.onerror=null;this.src='/placeholder-product.svg';" />
+          </div>
+          <div>
+            <h4 class="text-xl font-bold mb-2">${name}</h4>
+            <div class="mb-2"><span class="text-2xl font-bold text-blue-600">${formatFRW(price)}</span></div>
+            <div class="text-sm text-gray-600 mb-2">Stock: ${stock} ${unitType}</div>
+            <div class="text-gray-700 whitespace-pre-line">${desc}</div>
+          </div>
+        </div>`;
+      document.getElementById('productModal').classList.remove('hidden');
+    }
+    function closeProductModal() { document.getElementById('productModal').classList.add('hidden'); }
+
+    // -------------------------
+    // Cart
+    // -------------------------
+    function addToCart(productId) {
+      const p = allProducts.find(x => x.id == productId);
+      if (!p) return;
+      // normalize
+      const name = p.name || p.product_name || 'Product';
+      const price = Number(p.price || p.unit_price || 0);
+      const existing = selectedProducts.find(x => x.id == productId && x.product_type === currentProductType);
+      const minOrder = currentProductType === 'local' ? Number(p.minimum_order || 1) : 1;
+      if (existing) {
+        existing.quantity += 1;
+      } else {
+        selectedProducts.push({ id: productId, name, price, quantity: minOrder, product_type: currentProductType });
+      }
+      updateCartDisplay();
+      showMessage(`${name} added`, 'success');
+    }
+
+    function removeFromCart(productId) {
+      selectedProducts = selectedProducts.filter(x => x.id != productId);
+      updateCartDisplay();
+    }
+
+    function changeQty(productId, delta) {
+      const item = selectedProducts.find(x => x.id == productId);
+      if (!item) return;
+      item.quantity = Math.max(1, item.quantity + delta);
+      updateCartDisplay();
+    }
+
+    function computeSubtotal() {
+      return selectedProducts.reduce((sum, it) => sum + (Number(it.price) * Number(it.quantity)), 0);
+    }
+
+    function updateCartDisplay() {
+      const container = document.getElementById('selectedProducts');
+      const countEl = document.getElementById('cartCount');
+      const totalEl = document.getElementById('totalAmount');
+      countEl.textContent = selectedProducts.length;
+      const subtotal = computeSubtotal();
+      totalEl.textContent = formatFRW(subtotal);
+      if (!selectedProducts.length) {
+        container.innerHTML = '<p class="text-gray-500 text-sm">No products selected yet</p>';
+        document.getElementById('goToStep2Btn').disabled = true;
+        return;
+      }
+      document.getElementById('goToStep2Btn').disabled = false;
+      container.innerHTML = selectedProducts.map(it => `
+        <div class="flex items-center justify-between bg-gray-50 rounded p-2">
+          <div class="text-sm">
+            <div class="font-medium">${it.name}</div>
+            <div class="text-gray-600">${formatFRW(it.price)} x ${it.quantity} = <span class="font-semibold">${formatFRW(it.price * it.quantity)}</span></div>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button class="px-2 py-1 bg-gray-200 rounded" onclick="changeQty(${it.id}, -1)">-</button>
+            <button class="px-2 py-1 bg-gray-200 rounded" onclick="changeQty(${it.id}, 1)">+</button>
+            <button class="px-2 py-1 bg-red-500 text-white rounded" onclick="removeFromCart(${it.id})"><i class="fas fa-trash"></i></button>
+          </div>
+        </div>`).join('');
+    }
+
+    function searchProducts() {
+      const term = document.getElementById('productSearch').value.trim().toLowerCase();
+      const categoryId = document.getElementById('categoryFilter').value;
+      const distance = document.getElementById('distanceFilter').value;
+      let filtered = allProducts.filter(p => {
+        const name = (p.name || p.product_name || '').toLowerCase();
+        const desc = (p.description || p.product_description || '').toLowerCase();
+        const seller = (p.seller_name || p.store_name || '').toLowerCase();
+        const matchesSearch = !term || name.includes(term) || desc.includes(term) || seller.includes(term);
+        const matchesCategory = !categoryId || p.category_id == categoryId || (p.category_name === categoryId);
+        let matchesDistance = true;
+        if (currentProductType === 'local' && distance && p.distance_km) matchesDistance = parseFloat(p.distance_km) <= parseFloat(distance);
+        return matchesSearch && matchesCategory && matchesDistance;
+      });
+      allProducts = filtered;
+      currentPage = 1;
+      displayProductsWithPagination();
+      updatePaginationInfo();
+    }
+
+    // -------------------------
+    // Delivery Method
+    // -------------------------
+    function selectDeliveryMethod(method) {
+      // Always force home delivery since pickup options are removed
+      selectedDeliveryMethod = 'home';
+      
+      const pickupSection = document.getElementById('pickupSiteSection');
+      const homeSection = document.getElementById('homeDeliverySection');
+
+      // Show home delivery section and hide pickup section
+      if (homeSection) {
+        homeSection.classList.remove('hidden');
+      }
+      if (pickupSection) {
+        pickupSection.classList.add('hidden');
+      }
+      
+      // Initialize map for home delivery
+      initDeliveryMap();
+      
+      // Always FREE delivery for customer-facing totals
+      const deliveryFeeEl = document.getElementById('deliveryFeeText');
+      if (deliveryFeeEl) {
+        deliveryFeeEl.textContent = 'FREE';
+      }
+      
+      updateOrderSummary();
+    }
+
+    async function loadPickupSites() {
+      try {
+        const listEl = document.getElementById('pickupSitesList');
+        listEl.innerHTML = '<div class="text-gray-500">Loading sites...</div>';
+        let res = await fetch('/api/pickup-sites/available');
+        if (!res.ok) res = await fetch('/api/pickup-sites');
+        const data = await res.json();
+        const sites = data.sites || data.pickup_sites || [];
+        if (!sites.length) { listEl.innerHTML = '<div class="text-gray-500">No pickup sites available</div>'; return; }
+        listEl.innerHTML = sites.map(site => `
+          <div class="pickup-site-option border rounded p-3 flex items-start justify-between ${selectedPickupSite && selectedPickupSite.id===site.id ? 'selected' : ''}" onclick="selectPickupSite(${site.id})">
+            <div>
+              <div class="font-semibold">${site.site_name || site.name}</div>
+              <div class="text-sm text-gray-600">${site.address || site.address_line1 || ''} ${site.city ? ' - ' + site.city : ''}</div>
+              <div class="text-xs text-gray-500">Capacity: ${site.capacity ?? '-'} | Current: ${site.current_load ?? '-'}</div>
+            </div>
+            <div><i class="fas fa-check-circle text-blue-600 ${selectedPickupSite && selectedPickupSite.id===site.id ? '' : 'opacity-0'}"></i></div>
+          </div>`).join('');
+      } catch (e) {
+        logError(e);
+        showMessage('Failed to load pickup sites', 'error');
+      }
+    }
+
+    function selectPickupSite(id) {
+      const listEl = document.getElementById('pickupSitesList');
+      const items = Array.from(listEl.children);
+      items.forEach(i => i.classList.remove('selected'));
+      const sites = Array.from(items).map(div => div);
+      // We don't have the full object here; refetch minimal info from DOM content
+      // Simpler: store selected id and mark UI; we will pass id to backend
+      selectedPickupSite = { id };
+      items.forEach(el => {
+        const onclick = el.getAttribute('onclick') || '';
+        if (onclick.includes(`selectPickupSite(${id})`)) el.classList.add('selected');
+      });
+      updateOrderSummary();
+    }
+
+    function initDeliveryMap() {
+      try {
+        const mapEl = document.getElementById('deliveryMap');
+        if (!mapEl) {
+          console.warn('[MAP] Map container not found');
+          return;
+        }
+        
+        // Check if Leaflet is loaded
+        if (typeof L === 'undefined') {
+          console.error('[MAP] Leaflet library not loaded');
+          return;
+        }
+        
+        if (!deliveryMap) {
+          console.log('[MAP] Initializing delivery map...');
+          const center = userLocation ? [userLocation.latitude, userLocation.longitude] : [-1.9441, 30.0619];
+          
+          deliveryMap = L.map('deliveryMap').setView(center, 13);
+          
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
+            maxZoom: 19,
+            attribution: '© OpenStreetMap contributors'
+          }).addTo(deliveryMap);
+          
+          deliveryMap.on('click', (e) => {
+            setDeliveryMarker(e.latlng.lat, e.latlng.lng);
+          });
+          
+          console.log('[MAP] Map initialized successfully');
+        }
+        
+        // Ensure map renders properly
+        setTimeout(() => { 
+          if (deliveryMap) {
+            deliveryMap.invalidateSize(); 
+            console.log('[MAP] Map size invalidated');
+          }
+        }, 500);
+        
+      } catch (error) {
+        console.error('[MAP] Error initializing map:', error);
+      }
+    }
+
+    function setDeliveryMarker(lat, lng) {
+      deliveryLocation = { lat, lng };
+      if (deliveryMarker) deliveryMap.removeLayer(deliveryMarker);
+      deliveryMarker = L.marker([lat, lng]).addTo(deliveryMap);
+      document.getElementById('selectedLocationText').textContent = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+      updateOrderSummary();
+    }
+
+    // -------------------------
+    // Step 3 summary
+    // -------------------------
+    function updateOrderSummary() {
+      const name = document.getElementById('customerName').value.trim();
+      const phone = document.getElementById('customerPhone').value.trim();
+      const subtotal = computeSubtotal();
+      const total = subtotal; // buyer-facing total equals subtotal (FREE delivery)
+      document.getElementById('summaryCustomerName').textContent = name || '-';
+      document.getElementById('summaryCustomerPhone').textContent = phone || '-';
+      document.getElementById('summaryItemCount').textContent = selectedProducts.length;
+      document.getElementById('summarySubtotal').textContent = formatFRW(subtotal);
+      document.getElementById('summaryDeliveryMethod').textContent = 'Home Delivery - FREE';
+      document.getElementById('summaryDeliveryFee').textContent = 'FREE';
+      document.getElementById('summaryTotal').textContent = formatFRW(total);
+      const feeText = document.getElementById('deliveryFeeText');
+      if (feeText) feeText.textContent = 'FREE';
+    }
+
+    // -------------------------
+    // Order creation
+    // -------------------------
+    async function createManualOrder() {
+      try {
+        if (!selectedProducts.length) { showMessage('Add at least one product', 'warning'); return; }
+        if (!validateStep2()) return;
+
+        const name = document.getElementById('customerName').value.trim();
+        const phone = document.getElementById('customerPhone').value.trim();
+        const email = document.getElementById('customerEmail').value.trim();
+        const address = document.getElementById('customerAddress').value.trim();
+        const paymentMethod = document.getElementById('paymentMethod').value;
+        const proofFile = document.getElementById('paymentProof').files[0] || null;
+
+        const subtotal = computeSubtotal();
+        const delivery_fee = 0; // buyer-facing FREE delivery
+        const total_amount = subtotal + delivery_fee;
+
+        // Build order data for home delivery only
+        const orderData = {
+          buyer_name: name,
+          buyer_phone: phone,
+          buyer_email: email || null,
+          buyer_national_id: document.getElementById('customerNationalId').value.trim() || null,
+          delivery_details: {
+            type: 'home', // Force home delivery
+            address: address,
+            latitude: deliveryLocation ? deliveryLocation.lat : null,
+            longitude: deliveryLocation ? deliveryLocation.lng : null
+          },
+          items: selectedProducts.map(it => ({ 
+            item: it.name, 
+            price: it.price, 
+            quantity: it.quantity 
+          })),
+          notes: `Manual order created by agent. Payment method: ${paymentMethod}`
+        };
+
+        // Build multipart request for payment proof if provided
+        const fd = new FormData();
+        fd.append('buyer_name', orderData.buyer_name);
+        fd.append('buyer_phone', orderData.buyer_phone);
+        if (orderData.buyer_email) fd.append('buyer_email', orderData.buyer_email);
+        if (orderData.buyer_national_id) fd.append('buyer_national_id', orderData.buyer_national_id);
+        fd.append('delivery_details', JSON.stringify(orderData.delivery_details));
+        fd.append('items', JSON.stringify(orderData.items));
+        fd.append('notes', orderData.notes);
+        if (proofFile) fd.append('payment_proof', proofFile);
+
+        showMessage('Creating manual order...', 'info');
+        const res = await fetch('/api/pickup-site-manager/create-order', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+          body: fd
+        });
+        
+        if (!res.ok) {
+          console.error('[CREATE-ORDER] HTTP Error:', res.status, res.statusText);
+          let errorMessage = `HTTP ${res.status}: ${res.statusText}`;
+          try {
+            const errorData = await res.json();
+            errorMessage = errorData.error || errorData.message || errorMessage;
+            console.error('[CREATE-ORDER] Error details:', errorData);
+          } catch (parseError) {
+            console.error('[CREATE-ORDER] Could not parse error response');
+          }
+          throw new Error(errorMessage);
+        }
+        
+        const data = await res.json();
+        if (!data.success) {
+          throw new Error(data.error || data.message || 'Failed to create manual order');
+        }
+
+        createdOrderId = data.orderId;
+        createdOrderNumber = data.orderNumber;
+        document.getElementById('createdOrderNumber').textContent = createdOrderNumber;
+        document.getElementById('postCreateActions').classList.remove('hidden');
+        document.getElementById('newOrderBtn').classList.remove('hidden');
+        
+        // Automatic PDF download
+        if (data.autoDownload && data.downloadUrl) {
+          showMessage('Order created successfully! Downloading receipt...', 'success');
+          setTimeout(() => {
+            downloadPDFReceipt(data.downloadUrl, createdOrderNumber);
+          }, 1000);
+        } else {
+          showMessage('Manual order created successfully', 'success');
+        }
+      } catch (e) {
+        logError(e);
+        showMessage(e.message || 'Failed to create manual order', 'error');
+      }
+    }
+
+    async function regenerateReceipt() {
+      try {
+        if (!createdOrderId) { showMessage('No created order to regenerate receipt', 'warning'); return; }
+        const res = await fetch(`/api/pickup-site-manager/order/${createdOrderId}/regenerate-receipt`, { method: 'POST', headers: authHeader() });
+        const data = await res.json();
+        if (!res.ok || !data.success) throw new Error(data.error || 'Failed to regenerate receipt');
+        showMessage('Receipt regenerated successfully', 'success');
+      } catch (e) {
+        showMessage(e.message || 'Failed to regenerate receipt', 'error');
+      }
+    }
+
+    async function downloadReceipt() {
+      try {
+        if (!createdOrderId) { showMessage('No created order to download receipt', 'warning'); return; }
+        const res = await fetch(`/api/pickup-site-manager/order/${createdOrderId}/receipt`, { headers: authHeader() });
+        if (!res.ok) throw new Error('Failed to download receipt');
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const suggested = res.headers.get('X-Filename');
+        a.download = suggested || `receipt-${createdOrderNumber || createdOrderId}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+      } catch (e) {
+        showMessage(e.message || 'Failed to download receipt', 'error');
+      }
+    }
+
+    // New function for automatic PDF download
+    async function downloadPDFReceipt(downloadUrl, orderNumber) {
+      try {
+        const res = await fetch(downloadUrl, { 
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error('Failed to download PDF receipt');
+        
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `receipt-${orderNumber}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+        
+        showMessage('Receipt PDF downloaded successfully!', 'success');
+      } catch (e) {
+        console.error('PDF download error:', e);
+        showMessage('Order created successfully, but PDF download failed. You can try downloading manually.', 'warning');
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agent Types Frontend Test Suite</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    .test-result { transition: all 0.3s ease; }
+    .test-pass { background-color: #dcfce7; border-color: #16a34a; }
+    .test-fail { background-color: #fef2f2; border-color: #dc2626; }
+    .test-pending { background-color: #fef3c7; border-color: #d97706; }
+  </style>
+</head>
+<body class="bg-gray-50 p-8">
+  <div class="max-w-6xl mx-auto">
+    <div class="bg-white rounded-2xl shadow-lg p-8 mb-8">
+      <h1 class="text-3xl font-bold text-gray-800 mb-4">
+        <i class="fas fa-vial text-blue-600 mr-3"></i>
+        Agent Types Frontend Test Suite
+      </h1>
+      <p class="text-gray-600 mb-6">Comprehensive testing of all three agent type dashboards and their functionality.</p>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div class="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+          <i class="fas fa-truck text-green-600 text-2xl mb-2"></i>
+          <h3 class="font-semibold text-green-800">Fast Delivery</h3>
+          <p class="text-sm text-green-600">Grocery & Local Market</p>
+        </div>
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
+          <i class="fas fa-box text-blue-600 text-2xl mb-2"></i>
+          <h3 class="font-semibold text-blue-800">Pickup Delivery</h3>
+          <p class="text-sm text-blue-600">Physical Products</p>
+        </div>
+        <div class="bg-purple-50 border border-purple-200 rounded-lg p-4 text-center">
+          <i class="fas fa-store text-purple-600 text-2xl mb-2"></i>
+          <h3 class="font-semibold text-purple-800">Site Manager</h3>
+          <p class="text-sm text-purple-600">Smart Assistant</p>
+        </div>
+      </div>
+
+      <button id="start-tests" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
+        <i class="fas fa-play mr-2"></i>Start Frontend Tests
+      </button>
+    </div>
+
+    <!-- Test Results -->
+    <div id="test-results" class="space-y-6">
+      <!-- Fast Delivery Tests -->
+      <div class="bg-white rounded-2xl shadow-lg p-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">
+          <i class="fas fa-truck text-green-600 mr-2"></i>
+          Fast Delivery Agent Dashboard Tests
+        </h2>
+        <div id="fast-delivery-tests" class="space-y-3">
+          <!-- Test results will be populated here -->
+        </div>
+      </div>
+
+      <!-- Pickup Delivery Tests -->
+      <div class="bg-white rounded-2xl shadow-lg p-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">
+          <i class="fas fa-box text-blue-600 mr-2"></i>
+          Pickup Delivery Agent Dashboard Tests
+        </h2>
+        <div id="pickup-delivery-tests" class="space-y-3">
+          <!-- Test results will be populated here -->
+        </div>
+      </div>
+
+      <!-- Site Manager Tests -->
+      <div class="bg-white rounded-2xl shadow-lg p-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">
+          <i class="fas fa-store text-purple-600 mr-2"></i>
+          Pickup Site Manager Dashboard Tests
+        </h2>
+        <div id="site-manager-tests" class="space-y-3">
+          <!-- Test results will be populated here -->
+        </div>
+      </div>
+
+      <!-- API Tests -->
+      <div class="bg-white rounded-2xl shadow-lg p-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">
+          <i class="fas fa-server text-gray-600 mr-2"></i>
+          API Endpoint Tests
+        </h2>
+        <div id="api-tests" class="space-y-3">
+          <!-- Test results will be populated here -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Test Summary -->
+    <div id="test-summary" class="bg-white rounded-2xl shadow-lg p-6 mt-8 hidden">
+      <h2 class="text-xl font-bold text-gray-800 mb-4">
+        <i class="fas fa-chart-bar text-indigo-600 mr-2"></i>
+        Test Summary
+      </h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="text-center">
+          <div class="text-3xl font-bold text-green-600" id="passed-count">0</div>
+          <div class="text-sm text-gray-600">Passed</div>
+        </div>
+        <div class="text-center">
+          <div class="text-3xl font-bold text-red-600" id="failed-count">0</div>
+          <div class="text-sm text-gray-600">Failed</div>
+        </div>
+        <div class="text-center">
+          <div class="text-3xl font-bold text-blue-600" id="success-rate">0%</div>
+          <div class="text-sm text-gray-600">Success Rate</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    class FrontendTestSuite {
+      constructor() {
+        this.tests = [];
+        this.results = {
+          passed: 0,
+          failed: 0,
+          total: 0
+        };
+      }
+
+      async runAllTests() {
+        console.log('🚀 Starting Frontend Test Suite...');
+        
+        // Clear previous results
+        this.results = { passed: 0, failed: 0, total: 0 };
+        
+        // Test dashboard accessibility
+        await this.testDashboardAccessibility();
+        
+        // Test API endpoints
+        await this.testAPIEndpoints();
+        
+        // Test frontend functionality
+        await this.testFrontendFunctionality();
+        
+        // Show summary
+        this.showTestSummary();
+      }
+
+      async testDashboardAccessibility() {
+        const dashboards = [
+          {
+            name: 'Fast Delivery Dashboard',
+            url: '/agent/fast-delivery-dashboard-enhanced.html',
+            container: 'fast-delivery-tests'
+          },
+          {
+            name: 'Pickup Delivery Dashboard',
+            url: '/agent/pickup-delivery-dashboard-enhanced.html',
+            container: 'pickup-delivery-tests'
+          },
+          {
+            name: 'Site Manager Dashboard',
+            url: '/agent/pickup-site-manager-dashboard-enhanced.html',
+            container: 'site-manager-tests'
+          }
+        ];
+
+        for (const dashboard of dashboards) {
+          await this.testDashboard(dashboard);
+        }
+      }
+
+      async testDashboard(dashboard) {
+        const container = document.getElementById(dashboard.container);
+        
+        // Test 1: Dashboard file accessibility
+        const fileTest = await this.createTest(
+          `${dashboard.name} - File Access`,
+          async () => {
+            const response = await fetch(dashboard.url);
+            return response.ok;
+          }
+        );
+        container.appendChild(fileTest);
+
+        // Test 2: HTML structure validation
+        const structureTest = await this.createTest(
+          `${dashboard.name} - HTML Structure`,
+          async () => {
+            const response = await fetch(dashboard.url);
+            const html = await response.text();
+            return html.includes('<!DOCTYPE html>') && 
+                   html.includes('<title>') && 
+                   html.includes('dashboard');
+          }
+        );
+        container.appendChild(structureTest);
+
+        // Test 3: Required scripts and styles
+        const assetsTest = await this.createTest(
+          `${dashboard.name} - Assets Loading`,
+          async () => {
+            const response = await fetch(dashboard.url);
+            const html = await response.text();
+            return html.includes('tailwindcss.com') && 
+                   html.includes('font-awesome') &&
+                   html.includes('auth-utils.js');
+          }
+        );
+        container.appendChild(assetsTest);
+
+        // Test 4: Dashboard-specific elements
+        const elementsTest = await this.createTest(
+          `${dashboard.name} - Required Elements`,
+          async () => {
+            const response = await fetch(dashboard.url);
+            const html = await response.text();
+            
+            if (dashboard.name.includes('Fast Delivery')) {
+              return html.includes('available-orders') && html.includes('grocery');
+            } else if (dashboard.name.includes('Pickup Delivery')) {
+              return html.includes('pickup-sites') && html.includes('delivery');
+            } else if (dashboard.name.includes('Site Manager')) {
+              return html.includes('create-order') && html.includes('manual');
+            }
+            return false;
+          }
+        );
+        container.appendChild(elementsTest);
+      }
+
+      async testAPIEndpoints() {
+        const container = document.getElementById('api-tests');
+        
+        const endpoints = [
+          { name: 'Fast Delivery Dashboard API', url: '/api/fast-delivery-agent/dashboard' },
+          { name: 'Pickup Delivery Dashboard API', url: '/api/pickup-delivery-agent/dashboard' },
+          { name: 'Site Manager Dashboard API', url: '/api/pickup-site-manager/dashboard' },
+          { name: 'Fast Delivery Orders API', url: '/api/fast-delivery-agent/available-orders' },
+          { name: 'Pickup Sites API', url: '/api/pickup-delivery-agent/pickup-sites' },
+          { name: 'Site Manager Orders API', url: '/api/pickup-site-manager/orders' }
+        ];
+
+        for (const endpoint of endpoints) {
+          const test = await this.createTest(
+            `API - ${endpoint.name}`,
+            async () => {
+              try {
+                const response = await fetch(endpoint.url, {
+                  headers: {
+                    'Authorization': 'Bearer test-token'
+                  }
+                });
+                // API should respond (even if with 401/403 due to auth)
+                return response.status !== 404;
+              } catch (error) {
+                return false;
+              }
+            }
+          );
+          container.appendChild(test);
+        }
+      }
+
+      async testFrontendFunctionality() {
+        const container = document.getElementById('api-tests');
+        
+        // Test JavaScript functionality by creating hidden iframes
+        const functionalityTests = [
+          {
+            name: 'Fast Delivery - JavaScript Loading',
+            test: () => this.testJavaScriptInDashboard('/agent/fast-delivery-dashboard-enhanced.html')
+          },
+          {
+            name: 'Pickup Delivery - JavaScript Loading',
+            test: () => this.testJavaScriptInDashboard('/agent/pickup-delivery-dashboard-enhanced.html')
+          },
+          {
+            name: 'Site Manager - JavaScript Loading',
+            test: () => this.testJavaScriptInDashboard('/agent/pickup-site-manager-dashboard-enhanced.html')
+          }
+        ];
+
+        for (const funcTest of functionalityTests) {
+          const test = await this.createTest(funcTest.name, funcTest.test);
+          container.appendChild(test);
+        }
+      }
+
+      async testJavaScriptInDashboard(url) {
+        return new Promise((resolve) => {
+          const iframe = document.createElement('iframe');
+          iframe.style.display = 'none';
+          iframe.src = url;
+          
+          iframe.onload = () => {
+            try {
+              // Check if basic JavaScript elements are present
+              const doc = iframe.contentDocument;
+              const hasScripts = doc.querySelectorAll('script').length > 0;
+              const hasEventListeners = doc.body.innerHTML.includes('addEventListener') || 
+                                      doc.body.innerHTML.includes('onclick');
+              
+              document.body.removeChild(iframe);
+              resolve(hasScripts && hasEventListeners);
+            } catch (error) {
+              document.body.removeChild(iframe);
+              resolve(false);
+            }
+          };
+          
+          iframe.onerror = () => {
+            document.body.removeChild(iframe);
+            resolve(false);
+          };
+          
+          document.body.appendChild(iframe);
+          
+          // Timeout after 5 seconds
+          setTimeout(() => {
+            if (document.body.contains(iframe)) {
+              document.body.removeChild(iframe);
+              resolve(false);
+            }
+          }, 5000);
+        });
+      }
+
+      async createTest(name, testFunction) {
+        const testElement = document.createElement('div');
+        testElement.className = 'test-result border rounded-lg p-3 test-pending';
+        
+        testElement.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="font-medium">${name}</span>
+            <div class="flex items-center">
+              <i class="fas fa-spinner fa-spin text-yellow-600 mr-2"></i>
+              <span class="text-sm text-yellow-600">Testing...</span>
+            </div>
+          </div>
+        `;
+
+        this.results.total++;
+
+        try {
+          const result = await testFunction();
+          
+          if (result) {
+            testElement.className = 'test-result border rounded-lg p-3 test-pass';
+            testElement.innerHTML = `
+              <div class="flex items-center justify-between">
+                <span class="font-medium">${name}</span>
+                <div class="flex items-center">
+                  <i class="fas fa-check text-green-600 mr-2"></i>
+                  <span class="text-sm text-green-600">PASS</span>
+                </div>
+              </div>
+            `;
+            this.results.passed++;
+          } else {
+            testElement.className = 'test-result border rounded-lg p-3 test-fail';
+            testElement.innerHTML = `
+              <div class="flex items-center justify-between">
+                <span class="font-medium">${name}</span>
+                <div class="flex items-center">
+                  <i class="fas fa-times text-red-600 mr-2"></i>
+                  <span class="text-sm text-red-600">FAIL</span>
+                </div>
+              </div>
+            `;
+            this.results.failed++;
+          }
+        } catch (error) {
+          testElement.className = 'test-result border rounded-lg p-3 test-fail';
+          testElement.innerHTML = `
+            <div class="flex items-center justify-between">
+              <span class="font-medium">${name}</span>
+              <div class="flex items-center">
+                <i class="fas fa-exclamation-triangle text-red-600 mr-2"></i>
+                <span class="text-sm text-red-600">ERROR</span>
+              </div>
+            </div>
+            <div class="mt-2 text-xs text-red-500">${error.message}</div>
+          `;
+          this.results.failed++;
+        }
+
+        return testElement;
+      }
+
+      showTestSummary() {
+        const summary = document.getElementById('test-summary');
+        summary.classList.remove('hidden');
+
+        document.getElementById('passed-count').textContent = this.results.passed;
+        document.getElementById('failed-count').textContent = this.results.failed;
+        
+        const successRate = this.results.total > 0 ? 
+          Math.round((this.results.passed / this.results.total) * 100) : 0;
+        document.getElementById('success-rate').textContent = `${successRate}%`;
+
+        // Show completion message
+        const message = successRate >= 80 ? 
+          '🎉 Excellent! Most tests passed.' :
+          successRate >= 60 ?
+          '⚠️ Good, but some issues detected.' :
+          '❌ Multiple issues found. Review failed tests.';
+
+        console.log(`Test Summary: ${this.results.passed}/${this.results.total} passed (${successRate}%)`);
+        console.log(message);
+      }
+    }
+
+    // Initialize test suite
+    const testSuite = new FrontendTestSuite();
+
+    document.getElementById('start-tests').addEventListener('click', () => {
+      document.getElementById('start-tests').disabled = true;
+      document.getElementById('start-tests').innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Running Tests...';
+      
+      testSuite.runAllTests().then(() => {
+        document.getElementById('start-tests').disabled = false;
+        document.getElementById('start-tests').innerHTML = '<i class="fas fa-redo mr-2"></i>Run Tests Again';
+      });
+    });
+
+    // Auto-run tests on page load
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        document.getElementById('start-tests').click();
+      }, 1000);
+    });
+  </script>
+</body>
+</html>

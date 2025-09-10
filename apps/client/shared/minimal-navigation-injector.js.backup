@@ -1,0 +1,360 @@
+/**
+ * Minimal Navigation Injector
+ * Provides only the flexible navigation system without any UI templates
+ * Each page maintains its own unique navigation design
+ */
+
+(function() {
+  'use strict';
+
+  class MinimalNavigationInjector {
+    constructor() {
+      this.isInjected = false;
+      this.init();
+    }
+
+    init() {
+      // Wait for DOM to be ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => this.inject());
+      } else {
+        this.inject();
+      }
+    }
+
+    inject() {
+      if (this.isInjected) return;
+      
+      console.log('🔧 Minimal Navigation System loading...');
+      
+      this.loadFlexibleNavigationSystem();
+      this.setupGlobalUtilities();
+      this.addNavigationHelpers();
+      
+      this.isInjected = true;
+      console.log('✅ Minimal Navigation System ready');
+    }
+
+    loadFlexibleNavigationSystem() {
+      // Load the flexible navigation system
+      if (!document.querySelector('script[src*="flexible-navigation-system.js"]')) {
+        const script = document.createElement('script');
+        script.src = '/shared/flexible-navigation-system.js';
+        script.async = false;
+        script.onload = () => {
+          console.log('✅ Flexible Navigation System loaded');
+        };
+        script.onerror = () => {
+          console.warn('⚠️ Failed to load Flexible Navigation System');
+        };
+        document.head.appendChild(script);
+      }
+    }
+
+    setupGlobalUtilities() {
+      // Add global navigation utilities that pages can use
+      window.navUtils = {
+        // Quick navigation functions
+        goHome: () => {
+          window.location.href = '/';
+        },
+        
+        goBack: () => {
+          if (window.history.length > 1) {
+            window.history.back();
+          } else {
+            window.location.href = '/';
+          }
+        },
+        
+        goToLogin: (role = 'buyer') => {
+          const loginPages = {
+            buyer: '/auth/auth-buyer.html',
+            seller: '/auth/auth-seller.html',
+            agent: '/auth/auth-agent.html',
+            admin: '/auth/auth-admin.html'
+          };
+          window.location.href = loginPages[role] || loginPages.buyer;
+        },
+        
+        goToProfile: () => {
+          const user = this.getCurrentUser();
+          if (user.isAuthenticated) {
+            const profilePages = {
+              buyer: '/buyer/profile.html',
+              seller: '/seller/profile.html',
+              agent: '/agent/profile.html',
+              admin: '/admin/settings.html'
+            };
+            window.location.href = profilePages[user.role] || profilePages.buyer;
+          } else {
+            this.goToLogin();
+          }
+        },
+        
+        goToDashboard: () => {
+          const user = this.getCurrentUser();
+          if (user.isAuthenticated) {
+            const dashboardPages = {
+              buyer: '/buyer/buyers-home.html',
+              seller: '/seller/dashboard.html',
+              agent: '/agent/dashboard.html',
+              admin: '/admin/dashboard.html'
+            };
+            window.location.href = dashboardPages[user.role] || dashboardPages.buyer;
+          } else {
+            window.location.href = '/';
+          }
+        },
+        
+        // Mode switching
+        switchToMarketplace: () => {
+          localStorage.setItem('currentMode', 'marketplace');
+          window.location.href = '/';
+        },
+        
+        switchToLocalMarket: () => {
+          localStorage.setItem('currentMode', 'local-market');
+          window.location.href = '/grocery/local-market-home.html';
+        },
+        
+        getCurrentMode: () => {
+          return localStorage.getItem('currentMode') || 'marketplace';
+        },
+        
+        // User utilities
+        getCurrentUser: () => {
+          try {
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            const token = localStorage.getItem('token');
+            return {
+              ...user,
+              isAuthenticated: !!token,
+              role: user.role || 'public'
+            };
+          } catch {
+            return { isAuthenticated: false, role: 'public' };
+          }
+        },
+        
+        logout: () => {
+          localStorage.removeItem('user');
+          localStorage.removeItem('token');
+          localStorage.removeItem('currentJourney');
+          window.location.href = '/';
+        },
+        
+        // Journey utilities
+        startBuyerJourney: (data = {}) => {
+          if (window.flexibleNav) {
+            const mode = window.navUtils.getCurrentMode();
+            const journeyId = mode === 'local-market' ? 'buyer-local-market' : 'buyer-marketplace';
+            window.flexibleNav.startJourney(journeyId, data);
+          }
+        },
+        
+        completeJourneyStep: (data = {}) => {
+          if (window.flexibleNav) {
+            window.flexibleNav.completeStep(data);
+          }
+        },
+        
+        // Link validation
+        validatePageLinks: () => {
+          if (window.flexibleNav) {
+            return window.flexibleNav.validateLinks();
+          }
+          return null;
+        },
+        
+        fixBrokenLinks: () => {
+          if (window.flexibleNav) {
+            return window.flexibleNav.fixBrokenLinks();
+          }
+          return 0;
+        }
+      };
+    }
+
+    addNavigationHelpers() {
+      // Add CSS classes for navigation styling (optional)
+      const style = document.createElement('style');
+      style.textContent = `
+        /* Optional navigation helper styles */
+        .nav-link {
+          text-decoration: none;
+          transition: all 0.2s ease;
+        }
+        
+        .nav-link:hover {
+          opacity: 0.8;
+        }
+        
+        .nav-button {
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        
+        .nav-button:hover {
+          transform: translateY(-1px);
+        }
+        
+        .nav-active {
+          font-weight: 600;
+        }
+        
+        .mode-indicator {
+          display: inline-block;
+          padding: 4px 8px;
+          border-radius: 12px;
+          font-size: 12px;
+          font-weight: 600;
+          text-transform: uppercase;
+        }
+        
+        .mode-marketplace {
+          background: #dbeafe;
+          color: #2563eb;
+        }
+        
+        .mode-local-market {
+          background: #dcfce7;
+          color: #16a34a;
+        }
+        
+        /* Journey progress indicator (optional) */
+        .journey-progress {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 3px;
+          background: #f3f4f6;
+          z-index: 9999;
+        }
+        
+        .journey-progress-bar {
+          height: 100%;
+          background: linear-gradient(90deg, #3b82f6, #10b981);
+          transition: width 0.3s ease;
+        }
+      `;
+      document.head.appendChild(style);
+
+      // Add data attributes helper
+      this.addDataAttributeHelpers();
+      
+      // Add event listeners for navigation actions
+      this.setupNavigationEventListeners();
+    }
+
+    addDataAttributeHelpers() {
+      // Helper function to add data-route attributes to links
+      window.addRouteToLink = (linkElement, route) => {
+        if (linkElement && route) {
+          linkElement.setAttribute('data-route', route);
+        }
+      };
+      
+      // Helper function to add journey actions to buttons
+      window.addJourneyAction = (buttonElement, action, data = {}) => {
+        if (buttonElement && action) {
+          buttonElement.setAttribute('data-journey-action', action);
+          if (Object.keys(data).length > 0) {
+            buttonElement.setAttribute('data-journey-data', JSON.stringify(data));
+          }
+        }
+      };
+      
+      // Helper function to add mode switch to buttons
+      window.addModeSwitch = (buttonElement, mode) => {
+        if (buttonElement && mode) {
+          buttonElement.setAttribute('data-mode-switch', mode);
+        }
+      };
+    }
+
+    setupNavigationEventListeners() {
+      // Listen for clicks on elements with navigation data attributes
+      document.addEventListener('click', (e) => {
+        // Handle quick navigation buttons
+        const quickNavButton = e.target.closest('[data-quick-nav]');
+        if (quickNavButton) {
+          e.preventDefault();
+          const action = quickNavButton.getAttribute('data-quick-nav');
+          
+          switch (action) {
+            case 'home':
+              window.navUtils.goHome();
+              break;
+            case 'back':
+              window.navUtils.goBack();
+              break;
+            case 'login':
+              const role = quickNavButton.getAttribute('data-role') || 'buyer';
+              window.navUtils.goToLogin(role);
+              break;
+            case 'profile':
+              window.navUtils.goToProfile();
+              break;
+            case 'dashboard':
+              window.navUtils.goToDashboard();
+              break;
+            case 'logout':
+              if (confirm('Are you sure you want to logout?')) {
+                window.navUtils.logout();
+              }
+              break;
+          }
+        }
+        
+        // Handle mode switch buttons
+        const modeSwitchButton = e.target.closest('[data-mode-switch]');
+        if (modeSwitchButton) {
+          const mode = modeSwitchButton.getAttribute('data-mode-switch');
+          if (mode === 'marketplace') {
+            window.navUtils.switchToMarketplace();
+          } else if (mode === 'local-market') {
+            window.navUtils.switchToLocalMarket();
+          }
+        }
+      });
+      
+      // Update mode indicators when page loads
+      this.updateModeIndicators();
+      
+      // Listen for mode changes
+      window.addEventListener('modechange', () => {
+        this.updateModeIndicators();
+      });
+    }
+
+    updateModeIndicators() {
+      const currentMode = window.navUtils.getCurrentMode();
+      const indicators = document.querySelectorAll('.mode-indicator');
+      
+      indicators.forEach(indicator => {
+        indicator.className = `mode-indicator mode-${currentMode}`;
+        indicator.textContent = currentMode === 'marketplace' ? 'Marketplace' : 'Local Market';
+      });
+    }
+
+    getCurrentUser() {
+      try {
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const token = localStorage.getItem('token');
+        return {
+          ...user,
+          isAuthenticated: !!token,
+          role: user.role || 'public'
+        };
+      } catch {
+        return { isAuthenticated: false, role: 'public' };
+      }
+    }
+  }
+
+  // Initialize the minimal navigation injector
+  new MinimalNavigationInjector();
+
+})();

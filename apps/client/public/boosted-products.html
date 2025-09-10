@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Boosted Products | African Deals Domain</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="flex flex-col min-h-screen bg-gray-50">
+  <!-- Flash messages will be dynamically inserted here -->
+  <div id="flash-messages"></div>
+  
+  <main class="flex-1 container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-8 text-center">Boosted Products</h1>
+    
+    <div id="boosted-products" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <!-- Products will be dynamically loaded here -->
+    </div>
+    
+    <div id="loading" class="text-center py-8">
+      <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <p class="mt-2 text-gray-600">Loading boosted products...</p>
+    </div>
+    
+    <div id="no-products" class="text-center py-8 hidden">
+      <p class="text-gray-600">No boosted products available at the moment.</p>
+    </div>
+  </main>
+
+  <script>
+    // Load boosted products
+    async function loadBoostedProducts() {
+      try {
+        const response = await 
+                try {
+                    const response = await fetch('/api/products/boosted');
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    // Continue with successful response
+                    const data = await response.json();
+                    return data;
+                } catch (error) {
+                    console.error('API call failed:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+                    showNotification('Operation failed. Please try again.', 'error');
+                    throw error;
+                };
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            displayBoostedProducts(data.products);
+          } else {
+            showNotification('Failed to load boosted products', 'error');
+            document.getElementById('no-products').classList.remove('hidden');
+          }
+        } else {
+          throw new Error('Failed to fetch boosted products');
+        }
+      } catch (error) {
+        console.error('Error loading boosted products:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+        showNotification('An error occurred while loading boosted products', 'error');
+        document.getElementById('no-products').classList.remove('hidden');
+      } finally {
+        document.getElementById('loading').classList.add('hidden');
+      }
+    }
+
+    // Display boosted products
+    function displayBoostedProducts(products) {
+      const productsContainer = document.getElementById('boosted-products');
+      
+      if (products && products.length > 0) {
+        productsContainer.innerHTML = products.map(product => `
+          <div class="bg-white rounded shadow hover:shadow-lg transition-shadow">
+            <a href="/public/product-detail.html?id=${product.id}">
+              <img src="${product.main_image || product.image}" alt="${product.name}" class="h-32 w-full object-cover rounded mb-2">
+              <div class="p-4">
+                <h3 class="font-bold text-lg mb-1">${product.name}</h3>
+                <p class="text-gray-600 text-sm mb-2">${product.description}</p>
+                <div class="text-yellow-700 font-bold mb-2">${product.price}</div>
+              </div>
+            </a>
+            <form class="add-to-cart-form p-4 pt-0" data-product-id="${product.id}" method="POST" action="#">
+              <input type="hidden" name="productId" value="${product.id}">
+              <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">Add to Cart</button>
+            </form>
+          </div>
+        `).join('');
+        
+        // Add event listeners for add to cart buttons
+        document.querySelectorAll('.add-to-cart-form').forEach(form => {
+          form.addEventListener('submit', handleAddToCart);
+        });
+      } else {
+        document.getElementById('no-products').classList.remove('hidden');
+      }
+    }
+
+    // Handle add to cart
+    async function handleAddToCart(e) {
+      e.preventDefault();
+      
+      const productId = e.target.querySelector('input[name="productId"]').value;
+      
+      try {
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+          showNotification('Please login to add items to cart', 'error');
+          return;
+        }
+
+        const response = await fetch('/api/cart/add', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ productId, quantity: 1 })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          showNotification('Product added to cart successfully!', 'success');
+        } else {
+          showNotification(data.message || 'Failed to add product to cart', 'error');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+        showNotification('An error occurred while adding to cart', 'error');
+      }
+    }
+
+    // Show notification function
+    function showNotification(message, type = 'info') {
+      const flashDiv = document.getElementById('flash-messages');
+      const notification = document.createElement('div');
+      
+      let bgColor = 'bg-blue-100 text-blue-800';
+      if (type === 'success') {
+        bgColor = 'bg-green-100 text-green-800';
+      } else if (type === 'error') {
+        bgColor = 'bg-red-100 text-red-800';
+      }
+      
+      notification.className = `${bgColor} px-4 py-2 text-center animate-fade-in`;
+      notification.textContent = message;
+      
+      flashDiv.innerHTML = '';
+      flashDiv.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.remove();
+      }, 5000);
+    }
+
+    // Check for URL parameters for flash messages
+    const urlParams = new URLSearchParams(window.location.search);
+    const success = urlParams.get('success');
+    const error = urlParams.get('error');
+    
+    if (success) {
+      showNotification(decodeURIComponent(success), 'success');
+    }
+    if (error) {
+      showNotification(decodeURIComponent(error), 'error');
+    }
+
+    // Load boosted products on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      loadBoostedProducts();
+    });
+  </script>
+</body>
+</html>

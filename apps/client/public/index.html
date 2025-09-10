@@ -1,0 +1,2698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>African Deals Domain | Africa's Premier E-Commerce Platform</title>
+  <meta name="description" content="Discover amazing products from trusted African sellers. Electronics, Fashion, Groceries, Home & Living - all in one place with secure payments and fast delivery.">
+  <link rel="icon" type="image/png" href="/public/images/logo.png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/shared/auth-utils.js"></script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .glass { background: rgba(255,255,255,0.9); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); }
+    .brand-gradient { background: linear-gradient(135deg, #0e2038 0%, #23325c 50%, #1e3a8a 100%); }
+    .footer-link:hover { text-decoration: underline; }
+    .footer-icon { transition: transform 0.2s; }
+    .footer-icon:hover { transform: scale(1.15); }
+    .category-card:hover { box-shadow: 0 8px 32px 0 rgba(14,32,56,0.15); transform: translateY(-4px) scale(1.02); }
+    .product-card:hover { box-shadow: 0 12px 40px 0 rgba(14,32,56,0.12); transform: translateY(-6px); }
+    .fade-in { animation: fadeIn 0.6s ease-out; }
+    .slide-up { animation: slideUp 0.8s ease-out; }
+    .pulse-glow { animation: pulseGlow 2s infinite; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulseGlow { 0%, 100% { box-shadow: 0 0 20px rgba(14,32,56,0.1); } 50% { box-shadow: 0 0 30px rgba(14,32,56,0.2); } }
+    .country-flag { width: 24px; height: 16px; object-fit: cover; border-radius: 2px; }
+    .currency-badge { background: linear-gradient(135deg, #fbbf24, #f59e0b); }
+    .loading-shimmer { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
+    @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+    /* Enhanced Responsive Design */
+    @media (max-width: 640px) { 
+      .hide-mobile { display: none; }
+      .text-5xl { font-size: 2.5rem !important; }
+      .text-7xl { font-size: 3rem !important; }
+      .py-16 { padding-top: 3rem !important; padding-bottom: 3rem !important; }
+      .py-24 { padding-top: 4rem !important; padding-bottom: 4rem !important; }
+      .gap-4 { gap: 0.75rem !important; }
+      .px-8 { padding-left: 1rem !important; padding-right: 1rem !important; }
+      .max-w-7xl { padding-left: 1rem; padding-right: 1rem; }
+      .container { padding-left: 1rem; padding-right: 1rem; }
+    }
+    
+    @media (max-width: 768px) {
+      .grid-cols-2 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+      .grid-cols-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .grid-cols-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .grid-cols-6 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .text-2xl { font-size: 1.5rem; }
+      .text-3xl { font-size: 1.875rem; }
+    }
+    
+    @media (min-width: 1024px) {
+      .lg\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .lg\:grid-cols-6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+    }
+    
+    /* WhatsApp Floating Button */
+    .whatsapp-float { 
+      position: fixed; bottom: 20px; right: 20px; z-index: 1000; 
+      background: #25D366; width: 60px; height: 60px; border-radius: 50%; 
+      display: flex; align-items: center; justify-content: center; 
+      box-shadow: 0 4px 16px rgba(37, 211, 102, 0.3); 
+      transition: all 0.3s ease; cursor: pointer; 
+    }
+    .whatsapp-float:hover { 
+      transform: scale(1.1); 
+      box-shadow: 0 6px 24px rgba(37, 211, 102, 0.5); 
+    }
+    
+    /* Share Button Animation */
+    .share-btn {
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .share-btn::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: rgba(59, 130, 246, 0.3);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      transition: width 0.3s, height 0.3s;
+    }
+    
+    .share-btn:hover::before {
+      width: 100px;
+      height: 100px;
+    }
+
+    /* Dynamic Floating Messages */
+    .floating-message {
+      position: fixed;
+      bottom: 100px;
+      right: 80px;
+      background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+      color: white;
+      padding: 12px 16px;
+      border-radius: 20px 20px 4px 20px;
+      box-shadow: 0 4px 20px rgba(37, 211, 102, 0.3);
+      font-size: 14px;
+      font-weight: 500;
+      max-width: 280px;
+      z-index: 999;
+      opacity: 0;
+      transform: translateX(100px) scale(0.8);
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      cursor: pointer;
+      line-height: 1.4;
+    }
+
+    .floating-message.show {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+      animation: messageEntrance 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes messageEntrance {
+      0% {
+        opacity: 0;
+        transform: translateX(100px) scale(0.8) rotate(5deg);
+      }
+      60% {
+        opacity: 1;
+        transform: translateX(-10px) scale(1.05) rotate(-1deg);
+      }
+      100% {
+        opacity: 1;
+        transform: translateX(0) scale(1) rotate(0deg);
+      }
+    }
+
+    .floating-message.hide {
+      opacity: 0;
+      transform: translateX(100px) scale(0.8);
+    }
+
+    .floating-message::before {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      right: 20px;
+      width: 0;
+      height: 0;
+      border-left: 8px solid transparent;
+      border-right: 8px solid transparent;
+      border-top: 8px solid #25d366;
+      transform: rotate(45deg);
+    }
+
+    .floating-message:hover {
+      transform: translateX(-5px) scale(1.02);
+      box-shadow: 0 6px 25px rgba(37, 211, 102, 0.4);
+    }
+
+    /* Message close button */
+    .message-close {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      width: 20px;
+      height: 20px;
+      background: #ff4444;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .message-close:hover {
+      background: #cc0000;
+      transform: scale(1.1);
+    }
+
+    /* Pulsing dot indicator */
+    .message-indicator {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      width: 12px;
+      height: 12px;
+      background: #ff4444;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+        opacity: 1;
+      }
+      50% {
+        transform: scale(1.3);
+        opacity: 0.7;
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    /* Mobile responsive */
+    @media (max-width: 768px) {
+      .floating-message {
+        bottom: 80px;
+        right: 10px;
+        left: 10px;
+        max-width: calc(100vw - 20px);
+        font-size: 13px;
+        padding: 10px 14px;
+      }
+      
+      .floating-message::before {
+        right: 30px;
+      }
+    }
+    
+    @media (max-width: 640px) {
+      .whatsapp-float { width: 50px; height: 50px; bottom: 15px; right: 15px; }
+    }
+    
+    .contact-modal {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5); z-index: 2000; display: none;
+      align-items: center; justify-content: center; padding: 1rem;
+    }
+    .contact-modal-content {
+      background: white; padding: 2rem; border-radius: 1rem;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2); max-width: 400px; width: 100%;
+      max-height: 90vh; overflow-y: auto;
+    }
+    
+    @media (max-width: 640px) {
+      .contact-modal-content { padding: 1.5rem; }
+      #share-modal .bg-white { max-width: 95vw !important; margin: 1rem; }
+      #share-modal .p-6 { padding: 1rem !important; }
+      #share-modal .space-y-3 > button { padding: 0.75rem !important; font-size: 0.875rem; }
+    }
+    
+    /* Categories Sidebar Styles */
+    .categories-sidebar {
+      position: fixed;
+      top: 0;
+      left: -350px;
+      width: 350px;
+      height: 100vh;
+      background: white;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+      z-index: 2000;
+      transition: left 0.3s ease-in-out;
+      overflow-y: auto;
+    }
+    
+    .categories-sidebar.open {
+      left: 0;
+    }
+    
+    .categories-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 1999;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+    }
+    
+    .categories-overlay.show {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .category-toggle {
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    }
+    
+    .category-toggle::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: left 0.5s;
+    }
+    
+    .category-toggle:hover::before {
+      left: 100%;
+    }
+    
+    .category-item-sidebar {
+      display: flex;
+      align-items: center;
+      padding: 1rem;
+      border-bottom: 1px solid #f3f4f6;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      position: relative;
+    }
+    
+    .category-item-sidebar:hover {
+      background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+      transform: translateX(8px);
+    }
+    
+    .category-item-sidebar::after {
+      content: '';
+      position: absolute;
+      right: 0;
+      top: 0;
+      height: 100%;
+      width: 4px;
+      background: #3b82f6;
+      transform: scaleY(0);
+      transition: transform 0.2s ease;
+    }
+    
+    .category-item-sidebar:hover::after {
+      transform: scaleY(1);
+    }
+    
+    /* Dynamic Hero Section Styles */
+    .hero-container {
+      position: relative;
+      overflow: hidden;
+      min-height: 600px;
+    }
+    
+    #hero-background-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+    
+    .hero-background-image {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 1;
+    }
+    
+    .hero-background-image {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 1;
+    }
+    
+    .hero-background-video {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 1;
+    }
+    
+    .hero-content-overlay {
+      position: relative;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 600px;
+    }
+    
+    .hero-slideshow {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+    
+    .hero-slide {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      transition: opacity 1s ease-in-out;
+    }
+    
+    .hero-slide.active {
+      opacity: 1;
+    }
+    
+    .hero-slide img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .slideshow-indicators {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+      z-index: 3;
+    }
+    
+    .slide-indicator {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.5);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .slide-indicator.active {
+      background: white;
+      transform: scale(1.2);
+    }
+    
+    /* Mobile responsiveness for sidebar */
+    @media (max-width: 768px) {
+      .categories-sidebar {
+        width: 280px;
+        left: -280px;
+      }
+      
+      .hero-container {
+        min-height: 500px;
+      }
+      
+      .category-item-sidebar {
+        padding: 0.75rem;
+      }
+    }
+    
+    /* Partners and Services Marquee Styles */
+    .marquee-container {
+      width: 100%;
+      height: 140px;
+      position: relative;
+      overflow: hidden;
+      mask: linear-gradient(90deg, transparent, white 20%, white 80%, transparent);
+      -webkit-mask: linear-gradient(90deg, transparent, white 20%, white 80%, transparent);
+    }
+
+    .marquee-content {
+      display: flex;
+      animation-duration: 30s;
+      animation-timing-function: linear;
+      animation-iteration-count: infinite;
+      width: fit-content;
+    }
+
+    .animate-marquee {
+      animation-name: marqueeLeft;
+    }
+
+    .animate-marquee-reverse {
+      animation-name: marqueeRight;
+    }
+
+    @keyframes marqueeLeft {
+      0% { transform: translateX(100%); }
+      100% { transform: translateX(-100%); }
+    }
+
+    @keyframes marqueeRight {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    .partner-card, .service-card {
+      flex: 0 0 auto;
+      width: 280px;
+      height: 120px;
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border: 2px solid transparent;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .partner-card:hover, .service-card:hover {
+      transform: translateY(-4px) scale(1.02);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      border-color: #3b82f6;
+    }
+
+    .partner-card::before, .service-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.1), transparent);
+      transition: left 0.5s;
+    }
+
+    .partner-card:hover::before, .service-card:hover::before {
+      left: 100%;
+    }
+
+    .partner-logo, .service-icon {
+      flex: 0 0 60px;
+      width: 60px;
+      height: 60px;
+      border-radius: 8px;
+      object-fit: cover;
+      background: #f3f4f6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+
+    .partner-info, .service-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .partner-name, .service-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .partner-description, .service-description {
+      font-size: 13px;
+      color: #6b7280;
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .external-link-icon {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      color: #9ca3af;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    .partner-card:hover .external-link-icon,
+    .service-card:hover .external-link-icon {
+      color: #3b82f6;
+      transform: scale(1.2);
+    }
+
+    /* Marquee pause on hover */
+    .marquee-container:hover .marquee-content {
+      animation-play-state: paused;
+    }
+
+    /* Loading animation for cards */
+    .card-loading {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: loading-shimmer 1.5s infinite;
+    }
+
+    @keyframes loading-shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+
+    /* Mobile responsive adjustments */
+    @media (max-width: 640px) {
+      .marquee-container {
+        height: 120px;
+      }
+
+      .partner-card, .service-card {
+        width: 240px;
+        height: 100px;
+        padding: 12px;
+      }
+
+      .partner-logo, .service-icon {
+        width: 50px;
+        height: 50px;
+        flex: 0 0 50px;
+        font-size: 20px;
+      }
+
+      .partner-name, .service-name {
+        font-size: 14px;
+      }
+
+      .partner-description, .service-description {
+        font-size: 12px;
+      }
+    }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-900 min-h-screen flex flex-col">
+  <!-- Header -->
+  <header class="w-full glass shadow-lg border-b border-blue-200 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 py-3 md:py-4">
+      <!-- Mobile Layout -->
+      <div class="flex flex-col lg:hidden space-y-3">
+        <!-- Logo Row -->
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <button id="categories-toggle-mobile" class="category-toggle px-3 py-2 rounded-lg text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-1">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+              </svg>
+              <span class="text-sm">Categories</span>
+            </button>
+            <a href="/" class="flex items-center gap-2 group">
+              <img src="/public/images/logo.png" alt="African Deals Domain Logo" class="h-10 w-10 rounded-xl shadow-lg group-hover:scale-110 transition-transform duration-300" />
+              <span class="font-extrabold text-lg bg-gradient-to-r from-[#0e2038] to-[#23325c] bg-clip-text text-transparent">African Deals Domain</span>
+            </a>
+          </div>
+        </div>
+        
+        <!-- Controls Row -->
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center gap-2 flex-1">
+            <!-- Other Services Link -->
+            <a href="/public/other-services.html" class="px-2 py-1 text-xs rounded font-medium text-[#0e2038] hover:text-[#23325c] hover:underline transition-all duration-300 flex items-center gap-1">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+              </svg>
+              <span>Other Services</span>
+            </a>
+            <!-- Partner & Promote Link -->
+            <a href="/public/partner-promote.html" class="px-2 py-1 text-xs rounded font-medium text-[#0e2038] hover:text-[#23325c] hover:underline transition-all duration-300 flex items-center gap-1">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+              </svg>
+              <span>Partner & Promote</span>
+            </a>
+          </div>
+          
+          <div class="flex items-center gap-1">
+            <a href="/auth/auth-buyer.html" class="px-2 py-1 text-xs rounded font-semibold border border-[#0e2038] text-[#0e2038] bg-white hover:bg-[#0e2038] hover:text-white transition-all duration-300">Sign In</a>
+            <a href="/auth/unified-auth.html" class="px-2 py-1 text-xs rounded font-semibold text-white bg-[#0e2038] hover:bg-[#23325c] transition-all duration-300">Join</a>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Desktop Layout -->
+      <div class="hidden lg:flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <button id="categories-toggle-desktop" class="category-toggle px-4 py-2 rounded-lg text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+            <span>Categories</span>
+          </button>
+          <a href="/" class="flex items-center gap-3 group">
+            <img src="/public/images/logo.png" alt="African Deals Domain Logo" class="h-12 w-12 rounded-xl shadow-lg group-hover:scale-110 transition-transform duration-300" />
+            <span class="font-extrabold text-2xl md:text-3xl bg-gradient-to-r from-[#0e2038] to-[#23325c] bg-clip-text text-transparent">African Deals Domain</span>
+          </a>
+        </div>
+        <div class="flex items-center gap-2 md:gap-4">
+          <!-- Other Services Link -->
+          <a href="/public/other-services.html" class="px-4 py-2 rounded-lg font-medium text-[#0e2038] hover:text-[#23325c] hover:underline transition-all duration-300 flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+            </svg>
+            <span>Other Services We Offer</span>
+          </a>
+          <!-- Partner & Promote Link -->
+          <a href="/public/partner-promote.html" class="px-4 py-2 rounded-lg font-medium text-[#0e2038] hover:text-[#23325c] hover:underline transition-all duration-300 flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+            </svg>
+            <span>Partner & Promote</span>
+          </a>
+          <div class="flex items-center gap-2">
+            <!-- Auth Buttons -->
+            <a href="/auth/auth-buyer.html" class="px-4 py-2 rounded-lg font-semibold border-2 border-[#0e2038] text-[#0e2038] bg-white/90 hover:bg-[#0e2038] hover:text-white transition-all duration-300 shadow-md">Sign In</a>
+            <a href="/auth/unified-auth.html" class="px-4 py-2 rounded-lg font-semibold text-white bg-gradient-to-r from-[#0e2038] to-[#23325c] hover:from-[#23325c] hover:to-[#0e2038] transition-all duration-300 shadow-md pulse-glow">Join Us</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+  
+  <!-- Categories Sidebar -->
+  <div class="categories-sidebar" id="categories-sidebar">
+    <div class="p-6 border-b border-gray-200">
+      <div class="flex items-center justify-between">
+        <h2 class="text-2xl font-bold text-[#0e2038]">Categories</h2>
+        <button id="close-sidebar" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div id="sidebar-categories-list">
+      <!-- Categories will be loaded here -->
+      <div class="p-4 space-y-2">
+        <div class="loading-shimmer h-12 rounded-lg"></div>
+        <div class="loading-shimmer h-12 rounded-lg"></div>
+        <div class="loading-shimmer h-12 rounded-lg"></div>
+        <div class="loading-shimmer h-12 rounded-lg"></div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Categories Overlay -->
+  <div class="categories-overlay" id="categories-overlay"></div>
+  
+  <!-- Dynamic Hero Section -->
+  <section id="hero-section" class="hero-container text-white py-16 md:py-24 px-4 text-center fade-in relative overflow-hidden">
+    <!-- Dynamic Background Elements -->
+    <div id="hero-background-container">
+      <!-- Default gradient background -->
+      <div class="absolute inset-0 brand-gradient"></div>
+      <div class="absolute inset-0 bg-gradient-to-br from-blue-900/20 to-purple-900/20"></div>
+    </div>
+    
+    <!-- Content Overlay -->
+    <div class="hero-content-overlay">
+      <div class="max-w-4xl mx-auto">
+        <div class="mb-8">
+          <span id="hero-badge" class="inline-block px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-sm font-medium mb-4">
+            🚀 Africa's Fastest Growing E-Commerce Platform
+          </span>
+        </div>
+        <h1 id="hero-title" class="text-5xl md:text-7xl font-black mb-6 leading-tight">
+          <span class="bg-gradient-to-r from-yellow-300 to-orange-300 bg-clip-text text-transparent">Discover</span>
+          <br>Amazing Products
+        </h1>
+        <div id="hero-description" class="text-xl md:text-2xl mb-8 leading-relaxed opacity-90">
+          <p>Connect with <span class="font-bold text-yellow-300">trusted African sellers</span> and discover unique products from across the continent.</p>
+          <p class="text-lg opacity-80">Secure payments • Fast delivery • 24/7 support</p>
+        </div>
+        
+        <!-- Dynamic Stats Section -->
+        <div id="hero-stats" class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8 max-w-3xl mx-auto">
+          <div class="text-center">
+            <div id="stats-sellers" class="text-3xl md:text-4xl font-bold text-yellow-300">500+</div>
+            <div class="text-sm opacity-80">Active Sellers</div>
+          </div>
+          <div class="text-center">
+            <div id="stats-products" class="text-3xl md:text-4xl font-bold text-yellow-300">10K+</div>
+            <div class="text-sm opacity-80">Products</div>
+          </div>
+          <div class="text-center">
+            <div id="stats-customers" class="text-3xl md:text-4xl font-bold text-yellow-300">50K+</div>
+            <div class="text-sm opacity-80">Happy Customers</div>
+          </div>
+          <div class="text-center">
+            <div id="stats-countries" class="text-3xl md:text-4xl font-bold text-yellow-300">7</div>
+            <div class="text-sm opacity-80">Countries</div>
+          </div>
+        </div>
+        
+        <!-- Dynamic Action Buttons -->
+        <div id="hero-buttons" class="flex flex-col md:flex-row gap-4 justify-center mt-8">
+          <a id="primary-button" href="#discover" class="group bg-white text-[#0e2038] font-bold px-8 py-4 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2">
+            <span>Explore Products</span>
+            <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+            </svg>
+          </a>
+          <a id="secondary-button" href="/auth/auth-buyer.html" class="bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold px-8 py-4 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2">
+            <span>Join Free Today</span>
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Slideshow Indicators (hidden by default) -->
+    <div id="slideshow-indicators" class="slideshow-indicators" style="display: none;"></div>
+  </section>
+  <!-- Product Discovery Section -->
+  <section id="discover" class="max-w-7xl mx-auto w-full px-4 py-16 md:py-20">
+    <!-- Section Header -->
+    <div class="text-center mb-12 slide-up">
+      <h2 class="text-4xl md:text-5xl font-black mb-4 bg-gradient-to-r from-[#0e2038] to-[#23325c] bg-clip-text text-transparent">
+        Discover Amazing Products
+      </h2>
+      <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+        From electronics to fashion, groceries to home decor - find everything you need from trusted African sellers
+      </p>
+    </div>
+    <!-- Search and Filter Bar -->
+    <div class="bg-white rounded-2xl shadow-xl p-6 mb-8 slide-up">
+      <div class="flex flex-col lg:flex-row gap-4 items-center">
+        <div class="flex-1 relative">
+          <input id="search-bar" type="text" placeholder="🔍 Search for products, brands, or categories..." 
+                 class="w-full px-6 py-4 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50 text-lg" />
+          <div class="absolute right-4 top-1/2 -translate-y-1/2">
+            <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+          </div>
+        </div>
+        <select id="category-filter" class="px-6 py-4 rounded-xl border-2 border-gray-200 text-[#0e2038] font-semibold bg-white shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer">
+          <option value="all">📂 All Categories</option>
+        </select>
+        <select id="sort-filter" class="px-6 py-4 rounded-xl border-2 border-gray-200 text-[#0e2038] font-semibold bg-white shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer">
+          <option value="newest">🆕 Newest First</option>
+          <option value="price-low">💰 Price: Low to High</option>
+          <option value="price-high">💰 Price: High to Low</option>
+          <option value="name">📝 Name: A to Z</option>
+        </select>
+      </div>
+    </div>
+    <!-- Categories Notice -->
+    <div class="mb-12 slide-up">
+      <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-6 text-center border border-blue-100">
+        <div class="flex items-center justify-center gap-3 mb-2">
+          <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+          <h3 class="text-2xl font-bold text-[#0e2038]">Browse Categories</h3>
+        </div>
+        <p class="text-gray-600 mb-4">Explore our wide range of product categories</p>
+        <button onclick="toggleCategoriesSidebar()" class="category-toggle px-6 py-3 rounded-lg text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300">
+          Open Categories Menu
+        </button>
+      </div>
+    </div>
+    <!-- New Products Section -->
+    <div class="slide-up mb-12">
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="text-2xl font-bold text-[#0e2038] flex items-center gap-2">
+          <span class="text-2xl">🆕</span>
+          New Products
+        </h3>
+        <a href="/public/products.html?filter=new" class="text-blue-600 hover:text-blue-800 font-semibold">View All →</a>
+      </div>
+      <div id="new-products" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <!-- New Products will be loaded here -->
+        <div class="loading-shimmer h-80 rounded-2xl"></div>
+        <div class="loading-shimmer h-80 rounded-2xl"></div>
+        <div class="loading-shimmer h-80 rounded-2xl"></div>
+        <div class="loading-shimmer h-80 rounded-2xl"></div>
+      </div>
+    </div>
+
+    <!-- Trending Products Section -->
+    <div class="slide-up mb-12">
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="text-2xl font-bold text-[#0e2038] flex items-center gap-2">
+          <span class="text-2xl">🔥</span>
+          Trending Products
+        </h3>
+        <a href="/public/products.html?filter=trending" class="text-blue-600 hover:text-blue-800 font-semibold">View All →</a>
+      </div>
+      <div id="trending-products" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <!-- Trending Products will be loaded here -->
+        <div class="loading-shimmer h-80 rounded-2xl"></div>
+        <div class="loading-shimmer h-80 rounded-2xl"></div>
+        <div class="loading-shimmer h-80 rounded-2xl"></div>
+        <div class="loading-shimmer h-80 rounded-2xl"></div>
+      </div>
+    </div>
+
+    <!-- Featured Products -->
+    <div class="slide-up">
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="text-2xl font-bold text-[#0e2038] flex items-center gap-2">
+          <span class="text-2xl">⭐</span>
+          Featured Products
+        </h3>
+        <div class="flex items-center gap-4">
+          <span id="product-count" class="text-gray-600">Loading...</span>
+          <button id="load-more-btn" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold hidden" onclick="loadMoreProducts()">
+            Load More
+          </button>
+        </div>
+      </div>
+      <div id="product-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <!-- Products will be loaded here -->
+        <div class="loading-shimmer h-80 rounded-2xl"></div>
+        <div class="loading-shimmer h-80 rounded-2xl"></div>
+        <div class="loading-shimmer h-80 rounded-2xl"></div>
+        <div class="loading-shimmer h-80 rounded-2xl"></div>
+      </div>
+    </div>
+  </section>
+  <!-- Features Section -->
+  <section class="bg-white py-16 md:py-20 px-4">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12">
+        <h2 class="text-4xl md:text-5xl font-black mb-4 bg-gradient-to-r from-[#0e2038] to-[#23325c] bg-clip-text text-transparent">
+          Why Choose African Deals Domain?
+        </h2>
+        <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+          We're building Africa's most trusted e-commerce platform with features designed for African businesses and consumers
+        </p>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div class="text-center p-6 rounded-2xl bg-gradient-to-br from-blue-50 to-purple-50 hover:shadow-lg transition-all duration-300">
+          <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <span class="text-2xl">🛡️</span>
+          </div>
+          <h3 class="text-xl font-bold text-[#0e2038] mb-2">Secure Payments</h3>
+          <p class="text-gray-600">Multiple payment options with escrow protection for safe transactions</p>
+        </div>
+        <div class="text-center p-6 rounded-2xl bg-gradient-to-br from-green-50 to-blue-50 hover:shadow-lg transition-all duration-300">
+          <div class="w-16 h-16 bg-gradient-to-br from-green-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <span class="text-2xl">🚚</span>
+          </div>
+          <h3 class="text-xl font-bold text-[#0e2038] mb-2">Fast Delivery</h3>
+          <p class="text-gray-600">Reliable shipping across 7 African countries with real-time tracking</p>
+        </div>
+        <div class="text-center p-6 rounded-2xl bg-gradient-to-br from-yellow-50 to-orange-50 hover:shadow-lg transition-all duration-300">
+          <div class="w-16 h-16 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <span class="text-2xl">💬</span>
+          </div>
+          <h3 class="text-xl font-bold text-[#0e2038] mb-2">24/7 Support</h3>
+          <p class="text-gray-600">Multi-language customer support in English, French, and local languages</p>
+        </div>
+        <div class="text-center p-6 rounded-2xl bg-gradient-to-br from-purple-50 to-pink-50 hover:shadow-lg transition-all duration-300">
+          <div class="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <span class="text-2xl">🌍</span>
+          </div>
+          <h3 class="text-xl font-bold text-[#0e2038] mb-2">Local Currency</h3>
+          <p class="text-gray-600">Pay in your local currency with real-time exchange rates</p>
+        </div>
+        <div class="text-center p-6 rounded-2xl bg-gradient-to-br from-red-50 to-pink-50 hover:shadow-lg transition-all duration-300">
+          <div class="w-16 h-16 bg-gradient-to-br from-red-500 to-pink-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <span class="text-2xl">✅</span>
+          </div>
+          <h3 class="text-xl font-bold text-[#0e2038] mb-2">Verified Sellers</h3>
+          <p class="text-gray-600">All sellers are verified and rated by our community</p>
+        </div>
+        <div class="text-center p-6 rounded-2xl bg-gradient-to-br from-indigo-50 to-blue-50 hover:shadow-lg transition-all duration-300">
+          <div class="w-16 h-16 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <span class="text-2xl">📱</span>
+          </div>
+          <h3 class="text-xl font-bold text-[#0e2038] mb-2">Mobile First</h3>
+          <p class="text-gray-600">Optimized for mobile devices with seamless shopping experience</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Partners Section -->
+  <section class="bg-gradient-to-r from-blue-50 to-indigo-50 py-12 overflow-hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-8">
+        <h2 class="text-3xl font-bold text-gray-900 mb-4">Our Trusted Partners</h2>
+        <p class="text-gray-600 max-w-2xl mx-auto">Collaborating with industry leaders to bring you the best products and services</p>
+      </div>
+      <div class="relative">
+        <div class="marquee-container overflow-hidden">
+          <div class="marquee-content flex gap-6 animate-marquee" id="partners-marquee">
+            <!-- Partners will be loaded dynamically -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Other Services Section -->
+  <section class="bg-gradient-to-r from-green-50 to-emerald-50 py-12 overflow-hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-8">
+        <h2 class="text-3xl font-bold text-gray-900 mb-4">Other Services We Offer</h2>
+        <p class="text-gray-600 max-w-2xl mx-auto">Discover our comprehensive range of services beyond e-commerce</p>
+      </div>
+      <div class="relative">
+        <div class="marquee-container overflow-hidden">
+          <div class="marquee-content flex gap-6 animate-marquee-reverse" id="services-marquee">
+            <!-- Services will be loaded dynamically -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-white/90 border-t border-gray-200 mt-12 pt-8 pb-4 px-2 md:px-6">
+    <div class="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-sm">
+      <div>
+        <h3 class="font-bold text-gray-800 mb-2 flex items-center gap-1">Support</h3>
+        <ul class="space-y-1">
+          <li><a href="/public/faq.html" class="hover:underline flex items-center gap-1">Help Center & FAQ</a></li>
+          <li><a href="/public/contact.html" class="hover:underline flex items-center gap-1">Contact Us</a></li>
+          <li><a href="/auth/auth-buyer.html" class="hover:underline flex items-center gap-1">Live Chat</a></li>
+          <li><a href="/auth/auth-buyer.html" class="hover:underline flex items-center gap-1">Check Order Status</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="font-bold text-gray-800 mb-2 flex items-center gap-1">Business</h3>
+        <ul class="space-y-1">
+          <li><a href="/auth/auth-seller.html" class="hover:underline flex items-center gap-1">Start Selling</a></li>
+          <li><a href="/auth/auth-agent.html" class="hover:underline flex items-center gap-1">Become a Verified agent</a></li>
+
+          <li><a href="/auth/auth-seller.html" class="hover:underline flex items-center gap-1">Become a Verified Supplier</a></li>
+          <li><a href="/public/how-it-works.html" class="hover:underline flex items-center gap-1">How It Works</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="font-bold text-gray-800 mb-2 flex items-center gap-1">Legal & Policies</h3>
+        <ul class="space-y-1">
+          <li><a href="/public/privacy-policy.html" class="hover:underline flex items-center gap-1">Privacy Policy</a></li>
+          <li><a href="/public/terms-and-conditions.html" class="hover:underline flex items-center gap-1">Terms & Conditions</a></li>
+          <li><a href="/public/shipping-policy.html" class="hover:underline flex items-center gap-1">Shipping Policy</a></li>
+          <li><a href="/public/returns-policy.html" class="hover:underline flex items-center gap-1">Returns Policy</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="font-bold text-gray-800 mb-2 flex items-center gap-1">About & Connect</h3>
+        <ul class="space-y-1">
+          <li><a href="/public/about.html" class="hover:underline flex items-center gap-1">About Us</a></li>
+          <li><a href="/public/contact.html" class="hover:underline flex items-center gap-1">Contact</a></li>
+          <li><span class="flex items-center gap-1">Rwanda</span></li>
+          <li><span class="flex items-center gap-1">Kigali</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="text-center text-xs text-gray-500 mt-4">&copy; 2025 African Deals Domain. All rights reserved.</div>
+  </footer>
+  <script>
+    // --- GLOBAL STATE ---
+    let currentCurrency = 'RWF';
+    let currencyRates = {
+      USD: 1,
+      RWF: 1200,
+      EUR: 0.85,
+      KES: 100,
+      NGN: 400
+    };
+    let currentDeliveryCountry = 'Rwanda';
+    let products = [];
+    let categories = [];
+    let currentPage = 1;
+    let hasMoreProducts = true;
+    let currentFilters = {
+      search: '',
+      category_id: null,
+      sort: 'newest'
+    };
+    // --- CURRENCY CONVERSION ---
+    async function fetchCurrencyRates() {
+      try {
+        const response = await fetch('https://v6.exchangerate-api.com/v6/c5f524e323378439dad2a43f/latest/USD');
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch currency rates: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        if (data && data.conversion_rates) {
+          currencyRates = data.conversion_rates;
+        } else {
+          throw new Error('Invalid currency data');
+        }
+        updateCurrencyDisplay();
+      } catch (error) {
+        console.error('Error fetching currency rates:', error);
+        // Fallback rates
+        currencyRates = {
+          RWF: 1200,
+          USD: 1,
+          EUR: 0.85,
+          KES: 100,
+          NGN: 400
+        };
+        updateCurrencyDisplay();
+      }
+    }
+    function updateCurrencyDisplay() {
+      const rateElement = document.getElementById('currency-rate');
+      if (rateElement && currencyRates[currentCurrency]) {
+        const usdRate = currencyRates[currentCurrency];
+        rateElement.textContent = `1 USD = ${usdRate.toFixed(2)} ${currentCurrency}`;
+      }
+    }
+    function convertPrice(price, fromCurrency = 'USD', toCurrency = currentCurrency) {
+      // Ensure price is a number
+      const numericPrice = parseFloat(price);
+      if (isNaN(numericPrice)) {
+        console.warn('Invalid price value:', price);
+        return 0;
+      }
+      // If currencies are the same, return the price as is
+      if (fromCurrency === toCurrency) return numericPrice;
+      // If currency rates are not available, return the original price
+      if (!currencyRates[fromCurrency] || !currencyRates[toCurrency]) {
+        console.warn('Currency rates not available for:', fromCurrency, 'or', toCurrency);
+        return numericPrice;
+      }
+      // Convert through USD
+      const usdAmount = numericPrice / currencyRates[fromCurrency];
+      return usdAmount * currencyRates[toCurrency];
+    }
+    // --- CURRENCY SWITCHER ---
+    // Note: Currency switcher elements removed in favor of new navigation links
+    // Currency functionality still available for internal operations
+    
+    // --- DELIVERY COUNTRY PICKER ---
+    // Note: Delivery picker elements removed in favor of new navigation links
+    // Delivery functionality still available for internal operations
+    // --- FETCH CATEGORIES ---
+    async function fetchCategories() {
+      try {
+        const response = await fetch('/api/categories/active');
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch categories: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        if (data && data.success) {
+          categories = data.categories;
+          renderCategories();
+          populateCategoryFilter();
+        }
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+        showNotification(error.message || 'Failed to load categories', 'error');
+      }
+    }
+    function renderCategories() {
+      // Check if product-categories container exists (legacy support)
+      const container = document.getElementById('product-categories');
+      if (!container) {
+        // If no main categories container, categories are handled by sidebar only
+        console.log('Categories displayed in sidebar only');
+        return;
+      }
+      
+      container.innerHTML = '';
+      categories.forEach(category => {
+        const card = document.createElement('div');
+        card.className = 'category-card bg-white rounded-2xl shadow-lg p-6 flex flex-col items-center border-2 border-gray-100 transition-all cursor-pointer hover:border-blue-300';
+        card.onclick = () => filterByCategory(category.id);
+        card.innerHTML = `
+          <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mb-4">
+            <span class="text-2xl">${getCategoryIcon(category.name)}</span>
+          </div>
+          <span class="font-bold text-lg mb-2 text-[#0e2038]">${category.name}</span>
+          <span class="text-sm text-gray-500 text-center">${category.product_count || 0} products</span>
+        `;
+        container.appendChild(card);
+      });
+    }
+    function getCategoryIcon(categoryName) {
+      const icons = {
+        'Electronics': '📱',
+        'Fashion': '👗',
+        'Groceries': '🛒',
+        'Home & Living': '🏠',
+        'Beauty': '💄',
+        'Sports': '⚽',
+        'Books': '📚',
+        'Automotive': '🚗',
+        'Health': '💊',
+        'Toys': '🧸'
+      };
+      return icons[categoryName] || '📦';
+    }
+    function populateCategoryFilter() {
+      const filter = document.getElementById('category-filter');
+      filter.innerHTML = '<option value="all">📂 All Categories</option>';
+      categories.forEach(category => {
+        const option = document.createElement('option');
+        option.value = category.id;
+        option.textContent = `${getCategoryIcon(category.name)} ${category.name}`;
+        filter.appendChild(option);
+      });
+    }
+    // --- FETCH PRODUCTS ---
+    async function fetchProducts(resetPage = true) {
+      try {
+        if (resetPage) {
+          currentPage = 1;
+          hasMoreProducts = true;
+        }
+        const params = new URLSearchParams({
+          page: currentPage,
+          limit: 8,
+          sort: currentFilters.sort
+        });
+        if (currentFilters.category_id) {
+          params.append('category_id', currentFilters.category_id);
+        }
+        if (currentFilters.search) {
+          params.append('search', currentFilters.search);
+        }
+        const loadingIndicator = showLoadingSpinner();
+        
+        const response = await fetch(`/api/products?${params}`);
+        
+        if (!response.ok) {
+          hideLoadingSpinner(loadingIndicator);
+          let errorMessage = 'Request failed';
+          try {
+            const errorData = await response.json();
+            errorMessage = errorData.message || errorData.error || `HTTP ${response.status}: ${response.statusText}`;
+          } catch (e) {
+            errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+          }
+          throw new Error(errorMessage);
+        }
+        
+        hideLoadingSpinner(loadingIndicator);
+        const data = await response.json();
+        if (data.success) {
+          if (resetPage) {
+            products = data.products;
+          } else {
+            products = [...products, ...data.products];
+          }
+          hasMoreProducts = data.products.length === 8;
+          renderProducts();
+          updateProductCount();
+          updateLoadMoreButton();
+        }
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        showNotification(error.message || 'Failed to load products', 'error');
+        showError('Failed to load products');
+      }
+    }
+    function renderProducts() {
+      const container = document.getElementById('product-list');
+      if (products.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-full text-center py-16">
+            <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+              </svg>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">No products found</h3>
+            <p class="text-gray-600 mb-6">Try adjusting your search or browse all categories</p>
+            <button onclick="clearFilters()" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+              Browse All Products
+            </button>
+          </div>
+        `;
+        return;
+      }
+      container.innerHTML = products.map(product => {
+        // Ensure product has valid data
+        const safePrice = product.discount_price || product.price || 0;
+        const safeCurrency = product.currency || 'USD';
+        const convertedPrice = convertPrice(safePrice, safeCurrency, currentCurrency) || 0;
+        const originalPrice = product.discount_price ? (convertPrice(product.price, safeCurrency, currentCurrency) || 0) : 0;
+        return `
+        <div class="product-card bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 transition-all duration-300 group">
+          <div class="relative">
+            <img src="${product.main_image ? `/uploads/${product.main_image}` : '/public/images/logo.png'}" 
+                 alt="${product.name}" 
+                 class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                 onerror="this.src='/public/images/logo.png'">
+            ${product.discount_price ? `
+              <div class="absolute top-3 right-3 bg-red-500 text-white text-xs px-2 py-1 rounded-full font-bold">
+                ${Math.round(((product.price - product.discount_price) / product.price) * 100)}% OFF
+              </div>
+            ` : ''}
+            <div class="absolute top-3 left-3">
+              <span class="bg-white/90 backdrop-blur-sm text-xs px-2 py-1 rounded-full font-semibold text-gray-700">
+                ${product.category_name || 'Uncategorized'}
+              </span>
+            </div>
+          </div>
+          <div class="p-6">
+            <h3 class="font-bold text-lg mb-2 text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors">
+              ${product.name}
+            </h3>
+            <p class="text-sm text-gray-600 mb-4 line-clamp-2">
+              ${product.description || 'No description available'}
+            </p>
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center gap-2">
+                <span class="text-2xl font-bold text-[#0e2038]">
+                  ${currentCurrency} ${convertedPrice.toFixed(2)}
+                </span>
+                ${product.discount_price ? `
+                  <span class="text-sm text-gray-500 line-through">
+                    ${currentCurrency} ${originalPrice.toFixed(2)}
+                  </span>
+                ` : ''}
+              </div>
+              <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                MOQ: ${product.moq || 1}
+              </span>
+            </div>
+            <div class="flex items-center justify-between text-xs text-gray-500 mb-4">
+              <span>Stock: ${product.stock || 0}</span>
+              <span>${product.seller_name || 'Verified Seller'}</span>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="viewProduct(${product.id})" 
+                      class="flex-1 bg-gradient-to-r from-[#0e2038] to-[#23325c] text-white py-3 rounded-xl hover:from-[#23325c] hover:to-[#0e2038] transition-all duration-300 font-semibold group-hover:scale-105">
+                View Details
+              </button>
+              <button onclick="contactSeller(${product.seller_id})" 
+                      class="px-4 py-3 border-2 border-gray-300 rounded-xl hover:border-blue-500 hover:text-blue-600 transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+      }).join('');
+    }
+    // --- FILTER FUNCTIONS ---
+    function filterByCategory(categoryId) {
+      currentFilters.category_id = categoryId;
+      document.getElementById('category-filter').value = categoryId;
+      fetchProducts(true);
+    }
+    function clearFilters() {
+      currentFilters = {
+        search: '',
+        category_id: null,
+        sort: 'newest'
+      };
+      document.getElementById('search-bar').value = '';
+      document.getElementById('category-filter').value = 'all';
+      document.getElementById('sort-filter').value = 'newest';
+      fetchProducts(true);
+    }
+    function updateProductCount() {
+      document.getElementById('product-count').textContent = `Showing ${products.length} products`;
+    }
+    function updateLoadMoreButton() {
+      const loadMoreBtn = document.getElementById('load-more-btn');
+      if (hasMoreProducts) {
+        loadMoreBtn.classList.remove('hidden');
+        loadMoreBtn.onclick = () => {
+          currentPage++;
+          fetchProducts(false);
+        };
+      } else {
+        loadMoreBtn.classList.add('hidden');
+      }
+    }
+    function showError(message, containerId = 'product-list') {
+      const container = document.getElementById(containerId);
+      container.innerHTML = `
+        <div class="col-span-full text-center py-16">
+          <div class="w-24 h-24 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-12 h-12 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <h3 class="text-xl font-semibold text-gray-900 mb-2">Oops! Something went wrong</h3>
+          <p class="text-gray-600 mb-6">${message}</p>
+          <button onclick="location.reload()" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+            Try Again
+          </button>
+        </div>
+      `;
+    }
+
+    // --- FETCH NEW PRODUCTS ---
+    async function fetchNewProducts() {
+      try {
+        const response = await fetch('/api/products?sort=newest&limit=4');
+        if (!response.ok) throw new Error('Failed to fetch new products');
+        
+        const data = await response.json();
+        if (data.success && data.products.length > 0) {
+          renderProductsToContainer(data.products, 'new-products');
+        } else {
+          document.getElementById('new-products').innerHTML = '<div class="col-span-full text-center py-8 text-gray-500">No new products available</div>';
+        }
+      } catch (error) {
+        console.error('Error fetching new products:', error);
+        showError('Failed to load new products', 'new-products');
+      }
+    }
+
+    // --- FETCH TRENDING PRODUCTS ---
+    async function fetchTrendingProducts() {
+      try {
+        const response = await fetch('/api/products?sort=trending&limit=4');
+        if (!response.ok) throw new Error('Failed to fetch trending products');
+        
+        const data = await response.json();
+        if (data.success && data.products.length > 0) {
+          renderProductsToContainer(data.products, 'trending-products');
+        } else {
+          document.getElementById('trending-products').innerHTML = '<div class="col-span-full text-center py-8 text-gray-500">No trending products available</div>';
+        }
+      } catch (error) {
+        console.error('Error fetching trending products:', error);
+        showError('Failed to load trending products', 'trending-products');
+      }
+    }
+
+    // --- RENDER PRODUCTS TO SPECIFIC CONTAINER ---
+    function renderProductsToContainer(products, containerId) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+
+      container.innerHTML = products.map(product => {
+        const safePrice = product.discount_price || product.price || 0;
+        const safeCurrency = product.currency || 'USD';
+        const convertedPrice = convertPrice(safePrice, safeCurrency, currentCurrency) || 0;
+        const originalPrice = product.discount_price ? (convertPrice(product.price, safeCurrency, currentCurrency) || 0) : 0;
+        
+        return `
+        <div class="product-card bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 transition-all duration-300 group">
+          <div class="relative">
+            <img src="${product.main_image ? `/uploads/${product.main_image}` : '/public/images/logo.png'}" 
+                 alt="${product.name}" 
+                 class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                 onerror="this.src='/public/images/logo.png'">
+            ${product.discount_price ? `
+              <div class="absolute top-3 right-3 bg-red-500 text-white text-xs px-2 py-1 rounded-full font-bold">
+                ${Math.round(((product.price - product.discount_price) / product.price) * 100)}% OFF
+              </div>
+            ` : ''}
+            <div class="absolute top-3 left-3">
+              <span class="bg-white/90 backdrop-blur-sm text-xs px-2 py-1 rounded-full font-semibold text-gray-700">
+                ${product.category_name || 'Uncategorized'}
+              </span>
+            </div>
+          </div>
+          <div class="p-6">
+            <h3 class="font-bold text-lg mb-2 text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors">
+              ${product.name}
+            </h3>
+            <p class="text-sm text-gray-600 mb-4 line-clamp-2">
+              ${product.description || 'No description available'}
+            </p>
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center gap-2">
+                <span class="text-2xl font-bold text-[#0e2038]">
+                  ${currentCurrency} ${convertedPrice.toFixed(2)}
+                </span>
+                ${product.discount_price ? `
+                  <span class="text-sm text-gray-500 line-through">
+                    ${currentCurrency} ${originalPrice.toFixed(2)}
+                  </span>
+                ` : ''}
+              </div>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="viewProduct(${product.id})" class="flex-1 bg-[#0e2038] text-white py-3 px-4 rounded-xl font-semibold hover:bg-[#23325c] transition-all duration-300">
+                View Details
+              </button>
+              <button onclick="shareProduct(${product.id})" class="share-btn px-4 py-3 border-2 border-blue-300 text-blue-600 rounded-xl hover:border-blue-500 hover:text-blue-700 transition-all duration-300" title="Share Product">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"></path>
+                </svg>
+              </button>
+              <button onclick="contactSeller(${product.seller_id || product.user_id})" class="px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:border-[#0e2038] hover:text-[#0e2038] transition-all duration-300">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+        `;
+      }).join('');
+    }
+    // --- LOADING SPINNER FUNCTIONS ---
+    function showLoadingSpinner() {
+      const spinner = document.createElement('div');
+      spinner.id = 'loading-spinner';
+      spinner.className = 'fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50';
+      spinner.innerHTML = `
+        <div class="bg-white rounded-lg shadow-lg p-6 flex items-center gap-3">
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <span class="text-gray-700 font-medium">Loading...</span>
+        </div>
+      `;
+      document.body.appendChild(spinner);
+      return spinner;
+    }
+
+    function hideLoadingSpinner(spinner) {
+      if (spinner && spinner.parentNode) {
+        spinner.parentNode.removeChild(spinner);
+      }
+    }
+
+    // --- NOTIFICATION FUNCTIONS ---
+    function showNotification(message, type = 'info') {
+      const notification = document.createElement('div');
+      notification.className = `fixed top-4 right-4 z-50 max-w-sm p-4 rounded-lg shadow-lg transition-all duration-300 ${
+        type === 'error' ? 'bg-red-500 text-white' : 
+        type === 'success' ? 'bg-green-500 text-white' : 
+        'bg-blue-500 text-white'
+      }`;
+      notification.innerHTML = `
+        <div class="flex items-center gap-2">
+          <span>${message}</span>
+          <button onclick="this.parentElement.parentElement.remove()" class="ml-2 text-white hover:text-gray-200">×</button>
+        </div>
+      `;
+      document.body.appendChild(notification);
+      
+      // Auto remove after 5 seconds
+      setTimeout(() => {
+        if (notification.parentNode) {
+          notification.remove();
+        }
+      }, 5000);
+    }
+
+    function showError(message) {
+      showNotification(message, 'error');
+    }
+
+    // --- LOAD MORE PRODUCTS ---
+    function loadMoreProducts() {
+      currentPage++;
+      fetchProducts(false);
+    }
+    
+    // --- UTILITY FUNCTIONS ---
+    function viewProduct(productId) {
+      window.location.href = `/public/product-detail.html?id=${productId}`;
+    }
+    function contactSeller(sellerId) {
+      // Show contact modal for public users
+      openContactModal();
+    }
+
+    function openContactModal() {
+      const modal = document.getElementById('contact-modal');
+      if (modal) {
+        modal.style.display = 'flex';
+      }
+    }
+
+    function closeContactModal() {
+      const modal = document.getElementById('contact-modal');
+      if (modal) {
+        modal.style.display = 'none';
+      }
+    }
+
+    function openWhatsApp() {
+      const message = encodeURIComponent("Hello! I'm interested in your products on African Deals Domain. Can you help me?");
+      const whatsappUrl = `https://wa.me/250788910639?text=${message}`;
+      window.open(whatsappUrl, '_blank');
+      closeContactModal();
+    }
+
+    function callSeller() {
+      window.open('tel:+250788910639', '_self');
+      closeContactModal();
+    }
+
+    // --- SHARE PRODUCT FUNCTIONALITY ---
+    function shareProduct(productId) {
+      const product = products.find(p => p.id == productId);
+      if (!product) {
+        showNotification('Product not found', 'error');
+        return;
+      }
+
+      // Show share options modal
+      showShareModal(product);
+    }
+
+    function showShareModal(product) {
+      const modal = document.createElement('div');
+      modal.id = 'share-modal';
+      modal.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4';
+      
+      const convertedPrice = convertPrice(product.price, 'RWF', currentCurrency);
+      const productUrl = `${window.location.origin}/public/product-detail.html?id=${product.id}`;
+      const imageUrl = product.image_url ? `${window.location.origin}${product.image_url}` : '';
+      
+      modal.innerHTML = `
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-90vh overflow-y-auto">
+          <div class="p-6">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-xl font-bold text-gray-900">Share Product</h3>
+              <button onclick="closeShareModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
+            </div>
+            
+            <div class="mb-6">
+              <div class="flex items-center gap-3 mb-3">
+                ${imageUrl ? `<img src="${imageUrl}" alt="${product.name}" class="w-16 h-16 rounded-lg object-cover">` : ''}
+                <div>
+                  <h4 class="font-semibold text-gray-900">${product.name}</h4>
+                  <p class="text-lg font-bold text-[#0e2038]">${currentCurrency} ${convertedPrice.toFixed(2)}</p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="space-y-3">
+              <button onclick="shareToWhatsApp('${product.id}')" class="w-full flex items-center gap-3 p-4 bg-green-500 text-white rounded-xl hover:bg-green-600 transition-all duration-300">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.309"/>
+                </svg>
+                <span class="font-semibold">Share on WhatsApp</span>
+              </button>
+              
+              <button onclick="shareToFacebook('${product.id}')" class="w-full flex items-center gap-3 p-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all duration-300">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                </svg>
+                <span class="font-semibold">Share on Facebook</span>
+              </button>
+              
+              <button onclick="shareToTwitter('${product.id}')" class="w-full flex items-center gap-3 p-4 bg-blue-400 text-white rounded-xl hover:bg-blue-500 transition-all duration-300">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+                </svg>
+                <span class="font-semibold">Share on Twitter</span>
+              </button>
+              
+              <button onclick="copyProductLink('${product.id}')" class="w-full flex items-center gap-3 p-4 bg-gray-600 text-white rounded-xl hover:bg-gray-700 transition-all duration-300">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                </svg>
+                <span class="font-semibold">Copy Link</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(modal);
+      
+      // Close on click outside
+      modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+          closeShareModal();
+        }
+      });
+    }
+
+    function closeShareModal() {
+      const modal = document.getElementById('share-modal');
+      if (modal) {
+        modal.remove();
+      }
+    }
+
+    function shareToWhatsApp(productId) {
+      const product = products.find(p => p.id == productId);
+      if (!product) return;
+      
+      const convertedPrice = convertPrice(product.price, 'RWF', currentCurrency);
+      const productUrl = `${window.location.origin}/public/product-detail.html?id=${product.id}`;
+      
+      const message = `🛍️ *${product.name}*
+
+📝 ${product.description || 'Check out this amazing product!'}
+
+💰 *Price:* ${currentCurrency} ${convertedPrice.toFixed(2)}
+🏷️ *Category:* ${product.category_name || 'General'}
+
+🌍 Available on African Deals Domain - Africa's Premier E-Commerce Platform
+
+🔗 View Details: ${productUrl}
+
+#AfricanDeals #Shopping #${product.category_name?.replace(/\s+/g, '') || 'Products'}`;
+
+      const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+      window.open(whatsappUrl, '_blank');
+      closeShareModal();
+    }
+
+    function shareToFacebook(productId) {
+      const product = products.find(p => p.id == productId);
+      if (!product) return;
+      
+      const productUrl = `${window.location.origin}/public/product-detail.html?id=${product.id}`;
+      const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(productUrl)}`;
+      
+      window.open(facebookUrl, '_blank', 'width=600,height=400');
+      closeShareModal();
+    }
+
+    function shareToTwitter(productId) {
+      const product = products.find(p => p.id == productId);
+      if (!product) return;
+      
+      const convertedPrice = convertPrice(product.price, 'RWF', currentCurrency);
+      const productUrl = `${window.location.origin}/public/product-detail.html?id=${product.id}`;
+      
+      const text = `Check out "${product.name}" for ${currentCurrency} ${convertedPrice.toFixed(2)} on African Deals Domain! ${productUrl} #AfricanDeals #Shopping`;
+      const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+      
+      window.open(twitterUrl, '_blank', 'width=600,height=400');
+      closeShareModal();
+    }
+
+    function copyProductLink(productId) {
+      const productUrl = `${window.location.origin}/public/product-detail.html?id=${productId}`;
+      
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(productUrl).then(() => {
+          showNotification('Product link copied to clipboard!', 'success');
+          closeShareModal();
+        }).catch(() => {
+          fallbackCopyTextToClipboard(productUrl);
+        });
+      } else {
+        fallbackCopyTextToClipboard(productUrl);
+      }
+    }
+
+    function fallbackCopyTextToClipboard(text) {
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.style.top = "0";
+      textArea.style.left = "0";
+      textArea.style.position = "fixed";
+
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+
+      try {
+        const successful = document.execCommand('copy');
+        if (successful) {
+          showNotification('Product link copied to clipboard!', 'success');
+        } else {
+          showNotification('Failed to copy link', 'error');
+        }
+      } catch (err) {
+        showNotification('Failed to copy link', 'error');
+      }
+
+      document.body.removeChild(textArea);
+      closeShareModal();
+    }
+
+    // --- DYNAMIC FLOATING MESSAGES FUNCTIONALITY ---
+    let currentMessageIndex = 0;
+    let messageTimer;
+    let isMessageVisible = false;
+    let messageTimeoutId;
+
+    const welcomeMessages = [
+      {
+        text: "👋 Hi there! Welcome to African Deals Domain!",
+        icon: "👋"
+      },
+      {
+        text: "🛍️ Looking for something specific? I'm here to help!",
+        icon: "🛍️"
+      },
+      {
+        text: "💬 Need assistance with your shopping? Chat with us!",
+        icon: "💬"
+      },
+      {
+        text: "🎯 Found the perfect deal? Let me know if you need help!",
+        icon: "🎯"
+      },
+      {
+        text: "📞 Have questions? Click here for instant support!",
+        icon: "📞"
+      },
+      {
+        text: "✨ Explore thousands of products from African sellers!",
+        icon: "✨"
+      },
+      {
+        text: "🚀 Fast delivery and great prices await you!",
+        icon: "🚀"
+      },
+      {
+        text: "💝 Special deals just for you! Ask me about them!",
+        icon: "💝"
+      }
+    ];
+
+    function createFloatingMessage(message) {
+      const container = document.getElementById('floating-messages-container');
+      const messageDiv = document.createElement('div');
+      messageDiv.className = 'floating-message';
+      messageDiv.innerHTML = `
+        <div class="message-close" onclick="hideFloatingMessage()">&times;</div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 16px;">${message.icon}</span>
+          <span>${message.text}</span>
+        </div>
+      `;
+
+      // Add click handler to open contact modal
+      messageDiv.addEventListener('click', function(e) {
+        if (!e.target.classList.contains('message-close')) {
+          hideFloatingMessage();
+          openContactModal();
+        }
+      });
+
+      container.appendChild(messageDiv);
+
+      // Show with animation
+      setTimeout(() => {
+        messageDiv.classList.add('show');
+        isMessageVisible = true;
+      }, 100);
+
+      return messageDiv;
+    }
+
+    function showNextMessage() {
+      if (isMessageVisible) return; // Don't show new message if one is already visible
+      if (!isUserActive) return; // Don't show messages when user is inactive
+
+      const message = welcomeMessages[currentMessageIndex];
+      const messageElement = createFloatingMessage(message);
+
+      // Show message indicator when message appears
+      showMessageIndicator();
+
+      // Auto hide after 6 seconds (increased from 5 for better readability)
+      messageTimeoutId = setTimeout(() => {
+        if (messageElement && messageElement.parentNode) {
+          hideFloatingMessage();
+        }
+      }, 6000);
+
+      currentMessageIndex = (currentMessageIndex + 1) % welcomeMessages.length;
+    }
+
+    function hideFloatingMessage() {
+      const container = document.getElementById('floating-messages-container');
+      const activeMessage = container.querySelector('.floating-message.show');
+      
+      if (activeMessage) {
+        activeMessage.classList.remove('show');
+        activeMessage.classList.add('hide');
+        
+        setTimeout(() => {
+          if (activeMessage.parentNode) {
+            activeMessage.parentNode.removeChild(activeMessage);
+          }
+          isMessageVisible = false;
+        }, 400);
+
+        // Clear timeout if message is manually closed
+        if (messageTimeoutId) {
+          clearTimeout(messageTimeoutId);
+          messageTimeoutId = null;
+        }
+      }
+    }
+
+    function hideMessageIndicator() {
+      const indicator = document.getElementById('message-indicator');
+      if (indicator) {
+        indicator.style.display = 'none';
+      }
+    }
+
+    function showMessageIndicator() {
+      const indicator = document.getElementById('message-indicator');
+      if (indicator) {
+        indicator.style.display = 'block';
+      }
+    }
+
+    function startFloatingMessages() {
+      // Show first message after 3 seconds
+      setTimeout(() => {
+        showNextMessage();
+      }, 3000);
+
+      // Then show messages every 10 seconds (increased for better UX)
+      messageTimer = setInterval(() => {
+        showNextMessage();
+      }, 10000);
+    }
+
+    function stopFloatingMessages() {
+      if (messageTimer) {
+        clearInterval(messageTimer);
+        messageTimer = null;
+      }
+      hideFloatingMessage();
+    }
+
+    // Pause messages when user is inactive
+    let userInactiveTimer;
+    let isUserActive = true;
+
+    function resetUserActivity() {
+      isUserActive = true;
+      clearTimeout(userInactiveTimer);
+      
+      userInactiveTimer = setTimeout(() => {
+        isUserActive = false;
+      }, 30000); // 30 seconds of inactivity
+    }
+
+    // Track user activity
+    document.addEventListener('mousemove', resetUserActivity);
+    document.addEventListener('keydown', resetUserActivity);
+    document.addEventListener('scroll', resetUserActivity);
+    document.addEventListener('click', resetUserActivity);
+
+    // Enhanced WhatsApp button functionality
+    function enhancedOpenContactModal() {
+      hideFloatingMessage();
+      hideMessageIndicator();
+      openContactModal();
+    }
+
+    // --- EVENT LISTENERS ---
+    document.addEventListener('DOMContentLoaded', function() {
+      // Note: Currency and delivery selectors removed, keeping functionality for internal use
+      
+      // Set default values from localStorage or defaults
+      const savedCountry = localStorage.getItem('deliveryCountry') || 'Rwanda';
+      const savedFlag = localStorage.getItem('deliveryFlag') || '🇷🇼';
+      currentDeliveryCountry = savedCountry;
+      // Initialize
+      async function initialize() {
+        await fetchCurrencyRates();
+        fetchCategories();
+        fetchProducts();
+        fetchNewProducts();
+        fetchTrendingProducts();
+      }
+      initialize();
+      
+      // Start floating messages after page is fully loaded
+      startFloatingMessages();
+      
+      // Search functionality
+      let searchTimeout;
+      document.getElementById('search-bar').addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+          currentFilters.search = this.value;
+          fetchProducts(true);
+        }, 500);
+      });
+      // Category filter
+      document.getElementById('category-filter').addEventListener('change', function() {
+        currentFilters.category_id = this.value === 'all' ? null : this.value;
+        fetchProducts(true);
+      });
+      // Sort filter
+      document.getElementById('sort-filter').addEventListener('change', function() {
+        currentFilters.sort = this.value;
+        fetchProducts(true);
+      });
+      // Setup navigation for the local market switch button for guest users
+      const localMarketSwitch = document.querySelector('[data-local-market-switch]');
+      if (localMarketSwitch) {
+        // This button should navigate to the public local market page
+        const publicLocalMarketUrl = '/grocery/local-market-home.html';
+        localMarketSwitch.addEventListener('click', function(e) {
+          e.preventDefault();
+          window.location.href = publicLocalMarketUrl;
+        });
+      }
+
+      // WhatsApp floating button event listener
+      const whatsappButton = document.querySelector('.whatsapp-float');
+      if (whatsappButton) {
+        whatsappButton.addEventListener('click', enhancedOpenContactModal);
+      }
+
+      // Contact modal click outside to close
+      const contactModal = document.getElementById('contact-modal');
+      if (contactModal) {
+        contactModal.addEventListener('click', function(e) {
+          if (e.target === contactModal) {
+            closeContactModal();
+          }
+        });
+      }
+      
+      // Categories sidebar and dynamic hero initialization
+      initializeCategoriesSidebar();
+      loadDynamicHeroSection();
+    });
+
+    // ========== CONTACT MODAL FUNCTIONS ==========
+    function openContactModal() {
+      const modal = document.getElementById('contact-modal');
+      if (modal) {
+        modal.style.display = 'flex';
+      }
+    }
+
+    function closeContactModal() {
+      const modal = document.getElementById('contact-modal');
+      if (modal) {
+        modal.style.display = 'none';
+      }
+    }
+
+    function openWhatsApp() {
+      const message = encodeURIComponent('Hello! I\'m interested in your products on African Deals Domain.');
+      const whatsappUrl = `https://wa.me/250788910639?text=${message}`;
+      window.open(whatsappUrl, '_blank');
+      closeContactModal();
+    }
+
+    function callSeller() {
+      window.open('tel:+250788910639');
+      closeContactModal();
+    }
+
+    // ========== CATEGORIES SIDEBAR FUNCTIONS ==========
+    function initializeCategoriesSidebar() {
+      // Add event listeners for category toggle buttons
+      const toggleMobile = document.getElementById('categories-toggle-mobile');
+      const toggleDesktop = document.getElementById('categories-toggle-desktop');
+      const sidebar = document.getElementById('categories-sidebar');
+      const overlay = document.getElementById('categories-overlay');
+      const closeSidebar = document.getElementById('close-sidebar');
+
+      if (toggleMobile) {
+        toggleMobile.addEventListener('click', toggleCategoriesSidebar);
+      }
+      
+      if (toggleDesktop) {
+        toggleDesktop.addEventListener('click', toggleCategoriesSidebar);
+      }
+
+      if (closeSidebar) {
+        closeSidebar.addEventListener('click', closeCategoriesSidebar);
+      }
+
+      if (overlay) {
+        overlay.addEventListener('click', closeCategoriesSidebar);
+      }
+
+      // Load categories for sidebar
+      loadCategoriesForSidebar();
+    }
+
+    function toggleCategoriesSidebar() {
+      const sidebar = document.getElementById('categories-sidebar');
+      const overlay = document.getElementById('categories-overlay');
+      
+      if (sidebar && overlay) {
+        const isOpen = sidebar.classList.contains('open');
+        
+        if (isOpen) {
+          closeCategoriesSidebar();
+        } else {
+          openCategoriesSidebar();
+        }
+      }
+    }
+
+    function openCategoriesSidebar() {
+      const sidebar = document.getElementById('categories-sidebar');
+      const overlay = document.getElementById('categories-overlay');
+      
+      if (sidebar && overlay) {
+        sidebar.classList.add('open');
+        overlay.classList.add('show');
+        document.body.style.overflow = 'hidden'; // Prevent background scrolling
+      }
+    }
+
+    function closeCategoriesSidebar() {
+      const sidebar = document.getElementById('categories-sidebar');
+      const overlay = document.getElementById('categories-overlay');
+      
+      if (sidebar && overlay) {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('show');
+        document.body.style.overflow = ''; // Restore scrolling
+      }
+    }
+
+    async function loadCategoriesForSidebar() {
+      try {
+        const response = await fetch('/api/categories');
+        const data = await response.json();
+        
+        if (data.success && data.categories) {
+          displayCategoriesInSidebar(data.categories);
+        } else {
+          console.error('Failed to fetch categories:', data.error);
+        }
+      } catch (error) {
+        console.error('Error loading categories for sidebar:', error);
+      }
+    }
+
+    function displayCategoriesInSidebar(categories) {
+      const container = document.getElementById('sidebar-categories-list');
+      if (!container) return;
+      
+      container.innerHTML = '';
+      
+      // Add "All Categories" option
+      const allCategoriesItem = document.createElement('div');
+      allCategoriesItem.className = 'category-item-sidebar';
+      allCategoriesItem.innerHTML = `
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
+            <span class="text-white text-lg">🛍️</span>
+          </div>
+          <div>
+            <div class="font-semibold text-gray-900">All Products</div>
+            <div class="text-sm text-gray-500">Browse everything</div>
+          </div>
+        </div>
+      `;
+      allCategoriesItem.addEventListener('click', () => {
+        window.location.href = '/public/products.html';
+        closeCategoriesSidebar();
+      });
+      container.appendChild(allCategoriesItem);
+      
+      // Add separator
+      const separator = document.createElement('div');
+      separator.className = 'h-px bg-gray-200 mx-4 my-2';
+      container.appendChild(separator);
+      
+      categories.forEach(category => {
+        const categoryItem = document.createElement('div');
+        categoryItem.className = 'category-item-sidebar';
+        
+        const categoryIcon = getCategoryIcon(category.name);
+        const productCount = category.product_count || 0;
+        
+        categoryItem.innerHTML = `
+          <div class="flex items-center gap-3 flex-1">
+            <div class="w-10 h-10 rounded-lg bg-gradient-to-r from-blue-100 to-blue-200 flex items-center justify-center">
+              <span class="text-blue-600 text-lg">${categoryIcon}</span>
+            </div>
+            <div class="flex-1">
+              <div class="font-semibold text-gray-900">${category.name}</div>
+              <div class="text-sm text-gray-500">${productCount} products</div>
+            </div>
+            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+          </div>
+        `;
+        
+        categoryItem.addEventListener('click', () => {
+          window.location.href = `/public/products.html?category=${category.id}&name=${encodeURIComponent(category.name)}`;
+          closeCategoriesSidebar();
+        });
+        
+        container.appendChild(categoryItem);
+      });
+    }
+
+    function getCategoryIcon(categoryName) {
+      const icons = {
+        'Electronics': '📱',
+        'Fashion': '👕',
+        'Beauty': '💄',
+        'Home': '🏠',
+        'Sports': '⚽',
+        'Books': '📚',
+        'Toys': '🧸',
+        'Food': '🍎',
+        'Health': '💊',
+        'Automotive': '🚗',
+        'Garden': '🌱',
+        'Office': '💼',
+        'Jewelry': '💎',
+        'Music': '🎵',
+        'Travel': '✈️',
+        'Pets': '🐕',
+        'Baby': '🍼',
+        'Gifts': '🎁'
+      };
+      
+      // Try to find a match by checking if category name contains key words
+      for (const [key, icon] of Object.entries(icons)) {
+        if (categoryName.toLowerCase().includes(key.toLowerCase())) {
+          return icon;
+        }
+      }
+      
+      return '🛍️'; // Default icon
+    }
+
+    // ========== DYNAMIC HERO SECTION FUNCTIONS ==========
+    let currentHeroAd = null;
+    let slideshowInterval = null;
+    let currentSlideIndex = 0;
+
+    async function loadDynamicHeroSection() {
+      try {
+        const response = await fetch('/api/home-ads/active');
+        const data = await response.json();
+        
+        if (data.success && data.ad) {
+          currentHeroAd = data.ad;
+          renderHeroSection(data.ad);
+        } else {
+          console.log('No active home ad found, using default');
+          // Keep the default hero section
+        }
+      } catch (error) {
+        console.error('Error loading dynamic hero section:', error);
+        // Keep the default hero section
+      }
+    }
+
+    function renderHeroSection(ad) {
+      // Update hero content
+      updateHeroContent(ad);
+      
+      // Handle background based on ad type
+      switch (ad.type) {
+        case 'image':
+          setupImageBackground(ad);
+          break;
+        case 'video':
+          setupVideoBackground(ad);
+          break;
+        case 'slideshow':
+          setupSlideshowBackground(ad);
+          break;
+        default:
+          // Keep default gradient background
+          break;
+      }
+    }
+
+    function updateHeroContent(ad) {
+      // Update title
+      const titleElement = document.getElementById('hero-title');
+      if (titleElement && ad.title) {
+        // Parse title to keep the gradient effect
+        const words = ad.title.split(' ');
+        if (words.length > 1) {
+          titleElement.innerHTML = `
+            <span class="bg-gradient-to-r from-yellow-300 to-orange-300 bg-clip-text text-transparent">${words[0]}</span>
+            <br>${words.slice(1).join(' ')}
+          `;
+        } else {
+          titleElement.innerHTML = `
+            <span class="bg-gradient-to-r from-yellow-300 to-orange-300 bg-clip-text text-transparent">${ad.title}</span>
+          `;
+        }
+      }
+
+      // Update subtitle and description
+      const descriptionElement = document.getElementById('hero-description');
+      if (descriptionElement) {
+        descriptionElement.innerHTML = `
+          <p>${ad.subtitle || 'Connect with trusted African sellers and discover unique products from across the continent.'}</p>
+          <p class="text-lg opacity-80">${ad.description || 'Secure payments • Fast delivery • 24/7 support'}</p>
+        `;
+      }
+
+      // Update stats
+      if (ad.stats) {
+        const statsElements = {
+          'stats-sellers': ad.stats.activeSellers,
+          'stats-products': ad.stats.products,
+          'stats-customers': ad.stats.happyCustomers,
+          'stats-countries': ad.stats.countries
+        };
+
+        for (const [elementId, value] of Object.entries(statsElements)) {
+          const element = document.getElementById(elementId);
+          if (element && value) {
+            element.textContent = formatNumber(value);
+          }
+        }
+      }
+
+      // Update button texts and links
+      const primaryButton = document.getElementById('primary-button');
+      const secondaryButton = document.getElementById('secondary-button');
+
+      if (primaryButton && ad.buttonText) {
+        primaryButton.href = ad.buttonLink || '#discover';
+        primaryButton.querySelector('span').textContent = ad.buttonText;
+      }
+
+      if (secondaryButton && ad.secondaryButtonText) {
+        secondaryButton.href = ad.secondaryButtonLink || '/auth/auth-buyer.html';
+        secondaryButton.querySelector('span').textContent = ad.secondaryButtonText;
+      }
+    }
+
+    function setupImageBackground(ad) {
+      const backgroundContainer = document.getElementById('hero-background-container');
+      if (!backgroundContainer || !ad.contentUrl) return;
+
+      // Clear any existing background style
+      backgroundContainer.style.background = '';
+      
+      // Create image element with error handling
+      const img = new Image();
+      img.onload = function() {
+        console.log('✅ Image loaded successfully:', ad.contentUrl);
+        backgroundContainer.innerHTML = `
+          <img src="${ad.contentUrl}" alt="Hero Background" class="hero-background-image">
+          <div class="absolute inset-0 z-10" style="background: ${ad.overlay || 'rgba(14, 32, 56, 0.7)'}"></div>
+        `;
+      };
+      
+      img.onerror = function() {
+        console.warn('⚠️ Image failed to load:', ad.contentUrl);
+        // Fallback to gradient background
+        backgroundContainer.style.background = ad.backgroundColor || 'linear-gradient(135deg, #0e2038 0%, #23325c 50%, #1e3a8a 100%)';
+        backgroundContainer.innerHTML = `
+          <div class="absolute inset-0 z-10" style="background: ${ad.overlay || 'rgba(14, 32, 56, 0.1)'}"></div>
+          <div class="absolute inset-0 flex items-center justify-center z-20">
+            <div class="text-white text-center opacity-50">
+              <div class="text-4xl mb-2">🎨</div>
+              <div class="text-sm">Image not available - Using fallback background</div>
+            </div>
+          </div>
+        `;
+      };
+      
+      img.src = ad.contentUrl;
+    }
+
+    function setupVideoBackground(ad) {
+      const backgroundContainer = document.getElementById('hero-background-container');
+      if (!backgroundContainer || !ad.contentUrl) return;
+
+      // Clear any existing background style
+      backgroundContainer.style.background = '';
+      
+      const videoElement = document.createElement('video');
+      videoElement.autoplay = true;
+      videoElement.muted = true;
+      videoElement.loop = true;
+      videoElement.playsInline = true;
+      videoElement.className = 'hero-background-video';
+      
+      videoElement.onloadeddata = function() {
+        console.log('✅ Video loaded successfully:', ad.contentUrl);
+        backgroundContainer.innerHTML = `
+          <video autoplay muted loop playsinline class="hero-background-video">
+            <source src="${ad.contentUrl}" type="video/mp4">
+          </video>
+          <div class="absolute inset-0 z-10" style="background: ${ad.overlay || 'rgba(14, 32, 56, 0.7)'}"></div>
+        `;
+      };
+      
+      videoElement.onerror = function() {
+        console.warn('⚠️ Video failed to load:', ad.contentUrl);
+        // Fallback to gradient background
+        backgroundContainer.style.background = ad.backgroundColor || 'linear-gradient(135deg, #0e2038 0%, #23325c 50%, #1e3a8a 100%)';
+        backgroundContainer.innerHTML = `
+          <div class="absolute inset-0 z-10" style="background: ${ad.overlay || 'rgba(14, 32, 56, 0.1)'}"></div>
+          <div class="absolute inset-0 flex items-center justify-center z-20">
+            <div class="text-white text-center opacity-50">
+              <div class="text-4xl mb-2">🎬</div>
+              <div class="text-sm">Video not available - Using fallback background</div>
+            </div>
+          </div>
+        `;
+      };
+      
+      videoElement.src = ad.contentUrl;
+    }
+
+    function setupSlideshowBackground(ad) {
+      // For slideshow, we would need multiple images
+      // This is a simplified version - in a real implementation, you'd need to handle multiple images
+      const backgroundContainer = document.getElementById('hero-background-container');
+      const indicatorsContainer = document.getElementById('slideshow-indicators');
+      
+      if (!backgroundContainer || !ad.contentUrl) return;
+
+      // For now, treat it as a single image with slideshow styling
+      backgroundContainer.innerHTML = `
+        <div class="hero-slideshow">
+          <div class="hero-slide active">
+            <img src="${ad.contentUrl}" alt="Slide 1">
+          </div>
+        </div>
+        <div class="absolute inset-0" style="background: ${ad.overlay || 'rgba(14, 32, 56, 0.7)'}"></div>
+      `;
+
+      // Show indicators
+      if (indicatorsContainer) {
+        indicatorsContainer.style.display = 'flex';
+        indicatorsContainer.innerHTML = `
+          <div class="slide-indicator active" data-slide="0"></div>
+        `;
+      }
+    }
+
+    function formatNumber(num) {
+      if (num >= 1000000) {
+        return (num / 1000000).toFixed(1) + 'M+';
+      } else if (num >= 1000) {
+        return (num / 1000).toFixed(1) + 'K+';
+      }
+      return num.toString() + '+';
+    }
+
+    // ========== GLOBAL CATEGORY SIDEBAR FUNCTION ==========
+    // Make toggleCategoriesSidebar globally available for button onclick
+    window.toggleCategoriesSidebar = toggleCategoriesSidebar;
+
+    // ========== PARTNERS AND SERVICES FUNCTIONS ==========
+    async function fetchPartnersAndServices() {
+      try {
+        // Fetch partners
+        fetchPartners();
+        
+        // Fetch services
+        fetchServices();
+      } catch (error) {
+        console.error('Error fetching partners and services:', error);
+      }
+    }
+
+    // Enhanced Image URL Processing Function
+    function processImageUrl(imageUrl, type = 'general') {
+      if (!imageUrl) return null;
+      
+      // If already a complete URL, return as is
+      if (imageUrl.startsWith('http')) {
+        return imageUrl;
+      }
+      
+      // If starts with /, make it relative to server
+      if (imageUrl.startsWith('/')) {
+        return imageUrl;
+      }
+      
+      // Otherwise, assume it's a relative path and prepend /uploads/
+      return '/uploads/' + imageUrl;
+    }
+
+    async function fetchPartners() {
+      try {
+        const response = await fetch('/api/partners');
+        const data = await response.json();
+        
+        if (data.success && data.partners && data.partners.length > 0) {
+          displayPartners(data.partners);
+        } else {
+          // Use sample data instead of placeholders
+          console.warn('No partners from API, using sample data');
+          displayPartners(SAMPLE_PARTNERS);
+        }
+      } catch (error) {
+        console.error('Error fetching partners:', error);
+        // Use sample data on error
+        console.warn('API error, using sample partners data');
+        displayPartners(SAMPLE_PARTNERS);
+      }
+    }
+
+    async function fetchServices() {
+      try {
+        const response = await fetch('/api/other-services');
+        const data = await response.json();
+        
+        if (data.success && data.services && data.services.length > 0) {
+          displayServices(data.services);
+        } else {
+          // Use sample data instead of placeholders
+          console.warn('No services from API, using sample data');
+          displayServices(SAMPLE_SERVICES);
+        }
+      } catch (error) {
+        console.error('Error fetching services:', error);
+        // Use sample data on error
+        console.warn('API error, using sample services data');
+        displayServices(SAMPLE_SERVICES);
+      }
+    }
+
+    function displayPartners(partners) {
+      const marquee = document.getElementById('partners-marquee');
+      if (!marquee) return;
+      
+      // Create multiple copies for seamless scrolling
+      const partnersContent = partners.concat(partners).map(partner => createPartnerCard(partner)).join('');
+      marquee.innerHTML = partnersContent;
+    }
+
+    function displayServices(services) {
+      const marquee = document.getElementById('services-marquee');
+      if (!marquee) return;
+      
+      // Create multiple copies for seamless scrolling
+      const servicesContent = services.concat(services).map(service => createServiceCard(service)).join('');
+      marquee.innerHTML = servicesContent;
+    }
+
+    function createPartnerCard(partner) {
+      // Use enhanced image processing
+      const logoSrc = processImageUrl(partner.logo_url) || '/public/images/default-avatar.png';
+      
+      const logoDisplay = partner.logo_url ? 
+        `<img src="${logoSrc}" alt="${partner.name}" class="partner-logo" 
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+             onload="this.nextElementSibling.style.display='none';">
+         <div class="partner-logo bg-gradient-to-br from-blue-500 to-purple-600 text-white font-bold" style="display: none;">${partner.name.charAt(0).toUpperCase()}</div>` :
+        `<div class="partner-logo bg-gradient-to-br from-blue-500 to-purple-600 text-white font-bold">${partner.name.charAt(0).toUpperCase()}</div>`;
+
+      return `
+        <div class="partner-card" onclick="openPartnerLink('${partner.link}')">
+          <span class="external-link-icon">↗</span>
+          ${logoDisplay}
+          <div class="partner-info">
+            <div class="partner-name">${partner.name}</div>
+            <div class="partner-description">${partner.description || 'Trusted partner providing quality services'}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function createServiceCard(service) {
+      // Use enhanced image processing for services
+      const iconSrc = processImageUrl(service.image_url);
+      
+      // Clean up the icon to handle non-emoji characters
+      const cleanIcon = service.icon && service.icon.length <= 4 && /[\u{1F600}-\u{1F64F}|\u{1F300}-\u{1F5FF}|\u{1F680}-\u{1F6FF}|\u{1F1E0}-\u{1F1FF}|\u{2600}-\u{26FF}|\u{2700}-\u{27BF}]/u.test(service.icon) ? service.icon : '🔗';
+      
+      const iconDisplay = iconSrc ? 
+        `<img src="${iconSrc}" alt="${service.name}" class="service-icon" 
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+             onload="this.nextElementSibling.style.display='none';">
+         <div class="service-icon bg-gradient-to-br from-green-500 to-blue-600 text-white" style="display: none;">${cleanIcon}</div>` :
+        `<div class="service-icon bg-gradient-to-br from-green-500 to-blue-600 text-white">${cleanIcon}</div>`;
+
+      return `
+        <div class="service-card" onclick="openServiceLink('${service.link}')">
+          <span class="external-link-icon">↗</span>
+          ${iconDisplay}
+          <div class="service-info">
+            <div class="service-name">${service.name}</div>
+            <div class="service-description">${service.description || 'Comprehensive service offering quality solutions'}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function displayPlaceholderPartners() {
+      const marquee = document.getElementById('partners-marquee');
+      if (!marquee) return;
+      
+      const placeholders = [
+        { name: 'Global Tech Partners', description: 'Technology solutions and innovation', icon: '💻' },
+        { name: 'African Business Network', description: 'Connecting businesses across Africa', icon: '🌍' },
+        { name: 'Logistics Excellence', description: 'Fast and reliable delivery services', icon: '🚚' },
+        { name: 'Payment Solutions Pro', description: 'Secure payment processing', icon: '💳' },
+        { name: 'Quality Assurance Corp', description: 'Ensuring product quality standards', icon: '✅' }
+      ];
+      
+      const content = placeholders.concat(placeholders).map(partner => `
+        <div class="partner-card">
+          <div class="partner-logo">${partner.icon}</div>
+          <div class="partner-info">
+            <div class="partner-name">${partner.name}</div>
+            <div class="partner-description">${partner.description}</div>
+          </div>
+        </div>
+      `).join('');
+      
+      marquee.innerHTML = content;
+    }
+
+    function displayPlaceholderServices() {
+      const marquee = document.getElementById('services-marquee');
+      if (!marquee) return;
+      
+      const placeholders = [
+        { name: 'Digital Marketing', description: 'Boost your online presence and reach', icon: '📱' },
+        { name: 'Web Development', description: 'Custom websites and applications', icon: '🌐' },
+        { name: 'Consulting Services', description: 'Expert business guidance and strategy', icon: '💼' },
+        { name: 'Financial Services', description: 'Loans, insurance and financial planning', icon: '💰' },
+        { name: 'Educational Programs', description: 'Skills development and training', icon: '📚' }
+      ];
+      
+      const content = placeholders.concat(placeholders).map(service => `
+        <div class="service-card">
+          <div class="service-icon">${service.icon}</div>
+          <div class="service-info">
+            <div class="service-name">${service.name}</div>
+            <div class="service-description">${service.description}</div>
+          </div>
+        </div>
+      `).join('');
+      
+      marquee.innerHTML = content;
+    }
+
+    function openPartnerLink(url) {
+      if (url && url !== 'null' && url !== '') {
+        // Ensure the URL has a protocol
+        const fullUrl = url.startsWith('http://') || url.startsWith('https://') ? url : `https://${url}`;
+        window.open(fullUrl, '_blank', 'noopener,noreferrer');
+      }
+    }
+
+    function openServiceLink(url) {
+      if (url && url !== 'null' && url !== '') {
+        // Ensure the URL has a protocol
+        const fullUrl = url.startsWith('http://') || url.startsWith('https://') ? url : `https://${url}`;
+        window.open(fullUrl, '_blank', 'noopener,noreferrer');
+      }
+    }
+
+    // Initialize partners and services on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      setTimeout(fetchPartnersAndServices, 1000); // Small delay to let other content load first
+    });
+
+  </script>
+
+<!-- WhatsApp Floating Button -->
+<div class="whatsapp-float" id="whatsapp-button" onclick="enhancedOpenContactModal()">
+  <div class="message-indicator" id="message-indicator"></div>
+  <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+    <path d="M26.6667 15.7333C26.6667 22.2667 21.5333 27.4 15 27.4C12.9333 27.4 10.9333 26.8 9.2 25.7333L4 27.4L5.66667 22.2C4.53333 20.4 4 18.3333 4 16C4 9.46667 9.13333 4.33334 15.6667 4.33334C22.2 4.33334 26.6667 9.2 26.6667 15.7333ZM15.6667 6.66667C10.4 6.66667 6.33333 10.7333 6.33333 16C6.33333 18 7.06667 19.8667 8.33333 21.3333L7.33333 24.6667L10.8 23.6667C12.2667 24.6667 13.9333 25.0667 15.6667 25.0667C20.9333 25.0667 25 21 25 15.7333C25 10.4667 20.9333 6.66667 15.6667 6.66667ZM21.3333 18.5333C21.3333 18.2667 21.0667 18.1333 20.6667 17.8667C20.2667 17.6 18.6667 16.8 18.2667 16.6667C17.8667 16.5333 17.6 16.4 17.3333 16.8C17.0667 17.2 16.5333 17.8667 16.2667 18.1333C16 18.4 15.7333 18.4 15.3333 18.1333C14.9333 17.8667 13.6 17.4667 12.0667 16.1333C10.8 15 10 13.6 9.73333 13.2C9.46667 12.8 9.73333 12.5333 10 12.2667C10.2667 12 10.5333 11.6 10.8 11.3333C11.0667 11.0667 11.2 10.8 11.3333 10.5333C11.4667 10.2667 11.4 10 11.2 9.73334C11 9.46667 10.2667 7.86667 9.86667 7.06667C9.46667 6.26667 9.06667 6.4 8.8 6.4C8.53333 6.4 8.26667 6.4 8 6.4C7.73333 6.4 7.33333 6.53334 6.93333 6.93334C6.53333 7.33334 5.73333 8.13334 5.73333 9.73334C5.73333 11.3333 6.93333 12.8667 7.2 13.1333C7.46667 13.4 10.0667 17.2 14 18.9333C15.0667 19.3333 15.8667 19.5333 16.5333 19.6667C17.6 20 18.5333 19.9333 19.2667 19.8C20.0667 19.6667 21.3333 18.9333 21.6 18.1333C21.8667 17.3333 21.8667 16.6667 21.7333 16.5333C21.6 16.4 21.3333 16.2667 21.3333 18.5333Z" fill="white"/>
+  </svg>
+</div>
+
+<!-- Dynamic Floating Messages Container -->
+<div id="floating-messages-container"></div>
+
+<!-- Contact Modal -->
+<div id="contact-modal" class="contact-modal">
+  <div class="contact-modal-content">
+    <div class="text-center">
+      <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="white">
+          <path d="M26.6667 15.7333C26.6667 22.2667 21.5333 27.4 15 27.4C12.9333 27.4 10.9333 26.8 9.2 25.7333L4 27.4L5.66667 22.2C4.53333 20.4 4 18.3333 4 16C4 9.46667 9.13333 4.33334 15.6667 4.33334C22.2 4.33334 26.6667 9.2 26.6667 15.7333Z" fill="white"/>
+        </svg>
+      </div>
+      <h3 class="text-2xl font-bold text-gray-900 mb-2">Contact Us</h3>
+      <p class="text-gray-600 mb-6">Choose how you'd like to get in touch with us</p>
+      <div class="space-y-3">
+        <button onclick="openWhatsApp()" class="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2">
+          <svg width="20" height="20" viewBox="0 0 32 32" fill="currentColor">
+            <path d="M26.6667 15.7333C26.6667 22.2667 21.5333 27.4 15 27.4C12.9333 27.4 10.9333 26.8 9.2 25.7333L4 27.4L5.66667 22.2C4.53333 20.4 4 18.3333 4 16C4 9.46667 9.13333 4.33334 15.6667 4.33334C22.2 4.33334 26.6667 9.2 26.6667 15.7333Z"/>
+          </svg>
+          WhatsApp Chat
+        </button>
+        <button onclick="callSeller()" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+          </svg>
+          Phone Call
+        </button>
+      </div>
+      <button onclick="closeContactModal()" class="mt-4 text-gray-500 hover:text-gray-700 transition-colors">Close</button>
+    </div>
+  </div>
+</div>
+
+
+
+</body>
+</html> 

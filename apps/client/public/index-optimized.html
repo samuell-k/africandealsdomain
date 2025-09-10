@@ -1,0 +1,1377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ADD Physical Products | Africa's Premier E-Commerce Platform</title>
+  <meta name="description" content="Discover amazing products from trusted African sellers. Electronics, Fashion, Groceries, Home & Living - all in one place with secure payments and fast delivery.">
+  
+  <!-- Critical Resource Preloading -->
+  <link rel="preload" href="/shared/auth-utils.js" as="script">
+  
+  <link rel="preload" href="/public/images/logo.png" as="image">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  
+  
+  <!-- Prefetch likely next pages -->
+  <link rel="prefetch" href="/auth/auth-buyer.html">
+  <link rel="prefetch" href="/buyer/dashboard.html">
+  <link rel="prefetch" href="/seller/dashboard.html">
+  
+  <link rel="icon" type="image/png" href="/public/images/logo.png">
+  
+  <!-- Critical CSS Inlined -->
+  <style id="critical-css">
+    /* Critical Base Styles */
+    *, *::before, *::after { box-sizing: border-box; }
+    html { line-height: 1.15; -webkit-text-size-adjust: 100%; }
+    body { 
+      margin: 0; 
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      color: #1f2937;
+      background-color: #f9fafb;
+    }
+    
+    /* Critical Layout */
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 1rem; }
+    .flex { display: flex; }
+    .grid { display: grid; }
+    .hidden { display: none; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+    
+    /* Critical Header Styles */
+    header { 
+      position: sticky; 
+      top: 0; 
+      z-index: 50; 
+      background: rgba(255,255,255,0.95); 
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid #e5e7eb;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+    }
+    
+    .logo { 
+      height: 3rem; 
+      width: 3rem; 
+      border-radius: 0.75rem; 
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease;
+    }
+    
+    .logo:hover { transform: scale(1.1); }
+    
+    .brand-text { 
+      font-weight: 800; 
+      font-size: 1.5rem;
+      background: linear-gradient(135deg, #0e2038 0%, #23325c 50%, #1e3a8a 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    /* Critical Loading States */
+    .loading-shimmer { 
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); 
+      background-size: 200% 100%; 
+      animation: shimmer 1.5s infinite; 
+    }
+    
+    @keyframes shimmer { 
+      0% { background-position: -200% 0; } 
+      100% { background-position: 200% 0; } 
+    }
+    
+    .fade-in { 
+      animation: fadeIn 0.6s ease-out; 
+    }
+    
+    @keyframes fadeIn { 
+      from { opacity: 0; } 
+      to { opacity: 1; } 
+    }
+    
+    /* Critical Button Styles */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.5rem 1rem;
+      border-radius: 0.375rem;
+      font-weight: 500;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      border: none;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #2563eb, #1e40af);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    }
+    
+    /* Homepage Critical Styles */
+    .hero-section {
+      background: linear-gradient(135deg, #0e2038 0%, #23325c 50%, #1e3a8a 100%);
+      color: white;
+      padding: 4rem 0;
+      text-align: center;
+    }
+    
+    .hero-title {
+      font-size: 3rem;
+      font-weight: 800;
+      margin-bottom: 1rem;
+      line-height: 1.2;
+    }
+    
+    .hero-subtitle {
+      font-size: 1.25rem;
+      opacity: 0.9;
+      margin-bottom: 2rem;
+    }
+    
+    .search-bar {
+      max-width: 600px;
+      margin: 0 auto;
+      position: relative;
+    }
+    
+    .search-input {
+      width: 100%;
+      padding: 1rem 3rem 1rem 1rem;
+      border: none;
+      border-radius: 0.5rem;
+      font-size: 1.125rem;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    
+    .category-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin: 3rem 0;
+    }
+    
+    .category-card {
+      background: white;
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      text-align: center;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .category-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.15);
+    }
+    
+    /* Hide non-critical content initially */
+    .below-fold { opacity: 0; transition: opacity 0.3s ease; }
+    .lazy-load { opacity: 0; transition: opacity 0.3s ease; }
+    
+    @media (max-width: 768px) {
+      .container { padding: 0 0.5rem; }
+      .brand-text { font-size: 1.25rem; }
+      .btn { padding: 0.5rem 0.75rem; font-size: 0.875rem; }
+      .hero-title { font-size: 2rem; }
+      .hero-subtitle { font-size: 1rem; }
+      .category-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; }
+    }
+  </style>
+  
+  <!-- Load Google Fonts optimally -->
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"></noscript>
+  
+  <!-- Load Tailwind CSS after critical rendering -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <noscript><script src="https://cdn.tailwindcss.com"></script></noscript>
+  
+  <!-- Performance optimizations -->
+  <script>
+    // Performance optimizations
+    (function() {
+      // Preload critical resources
+      const criticalResources = [
+        '/api/products?limit=12',
+        '/api/categories',
+        '/api/currency/rates'
+      ];
+      
+      // Prefetch API data
+      if ('fetch' in window) {
+        setTimeout(() => {
+          criticalResources.forEach(url => {
+            fetch(url).then(response => response.json()).catch(() => {});
+          });
+        }, 100);
+      }
+      
+      // Optimize font loading
+      if ('fonts' in document) {
+        document.fonts.load('400 16px Inter').then(() => {
+          document.body.classList.add('fonts-loaded');
+        });
+      }
+      
+      // Progressive enhancement for below-fold content
+      const revealBelowFold = () => {
+        const elements = document.querySelectorAll('.below-fold');
+        elements.forEach(el => {
+          el.style.opacity = '1';
+          el.style.transition = 'opacity 0.3s ease-in';
+        });
+      };
+      
+      // Reveal below-fold content after critical rendering
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+          setTimeout(revealBelowFold, 100);
+        });
+      } else {
+        setTimeout(revealBelowFold, 100);
+      }
+      
+      // Service Worker registration
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(() => {});
+        });
+      }
+    })();
+  </script>
+</head>
+
+<body class="bg-gray-50 text-gray-900 min-h-screen flex flex-col">
+  <!-- Header -->
+  <header class="w-full glass shadow-lg border-b border-blue-200 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto flex items-center justify-between px-4 py-3 md:py-4">
+      <a href="/" class="flex items-center gap-3 group">
+        <img src="/public/images/logo.png" alt="ADD Physical Product Logo" class="logo" />
+        <span class="brand-text">ADD Physical Products</span>
+      </a>
+      <div class="flex items-center gap-2 md:gap-4">
+
+        <!-- Currency Switcher -->
+        <div class="relative">
+          <select id="currency-selector" class="bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="USD">USD ($)</option>
+            <option value="EUR">EUR (€)</option>
+            <option value="GBP">GBP (£)</option>
+            <option value="RWF">RWF (₣)</option>
+          </select>
+        </div>
+        
+        <!-- Auth Buttons -->
+        <div class="flex gap-2">
+          <a href="/auth/auth-buyer.html" class="btn btn-primary">Sign In</a>
+          <a href="/auth/auth-seller.html" class="btn bg-green-600 text-white hover:bg-green-700">Sell</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="container">
+      <h1 class="hero-title">Discover Amazing Products</h1>
+      <p class="hero-subtitle">From trusted African sellers with secure payments and fast delivery</p>
+      
+      <div class="search-bar">
+        <input type="text" id="search-bar" class="search-input" placeholder="Search for products...">
+        <button class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600" onclick="showNotification('Feature in development', 'info')">
+          svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Categories Section -->
+  <section class="container py-12">
+    <h2 class="text-3xl font-bold text-center mb-8">Shop by Category</h2>
+    <div id="categories-container" class="category-grid">
+      <!-- Categories will be loaded here -->
+      <div class="category-card loading-shimmer" style="height: 120px;"></div>
+      <div class="category-card loading-shimmer" style="height: 120px;"></div>
+      <div class="category-card loading-shimmer" style="height: 120px;"></div>
+      <div class="category-card loading-shimmer" style="height: 120px;"></div>
+    </div>
+  </section>
+
+  <!-- Products Section (Below-fold) -->
+  <section class="container py-12 below-fold">
+    <div class="flex justify-between items-center mb-8">
+      <h2 class="text-3xl font-bold">Featured Products</h2>
+      <div class="flex gap-4">
+        <select id="category-filter" class="border border-gray-300 rounded-lg px-3 py-2">
+          <option value="all">All Categories</option>
+        </select>
+        <select id="sort-filter" class="border border-gray-300 rounded-lg px-3 py-2">
+          <option value="newest">Newest</option>
+          <option value="price_low">Price: Low to High</option>
+          <option value="price_high">Price: High to Low</option>
+          <option value="popular">Most Popular</option>
+        </select>
+      </div>
+    </div>
+    
+    <div id="products-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <!-- Products will be loaded here -->
+    </div>
+    
+    <div class="text-center mt-8">
+      <button id="load-more" class="btn btn-primary" onclick="showNotification('Feature in development', 'info')">Load More Products/button>
+    </div>
+  </section>
+
+  <!-- Footer (Below-fold) -->
+  <footer class="bg-gray-800 text-white py-12 mt-auto below-fold">
+    <div class="container">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div>
+          <h3 class="text-xl font-bold mb-4">ADD Physical Products</h3>
+          <p class="text-gray-300">Africa's premier e-commerce platform connecting buyers and sellers across the continent.</p>
+        </div>
+        <div>
+          <h4 class="font-semibold mb-4">Quick Links</h4>
+          <ul class="space-y-2">
+            <li><a href="/about.html" class="text-gray-300 hover:text-white">About Us</a></li>
+            <li><a href="/contact.html" class="text-gray-300 hover:text-white">Contact</a></li>
+            <li><a href="/help.html" class="text-gray-300 hover:text-white">Help Center</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-semibold mb-4">For Sellers</h4>
+          <ul class="space-y-2">
+            <li><a href="/auth/auth-seller.html" class="text-gray-300 hover:text-white">Start Selling</a></li>
+            <li><a href="/seller-guide.html" class="text-gray-300 hover:text-white">Seller Guide</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-semibold mb-4">Connect</h4>
+          <div class="flex space-x-4">
+            <a href="javascript:void(0)" onclick="showNotification('Navigation feature available', 'info')" class="text-gray-300 hover:text-white">Facebook</a>
+            <a href="javascript:void(0)" onclick="showNotification('Navigation feature available', 'info')" class="text-gray-300 hover:text-white">Twitter</a>
+            <a href="javascript:void(0)" onclick="showNotification('Navigation feature available', 'info')" class="text-gray-300 hover:text-white">Instagram</a>
+          </div>
+        </div>
+      </div>
+      <div class="border-t border-gray-700 mt-8 pt-8 text-center">
+        <p class="text-gray-300">&copy; 2024 ADD Physical Products. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Load critical JavaScript -->
+  <script src="/shared/auth-utils.js" defer></script>
+
+  <!-- Lazy loading script -->
+  <script>
+    // Intersection Observer for lazy loading
+    if ('IntersectionObserver' in window) {
+      const imageObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const img = entry.target;
+            img.src = img.dataset.src;
+            img.classList.remove('lazy-image');
+            img.classList.add('fade-in');
+            observer.unobserve(img);
+          }
+        });
+      }, { rootMargin: '50px' });
+      
+      document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.lazy-image').forEach(img => imageObserver.observe(img));
+      });
+    }
+  </script>
+
+  <!-- Main application script (deferred) -->
+  <script defer>
+    // Global variables
+    let currentPage = 1;
+    let currentFilters = {
+      search: '',
+      category_id: null,
+      sort: 'newest'
+    };
+    let currentCurrency = 'USD';
+    let exchangeRates = {};
+    let currentDeliveryCountry = 'Rwanda';
+
+    // DOM elements
+    const productsContainer = document.getElementById('products-container');
+    const categoriesContainer = document.getElementById('categories-container');
+    const loadMoreBtn = document.getElementById('load-more');
+    const currencySelector = document.getElementById('currency-selector');
+
+    // Fetch currency rates
+    async function fetchCurrencyRates() {
+      try {
+        const response = await 
+                try {
+                    const response = await fetch('/api/currency/rates');
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    // Continue with successful response
+                    const data = await response.json();
+                    return data;
+                } catch (error) {
+                    console.error('API call failed:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+                    showNotification('Operation failed. Please try again.', 'error');
+                    throw error;
+                };
+        const data = await response.json();
+        if (data.success) {
+          exchangeRates = data.rates;
+        }
+      } catch (error) {
+        console.error('Error fetching currency rates:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+      }
+    }
+
+    // Format price with currency
+    function formatPrice(price, currency = currentCurrency) {
+      const rate = exchangeRates[currency] || 1;
+      const convertedPrice = price * rate;
+      const symbols = { USD: '
+    window.addEventListener('load', function() {
+      const link = document.createElement('script');
+      link.rel = 'stylesheet';
+      link.href = '/shared/styles.css';
+      document.head.appendChild(link);
+    });
+  </script>
+
+<script>
+// Utility Functions for Enhanced Functionality
+function showNotification(message, type = 'info') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 ${
+        type === 'success' ? 'bg-green-500 text-white' :
+        type === 'error' ? 'bg-red-500 text-white' :
+        type === 'warning' ? 'bg-yellow-500 text-black' :
+        'bg-blue-500 text-white'
+    }`;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+// Generic search handlers
+function handleProductSearch(query) {
+    console.log('Searching products:', query);
+    if (query.length > 2) {
+        // Implement product search logic
+        showNotification('Searching for: ' + query, 'info');
+    }
+}
+
+function handleSellerSearch(query) {
+    console.log('Searching sellers:', query);
+    if (query.length > 2) {
+        showNotification('Searching sellers: ' + query, 'info');
+    }
+}
+
+function handleAgentSearch(query) {
+    console.log('Searching agents:', query);
+    if (query.length > 2) {
+        showNotification('Searching agents: ' + query, 'info');
+    }
+}
+
+function handleOrderSearch(query) {
+    console.log('Searching orders:', query);
+    if (query.length > 2) {
+        showNotification('Searching orders: ' + query, 'info');
+    }
+}
+
+function handleUserSearch(query) {
+    console.log('Searching users:', query);
+    if (query.length > 2) {
+        showNotification('Searching users: ' + query, 'info');
+    }
+}
+
+// Generic form handlers
+function handleSave() {
+    showNotification('Save functionality will be implemented soon', 'info');
+}
+
+function handleEdit() {
+    showNotification('Edit functionality will be implemented soon', 'info');
+}
+
+function handleDelete() {
+    if (confirm('Are you sure you want to delete this item?')) {
+        showNotification('Delete functionality will be implemented soon', 'info');
+    }
+}
+
+function handleCancel() {
+    if (confirm('Are you sure you want to cancel? Unsaved changes will be lost.')) {
+        history.back();
+    }
+}
+</script>
+</body>
+</html>, EUR: '€', GBP: '£', RWF: '₣' };
+      return `${symbols[currency] || currency} ${convertedPrice.toLocaleString()}`;
+    }
+
+    // Fetch categories
+    async function fetchCategories() {
+      try {
+        const response = await 
+                try {
+                    const response = await fetch('/api/categories');
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    // Continue with successful response
+                    const data = await response.json();
+                    return data;
+                } catch (error) {
+                    console.error('API call failed:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+                    showNotification('Operation failed. Please try again.', 'error');
+                    throw error;
+                };
+        const data = await response.json();
+        
+        if (data.success) {
+          displayCategories(data.categories);
+          populateCategoryFilter(data.categories);
+        }
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+      }
+    }
+
+    // Display categories
+    function displayCategories(categories) {
+      categoriesContainer.innerHTML = categories.map(category => `
+        <div class="category-card cursor-pointer" onclick="filterByCategory(${category.id})">
+          <div class="text-4xl mb-3">${category.icon || '📦'}</div>
+          <h3 class="font-semibold text-lg">${category.name}</h3>
+          <p class="text-gray-600 text-sm mt-2">${category.description || ''}</p>
+        </div>
+      `).join('');
+    }
+
+    // Populate category filter
+    function populateCategoryFilter(categories) {
+      const categoryFilter = document.getElementById('category-filter');
+      categories.forEach(category => {
+        const option = document.createElement('option');
+        option.value = category.id;
+        option.textContent = category.name;
+        categoryFilter.appendChild(option);
+      });
+    }
+
+    // Fetch products
+    async function fetchProducts(reset = false) {
+      if (reset) {
+        currentPage = 1;
+        productsContainer.innerHTML = '';
+      }
+
+      try {
+        const params = new URLSearchParams({
+          page: currentPage,
+          limit: 12,
+          ...currentFilters
+        });
+
+        const response = await (async () => {
+                    try {
+                        const response = await fetch('/api/products?${params}', {});
+                        
+                        if (!response.ok) {
+                            const errorText = await response.text();
+                            let errorMessage = 'Request failed';
+                            
+                            try {
+                                const errorData = JSON.parse(errorText);
+                                errorMessage = errorData.message || errorData.error || errorMessage;
+                            } catch (e) {
+                                errorMessage = errorText || `HTTP ${response.status}: ${response.statusText}`;
+                            }
+                            
+                            throw new Error(errorMessage);
+                        }
+                        
+                        return response;
+                    } catch (error) {
+                        console.error('API call failed:', {
+                            url: '/api/products?${params}',
+                            error: error.message,
+                            timestamp: new Date().toISOString()
+                        });
+                        
+                        showNotification(
+                            error.message || 'Request failed. Please try again.',
+                            'error'
+                        );
+                        
+                        throw error;
+                    }
+                })();
+        const data = await response.json();
+
+        if (data.success) {
+          displayProducts(data.products, reset);
+          
+          if (data.products.length < 12) {
+            loadMoreBtn.style.display = 'none';
+          } else {
+            loadMoreBtn.style.display = 'block';
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching products:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+      }
+    }
+
+    // Display products
+    function displayProducts(products, reset = false) {
+      const productsHTML = products.map(product => `
+        <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+          <img data-src="${product.image_url || '/public/images/placeholder.jpg'}" 
+               src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E"
+               alt="${product.name}" 
+               class="w-full h-48 object-cover lazy-image">
+          <div class="p-4">
+            <h3 class="font-semibold text-lg mb-2">${product.name}</h3>
+            <p class="text-gray-600 text-sm mb-3">${product.description?.substring(0, 100)}...</p>
+            <div class="flex justify-between items-center">
+              <span class="text-xl font-bold text-blue-600">${formatPrice(product.price)}</span>
+              <button onclick="viewProduct(${product.id})" class="btn btn-primary">View</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      if (reset) {
+        productsContainer.innerHTML = productsHTML;
+      } else {
+        productsContainer.innerHTML += productsHTML;
+      }
+
+      // Re-observe lazy images
+      if ('IntersectionObserver' in window) {
+        document.querySelectorAll('.lazy-image').forEach(img => {
+          if (!img.src.includes('data:image')) return;
+          imageObserver.observe(img);
+        });
+      }
+    }
+
+    // Filter by category
+    function filterByCategory(categoryId) {
+      currentFilters.category_id = categoryId;
+      document.getElementById('category-filter').value = categoryId;
+      fetchProducts(true);
+    }
+
+    // View product
+    function viewProduct(productId) {
+      window.location.href = `/auth/auth-buyer.html?redirect=/buyer/product-detail.html?id=${productId}`;
+    }
+
+    // Event listeners
+    document.addEventListener('DOMContentLoaded', function() {
+      // Initialize
+      async function initialize() {
+        await fetchCurrencyRates();
+        fetchCategories();
+        fetchProducts();
+      }
+      initialize();
+
+      // Search functionality
+      let searchTimeout;
+      document.getElementById('search-bar').addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+          currentFilters.search = this.value;
+          fetchProducts(true);
+        }, 500);
+      });
+
+      // Category filter
+      document.getElementById('category-filter').addEventListener('change', function() {
+        currentFilters.category_id = this.value === 'all' ? null : this.value;
+        fetchProducts(true);
+      });
+
+      // Sort filter
+      document.getElementById('sort-filter').addEventListener('change', function() {
+        currentFilters.sort = this.value;
+        fetchProducts(true);
+      });
+
+      // Load more button
+      loadMoreBtn.addEventListener('click', function() {
+        currentPage++;
+        fetchProducts();
+      });
+
+      // Currency selector
+      currencySelector.addEventListener('change', function() {
+        currentCurrency = this.value;
+        fetchProducts(true);
+      });
+    });
+  </script>
+
+  <!-- Load non-critical CSS after page load -->
+  <script>
+    window.addEventListener('load', function() {
+      const link = document.createElement('script');
+      link.rel = 'stylesheet';
+      link.href = '/shared/styles.css';
+      document.head.appendChild(link);
+    });
+  </script>
+
+<script>
+// Utility Functions for Enhanced Functionality
+function showNotification(message, type = 'info') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 ${
+        type === 'success' ? 'bg-green-500 text-white' :
+        type === 'error' ? 'bg-red-500 text-white' :
+        type === 'warning' ? 'bg-yellow-500 text-black' :
+        'bg-blue-500 text-white'
+    }`;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+// Generic search handlers
+function handleProductSearch(query) {
+    console.log('Searching products:', query);
+    if (query.length > 2) {
+        // Implement product search logic
+        showNotification('Searching for: ' + query, 'info');
+    }
+}
+
+function handleSellerSearch(query) {
+    console.log('Searching sellers:', query);
+    if (query.length > 2) {
+        showNotification('Searching sellers: ' + query, 'info');
+    }
+}
+
+function handleAgentSearch(query) {
+    console.log('Searching agents:', query);
+    if (query.length > 2) {
+        showNotification('Searching agents: ' + query, 'info');
+    }
+}
+
+function handleOrderSearch(query) {
+    console.log('Searching orders:', query);
+    if (query.length > 2) {
+        showNotification('Searching orders: ' + query, 'info');
+    }
+}
+
+function handleUserSearch(query) {
+    console.log('Searching users:', query);
+    if (query.length > 2) {
+        showNotification('Searching users: ' + query, 'info');
+    }
+}
+
+// Generic form handlers
+function handleSave() {
+    showNotification('Save functionality will be implemented soon', 'info');
+}
+
+function handleEdit() {
+    showNotification('Edit functionality will be implemented soon', 'info');
+}
+
+function handleDelete() {
+    if (confirm('Are you sure you want to delete this item?')) {
+        showNotification('Delete functionality will be implemented soon', 'info');
+    }
+}
+
+function handleCancel() {
+    if (confirm('Are you sure you want to cancel? Unsaved changes will be lost.')) {
+        history.back();
+    }
+}
+</script>
+</body>
+</html>, RWF: 'FRw', EUR: '€', KES: 'Ksh', NGN: '₦' };
+    window.addEventListener('load', function() {
+      const link = document.createElement('script');
+      link.rel = 'stylesheet';
+      link.href = '/shared/styles.css';
+      document.head.appendChild(link);
+    });
+  </script>
+
+<script>
+// Utility Functions for Enhanced Functionality
+function showNotification(message, type = 'info') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 ${
+        type === 'success' ? 'bg-green-500 text-white' :
+        type === 'error' ? 'bg-red-500 text-white' :
+        type === 'warning' ? 'bg-yellow-500 text-black' :
+        'bg-blue-500 text-white'
+    }`;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+// Generic search handlers
+function handleProductSearch(query) {
+    console.log('Searching products:', query);
+    if (query.length > 2) {
+        // Implement product search logic
+        showNotification('Searching for: ' + query, 'info');
+    }
+}
+
+function handleSellerSearch(query) {
+    console.log('Searching sellers:', query);
+    if (query.length > 2) {
+        showNotification('Searching sellers: ' + query, 'info');
+    }
+}
+
+function handleAgentSearch(query) {
+    console.log('Searching agents:', query);
+    if (query.length > 2) {
+        showNotification('Searching agents: ' + query, 'info');
+    }
+}
+
+function handleOrderSearch(query) {
+    console.log('Searching orders:', query);
+    if (query.length > 2) {
+        showNotification('Searching orders: ' + query, 'info');
+    }
+}
+
+function handleUserSearch(query) {
+    console.log('Searching users:', query);
+    if (query.length > 2) {
+        showNotification('Searching users: ' + query, 'info');
+    }
+}
+
+// Generic form handlers
+function handleSave() {
+    showNotification('Save functionality will be implemented soon', 'info');
+}
+
+function handleEdit() {
+    showNotification('Edit functionality will be implemented soon', 'info');
+}
+
+function handleDelete() {
+    if (confirm('Are you sure you want to delete this item?')) {
+        showNotification('Delete functionality will be implemented soon', 'info');
+    }
+}
+
+function handleCancel() {
+    if (confirm('Are you sure you want to cancel? Unsaved changes will be lost.')) {
+        history.back();
+    }
+}
+</script>
+</body>
+</html>, EUR: '€', GBP: '£', RWF: '₣' };
+      return `${symbols[currency] || currency} ${convertedPrice.toLocaleString()}`;
+    }
+
+    // Fetch categories
+    async function fetchCategories() {
+      try {
+        const response = await 
+                try {
+                    const response = await fetch('/api/categories');
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    // Continue with successful response
+                    const data = await response.json();
+                    return data;
+                } catch (error) {
+                    console.error('API call failed:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+                    showNotification('Operation failed. Please try again.', 'error');
+                    throw error;
+                };
+        const data = await response.json();
+        
+        if (data.success) {
+          displayCategories(data.categories);
+          populateCategoryFilter(data.categories);
+        }
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+      }
+    }
+
+    // Display categories
+    function displayCategories(categories) {
+      categoriesContainer.innerHTML = categories.map(category => `
+        <div class="category-card cursor-pointer" onclick="filterByCategory(${category.id})">
+          <div class="text-4xl mb-3">${category.icon || '📦'}</div>
+          <h3 class="font-semibold text-lg">${category.name}</h3>
+          <p class="text-gray-600 text-sm mt-2">${category.description || ''}</p>
+        </div>
+      `).join('');
+    }
+
+    // Populate category filter
+    function populateCategoryFilter(categories) {
+      const categoryFilter = document.getElementById('category-filter');
+      categories.forEach(category => {
+        const option = document.createElement('option');
+        option.value = category.id;
+        option.textContent = category.name;
+        categoryFilter.appendChild(option);
+      });
+    }
+
+    // Fetch products
+    async function fetchProducts(reset = false) {
+      if (reset) {
+        currentPage = 1;
+        productsContainer.innerHTML = '';
+      }
+
+      try {
+        const params = new URLSearchParams({
+          page: currentPage,
+          limit: 12,
+          ...currentFilters
+        });
+
+        const response = await (async () => {
+                    try {
+                        const response = await fetch('/api/products?${params}', {});
+                        
+                        if (!response.ok) {
+                            const errorText = await response.text();
+                            let errorMessage = 'Request failed';
+                            
+                            try {
+                                const errorData = JSON.parse(errorText);
+                                errorMessage = errorData.message || errorData.error || errorMessage;
+                            } catch (e) {
+                                errorMessage = errorText || `HTTP ${response.status}: ${response.statusText}`;
+                            }
+                            
+                            throw new Error(errorMessage);
+                        }
+                        
+                        return response;
+                    } catch (error) {
+                        console.error('API call failed:', {
+                            url: '/api/products?${params}',
+                            error: error.message,
+                            timestamp: new Date().toISOString()
+                        });
+                        
+                        showNotification(
+                            error.message || 'Request failed. Please try again.',
+                            'error'
+                        );
+                        
+                        throw error;
+                    }
+                })();
+        const data = await response.json();
+
+        if (data.success) {
+          displayProducts(data.products, reset);
+          
+          if (data.products.length < 12) {
+            loadMoreBtn.style.display = 'none';
+          } else {
+            loadMoreBtn.style.display = 'block';
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching products:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+      }
+    }
+
+    // Display products
+    function displayProducts(products, reset = false) {
+      const productsHTML = products.map(product => `
+        <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+          <img data-src="${product.image_url || '/public/images/placeholder.jpg'}" 
+               src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E"
+               alt="${product.name}" 
+               class="w-full h-48 object-cover lazy-image">
+          <div class="p-4">
+            <h3 class="font-semibold text-lg mb-2">${product.name}</h3>
+            <p class="text-gray-600 text-sm mb-3">${product.description?.substring(0, 100)}...</p>
+            <div class="flex justify-between items-center">
+              <span class="text-xl font-bold text-blue-600">${formatPrice(product.price)}</span>
+              <button onclick="viewProduct(${product.id})" class="btn btn-primary">View</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      if (reset) {
+        productsContainer.innerHTML = productsHTML;
+      } else {
+        productsContainer.innerHTML += productsHTML;
+      }
+
+      // Re-observe lazy images
+      if ('IntersectionObserver' in window) {
+        document.querySelectorAll('.lazy-image').forEach(img => {
+          if (!img.src.includes('data:image')) return;
+          imageObserver.observe(img);
+        });
+      }
+    }
+
+    // Filter by category
+    function filterByCategory(categoryId) {
+      currentFilters.category_id = categoryId;
+      document.getElementById('category-filter').value = categoryId;
+      fetchProducts(true);
+    }
+
+    // View product
+    function viewProduct(productId) {
+      window.location.href = `/auth/auth-buyer.html?redirect=/buyer/product-detail.html?id=${productId}`;
+    }
+
+    // Event listeners
+    document.addEventListener('DOMContentLoaded', function() {
+      // Initialize
+      async function initialize() {
+        await fetchCurrencyRates();
+        fetchCategories();
+        fetchProducts();
+      }
+      initialize();
+
+      // Search functionality
+      let searchTimeout;
+      document.getElementById('search-bar').addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+          currentFilters.search = this.value;
+          fetchProducts(true);
+        }, 500);
+      });
+
+      // Category filter
+      document.getElementById('category-filter').addEventListener('change', function() {
+        currentFilters.category_id = this.value === 'all' ? null : this.value;
+        fetchProducts(true);
+      });
+
+      // Sort filter
+      document.getElementById('sort-filter').addEventListener('change', function() {
+        currentFilters.sort = this.value;
+        fetchProducts(true);
+      });
+
+      // Load more button
+      loadMoreBtn.addEventListener('click', function() {
+        currentPage++;
+        fetchProducts();
+      });
+
+      // Currency selector
+      currencySelector.addEventListener('change', function() {
+        currentCurrency = this.value;
+        fetchProducts(true);
+      });
+    });
+  </script>
+
+  <!-- Load non-critical CSS after page load -->
+  <script>
+    window.addEventListener('load', function() {
+      const link = document.createElement('script');
+      link.rel = 'stylesheet';
+      link.href = '/shared/styles.css';
+      document.head.appendChild(link);
+    });
+  </script>
+
+<script>
+// Utility Functions for Enhanced Functionality
+function showNotification(message, type = 'info') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 ${
+        type === 'success' ? 'bg-green-500 text-white' :
+        type === 'error' ? 'bg-red-500 text-white' :
+        type === 'warning' ? 'bg-yellow-500 text-black' :
+        'bg-blue-500 text-white'
+    }`;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+// Generic search handlers
+function handleProductSearch(query) {
+    console.log('Searching products:', query);
+    if (query.length > 2) {
+        // Implement product search logic
+        showNotification('Searching for: ' + query, 'info');
+    }
+}
+
+function handleSellerSearch(query) {
+    console.log('Searching sellers:', query);
+    if (query.length > 2) {
+        showNotification('Searching sellers: ' + query, 'info');
+    }
+}
+
+function handleAgentSearch(query) {
+    console.log('Searching agents:', query);
+    if (query.length > 2) {
+        showNotification('Searching agents: ' + query, 'info');
+    }
+}
+
+function handleOrderSearch(query) {
+    console.log('Searching orders:', query);
+    if (query.length > 2) {
+        showNotification('Searching orders: ' + query, 'info');
+    }
+}
+
+function handleUserSearch(query) {
+    console.log('Searching users:', query);
+    if (query.length > 2) {
+        showNotification('Searching users: ' + query, 'info');
+    }
+}
+
+// Generic form handlers
+function handleSave() {
+    showNotification('Save functionality will be implemented soon', 'info');
+}
+
+function handleEdit() {
+    showNotification('Edit functionality will be implemented soon', 'info');
+}
+
+function handleDelete() {
+    if (confirm('Are you sure you want to delete this item?')) {
+        showNotification('Delete functionality will be implemented soon', 'info');
+    }
+}
+
+function handleCancel() {
+    if (confirm('Are you sure you want to cancel? Unsaved changes will be lost.')) {
+        history.back();
+    }
+}
+</script>
+</body>
+</html>

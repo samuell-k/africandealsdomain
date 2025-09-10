@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="en" class="admin-page">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reviews Management | Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="admin-auth-check.js"></script>
+    <script src="admin-utils.js"></script>
+    <style>
+        :root {
+            --primary-color: #080b3b;
+            --secondary-color: #1e40af;
+            --accent-color: #3b82f6;
+        }
+        
+        .glass-morphism {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        }
+        .sidebar {
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .nav-item {
+            transition: all 0.3s ease;
+        }
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+        .nav-item.active {
+            background: rgba(255, 255, 255, 0.2);
+            border-left: 3px solid #3b82f6;
+        }
+        .loading-spinner {
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 2px solid #3b82f6;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .form-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+        }
+        .review-status-badge {
+            @apply px-2 py-1 rounded-full text-xs font-medium;
+        }
+        .status-pending { @apply bg-yellow-500/20 text-yellow-400; }
+        .status-approved { @apply bg-green-500/20 text-green-400; }
+        .status-rejected { @apply bg-red-500/20 text-red-400; }
+        .rating-stars {
+            display: flex;
+            gap: 2px;
+        }
+        .star {
+            color: #fbbf24;
+            font-size: 0.875rem;
+        }
+        .star.empty {
+            color: rgba(255, 255, 255, 0.3);
+        }
+        .review-card {
+            transition: all 0.3s ease;
+        }
+        .review-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+        .filter-tab {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .filter-tab:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .filter-tab.active {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: var(--accent-color);
+        }
+    </style>
+</head>
+
+<body class="gradient-bg min-h-screen">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <div class="sidebar w-64 lg:w-80 flex-shrink-0 hidden md:flex flex-col">
+            <div class="p-6 border-b border-white/10">
+                <h2 class="text-xl font-bold text-white">Admin Panel</h2>
+            </div>
+            
+            <nav class="flex-1 p-4 space-y-2">
+                <a href="dashboard.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="user-management.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-users"></i>
+                    <span>User Management</span>
+                </a>
+                <a href="manual-payment-approval.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-credit-card"></i>
+                    <span>Payment Approval</span>
+                </a>
+                <a href="products.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-box"></i>
+                    <span>Products</span>
+                </a>
+                <a href="order-management.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Orders</span>
+                </a>
+                <a href="agents.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-user-tie"></i>
+                    <span>Agents</span>
+                </a>
+                <a href="categories.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-tags"></i>
+                    <span>Categories</span>
+                </a>
+                <a href="brands.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-trademark"></i>
+                    <span>Brands</span>
+                </a>
+                <a href="reviews.html" class="nav-item active flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-star"></i>
+                    <span>Reviews</span>
+                </a>
+                <a href="reports.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Reports</span>
+                </a>
+                <a href="settings.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
+            
+            <!-- Header -->
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 space-y-4 sm:space-y-0">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-white mb-2">Reviews Management</h1>
+                    <p class="text-white/70">Manage and moderate product reviews</p>
+                </div>
+                <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                    <button onclick="exportReviews()" class="bg-gray-500 hover:bg-gray-600 text-white px-3 sm:px-4 py-2 rounded-lg transition text-sm flex items-center justify-center">
+                        <i class="fas fa-download mr-2"></i>Export
+                    </button>
+                    <button onclick="loadReviews()" class="bg-blue-500 hover:bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-lg transition text-sm flex items-center justify-center">
+                        <i class="fas fa-refresh mr-2"></i>Refresh
+                    </button>
+                </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
+                <div class="glass-morphism rounded-xl p-4 sm:p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-white/70 text-xs sm:text-sm">Total Reviews</p>
+                            <p class="text-white text-lg sm:text-2xl font-bold" id="total-reviews">0</p>
+                        </div>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-star text-blue-400 text-lg sm:text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-morphism rounded-xl p-4 sm:p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-white/70 text-xs sm:text-sm">Pending</p>
+                            <p class="text-white text-lg sm:text-2xl font-bold" id="pending-reviews">0</p>
+                        </div>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-clock text-yellow-400 text-lg sm:text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-morphism rounded-xl p-4 sm:p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-white/70 text-xs sm:text-sm">Approved</p>
+                            <p class="text-white text-lg sm:text-2xl font-bold" id="approved-reviews">0</p>
+                        </div>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-check-circle text-green-400 text-lg sm:text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-morphism rounded-xl p-4 sm:p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-white/70 text-xs sm:text-sm">Avg Rating</p>
+                            <p class="text-white text-lg sm:text-2xl font-bold" id="average-rating">0.0</p>
+                        </div>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-chart-line text-purple-400 text-lg sm:text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Tabs -->
+            <div class="flex flex-wrap gap-2 mb-6">
+                <div class="filter-tab active" data-filter="all" onclick="switchFilter('all')">
+                    <span class="text-white font-medium">All Reviews</span>
+                    <span id="all-count" class="ml-2 text-white/50 text-sm">(0)</span>
+                </div>
+                <div class="filter-tab" data-filter="pending" onclick="switchFilter('pending')">
+                    <span class="text-white font-medium">Pending</span>
+                    <span id="pending-count" class="ml-2 text-white/50 text-sm">(0)</span>
+                </div>
+                <div class="filter-tab" data-filter="approved" onclick="switchFilter('approved')">
+                    <span class="text-white font-medium">Approved</span>
+                    <span id="approved-count" class="ml-2 text-white/50 text-sm">(0)</span>
+                </div>
+                <div class="filter-tab" data-filter="rejected" onclick="switchFilter('rejected')">
+                    <span class="text-white font-medium">Rejected</span>
+                    <span id="rejected-count" class="ml-2 text-white/50 text-sm">(0)</span>
+                </div>
+            </div>
+
+            <!-- Search and Filters -->
+            <div class="glass-morphism rounded-xl p-4 sm:p-6 mb-6">
+                <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                    <div class="sm:col-span-2">
+                        <label class="block text-white/70 text-sm mb-2">Search Reviews</label>
+                        <input type="text" id="search-reviews" placeholder="Product name, reviewer, comment..." 
+                               class="w-full p-3 rounded-lg form-input text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-white/70 text-sm mb-2">Rating Filter</label>
+                        <select id="rating-filter" class="w-full p-3 rounded-lg form-input text-sm">
+                            <option value="">All Ratings</option>
+                            <option value="5">5 Stars</option>
+                            <option value="4">4 Stars</option>
+                            <option value="3">3 Stars</option>
+                            <option value="2">2 Stars</option>
+                            <option value="1">1 Star</option>
+                        </select>
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="applyFilters()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg text-sm font-medium">
+                            <i class="fas fa-search mr-2"></i>Search
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reviews List -->
+            <div class="glass-morphism rounded-xl overflow-hidden">
+                <div class="p-4 sm:p-6 border-b border-white/10">
+                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-3 sm:space-y-0">
+                        <h3 class="text-lg sm:text-xl font-bold text-white">Reviews List</h3>
+                        <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                            <button onclick="bulkApprove()" class="bg-green-500 hover:bg-green-600 text-white px-3 sm:px-4 py-2 rounded-lg text-sm flex items-center justify-center">
+                                <i class="fas fa-check mr-2"></i>Bulk Approve
+                            </button>
+                            <button onclick="exportReviews()" class="bg-gray-500 hover:bg-gray-600 text-white px-3 sm:px-4 py-2 rounded-lg text-sm flex items-center justify-center">
+                                <i class="fas fa-download mr-2"></i>Export
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="reviews-container" class="overflow-x-auto">
+                    <div class="text-center py-8">
+                        <div class="loading-spinner mx-auto mb-4"></div>
+                        <p class="text-white/70">Loading reviews...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Review Detail Modal -->
+    <div id="review-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+        <div class="glass-morphism p-6 sm:p-8 rounded-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 id="modal-title" class="text-xl sm:text-2xl font-bold text-white">Review Details</h2>
+                <button onclick="closeReviewModal()" class="text-white/70 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <div id="review-details" class="space-y-4">
+                <!-- Review details will be loaded here -->
+            </div>
+
+            <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 mt-6">
+                <button type="button" onclick="closeReviewModal()" 
+                        class="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg">
+                    Close
+                </button>
+                <button id="approve-btn" onclick="approveReview()" 
+                        class="px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg hidden">
+                    <i class="fas fa-check mr-2"></i>Approve
+                </button>
+                <button id="reject-btn" onclick="rejectReview()" 
+                        class="px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg hidden">
+                    <i class="fas fa-times mr-2"></i>Reject
+                </button>
+                <button id="delete-btn" onclick="deleteCurrentReview()" 
+                        class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg">
+                    <i class="fas fa-trash mr-2"></i>Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // Global variables
+    let allReviews = [];
+    let filteredReviews = [];
+    let currentFilter = 'all';
+    let currentReview = null;
+    let selectedReviews = [];
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('🚀 Reviews Management page initializing...');
+        
+        // Check authentication first
+        if (!checkAuthentication()) return;
+        
+        // Load data
+        loadReviews();
+        setupEventListeners();
+    });
+
+    // Check authentication
+    function checkAuthentication() {
+        const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
+        const userRole = localStorage.getItem('userRole');
+        
+        if (!token) {
+            console.log('❌ No authentication token found');
+            window.location.href = '/auth/auth-admin.html';
+            return false;
+        }
+        
+        if (userRole !== 'admin') {
+            console.log('❌ Insufficient permissions');
+            window.location.href = '/auth/auth-admin.html';
+            return false;
+        }
+        
+        console.log('✅ Authentication verified');
+        return true;
+    }
+
+    // Setup event listeners
+    function setupEventListeners() {
+        // Search functionality
+        document.getElementById('search-reviews').addEventListener('input', debounce(applyFilters, 500));
+        document.getElementById('rating-filter').addEventListener('change', applyFilters);
+    }
+
+    // Load reviews from API
+    async function loadReviews() {
+        try {
+            console.log('📊 Loading reviews...');
+            
+            const response = await makeAuthenticatedRequest('/api/admin/reviews?limit=100');
+
+            if (response.success) {
+                allReviews = response.reviews || [];
+                filteredReviews = [...allReviews];
+                
+                renderReviews(filteredReviews);
+                updateStatistics(allReviews);
+                updateFilterCounts(allReviews);
+                
+                console.log('✅ Reviews loaded successfully');
+            } else {
+                throw new Error(response.message || 'Failed to load reviews');
+            }
+
+        } catch (error) {
+            console.error('❌ Error loading reviews:', error);
+            document.getElementById('reviews-container').innerHTML = 
+                createErrorState(error.message, 'loadReviews()');
+            showToast('Failed to load reviews: ' + error.message, 'error');
+        }
+    }
+
+    // Switch filter
+    function switchFilter(filter) {
+        currentFilter = filter;
+        
+        // Update active tab
+        document.querySelectorAll('.filter-tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        document.querySelector(`[data-filter="${filter}"]`).classList.add('active');
+        
+        // Apply filter
+        applyFilters();
+    }
+
+    // Apply filters
+    function applyFilters() {
+        const searchTerm = document.getElementById('search-reviews').value.toLowerCase();
+        const ratingFilter = document.getElementById('rating-filter').value;
+        
+        filteredReviews = allReviews.filter(review => {
+            // Status filter
+            if (currentFilter !== 'all' && review.status !== currentFilter) {
+                return false;
+            }
+            
+            // Search filter
+            if (searchTerm) {
+                const searchableText = [
+                    review.product_name || '',
+                    review.reviewer_name || '',
+                    review.comment || ''
+                ].join(' ').toLowerCase();
+                
+                if (!searchableText.includes(searchTerm)) {
+                    return false;
+                }
+            }
+            
+            // Rating filter
+            if (ratingFilter && review.rating != ratingFilter) {
+                return false;
+            }
+            
+            return true;
+        });
+        
+        renderReviews(filteredReviews);
+    }
+
+    // Render reviews (mobile-first responsive)
+    function renderReviews(reviews) {
+        const container = document.getElementById('reviews-container');
+        
+        if (!reviews || reviews.length === 0) {
+            container.innerHTML = createEmptyState(
+                'reviews', 
+                'No Reviews Found', 
+                'No reviews match your current filters.',
+                '<button onclick="loadReviews()" class="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"><i class="fas fa-refresh mr-2"></i>Refresh</button>'
+            );
+            return;
+        }
+
+        // Mobile-first: Cards on mobile, table on desktop
+        const mobileCardsHTML = `
+            <div class="block lg:hidden space-y-4 p-4">
+                ${reviews.map(review => `
+                    <div class="review-card bg-white/5 rounded-lg p-4 hover:bg-white/10 transition-colors">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex-1">
+                                <div class="flex items-center justify-between mb-2">
+                                    <h4 class="text-white font-semibold text-sm">${review.product_name || 'Product'}</h4>
+                                    <span class="review-status-badge status-${review.status}">${formatStatus(review.status)}</span>
+                                </div>
+                                <div class="flex items-center space-x-2 mb-2">
+                                    <div class="rating-stars">
+                                        ${generateStars(review.rating)}
+                                    </div>
+                                    <span class="text-white/70 text-sm">by ${review.reviewer_name || 'Anonymous'}</span>
+                                </div>
+                                <p class="text-white/60 text-sm mb-2 line-clamp-2">${review.comment || 'No comment provided'}</p>
+                                <p class="text-white/50 text-xs">${formatDate(review.created_at)}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                            <button onclick="viewReview(${review.id})" 
+                                    class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-sm flex items-center justify-center">
+                                <i class="fas fa-eye mr-1"></i>View
+                            </button>
+                            ${review.status === 'pending' ? `
+                                <button onclick="approveReviewById(${review.id})" 
+                                        class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm flex items-center justify-center">
+                                    <i class="fas fa-check mr-1"></i>Approve
+                                </button>
+                                <button onclick="rejectReviewById(${review.id})" 
+                                        class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded text-sm flex items-center justify-center">
+                                    <i class="fas fa-times mr-1"></i>Reject
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+
+        // Desktop table
+        const desktopTableHTML = `
+            <div class="hidden lg:block">
+                <table class="w-full">
+                    <thead class="bg-white/5">
+                        <tr>
+                            <th class="text-left p-4 text-white/70 font-semibold">
+                                <input type="checkbox" onchange="toggleSelectAll(this)" class="mr-2">
+                                Product & Review
+                            </th>
+                            <th class="text-left p-4 text-white/70 font-semibold">Rating</th>
+                            <th class="text-left p-4 text-white/70 font-semibold">Reviewer</th>
+                            <th class="text-left p-4 text-white/70 font-semibold">Status</th>
+                            <th class="text-left p-4 text-white/70 font-semibold">Date</th>
+                            <th class="text-left p-4 text-white/70 font-semibold">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${reviews.map(review => `
+                            <tr class="border-t border-white/10 hover:bg-white/5">
+                                <td class="p-4">
+                                    <input type="checkbox" value="${review.id}" onchange="toggleReviewSelect(this)" class="mr-3">
+                                    <div>
+                                        <div class="text-white font-semibold text-sm">${review.product_name || 'Product'}</div>
+                                        <div class="text-white/70 text-xs mt-1 line-clamp-2 max-w-xs">${review.comment || 'No comment'}</div>
+                                    </div>
+                                </td>
+                                <td class="p-4">
+                                    <div class="rating-stars">
+                                        ${generateStars(review.rating)}
+                                    </div>
+                                </td>
+                                <td class="p-4 text-white/70 text-sm">
+                                    ${review.reviewer_name || 'Anonymous'}
+                                </td>
+                                <td class="p-4">
+                                    <span class="review-status-badge status-${review.status}">${formatStatus(review.status)}</span>
+                                </td>
+                                <td class="p-4 text-white/70 text-sm">
+                                    ${formatDate(review.created_at)}
+                                </td>
+                                <td class="p-4">
+                                    <div class="flex space-x-1">
+                                        <button onclick="viewReview(${review.id})" 
+                                                class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs"
+                                                title="View Details">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        ${review.status === 'pending' ? `
+                                            <button onclick="approveReviewById(${review.id})" 
+                                                    class="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-xs"
+                                                    title="Approve">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                            <button onclick="rejectReviewById(${review.id})" 
+                                                    class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs"
+                                                    title="Reject">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        ` : ''}
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+        
+        container.innerHTML = mobileCardsHTML + desktopTableHTML;
+    }
+
+    // Generate star rating
+    function generateStars(rating) {
+        const stars = [];
+        for (let i = 1; i <= 5; i++) {
+            stars.push(`<i class="fas fa-star star ${i <= rating ? '' : 'empty'}"></i>`);
+        }
+        return stars.join('');
+    }
+
+    // Format status
+    function formatStatus(status) {
+        const statusMap = {
+            'pending': 'Pending',
+            'approved': 'Approved', 
+            'rejected': 'Rejected'
+        };
+        return statusMap[status] || status;
+    }
+
+    // Update statistics
+    function updateStatistics(reviews) {
+        const totalReviews = reviews.length;
+        const pendingReviews = reviews.filter(r => r.status === 'pending').length;
+        const approvedReviews = reviews.filter(r => r.status === 'approved').length;
+        
+        // Calculate average rating
+        const ratingsSum = reviews.reduce((sum, review) => sum + (review.rating || 0), 0);
+        const averageRating = totalReviews > 0 ? (ratingsSum / totalReviews).toFixed(1) : '0.0';
+
+        document.getElementById('total-reviews').textContent = totalReviews;
+        document.getElementById('pending-reviews').textContent = pendingReviews;
+        document.getElementById('approved-reviews').textContent = approvedReviews;
+        document.getElementById('average-rating').textContent = averageRating;
+    }
+
+    // Update filter counts
+    function updateFilterCounts(reviews) {
+        const counts = {
+            all: reviews.length,
+            pending: reviews.filter(r => r.status === 'pending').length,
+            approved: reviews.filter(r => r.status === 'approved').length,
+            rejected: reviews.filter(r => r.status === 'rejected').length
+        };
+
+        Object.keys(counts).forEach(filter => {
+            const element = document.getElementById(`${filter}-count`);
+            if (element) {
+                element.textContent = `(${counts[filter]})`;
+            }
+        });
+    }
+
+    // View review details
+    function viewReview(reviewId) {
+        currentReview = allReviews.find(r => r.id === reviewId);
+        if (!currentReview) {
+            showToast('Review not found', 'error');
+            return;
+        }
+
+        // Populate modal
+        document.getElementById('review-details').innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-white/70 text-sm mb-1">Product</label>
+                    <div class="text-white font-semibold">${currentReview.product_name || 'N/A'}</div>
+                </div>
+                <div>
+                    <label class="block text-white/70 text-sm mb-1">Reviewer</label>
+                    <div class="text-white font-semibold">${currentReview.reviewer_name || 'Anonymous'}</div>
+                </div>
+                <div>
+                    <label class="block text-white/70 text-sm mb-1">Rating</label>
+                    <div class="rating-stars text-lg">
+                        ${generateStars(currentReview.rating)}
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-white/70 text-sm mb-1">Status</label>
+                    <span class="review-status-badge status-${currentReview.status}">${formatStatus(currentReview.status)}</span>
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-white/70 text-sm mb-1">Review Comment</label>
+                    <div class="bg-white/5 p-3 rounded-lg text-white">
+                        ${currentReview.comment || 'No comment provided'}
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-white/70 text-sm mb-1">Review Date</label>
+                    <div class="text-white">${formatDate(currentReview.created_at)}</div>
+                </div>
+                ${currentReview.admin_notes ? `
+                    <div class="md:col-span-2">
+                        <label class="block text-white/70 text-sm mb-1">Admin Notes</label>
+                        <div class="bg-white/5 p-3 rounded-lg text-white">
+                            ${currentReview.admin_notes}
+                        </div>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+
+        // Show/hide action buttons based on status
+        const approveBtn = document.getElementById('approve-btn');
+        const rejectBtn = document.getElementById('reject-btn');
+        
+        if (currentReview.status === 'pending') {
+            approveBtn.classList.remove('hidden');
+            rejectBtn.classList.remove('hidden');
+        } else {
+            approveBtn.classList.add('hidden');
+            rejectBtn.classList.add('hidden');
+        }
+
+        // Show modal
+        document.getElementById('review-modal').classList.remove('hidden');
+        document.getElementById('review-modal').classList.add('flex');
+    }
+
+    // Close review modal
+    function closeReviewModal() {
+        document.getElementById('review-modal').classList.add('hidden');
+        document.getElementById('review-modal').classList.remove('flex');
+        currentReview = null;
+    }
+
+    // Approve review
+    async function approveReview() {
+        if (!currentReview) return;
+        
+        const notes = prompt('Add approval notes (optional):');
+        await approveReviewById(currentReview.id, notes);
+        closeReviewModal();
+    }
+
+    // Reject review
+    async function rejectReview() {
+        if (!currentReview) return;
+        
+        const notes = prompt('Add rejection reason (required):', 'Review does not meet community guidelines');
+        if (!notes) return;
+        
+        await rejectReviewById(currentReview.id, notes);
+        closeReviewModal();
+    }
+
+    // Delete current review
+    async function deleteCurrentReview() {
+        if (!currentReview) return;
+        
+        if (!confirm('Are you sure you want to delete this review? This action cannot be undone.')) {
+            return;
+        }
+        
+        await deleteReview(currentReview.id);
+        closeReviewModal();
+    }
+
+    // Approve review by ID
+    async function approveReviewById(reviewId, notes = null) {
+        try {
+            console.log('✅ Approving review:', reviewId);
+
+            const response = await makeAuthenticatedRequest(`/api/admin/reviews/${reviewId}/approve`, {
+                method: 'POST',
+                body: JSON.stringify({ notes })
+            });
+
+            if (response.success) {
+                showToast('Review approved successfully', 'success');
+                loadReviews();
+            } else {
+                throw new Error(response.message || 'Failed to approve review');
+            }
+
+        } catch (error) {
+            console.error('❌ Error approving review:', error);
+            showToast('Error approving review: ' + error.message, 'error');
+        }
+    }
+
+    // Reject review by ID
+    async function rejectReviewById(reviewId, notes = null) {
+        try {
+            console.log('❌ Rejecting review:', reviewId);
+
+            const response = await makeAuthenticatedRequest(`/api/admin/reviews/${reviewId}/reject`, {
+                method: 'POST',
+                body: JSON.stringify({ notes })
+            });
+
+            if (response.success) {
+                showToast('Review rejected successfully', 'success');
+                loadReviews();
+            } else {
+                throw new Error(response.message || 'Failed to reject review');
+            }
+
+        } catch (error) {
+            console.error('❌ Error rejecting review:', error);
+            showToast('Error rejecting review: ' + error.message, 'error');
+        }
+    }
+
+    // Delete review
+    async function deleteReview(reviewId) {
+        try {
+            console.log('🗑️ Deleting review:', reviewId);
+
+            const response = await makeAuthenticatedRequest(`/api/admin/reviews/${reviewId}`, {
+                method: 'DELETE'
+            });
+
+            if (response.success) {
+                showToast('Review deleted successfully', 'success');
+                loadReviews();
+            } else {
+                throw new Error(response.message || 'Failed to delete review');
+            }
+
+        } catch (error) {
+            console.error('❌ Error deleting review:', error);
+            showToast('Error deleting review: ' + error.message, 'error');
+        }
+    }
+
+    // Toggle select all reviews
+    function toggleSelectAll(checkbox) {
+        const reviewCheckboxes = document.querySelectorAll('tbody input[type="checkbox"]');
+        selectedReviews = [];
+        
+        reviewCheckboxes.forEach(cb => {
+            cb.checked = checkbox.checked;
+            if (checkbox.checked) {
+                selectedReviews.push(parseInt(cb.value));
+            }
+        });
+        
+        console.log('Selected reviews:', selectedReviews);
+    }
+
+    // Toggle individual review selection
+    function toggleReviewSelect(checkbox) {
+        const reviewId = parseInt(checkbox.value);
+        
+        if (checkbox.checked) {
+            if (!selectedReviews.includes(reviewId)) {
+                selectedReviews.push(reviewId);
+            }
+        } else {
+            selectedReviews = selectedReviews.filter(id => id !== reviewId);
+        }
+        
+        console.log('Selected reviews:', selectedReviews);
+    }
+
+    // Bulk approve selected reviews
+    async function bulkApprove() {
+        if (selectedReviews.length === 0) {
+            showToast('No reviews selected', 'warning');
+            return;
+        }
+        
+        if (!confirm(`Approve ${selectedReviews.length} selected reviews?`)) {
+            return;
+        }
+        
+        try {
+            const promises = selectedReviews.map(id => 
+                makeAuthenticatedRequest(`/api/admin/reviews/${id}/approve`, {
+                    method: 'POST',
+                    body: JSON.stringify({ notes: 'Bulk approved' })
+                })
+            );
+            
+            await Promise.all(promises);
+            showToast(`${selectedReviews.length} reviews approved successfully`, 'success');
+            selectedReviews = [];
+            loadReviews();
+            
+        } catch (error) {
+            console.error('❌ Error bulk approving reviews:', error);
+            showToast('Error bulk approving reviews: ' + error.message, 'error');
+        }
+    }
+
+    // Export reviews
+    function exportReviews() {
+        if (!filteredReviews || filteredReviews.length === 0) {
+            showToast('No reviews to export', 'warning');
+            return;
+        }
+        
+        const exportData = filteredReviews.map(review => ({
+            'Product': review.product_name || '',
+            'Reviewer': review.reviewer_name || '',
+            'Rating': review.rating,
+            'Comment': review.comment || '',
+            'Status': formatStatus(review.status),
+            'Review Date': new Date(review.created_at).toLocaleDateString(),
+            'Admin Notes': review.admin_notes || ''
+        }));
+        
+        exportToCSV(exportData, `reviews_export_${new Date().toISOString().split('T')[0]}.csv`);
+    }
+
+    // Utility functions
+    function makeAuthenticatedRequest(url, options = {}) {
+        const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+        
+        if (!token) {
+            throw new Error('No authentication token available');
+        }
+
+        const defaultOptions = {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        };
+
+        return fetch(`http://localhost:3001${url}`, { ...defaultOptions, ...options })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            });
+    }
+
+    function createEmptyState(type, title, description, actions = '') {
+        return `
+            <div class="text-center py-12">
+                <div class="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-star text-white/30 text-3xl"></i>
+                </div>
+                <h3 class="text-white text-xl font-semibold mb-2">${title}</h3>
+                <p class="text-white/60 mb-6 max-w-md mx-auto">${description}</p>
+                ${actions}
+            </div>
+        `;
+    }
+
+    function createErrorState(message, retry = null) {
+        return `
+            <div class="text-center py-12">
+                <div class="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-exclamation-triangle text-red-400 text-3xl"></i>
+                </div>
+                <h3 class="text-white text-xl font-semibold mb-2">Error Loading Data</h3>
+                <p class="text-white/60 mb-6 max-w-md mx-auto">${message}</p>
+                ${retry ? `<button onclick="${retry}" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg"><i class="fas fa-refresh mr-2"></i>Try Again</button>` : ''}
+            </div>
+        `;
+    }
+
+    function showToast(message, type = 'info') {
+        console.log(`[${type.toUpperCase()}] ${message}`);
+        
+        const toast = document.createElement('div');
+        toast.className = `fixed top-4 right-4 z-50 px-6 py-4 rounded-lg text-white ${
+            type === 'success' ? 'bg-green-500' : 
+            type === 'error' ? 'bg-red-500' : 
+            type === 'warning' ? 'bg-yellow-500' : 'bg-blue-500'
+        }`;
+        toast.textContent = message;
+        
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    function formatDate(dateString) {
+        if (!dateString) return 'N/A';
+        return new Date(dateString).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    function exportToCSV(data, filename) {
+        const csv = convertToCSV(data);
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        window.URL.revokeObjectURL(url);
+    }
+
+    function convertToCSV(data) {
+        if (!data.length) return '';
+        
+        const headers = Object.keys(data[0]);
+        const csvContent = [
+            headers.join(','),
+            ...data.map(row => 
+                headers.map(header => `"${row[header] || ''}"`).join(',')
+            )
+        ].join('\n');
+        
+        return csvContent;
+    }
+
+    // Make functions globally available
+    window.loadReviews = loadReviews;
+    window.switchFilter = switchFilter;
+    window.applyFilters = applyFilters;
+    window.viewReview = viewReview;
+    window.closeReviewModal = closeReviewModal;
+    window.approveReview = approveReview;
+    window.rejectReview = rejectReview;
+    window.deleteCurrentReview = deleteCurrentReview;
+    window.approveReviewById = approveReviewById;
+    window.rejectReviewById = rejectReviewById;
+    window.toggleSelectAll = toggleSelectAll;
+    window.toggleReviewSelect = toggleReviewSelect;
+    window.bulkApprove = bulkApprove;
+    window.exportReviews = exportReviews;
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Earnings Report - {{period}}</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .earnings-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 700;
+        }
+        .period-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            margin-top: 10px;
+            display: inline-block;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .earnings-summary {
+            background: linear-gradient(135deg, #e8f5e9 0%, #e0f2f1 100%);
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 30px;
+            border-left: 5px solid #28a745;
+        }
+        .total-earnings {
+            font-size: 36px;
+            font-weight: bold;
+            color: #28a745;
+            margin-bottom: 10px;
+        }
+        .earnings-label {
+            color: #6c757d;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .stat-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            border-top: 3px solid #0e2038;
+        }
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #0e2038;
+            margin-bottom: 5px;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #6c757d;
+            text-transform: uppercase;
+        }
+        .breakdown-section {
+            background: #ffffff;
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            margin: 30px 0;
+        }
+        .breakdown-header {
+            background: #f8f9fa;
+            padding: 20px;
+            border-bottom: 1px solid #e9ecef;
+            font-weight: 600;
+            color: #0e2038;
+        }
+        .breakdown-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #f1f1f1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .breakdown-item:last-child {
+            border-bottom: none;
+        }
+        .item-description {
+            color: #495057;
+        }
+        .item-amount {
+            font-weight: 600;
+            color: #28a745;
+        }
+        .performance-section {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+            padding: 25px;
+            border-radius: 12px;
+            margin: 30px 0;
+        }
+        .rating-display {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .stars {
+            color: #ffc107;
+            font-size: 20px;
+        }
+        .rating-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #0e2038;
+        }
+        .next-payment {
+            background: #fff3cd;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 1px solid #ffeaa7;
+        }
+        .btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            text-decoration: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+            margin: 10px;
+        }
+        .footer {
+            background-color: #0e2038;
+            color: white;
+            padding: 30px;
+            text-align: center;
+            font-size: 14px;
+        }
+        @media (max-width: 600px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .breakdown-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="earnings-icon">💰</div>
+            <h1>Your Earnings Report</h1>
+            <div class="period-badge">{{period}}</div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <h2 style="color: #0e2038;">Hello {{agentName}}! 👋</h2>
+            <p style="color: #6c757d; margin-bottom: 30px;">Here's your detailed earnings summary for {{period}}. Keep up the excellent work!</p>
+
+            <!-- Earnings Summary -->
+            <div class="earnings-summary">
+                <div class="total-earnings">${{totalEarnings}}</div>
+                <div class="earnings-label">Total Earnings This Period</div>
+                {{#if bonusEarnings}}
+                <div style="margin-top: 15px; padding: 10px; background: rgba(255,193,7,0.2); border-radius: 8px;">
+                    <strong style="color: #856404;">🎉 Bonus: ${{bonusEarnings}}</strong>
+                </div>
+                {{/if}}
+            </div>
+
+            <!-- Performance Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number">{{totalOrders}}</div>
+                    <div class="stat-label">Orders Completed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{averageRating}}</div>
+                    <div class="stat-label">Average Rating</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${{#divide totalEarnings totalOrders}}{{/divide}}</div>
+                    <div class="stat-label">Per Order</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{#if bonusEarnings}}+{{bonusEarnings}}{{else}}0{{/if}}</div>
+                    <div class="stat-label">Bonus Earned</div>
+                </div>
+            </div>
+
+            <!-- Performance Rating -->
+            <div class="performance-section">
+                <h3 style="color: #0e2038; text-align: center; margin-top: 0;">🏆 Your Performance Rating</h3>
+                <div class="rating-display">
+                    <div class="stars">
+                        {{#repeat averageRating}}⭐{{/repeat}}
+                        {{#repeat (subtract 5 averageRating)}}☆{{/repeat}}
+                    </div>
+                    <div class="rating-number">{{averageRating}}/5</div>
+                </div>
+                <p style="text-align: center; color: #6c757d; margin-bottom: 0;">
+                    {{#gte averageRating 4.5}}Exceptional performance! You're in the top tier of agents.{{/gte}}
+                    {{#and (gte averageRating 4) (lt averageRating 4.5)}}Great work! Customers love your service.{{/and}}
+                    {{#and (gte averageRating 3.5) (lt averageRating 4)}}Good performance! Keep improving to earn more.{{/and}}
+                    {{#lt averageRating 3.5}}Focus on customer satisfaction to boost your earnings.{{/lt}}
+                </p>
+            </div>
+
+            <!-- Earnings Breakdown -->
+            {{#if ordersBreakdown}}
+            <div class="breakdown-section">
+                <div class="breakdown-header">💼 Earnings Breakdown</div>
+                {{#each ordersBreakdown}}
+                <div class="breakdown-item">
+                    <div class="item-description">
+                        <strong>{{orderType}}</strong><br>
+                        <small style="color: #6c757d;">{{count}} orders • Avg: ${{averageEarning}}</small>
+                    </div>
+                    <div class="item-amount">${{totalAmount}}</div>
+                </div>
+                {{/each}}
+            </div>
+            {{/if}}
+
+            <!-- Payment Information -->
+            <div class="next-payment">
+                <h3 style="color: #856404; margin-top: 0;">💳 Next Payment</h3>
+                <p style="margin-bottom: 0;">
+                    <strong>Expected Payment Date:</strong> {{nextPaymentDate}}<br>
+                    <strong>Amount:</strong> ${{totalEarnings}}
+                    {{#if bonusEarnings}} + ${{bonusEarnings}} bonus{{/if}}<br>
+                    <small style="color: #6c757d;">Payments are processed automatically to your registered account.</small>
+                </p>
+            </div>
+
+            <!-- Growth Tips -->
+            <div style="background: #e8f5e8; padding: 25px; border-radius: 12px; margin: 30px 0;">
+                <h3 style="color: #155724; margin-top: 0;">🚀 Tips to Increase Your Earnings:</h3>
+                <ul style="color: #155724; padding-left: 20px;">
+                    <li><strong>Maintain high ratings:</strong> Great customer service = more orders</li>
+                    <li><strong>Be available during peak hours:</strong> Lunch time and evenings</li>
+                    <li><strong>Respond quickly:</strong> Fast acceptance leads to more assignments</li>
+                    <li><strong>Complete orders efficiently:</strong> Speed and reliability matter</li>
+                    <li><strong>Go online regularly:</strong> Consistent availability increases your visibility</li>
+                </ul>
+            </div>
+
+            <!-- Call to Action -->
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="{{dashboardUrl}}" class="btn">View Dashboard</a>
+                <a href="{{earningsUrl}}" class="btn" style="background: linear-gradient(135deg, #0e2038, #2d5aa0);">Detailed Earnings</a>
+            </div>
+
+            <!-- Achievement Badge -->
+            {{#gte totalOrders 50}}
+            <div style="background: linear-gradient(135deg, #6f42c1, #e83e8c); color: white; padding: 20px; border-radius: 12px; text-align: center; margin: 30px 0;">
+                <div style="font-size: 32px; margin-bottom: 10px;">🏅</div>
+                <h3 style="margin: 0;">Achievement Unlocked!</h3>
+                <p style="margin: 10px 0 0 0; opacity: 0.9;">
+                    {{#gte totalOrders 100}}Delivery Master{{/gte}}
+                    {{#and (gte totalOrders 50) (lt totalOrders 100)}}Rising Star{{/and}}
+                    - You've completed {{totalOrders}} orders!
+                </p>
+            </div>
+            {{/gte}}
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <h3 style="margin-top: 0;">African Deals Domain</h3>
+            <p>Thank you for being a valued member of our agent network!</p>
+            <p style="font-size: 12px; opacity: 0.8; margin-bottom: 0;">
+                © 2024 African Deals Domain. All rights reserved.<br>
+                Questions? Contact agent support at support@africandealsdomain.com
+            </p>
+        </div>
+    </div>
+</body>
+</html>

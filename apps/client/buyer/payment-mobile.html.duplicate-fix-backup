@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Minimal Navigation System -->
+  <script src="/shared/universal-navigation.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manual Payment | African Deals Domain</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/shared/unified-router.js"></script>
+  <script src="/shared/mode-switcher.js"></script>
+  <script src="/shared/enhanced-navigation.js"></script>
+  <link rel="icon" href="/public/images/logo.png">
+  <script src="/shared/auth-utils.js"></script>
+  <style>
+    /* Responsive design for all devices */
+    .payment-container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    
+    @media (max-width: 640px) {
+      .mobile-stack { flex-direction: column; }
+      .mobile-full { width: 100%; }
+      .mobile-text-sm { font-size: 0.875rem; }
+      .mobile-p-4 { padding: 1rem; }
+    }
+    
+    @media (min-width: 768px) {
+      .desktop-grid { 
+        display: grid; 
+        grid-template-columns: 1fr 1fr; 
+        gap: 2rem; 
+      }
+      .payment-container { padding: 2rem; }
+    }
+    
+    .success-animation {
+      animation: slideInUp 0.5s ease-out;
+    }
+    
+    @keyframes slideInUp {
+      from {
+        transform: translateY(20px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen" data-page-type="buyer">
+  
+  <!-- Navigation preserved - each page has unique navigation -->
+
+  
+  <!-- Navigation preserved - each page has unique navigation -->
+
+  
+  
+  
+  <!-- Responsive Header -->
+  <header class="bg-white shadow-sm border-b border-gray-200 fixed top-0 left-0 right-0 z-40">
+    <div class="px-4 py-3 payment-container">
+      <div class="flex items-center justify-between">
+        <button onclick="history.back()" class="p-2 -ml-2 text-gray-600 hover:text-gray-900 transition-colors">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          </svg>
+        </button>
+        <h1 class="text-lg md:text-xl font-semibold text-gray-900">Complete Payment</h1>
+        <div class="w-10"></div>
+      </div>
+    </div>
+  </header>
+
+  <main class="pt-16 pb-8 px-4 payment-container">
+    <!-- Order Summary Card -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-4">
+      <div class="p-4 border-b border-gray-100">
+        <h2 class="font-semibold text-gray-900">Order Summary</h2>
+      </div>
+      <div id="mobile-order-summary" class="p-4">
+        <!-- Order details will be loaded here -->
+      </div>
+    </div>
+
+    <!-- Payment Methods Card -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-4">
+      <div class="p-4 border-b border-gray-100">
+        <h2 class="font-semibold text-gray-900">Payment Method</h2>
+      </div>
+      <div id="mobile-payment-methods" class="p-4">
+        <!-- Payment methods will be loaded here -->
+      </div>
+    </div>
+
+    <!-- Manual Payment Card -->
+    <div id="mobile-manual-payment" class="bg-white rounded-lg shadow-sm border border-gray-200 mb-4">
+      <div class="p-4 border-b border-gray-100">
+        <h2 class="font-semibold text-gray-900">Manual Payment</h2>
+      </div>
+      <div class="p-4">
+        <!-- Payment instructions -->
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <h3 class="font-medium text-blue-900 mb-4 text-base">💳 Payment Instructions</h3>
+          <div class="space-y-4 text-blue-800">
+            <div class="bg-blue-100 p-3 rounded-lg">
+              <p class="font-semibold text-blue-900 mb-2">📱 MTN Mobile Money (Rwanda)</p>
+              <p class="font-mono text-sm bg-white p-2 rounded border">Dial: *182*1*1*{AMOUNT}*{PHONE}#</p>
+              <p class="text-sm mt-1">
+                <strong>Merchant Number:</strong> <span class="font-mono bg-white px-2 py-1 rounded">+250 788 123 456</span>
+              </p>
+            </div>
+            
+            <div class="bg-green-100 p-3 rounded-lg">
+              <p class="font-semibold text-green-900 mb-2">💰 Airtel Money</p>
+              <p class="font-mono text-sm bg-white p-2 rounded border">Dial: *185*9*{AMOUNT}*{PHONE}#</p>
+              <p class="text-sm mt-1">
+                <strong>Merchant Number:</strong> <span class="font-mono bg-white px-2 py-1 rounded">+250 738 123 456</span>
+              </p>
+            </div>
+            
+            <div class="bg-purple-100 p-3 rounded-lg">
+              <p class="font-semibold text-purple-900 mb-2">🏦 Bank Transfer</p>
+              <div class="text-sm space-y-1">
+                <p><strong>Bank:</strong> Bank of Kigali</p>
+                <p><strong>Account Name:</strong> African Deals Domain Ltd</p>
+                <p><strong>Account Number:</strong> <span class="font-mono bg-white px-2 py-1 rounded">400000123456</span></p>
+                <p><strong>Swift Code:</strong> <span class="font-mono bg-white px-2 py-1 rounded">BKIGRKWR</span></p>
+              </div>
+            </div>
+            
+            <div class="bg-yellow-100 p-3 rounded-lg border-l-4 border-yellow-400">
+              <p class="text-yellow-800 text-sm">
+                <strong>⚠️ Important:</strong> After payment, you MUST upload proof (screenshot or transaction ID) below to confirm your order.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <form id="mobile-manual-form" class="space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Your Full Name *</label>
+              <input type="text" name="sender_name" required placeholder="Enter your full name"
+                     class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Payment Method *</label>
+              <select name="payment_method" required 
+                      class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                <option value="">Select payment method</option>
+                <option value="mtn_momo">MTN Mobile Money</option>
+                <option value="airtel_money">Airtel Money</option>
+                <option value="bank_transfer">Bank Transfer</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number Used for Payment *</label>
+            <input type="tel" name="sender_phone" required placeholder="+250 7XX XXX XXX"
+                   class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+            <p class="text-xs text-gray-500 mt-1">Enter the phone number you used to make the payment</p>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Transaction ID / Reference Number *</label>
+            <input type="text" name="transaction_id" required placeholder="e.g., MP240111.1234.A12345"
+                   class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+            <p class="text-xs text-gray-500 mt-1">Found in your payment confirmation SMS or receipt</p>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Payment Screenshot/Receipt *</label>
+            <div class="relative">
+              <input type="file" name="screenshot" accept="image/*,application/pdf" required 
+                     class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+              <p class="text-xs text-gray-500 mt-1">Upload screenshot of payment confirmation (Max 5MB, JPG/PNG/PDF)</p>
+            </div>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Additional Notes (Optional)</label>
+            <textarea name="notes" rows="3" placeholder="Any additional information about your payment..."
+                      class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none"></textarea>
+          </div>
+
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div class="flex">
+              <svg class="h-5 w-5 text-blue-400 mt-0.5 mr-3 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+              </svg>
+              <div>
+                <h3 class="text-sm font-medium text-blue-800">Verification Process</h3>
+                <p class="text-sm text-blue-700 mt-1">
+                  • Payment will be verified within 1-24 hours<br>
+                  • You'll receive email confirmation once verified<br>
+                  • Your order will be processed after payment confirmation<br>
+                  • Contact support if you need assistance
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-4 px-6 rounded-lg font-semibold text-base transition-all duration-200 transform hover:scale-105 shadow-lg">
+            <span class="flex items-center justify-center">
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              Submit Payment Proof
+            </span>
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Coming Soon Card -->
+    <div id="mobile-coming-soon" class="bg-white rounded-lg shadow-sm border border-gray-200 mb-4 text-center p-6 hidden">
+      <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+      </svg>
+      <h2 class="text-lg font-bold text-gray-900 mb-2">Payment Methods Coming Soon</h2>
+      <p class="text-gray-600 text-sm mb-4">We're adding secure payment options. Use manual payment for now.</p>
+      <button id="mobile-show-manual" class="bg-blue-600 text-white px-6 py-2 rounded-lg text-sm font-medium">
+        Use Manual Payment
+      </button>
+    </div>
+  </main>
+
+  <!-- Loading Overlay -->
+  <div id="mobile-loading" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen">
+      <div class="bg-white rounded-lg p-6 text-center mx-4">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-3"></div>
+        <p class="text-gray-600 text-sm">Processing...</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Payment handling for all devices
+    let currentOrder = null;
+    let paymentTransaction = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+      // Initialize payment page for all devices
+      console.log('🎯 Payment page loaded');
+      
+      loadOrderDetails();
+      setupEventListeners();
+      showManualPayment(); // Show manual payment by default
+    });
+
+    function setupEventListeners() {
+      const manualForm = document.getElementById('mobile-manual-form');
+      if (manualForm) {
+        manualForm.addEventListener('submit', handleManualPayment);
+      }
+      
+      const showManualBtn = document.getElementById('mobile-show-manual');
+      if (showManualBtn) {
+        showManualBtn.addEventListener('click', showManualPayment);
+      }
+    }
+
+    async function loadOrderDetails() {
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const orderId = urlParams.get('orderId');
+        
+        if (!orderId) {
+          showNotification('No order ID provided', 'error');
+          history.back();
+          return;
+        }
+
+        console.log('📦 Loading order details for ID:', orderId);
+
+        // Try to get order from localStorage first
+        const pendingOrder = localStorage.getItem('pendingOrder');
+        if (pendingOrder) {
+          currentOrder = JSON.parse(pendingOrder);
+          renderOrderSummary(currentOrder);
+          await createPaymentTransaction(orderId);
+        } else {
+          // Fetch order from API if not in localStorage
+          try {
+            const orderData = await window.authHelper.get(`/api/orders/${orderId}`);
+            currentOrder = orderData.order;
+            renderOrderSummary(currentOrder);
+            await createPaymentTransaction(orderId);
+          } catch (apiError) {
+            console.error('Failed to fetch order from API:', apiError);
+            showNotification('Failed to load order details', 'error');
+          }
+        }
+      } catch (error) {
+        console.error('Error loading order:', error);
+        showNotification('Failed to load order', 'error');
+      }
+    }
+
+    async function createPaymentTransaction(orderId) {
+      try {
+        console.log('💳 Creating payment transaction for order:', orderId);
+        const data = await window.authHelper.post('/api/payment-transactions', {
+          order_id: orderId,
+          amount: currentOrder.total_amount || currentOrder.total,
+          currency: currentOrder.currency || 'USD'
+        });
+        paymentTransaction = data.transaction;
+        console.log('✅ Payment transaction created:', paymentTransaction?.id);
+      } catch (error) {
+        console.error('Error creating payment transaction:', error);
+        // Continue without transaction - manual payment can still work
+      }
+    }
+
+    function renderOrderSummary(order) {
+      const container = document.getElementById('mobile-order-summary');
+      if (!container) return;
+      
+      const orderNumber = order.order_number || order.orderNumber || `ORD-${order.id}`;
+      const totalAmount = order.total_amount || order.total || order.finalPrice || 0;
+      const currency = order.currency || 'USD';
+      
+      container.innerHTML = `
+        <div class="space-y-4">
+          <div class="flex justify-between items-center text-sm">
+            <span class="text-gray-600">Order Number:</span>
+            <span class="font-mono text-blue-600">${orderNumber}</span>
+          </div>
+          
+          ${order.items && order.items.length > 0 ? `
+            <div class="border-t pt-3">
+              <h4 class="text-sm font-medium text-gray-700 mb-2">Items (${order.items.length})</h4>
+              <div class="space-y-2">
+                ${order.items.map(item => `
+                  <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">${item.name || 'Product'} x${item.quantity || 1}</span>
+                    <span>${currency} ${(item.total_price || item.price || 0).toFixed(2)}</span>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          ` : ''}
+          
+          <div class="flex justify-between text-lg font-bold border-t pt-3 text-blue-600">
+            <span>Total Amount:</span>
+            <span>${currency} ${totalAmount.toFixed ? totalAmount.toFixed(2) : totalAmount}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    function showManualPayment() {
+      // Hide other sections and show manual payment
+      const comingSoon = document.getElementById('mobile-coming-soon');
+      const paymentMethods = document.getElementById('mobile-payment-methods');
+      const manualPayment = document.getElementById('mobile-manual-payment');
+      
+      if (comingSoon) comingSoon.classList.add('hidden');
+      if (paymentMethods && paymentMethods.parentElement) {
+        paymentMethods.parentElement.classList.add('hidden');
+      }
+      if (manualPayment) manualPayment.classList.remove('hidden');
+      
+      console.log('📱 Manual payment form displayed');
+    }
+
+    async function handleManualPayment(e) {
+      e.preventDefault();
+      
+      console.log('📤 Submitting manual payment proof...');
+      
+      const formData = new FormData(e.target);
+      const loading = document.getElementById('mobile-loading');
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      
+      // Validate required fields
+      const requiredFields = ['sender_name', 'payment_method', 'sender_phone', 'transaction_id', 'screenshot'];
+      const missingFields = requiredFields.filter(field => !formData.get(field));
+      
+      if (missingFields.length > 0) {
+        showNotification(`Please fill in: ${missingFields.join(', ')}`, 'error');
+        return;
+      }
+      
+      // Validate file size (5MB max)
+      const screenshot = formData.get('screenshot');
+      if (screenshot && screenshot.size > 5 * 1024 * 1024) {
+        showNotification('Screenshot file size must be less than 5MB', 'error');
+        return;
+      }
+      
+      try {
+        // Show loading state
+        loading.classList.remove('hidden');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `
+          <span class="flex items-center justify-center">
+            <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+            Submitting...
+          </span>
+        `;
+        
+        // Add order information to form data
+        if (currentOrder) {
+          formData.append('order_id', new URLSearchParams(window.location.search).get('orderId'));
+          formData.append('order_number', currentOrder.order_number || currentOrder.orderNumber || '');
+          formData.append('amount', currentOrder.total_amount || currentOrder.total || currentOrder.finalPrice || 0);
+        }
+        
+        // Add transaction ID if available
+        if (paymentTransaction) {
+          formData.append('payment_transaction_id', paymentTransaction.id);
+        }
+        
+        // Submit to backend
+        const response = await fetch('/api/payment-proof', {
+          method: 'POST',
+          headers: {
+            ...window.authHelper.getAuthHeaders(),
+            // Don't set Content-Type for FormData - browser will set it with boundary
+          },
+          body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+          // Success - redirect to success page
+          showNotification('Payment proof submitted successfully! 🎉', 'success');
+          localStorage.removeItem('pendingOrder');
+          
+          setTimeout(() => {
+            window.location.href = `/buyer/order-success.html?orderId=${new URLSearchParams(window.location.search).get('orderId')}&status=payment_pending`;
+          }, 2000);
+          
+        } else {
+          throw new Error(data.error || data.message || 'Failed to submit payment proof');
+        }
+        
+      } catch (error) {
+        console.error('Payment proof submission error:', error);
+        showNotification(error.message || 'Failed to submit payment proof. Please try again.', 'error');
+        
+      } finally {
+        // Reset loading state
+        loading.classList.add('hidden');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `
+          <span class="flex items-center justify-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            Submit Payment Proof
+          </span>
+        `;
+      }
+    }
+    
+    // Notification system
+    function showNotification(message, type = 'info') {
+      console.log(`📢 ${type.toUpperCase()}: ${message}`);
+      
+      // Create notification element
+      const notification = document.createElement('div');
+      notification.className = `fixed top-4 right-4 z-50 max-w-sm w-full p-4 rounded-lg shadow-lg transition-all duration-300 transform translate-x-full`;
+      
+      // Set notification style based on type
+      if (type === 'success') {
+        notification.className += ' bg-green-500 text-white';
+      } else if (type === 'error') {
+        notification.className += ' bg-red-500 text-white';
+      } else {
+        notification.className += ' bg-blue-500 text-white';
+      }
+      
+      notification.innerHTML = `
+        <div class="flex items-center">
+          <div class="flex-1">
+            <p class="text-sm font-medium">${message}</p>
+          </div>
+          <button onclick="this.parentElement.parentElement.remove()" class="ml-3 text-white hover:text-gray-200">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+      `;
+      
+      document.body.appendChild(notification);
+      
+      // Animate in
+      setTimeout(() => {
+        notification.classList.remove('translate-x-full');
+      }, 100);
+      
+      // Auto remove after 5 seconds
+      setTimeout(() => {
+        notification.classList.add('translate-x-full');
+        setTimeout(() => {
+          if (notification.parentElement) {
+            notification.remove();
+          }
+        }, 300);
+      }, 5000);
+    }
+    
+    // Initialize auth helper if not available
+    if (!window.authHelper) {
+      window.authHelper = {
+        get: async function(url) {
+          const token = localStorage.getItem('token');
+          const response = await fetch(url, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          return await response.json();
+        },
+        
+        post: async function(url, data) {
+          const token = localStorage.getItem('token');
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+          });
+          return await response.json();
+        },
+        
+        getAuthHeaders: function() {
+          const token = localStorage.getItem('token');
+          return {
+            'Authorization': `Bearer ${token}`
+          };
+        }
+      };
+    }
+  </script>
+</body>
+</html>

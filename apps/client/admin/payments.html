@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Management - Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .status-pending { @apply bg-yellow-100 text-yellow-800; }
+        .status-processing { @apply bg-blue-100 text-blue-800; }
+        .status-completed { @apply bg-green-100 text-green-800; }
+        .status-rejected { @apply bg-red-100 text-red-800; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <h1 class="text-xl font-semibold text-gray-900">Payment Management</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button onclick="refreshData()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                        <i class="fas fa-sync-alt mr-2"></i>Refresh
+                    </button>
+                    <a href="dashboard.html" class="text-gray-600 hover:text-gray-900">
+                        <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-2 bg-yellow-100 rounded-lg">
+                        <i class="fas fa-clock text-yellow-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Pending Requests</p>
+                        <p class="text-2xl font-semibold text-gray-900" id="pending-count">0</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-2 bg-blue-100 rounded-lg">
+                        <i class="fas fa-spinner text-blue-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Processing</p>
+                        <p class="text-2xl font-semibold text-gray-900" id="processing-count">0</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-2 bg-green-100 rounded-lg">
+                        <i class="fas fa-check text-green-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Completed</p>
+                        <p class="text-2xl font-semibold text-gray-900" id="completed-count">0</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-2 bg-gray-100 rounded-lg">
+                        <i class="fas fa-money-bill-wave text-gray-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Pending Amount</p>
+                        <p class="text-2xl font-semibold text-gray-900" id="pending-amount">0 FRW</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="bg-white rounded-lg shadow mb-6">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex flex-wrap gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                        <select id="status-filter" class="border border-gray-300 rounded-md px-3 py-2">
+                            <option value="all">All Status</option>
+                            <option value="pending">Pending</option>
+                            <option value="processing">Processing</option>
+                            <option value="completed">Completed</option>
+                            <option value="rejected">Rejected</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Agent Type</label>
+                        <select id="agent-type-filter" class="border border-gray-300 rounded-md px-3 py-2">
+                            <option value="all">All Types</option>
+                            <option value="PDA">Pickup Delivery Agent</option>
+                            <option value="FDA">Fast Delivery Agent</option>
+                        </select>
+                    </div>
+                    
+                    <div class="flex items-end">
+                        <button onclick="applyFilters()" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                            <i class="fas fa-filter mr-2"></i>Apply Filters
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bulk Actions -->
+        <div class="bg-white rounded-lg shadow mb-6" id="bulk-actions" style="display: none;">
+            <div class="p-4 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600">
+                        <span id="selected-count">0</span> requests selected
+                    </span>
+                    <div class="flex space-x-2">
+                        <button onclick="bulkApprove()" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
+                            <i class="fas fa-check mr-2"></i>Bulk Approve
+                        </button>
+                        <button onclick="clearSelection()" class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700">
+                            Clear Selection
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Withdrawal Requests Table -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="p-6 border-b border-gray-200">
+                <h2 class="text-lg font-medium text-gray-900">Withdrawal Requests</h2>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <input type="checkbox" id="select-all" onchange="toggleSelectAll()">
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Agent</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Method</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="withdrawals-table" class="bg-white divide-y divide-gray-200">
+                        <!-- Table rows will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex-1 flex justify-between sm:hidden">
+                        <button onclick="previousPage()" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                            Previous
+                        </button>
+                        <button onclick="nextPage()" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                            Next
+                        </button>
+                    </div>
+                    <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                        <div>
+                            <p class="text-sm text-gray-700" id="pagination-info">
+                                Showing <span class="font-medium">1</span> to <span class="font-medium">10</span> of <span class="font-medium">0</span> results
+                            </p>
+                        </div>
+                        <div>
+                            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" id="pagination-controls">
+                                <!-- Pagination buttons will be populated by JavaScript -->
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Withdrawal Details Modal -->
+    <div id="withdrawal-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">Withdrawal Request Details</h3>
+                    <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <div id="modal-content">
+                    <!-- Modal content will be populated by JavaScript -->
+                </div>
+                
+                <div class="flex justify-end space-x-3 mt-6">
+                    <button onclick="closeModal()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Approval Modal -->
+    <div id="approval-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-1/2 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">Approve Withdrawal</h3>
+                    <button onclick="closeApprovalModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <form id="approval-form">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Payment Reference (Optional)</label>
+                        <input type="text" id="payment-reference" class="w-full border border-gray-300 rounded-md px-3 py-2" placeholder="Transaction ID, Receipt number, etc.">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Admin Notes (Optional)</label>
+                        <textarea id="admin-notes" rows="3" class="w-full border border-gray-300 rounded-md px-3 py-2" placeholder="Additional notes about the payment..."></textarea>
+                    </div>
+                    
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" onclick="closeApprovalModal()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400">
+                            Cancel
+                        </button>
+                        <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
+                            <i class="fas fa-check mr-2"></i>Approve Payment
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rejection Modal -->
+    <div id="rejection-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-1/2 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">Reject Withdrawal</h3>
+                    <button onclick="closeRejectionModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <form id="rejection-form">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Rejection Reason *</label>
+                        <select id="rejection-reason" class="w-full border border-gray-300 rounded-md px-3 py-2" required>
+                            <option value="">Select a reason</option>
+                            <option value="Insufficient documentation">Insufficient documentation</option>
+                            <option value="Invalid payment details">Invalid payment details</option>
+                            <option value="Account verification required">Account verification required</option>
+                            <option value="Suspicious activity">Suspicious activity</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Additional Notes</label>
+                        <textarea id="rejection-notes" rows="3" class="w-full border border-gray-300 rounded-md px-3 py-2" placeholder="Additional details about the rejection..."></textarea>
+                    </div>
+                    
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" onclick="closeRejectionModal()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400">
+                            Cancel
+                        </button>
+                        <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700">
+                            <i class="fas fa-times mr-2"></i>Reject Request
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPage = 1;
+        let totalPages = 1;
+        let selectedWithdrawals = new Set();
+        let currentWithdrawalId = null;
+
+        // API call function
+        async function apiCall(endpoint, method = 'GET', data = null) {
+            const token = localStorage.getItem('token');
+            const options = {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            };
+
+            if (data) {
+                options.body = JSON.stringify(data);
+            }
+
+            const response = await fetch(`/api/admin/payments${endpoint}`, options);
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        }
+
+        // Load withdrawal requests
+        async function loadWithdrawals() {
+            try {
+                const status = document.getElementById('status-filter').value;
+                const agentType = document.getElementById('agent-type-filter').value;
+                
+                const params = new URLSearchParams({
+                    page: currentPage,
+                    limit: 20,
+                    status,
+                    agent_type: agentType
+                });
+
+                const data = await apiCall(`/withdrawals?${params}`);
+                
+                if (data.success) {
+                    displayWithdrawals(data.withdrawals);
+                    updateSummary(data.summary);
+                    updatePagination(data.pagination);
+                }
+            } catch (error) {
+                console.error('Error loading withdrawals:', error);
+                showNotification('Failed to load withdrawal requests', 'error');
+            }
+        }
+
+        // Display withdrawals in table
+        function displayWithdrawals(withdrawals) {
+            const tbody = document.getElementById('withdrawals-table');
+            tbody.innerHTML = '';
+
+            withdrawals.forEach(withdrawal => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <input type="checkbox" class="withdrawal-checkbox" value="${withdrawal.id}" onchange="toggleSelection(${withdrawal.id})">
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div>
+                                <div class="text-sm font-medium text-gray-900">${withdrawal.agent_name}</div>
+                                <div class="text-sm text-gray-500">${withdrawal.agent_phone}</div>
+                                <div class="text-xs text-gray-400">${withdrawal.agent_type === 'pickup_delivery' ? 'PDA' : 'FDA'}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-medium text-gray-900">${parseFloat(withdrawal.amount).toLocaleString()} FRW</div>
+                        <div class="text-xs text-gray-500">Available: ${parseFloat(withdrawal.total_earnings - withdrawal.total_withdrawn).toLocaleString()} FRW</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${withdrawal.payment_method.toUpperCase()}</div>
+                        <div class="text-xs text-gray-500">${getPaymentDetails(withdrawal.payment_details)}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full status-${withdrawal.status}">
+                            ${withdrawal.status.charAt(0).toUpperCase() + withdrawal.status.slice(1)}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        ${new Date(withdrawal.created_at).toLocaleDateString()}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div class="flex space-x-2">
+                            <button onclick="viewDetails(${withdrawal.id})" class="text-blue-600 hover:text-blue-900">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            ${withdrawal.status === 'pending' ? `
+                                <button onclick="approveWithdrawal(${withdrawal.id})" class="text-green-600 hover:text-green-900">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                <button onclick="rejectWithdrawal(${withdrawal.id})" class="text-red-600 hover:text-red-900">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            ` : ''}
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Get payment details summary
+        function getPaymentDetails(paymentDetailsJson) {
+            try {
+                const details = JSON.parse(paymentDetailsJson);
+                if (details.phone) {
+                    return `${details.network || 'Mobile'}: ${details.phone}`;
+                } else if (details.account_number) {
+                    return `${details.bank_name}: ${details.account_number}`;
+                }
+                return 'Details available';
+            } catch (e) {
+                return 'Details available';
+            }
+        }
+
+        // Update summary cards
+        function updateSummary(summary) {
+            document.getElementById('pending-count').textContent = summary.pending_requests || 0;
+            document.getElementById('processing-count').textContent = summary.processing_requests || 0;
+            document.getElementById('completed-count').textContent = summary.completed_requests || 0;
+            document.getElementById('pending-amount').textContent = `${parseFloat(summary.pending_amount || 0).toLocaleString()} FRW`;
+        }
+
+        // Update pagination
+        function updatePagination(pagination) {
+            currentPage = pagination.page;
+            totalPages = pagination.totalPages;
+            
+            document.getElementById('pagination-info').innerHTML = `
+                Showing <span class="font-medium">${((pagination.page - 1) * pagination.limit) + 1}</span> to 
+                <span class="font-medium">${Math.min(pagination.page * pagination.limit, pagination.total)}</span> of 
+                <span class="font-medium">${pagination.total}</span> results
+            `;
+        }
+
+        // Selection functions
+        function toggleSelection(withdrawalId) {
+            if (selectedWithdrawals.has(withdrawalId)) {
+                selectedWithdrawals.delete(withdrawalId);
+            } else {
+                selectedWithdrawals.add(withdrawalId);
+            }
+            updateBulkActions();
+        }
+
+        function toggleSelectAll() {
+            const selectAll = document.getElementById('select-all');
+            const checkboxes = document.querySelectorAll('.withdrawal-checkbox');
+            
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = selectAll.checked;
+                const withdrawalId = parseInt(checkbox.value);
+                if (selectAll.checked) {
+                    selectedWithdrawals.add(withdrawalId);
+                } else {
+                    selectedWithdrawals.delete(withdrawalId);
+                }
+            });
+            
+            updateBulkActions();
+        }
+
+        function updateBulkActions() {
+            const bulkActions = document.getElementById('bulk-actions');
+            const selectedCount = document.getElementById('selected-count');
+            
+            if (selectedWithdrawals.size > 0) {
+                bulkActions.style.display = 'block';
+                selectedCount.textContent = selectedWithdrawals.size;
+            } else {
+                bulkActions.style.display = 'none';
+            }
+        }
+
+        function clearSelection() {
+            selectedWithdrawals.clear();
+            document.getElementById('select-all').checked = false;
+            document.querySelectorAll('.withdrawal-checkbox').forEach(cb => cb.checked = false);
+            updateBulkActions();
+        }
+
+        // Modal functions
+        function closeModal() {
+            document.getElementById('withdrawal-modal').classList.add('hidden');
+        }
+
+        function closeApprovalModal() {
+            document.getElementById('approval-modal').classList.add('hidden');
+            currentWithdrawalId = null;
+        }
+
+        function closeRejectionModal() {
+            document.getElementById('rejection-modal').classList.add('hidden');
+            currentWithdrawalId = null;
+        }
+
+        // View withdrawal details
+        async function viewDetails(withdrawalId) {
+            try {
+                const data = await apiCall(`/withdrawals/${withdrawalId}`);
+                if (data.success) {
+                    displayWithdrawalDetails(data);
+                    document.getElementById('withdrawal-modal').classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Error loading withdrawal details:', error);
+                showNotification('Failed to load withdrawal details', 'error');
+            }
+        }
+
+        function displayWithdrawalDetails(data) {
+            const { withdrawal, agent_stats, recent_withdrawals } = data;
+            const paymentDetails = JSON.parse(withdrawal.payment_details);
+            
+            document.getElementById('modal-content').innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="font-medium text-gray-900 mb-3">Withdrawal Information</h4>
+                        <div class="space-y-2 text-sm">
+                            <div><span class="font-medium">Amount:</span> ${parseFloat(withdrawal.amount).toLocaleString()} FRW</div>
+                            <div><span class="font-medium">Status:</span> <span class="px-2 py-1 rounded-full text-xs status-${withdrawal.status}">${withdrawal.status}</span></div>
+                            <div><span class="font-medium">Requested:</span> ${new Date(withdrawal.created_at).toLocaleString()}</div>
+                            <div><span class="font-medium">Payment Method:</span> ${withdrawal.payment_method.toUpperCase()}</div>
+                            ${withdrawal.notes ? `<div><span class="font-medium">Notes:</span> ${withdrawal.notes}</div>` : ''}
+                        </div>
+                        
+                        <h5 class="font-medium text-gray-900 mt-4 mb-2">Payment Details</h5>
+                        <div class="bg-gray-50 p-3 rounded text-sm">
+                            ${Object.entries(paymentDetails).map(([key, value]) => 
+                                `<div><span class="font-medium">${key.replace('_', ' ').toUpperCase()}:</span> ${value}</div>`
+                            ).join('')}
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-medium text-gray-900 mb-3">Agent Information</h4>
+                        <div class="space-y-2 text-sm">
+                            <div><span class="font-medium">Name:</span> ${withdrawal.agent_name}</div>
+                            <div><span class="font-medium">Phone:</span> ${withdrawal.agent_phone}</div>
+                            <div><span class="font-medium">Email:</span> ${withdrawal.agent_email}</div>
+                            <div><span class="font-medium">Type:</span> ${withdrawal.agent_type === 'pickup_delivery' ? 'Pickup Delivery Agent' : 'Fast Delivery Agent'}</div>
+                            <div><span class="font-medium">Trust Level:</span> ${withdrawal.trust_level}</div>
+                        </div>
+                        
+                        <h5 class="font-medium text-gray-900 mt-4 mb-2">Financial Summary</h5>
+                        <div class="bg-gray-50 p-3 rounded text-sm space-y-1">
+                            <div><span class="font-medium">Total Earnings:</span> ${parseFloat(agent_stats.total_earnings || 0).toLocaleString()} FRW</div>
+                            <div><span class="font-medium">Total Withdrawn:</span> ${parseFloat(agent_stats.total_withdrawn || 0).toLocaleString()} FRW</div>
+                            <div><span class="font-medium">Available Balance:</span> ${parseFloat(agent_stats.available_balance || 0).toLocaleString()} FRW</div>
+                            <div><span class="font-medium">Completed Orders:</span> ${agent_stats.completed_orders || 0}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Approve withdrawal
+        function approveWithdrawal(withdrawalId) {
+            currentWithdrawalId = withdrawalId;
+            document.getElementById('approval-modal').classList.remove('hidden');
+        }
+
+        // Reject withdrawal
+        function rejectWithdrawal(withdrawalId) {
+            currentWithdrawalId = withdrawalId;
+            document.getElementById('rejection-modal').classList.remove('hidden');
+        }
+
+        // Handle approval form submission
+        document.getElementById('approval-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (!currentWithdrawalId) return;
+            
+            try {
+                const paymentReference = document.getElementById('payment-reference').value;
+                const adminNotes = document.getElementById('admin-notes').value;
+                
+                await apiCall(`/withdrawals/${currentWithdrawalId}/approve`, 'POST', {
+                    payment_reference: paymentReference,
+                    admin_notes: adminNotes
+                });
+                
+                showNotification('Withdrawal approved successfully!', 'success');
+                closeApprovalModal();
+                loadWithdrawals();
+                
+                // Reset form
+                document.getElementById('approval-form').reset();
+                
+            } catch (error) {
+                console.error('Error approving withdrawal:', error);
+                showNotification('Failed to approve withdrawal', 'error');
+            }
+        });
+
+        // Handle rejection form submission
+        document.getElementById('rejection-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (!currentWithdrawalId) return;
+            
+            try {
+                const rejectionReason = document.getElementById('rejection-reason').value;
+                const rejectionNotes = document.getElementById('rejection-notes').value;
+                
+                if (!rejectionReason) {
+                    showNotification('Please select a rejection reason', 'error');
+                    return;
+                }
+                
+                await apiCall(`/withdrawals/${currentWithdrawalId}/reject`, 'POST', {
+                    rejection_reason: rejectionReason,
+                    admin_notes: rejectionNotes
+                });
+                
+                showNotification('Withdrawal rejected successfully!', 'success');
+                closeRejectionModal();
+                loadWithdrawals();
+                
+                // Reset form
+                document.getElementById('rejection-form').reset();
+                
+            } catch (error) {
+                console.error('Error rejecting withdrawal:', error);
+                showNotification('Failed to reject withdrawal', 'error');
+            }
+        });
+
+        // Bulk approve
+        async function bulkApprove() {
+            if (selectedWithdrawals.size === 0) return;
+            
+            if (!confirm(`Are you sure you want to approve ${selectedWithdrawals.size} withdrawal requests?`)) {
+                return;
+            }
+            
+            try {
+                await apiCall('/withdrawals/bulk-approve', 'POST', {
+                    withdrawal_ids: Array.from(selectedWithdrawals),
+                    admin_notes: 'Bulk approval processed'
+                });
+                
+                showNotification(`${selectedWithdrawals.size} withdrawals approved successfully!`, 'success');
+                clearSelection();
+                loadWithdrawals();
+                
+            } catch (error) {
+                console.error('Error bulk approving withdrawals:', error);
+                showNotification('Failed to process bulk approval', 'error');
+            }
+        }
+
+        // Filter functions
+        function applyFilters() {
+            currentPage = 1;
+            loadWithdrawals();
+        }
+
+        // Pagination functions
+        function previousPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                loadWithdrawals();
+            }
+        }
+
+        function nextPage() {
+            if (currentPage < totalPages) {
+                currentPage++;
+                loadWithdrawals();
+            }
+        }
+
+        // Refresh data
+        function refreshData() {
+            loadWithdrawals();
+        }
+
+        // Notification function
+        function showNotification(message, type = 'info') {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 p-4 rounded-md shadow-lg z-50 ${
+                type === 'success' ? 'bg-green-500 text-white' :
+                type === 'error' ? 'bg-red-500 text-white' :
+                'bg-blue-500 text-white'
+            }`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            // Remove after 5 seconds
+            setTimeout(() => {
+                document.body.removeChild(notification);
+            }, 5000);
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadWithdrawals();
+            
+            // Set up filter change listeners
+            document.getElementById('status-filter').addEventListener('change', applyFilters);
+            document.getElementById('agent-type-filter').addEventListener('change', applyFilters);
+        });
+    </script>
+</body>
+</html>

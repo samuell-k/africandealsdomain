@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Registration | ADD Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #080b3b;
+            --secondary-color: #1e40af;
+            --accent-color: #3b82f6;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        }
+        
+        .glass-morphism {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .form-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .form-input:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: var(--accent-color);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+        }
+        
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .step-indicator {
+            transition: all 0.3s ease;
+        }
+        
+        .step-indicator.active {
+            background: var(--accent-color);
+            color: white;
+        }
+        
+        .step-indicator.completed {
+            background: #10b981;
+            color: white;
+        }
+        
+        .step-content {
+            display: none;
+        }
+        
+        .step-content.active {
+            display: block;
+        }
+        
+        .file-upload-area {
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .file-upload-area:hover {
+            border-color: var(--accent-color);
+            background: rgba(59, 130, 246, 0.1);
+        }
+        
+        .file-upload-area.dragover {
+            border-color: var(--accent-color);
+            background: rgba(59, 130, 246, 0.2);
+        }
+        
+        .loading-spinner {
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 2px solid var(--accent-color);
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .agent-type-card {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .agent-type-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        .agent-type-card.selected {
+            border-color: var(--accent-color);
+            background: rgba(59, 130, 246, 0.1);
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen">
+    <!-- Header -->
+    <header class="glass-morphism border-b border-white/10">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <img src="/assets/logo.png" alt="ADD Platform" class="h-10 w-auto">
+                    <h1 class="text-2xl font-bold text-white">Agent Registration</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="/auth/auth-agent.html" class="text-gray-300 hover:text-white transition-colors">
+                        Already have an account? Sign In
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-6 py-8">
+        <!-- Progress Steps -->
+        <div class="mb-8">
+            <div class="flex items-center justify-center space-x-4">
+                <div class="step-indicator active flex items-center justify-center w-10 h-10 rounded-full bg-gray-600 text-white font-semibold" data-step="1">
+                    1
+                </div>
+                <div class="w-16 h-1 bg-gray-600"></div>
+                <div class="step-indicator flex items-center justify-center w-10 h-10 rounded-full bg-gray-600 text-white font-semibold" data-step="2">
+                    2
+                </div>
+                <div class="w-16 h-1 bg-gray-600"></div>
+                <div class="step-indicator flex items-center justify-center w-10 h-10 rounded-full bg-gray-600 text-white font-semibold" data-step="3">
+                    3
+                </div>
+                <div class="w-16 h-1 bg-gray-600"></div>
+                <div class="step-indicator flex items-center justify-center w-10 h-10 rounded-full bg-gray-600 text-white font-semibold" data-step="4">
+                    4
+                </div>
+            </div>
+            <div class="flex justify-center mt-4 space-x-16">
+                <span class="text-gray-300 text-sm">Agent Type</span>
+                <span class="text-gray-300 text-sm">Personal Info</span>
+                <span class="text-gray-300 text-sm">Documents</span>
+                <span class="text-gray-300 text-sm">Review</span>
+            </div>
+        </div>
+
+        <!-- Registration Form -->
+        <div class="max-w-4xl mx-auto">
+            <form id="agentRegistrationForm" class="glass-morphism p-8 rounded-xl">
+                <!-- Step 1: Agent Type Selection -->
+                <div class="step-content active" data-step="1">
+                    <h2 class="text-2xl font-bold text-white mb-6">Choose Your Agent Type</h2>
+                    <p class="text-gray-300 mb-8">Select the type of agent role you want to apply for:</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- Pickup Delivery Agent -->
+                        <div class="agent-type-card glass-morphism p-6 rounded-xl border-2 border-transparent" data-type="pickup_delivery_agent">
+                            <div class="text-center">
+                                <div class="bg-blue-500/20 p-4 rounded-lg inline-block mb-4">
+                                    <i class="fas fa-motorcycle text-blue-400 text-3xl"></i>
+                                </div>
+                                <h3 class="text-xl font-semibold text-white mb-2">Pickup Delivery Agent</h3>
+                                <p class="text-gray-300 text-sm mb-4">Handle order pickups from sellers and deliver to pickup sites</p>
+                                <ul class="text-gray-400 text-sm space-y-1">
+                                    <li>• Flexible working hours</li>
+                                    <li>• Vehicle required</li>
+                                    <li>• Commission-based earnings</li>
+                                    <li>• Local area coverage</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Fast Delivery Agent -->
+                        <div class="agent-type-card glass-morphism p-6 rounded-xl border-2 border-transparent" data-type="fast_delivery_agent">
+                            <div class="text-center">
+                                <div class="bg-green-500/20 p-4 rounded-lg inline-block mb-4">
+                                    <i class="fas fa-shipping-fast text-green-400 text-3xl"></i>
+                                </div>
+                                <h3 class="text-xl font-semibold text-white mb-2">Fast Delivery Agent</h3>
+                                <p class="text-gray-300 text-sm mb-4">Provide express delivery services directly to customers</p>
+                                <ul class="text-gray-400 text-sm space-y-1">
+                                    <li>• Same-day delivery</li>
+                                    <li>• Higher commission rates</li>
+                                    <li>• Customer interaction</li>
+                                    <li>• Premium service tier</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Pickup Site Manager -->
+                        <div class="agent-type-card glass-morphism p-6 rounded-xl border-2 border-transparent" data-type="pickup_site_manager">
+                            <div class="text-center">
+                                <div class="bg-purple-500/20 p-4 rounded-lg inline-block mb-4">
+                                    <i class="fas fa-warehouse text-purple-400 text-3xl"></i>
+                                </div>
+                                <h3 class="text-xl font-semibold text-white mb-2">Pickup Site Manager</h3>
+                                <p class="text-gray-300 text-sm mb-4">Manage pickup locations and coordinate order handovers</p>
+                                <ul class="text-gray-400 text-sm space-y-1">
+                                    <li>• Fixed location management</li>
+                                    <li>• Regular working hours</li>
+                                    <li>• Salary + bonuses</li>
+                                    <li>• Team coordination</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 text-center">
+                        <button type="button" onclick="nextStep()" class="bg-blue-600 hover:bg-blue-700 px-8 py-3 rounded-lg text-white font-semibold transition-colors">
+                            Continue <i class="fas fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Personal Information -->
+                <div class="step-content" data-step="2">
+                    <h2 class="text-2xl font-bold text-white mb-6">Personal Information</h2>
+                    <p class="text-gray-300 mb-8">Please provide your personal details:</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-gray-300 text-sm font-medium mb-2">Full Name *</label>
+                            <input type="text" id="fullName" name="fullName" required class="form-input w-full p-3 rounded-lg" placeholder="Enter your full name">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-gray-300 text-sm font-medium mb-2">Email Address *</label>
+                            <input type="email" id="email" name="email" required class="form-input w-full p-3 rounded-lg" placeholder="Enter your email">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-gray-300 text-sm font-medium mb-2">Phone Number *</label>
+                            <input type="tel" id="phone" name="phone" required class="form-input w-full p-3 rounded-lg" placeholder="Enter your phone number">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-gray-300 text-sm font-medium mb-2">Date of Birth *</label>
+                            <input type="date" id="dateOfBirth" name="dateOfBirth" required class="form-input w-full p-3 rounded-lg">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-gray-300 text-sm font-medium mb-2">National ID Number *</label>
+                            <input type="text" id="nationalId" name="nationalId" required class="form-input w-full p-3 rounded-lg" placeholder="Enter your national ID">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-gray-300 text-sm font-medium mb-2">Gender</label>
+                            <select id="gender" name="gender" class="form-input w-full p-3 rounded-lg">
+                                <option value="">Select gender</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6">
+                        <label class="block text-gray-300 text-sm font-medium mb-2">Address *</label>
+                        <textarea id="address" name="address" required class="form-input w-full p-3 rounded-lg h-24" placeholder="Enter your full address"></textarea>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                        <div>
+                            <label class="block text-gray-300 text-sm font-medium mb-2">City *</label>
+                            <input type="text" id="city" name="city" required class="form-input w-full p-3 rounded-lg" placeholder="Enter your city">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-gray-300 text-sm font-medium mb-2">Emergency Contact *</label>
+                            <input type="tel" id="emergencyContact" name="emergencyContact" required class="form-input w-full p-3 rounded-lg" placeholder="Emergency contact number">
+                        </div>
+                    </div>
+
+                    <div class="mt-8 flex justify-between">
+                        <button type="button" onclick="prevStep()" class="bg-gray-600 hover:bg-gray-700 px-6 py-3 rounded-lg text-white font-semibold transition-colors">
+                            <i class="fas fa-arrow-left mr-2"></i> Back
+                        </button>
+                        <button type="button" onclick="nextStep()" class="bg-blue-600 hover:bg-blue-700 px-8 py-3 rounded-lg text-white font-semibold transition-colors">
+                            Continue <i class="fas fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Documents Upload -->
+                <div class="step-content" data-step="3">
+                    <h2 class="text-2xl font-bold text-white mb-6">Required Documents</h2>
+                    <p class="text-gray-300 mb-8">Please upload the required documents for verification:</p>
+                    
+                    <div class="space-y-6">
+                        <!-- National ID -->
+                        <div>
+                            <label class="block text-gray-300 text-sm font-medium mb-2">National ID/Passport *</label>
+                            <div class="file-upload-area p-6 rounded-lg text-center" data-upload="nationalId">
+                                <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
+                                <p class="text-gray-300 mb-2">Drag and drop your ID document here, or click to browse</p>
+                                <p class="text-gray-500 text-sm">Supported formats: JPG, PNG, PDF (Max 5MB)</p>
+                                <input type="file" class="hidden" accept=".jpg,.jpeg,.png,.pdf" data-field="nationalId">
+                            </div>
+                            <div class="uploaded-file hidden mt-2 p-3 bg-green-500/20 rounded-lg">
+                                <i class="fas fa-check-circle text-green-400 mr-2"></i>
+                                <span class="text-green-400 file-name"></span>
+                                <button type="button" class="float-right text-red-400 hover:text-red-300" onclick="removeFile(this)">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Driver's License (for delivery agents) -->
+                        <div id="licenseUpload" class="hidden">
+                            <label class="block text-gray-300 text-sm font-medium mb-2">Driver's License *</label>
+                            <div class="file-upload-area p-6 rounded-lg text-center" data-upload="license">
+                                <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
+                                <p class="text-gray-300 mb-2">Upload your valid driver's license</p>
+                                <p class="text-gray-500 text-sm">Supported formats: JPG, PNG, PDF (Max 5MB)</p>
+                                <input type="file" class="hidden" accept=".jpg,.jpeg,.png,.pdf" data-field="license">
+                            </div>
+                            <div class="uploaded-file hidden mt-2 p-3 bg-green-500/20 rounded-lg">
+                                <i class="fas fa-check-circle text-green-400 mr-2"></i>
+                                <span class="text-green-400 file-name"></span>
+                                <button type="button" class="float-right text-red-400 hover:text-red-300" onclick="removeFile(this)">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Vehicle Registration (for delivery agents) -->
+                        <div id="vehicleUpload" class="hidden">
+                            <label class="block text-gray-300 text-sm font-medium mb-2">Vehicle Registration</label>
+                            <div class="file-upload-area p-6 rounded-lg text-center" data-upload="vehicle">
+                                <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
+                                <p class="text-gray-300 mb-2">Upload your vehicle registration document</p>
+                                <p class="text-gray-500 text-sm">Supported formats: JPG, PNG, PDF (Max 5MB)</p>
+                                <input type="file" class="hidden" accept=".jpg,.jpeg,.png,.pdf" data-field="vehicle">
+                            </div>
+                            <div class="uploaded-file hidden mt-2 p-3 bg-green-500/20 rounded-lg">
+                                <i class="fas fa-check-circle text-green-400 mr-2"></i>
+                                <span class="text-green-400 file-name"></span>
+                                <button type="button" class="float-right text-red-400 hover:text-red-300" onclick="removeFile(this)">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Profile Photo -->
+                        <div>
+                            <label class="block text-gray-300 text-sm font-medium mb-2">Profile Photo *</label>
+                            <div class="file-upload-area p-6 rounded-lg text-center" data-upload="photo">
+                                <i class="fas fa-camera text-4xl text-gray-400 mb-4"></i>
+                                <p class="text-gray-300 mb-2">Upload a clear profile photo</p>
+                                <p class="text-gray-500 text-sm">Supported formats: JPG, PNG (Max 2MB)</p>
+                                <input type="file" class="hidden" accept=".jpg,.jpeg,.png" data-field="photo">
+                            </div>
+                            <div class="uploaded-file hidden mt-2 p-3 bg-green-500/20 rounded-lg">
+                                <i class="fas fa-check-circle text-green-400 mr-2"></i>
+                                <span class="text-green-400 file-name"></span>
+                                <button type="button" class="float-right text-red-400 hover:text-red-300" onclick="removeFile(this)">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 flex justify-between">
+                        <button type="button" onclick="prevStep()" class="bg-gray-600 hover:bg-gray-700 px-6 py-3 rounded-lg text-white font-semibold transition-colors">
+                            <i class="fas fa-arrow-left mr-2"></i> Back
+                        </button>
+                        <button type="button" onclick="nextStep()" class="bg-blue-600 hover:bg-blue-700 px-8 py-3 rounded-lg text-white font-semibold transition-colors">
+                            Continue <i class="fas fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 4: Review and Submit -->
+                <div class="step-content" data-step="4">
+                    <h2 class="text-2xl font-bold text-white mb-6">Review Your Application</h2>
+                    <p class="text-gray-300 mb-8">Please review your information before submitting:</p>
+                    
+                    <div class="space-y-6">
+                        <!-- Agent Type Review -->
+                        <div class="glass-morphism p-6 rounded-lg">
+                            <h3 class="text-lg font-semibold text-white mb-4">Agent Type</h3>
+                            <div id="reviewAgentType" class="text-gray-300"></div>
+                        </div>
+
+                        <!-- Personal Information Review -->
+                        <div class="glass-morphism p-6 rounded-lg">
+                            <h3 class="text-lg font-semibold text-white mb-4">Personal Information</h3>
+                            <div id="reviewPersonalInfo" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-300"></div>
+                        </div>
+
+                        <!-- Documents Review -->
+                        <div class="glass-morphism p-6 rounded-lg">
+                            <h3 class="text-lg font-semibold text-white mb-4">Uploaded Documents</h3>
+                            <div id="reviewDocuments" class="space-y-2 text-gray-300"></div>
+                        </div>
+                    </div>
+
+                    <!-- Terms and Conditions -->
+                    <div class="mt-8 p-6 glass-morphism rounded-lg">
+                        <div class="flex items-start space-x-3">
+                            <input type="checkbox" id="agreeTerms" class="mt-1" required>
+                            <label for="agreeTerms" class="text-gray-300 text-sm">
+                                I agree to the <a href="/terms" class="text-blue-400 hover:text-blue-300">Terms and Conditions</a> 
+                                and <a href="/privacy" class="text-blue-400 hover:text-blue-300">Privacy Policy</a>. 
+                                I understand that my application will be reviewed and I will be notified of the decision via email.
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 flex justify-between">
+                        <button type="button" onclick="prevStep()" class="bg-gray-600 hover:bg-gray-700 px-6 py-3 rounded-lg text-white font-semibold transition-colors">
+                            <i class="fas fa-arrow-left mr-2"></i> Back
+                        </button>
+                        <button type="submit" id="submitBtn" class="bg-green-600 hover:bg-green-700 px-8 py-3 rounded-lg text-white font-semibold transition-colors">
+                            <span class="submit-text">Submit Application</span>
+                            <div class="loading-spinner hidden inline-block ml-2"></div>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+        <div class="glass-morphism p-8 rounded-xl max-w-md w-full mx-4 text-center">
+            <div class="bg-green-500/20 p-4 rounded-full inline-block mb-4">
+                <i class="fas fa-check-circle text-green-400 text-4xl"></i>
+            </div>
+            <h3 class="text-2xl font-semibold text-white mb-4">Application Submitted!</h3>
+            <p class="text-gray-300 mb-6">
+                Your agent application has been submitted successfully. You will receive an email confirmation shortly, 
+                and our team will review your application within 2-3 business days.
+            </p>
+            <div class="space-y-3">
+                <button onclick="closeSuccessModal()" class="w-full bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg text-white font-semibold transition-colors">
+                    Continue to Dashboard
+                </button>
+                <button onclick="window.location.href='/'" class="w-full text-gray-300 hover:text-white transition-colors">
+                    Return to Home
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        let selectedAgentType = '';
+        let uploadedFiles = {};
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            setupEventListeners();
+            updateStepDisplay();
+        });
+
+        function setupEventListeners() {
+            // Agent type selection
+            document.querySelectorAll('.agent-type-card').forEach(card => {
+                card.addEventListener('click', function() {
+                    selectAgentType(this.dataset.type);
+                });
+            });
+
+            // File upload areas
+            document.querySelectorAll('.file-upload-area').forEach(area => {
+                const input = area.querySelector('input[type="file"]');
+                
+                area.addEventListener('click', () => input.click());
+                area.addEventListener('dragover', handleDragOver);
+                area.addEventListener('drop', handleDrop);
+                input.addEventListener('change', handleFileSelect);
+            });
+
+            // Form submission
+            document.getElementById('agentRegistrationForm').addEventListener('submit', handleSubmit);
+        }
+
+        function selectAgentType(type) {
+            selectedAgentType = type;
+            
+            // Update UI
+            document.querySelectorAll('.agent-type-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            document.querySelector(`[data-type="${type}"]`).classList.add('selected');
+            
+            // Show/hide relevant document uploads
+            updateDocumentRequirements(type);
+        }
+
+        function updateDocumentRequirements(type) {
+            const licenseUpload = document.getElementById('licenseUpload');
+            const vehicleUpload = document.getElementById('vehicleUpload');
+            
+            if (type === 'pickup_delivery_agent' || type === 'fast_delivery_agent') {
+                licenseUpload.classList.remove('hidden');
+                vehicleUpload.classList.remove('hidden');
+            } else {
+                licenseUpload.classList.add('hidden');
+                vehicleUpload.classList.add('hidden');
+            }
+        }
+
+        function nextStep() {
+            if (validateCurrentStep()) {
+                if (currentStep < 4) {
+                    currentStep++;
+                    updateStepDisplay();
+                    
+                    if (currentStep === 4) {
+                        populateReview();
+                    }
+                }
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                updateStepDisplay();
+            }
+        }
+
+        function updateStepDisplay() {
+            // Update step indicators
+            document.querySelectorAll('.step-indicator').forEach((indicator, index) => {
+                const stepNumber = index + 1;
+                indicator.classList.remove('active', 'completed');
+                
+                if (stepNumber < currentStep) {
+                    indicator.classList.add('completed');
+                } else if (stepNumber === currentStep) {
+                    indicator.classList.add('active');
+                }
+            });
+
+            // Update step content
+            document.querySelectorAll('.step-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.querySelector(`[data-step="${currentStep}"]`).classList.add('active');
+        }
+
+        function validateCurrentStep() {
+            switch (currentStep) {
+                case 1:
+                    if (!selectedAgentType) {
+                        showError('Please select an agent type');
+                        return false;
+                    }
+                    return true;
+                    
+                case 2:
+                    return validatePersonalInfo();
+                    
+                case 3:
+                    return validateDocuments();
+                    
+                default:
+                    return true;
+            }
+        }
+
+        function validatePersonalInfo() {
+            const requiredFields = ['fullName', 'email', 'phone', 'dateOfBirth', 'nationalId', 'address', 'city', 'emergencyContact'];
+            
+            for (const field of requiredFields) {
+                const input = document.getElementById(field);
+                if (!input.value.trim()) {
+                    showError(`Please fill in the ${field.replace(/([A-Z])/g, ' $1').toLowerCase()}`);
+                    input.focus();
+                    return false;
+                }
+            }
+            
+            // Validate email format
+            const email = document.getElementById('email').value;
+            if (!isValidEmail(email)) {
+                showError('Please enter a valid email address');
+                return false;
+            }
+            
+            return true;
+        }
+
+        function validateDocuments() {
+            const requiredDocs = ['nationalId', 'photo'];
+            
+            if (selectedAgentType === 'pickup_delivery_agent' || selectedAgentType === 'fast_delivery_agent') {
+                requiredDocs.push('license');
+            }
+            
+            for (const doc of requiredDocs) {
+                if (!uploadedFiles[doc]) {
+                    showError(`Please upload your ${doc.replace(/([A-Z])/g, ' $1').toLowerCase()}`);
+                    return false;
+                }
+            }
+            
+            return true;
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                const input = e.currentTarget.querySelector('input[type="file"]');
+                input.files = files;
+                handleFileSelect({ target: input });
+            }
+        }
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            const field = e.target.dataset.field;
+            
+            if (file) {
+                if (validateFile(file, field)) {
+                    uploadedFiles[field] = file;
+                    showUploadedFile(e.target.closest('.file-upload-area').parentNode, file);
+                }
+            }
+        }
+
+        function validateFile(file, field) {
+            const maxSizes = {
+                photo: 2 * 1024 * 1024, // 2MB
+                default: 5 * 1024 * 1024 // 5MB
+            };
+            
+            const maxSize = maxSizes[field] || maxSizes.default;
+            
+            if (file.size > maxSize) {
+                showError(`File size must be less than ${maxSize / (1024 * 1024)}MB`);
+                return false;
+            }
+            
+            const allowedTypes = field === 'photo' 
+                ? ['image/jpeg', 'image/png']
+                : ['image/jpeg', 'image/png', 'application/pdf'];
+                
+            if (!allowedTypes.includes(file.type)) {
+                showError('Invalid file type. Please upload JPG, PNG, or PDF files only.');
+                return false;
+            }
+            
+            return true;
+        }
+
+        function showUploadedFile(container, file) {
+            const uploadArea = container.querySelector('.file-upload-area');
+            const uploadedDiv = container.querySelector('.uploaded-file');
+            const fileName = uploadedDiv.querySelector('.file-name');
+            
+            uploadArea.style.display = 'none';
+            uploadedDiv.classList.remove('hidden');
+            fileName.textContent = file.name;
+        }
+
+        function removeFile(button) {
+            const container = button.closest('.uploaded-file').parentNode;
+            const uploadArea = container.querySelector('.file-upload-area');
+            const uploadedDiv = container.querySelector('.uploaded-file');
+            const input = uploadArea.querySelector('input[type="file"]');
+            const field = input.dataset.field;
+            
+            delete uploadedFiles[field];
+            input.value = '';
+            
+            uploadArea.style.display = 'block';
+            uploadedDiv.classList.add('hidden');
+        }
+
+        function populateReview() {
+            // Agent Type
+            const agentTypeNames = {
+                'pickup_delivery_agent': 'Pickup Delivery Agent',
+                'fast_delivery_agent': 'Fast Delivery Agent',
+                'pickup_site_manager': 'Pickup Site Manager'
+            };
+            document.getElementById('reviewAgentType').textContent = agentTypeNames[selectedAgentType];
+            
+            // Personal Information
+            const personalInfo = document.getElementById('reviewPersonalInfo');
+            const fields = [
+                { id: 'fullName', label: 'Full Name' },
+                { id: 'email', label: 'Email' },
+                { id: 'phone', label: 'Phone' },
+                { id: 'dateOfBirth', label: 'Date of Birth' },
+                { id: 'nationalId', label: 'National ID' },
+                { id: 'city', label: 'City' },
+                { id: 'emergencyContact', label: 'Emergency Contact' }
+            ];
+            
+            personalInfo.innerHTML = fields.map(field => {
+                const value = document.getElementById(field.id).value;
+                return `<div><strong>${field.label}:</strong> ${value}</div>`;
+            }).join('');
+            
+            // Documents
+            const documents = document.getElementById('reviewDocuments');
+            const docNames = {
+                'nationalId': 'National ID/Passport',
+                'license': 'Driver\'s License',
+                'vehicle': 'Vehicle Registration',
+                'photo': 'Profile Photo'
+            };
+            
+            documents.innerHTML = Object.keys(uploadedFiles).map(key => {
+                return `<div><i class="fas fa-check-circle text-green-400 mr-2"></i>${docNames[key]}: ${uploadedFiles[key].name}</div>`;
+            }).join('');
+        }
+
+        async function handleSubmit(e) {
+            e.preventDefault();
+            
+            if (!document.getElementById('agreeTerms').checked) {
+                showError('Please agree to the terms and conditions');
+                return;
+            }
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const submitText = submitBtn.querySelector('.submit-text');
+            const spinner = submitBtn.querySelector('.loading-spinner');
+            
+            // Show loading state
+            submitBtn.disabled = true;
+            submitText.textContent = 'Submitting...';
+            spinner.classList.remove('hidden');
+            
+            try {
+                // Prepare form data
+                const formData = new FormData();
+                
+                // Add personal information
+                const personalFields = ['fullName', 'email', 'phone', 'dateOfBirth', 'nationalId', 'gender', 'address', 'city', 'emergencyContact'];
+                personalFields.forEach(field => {
+                    formData.append(field, document.getElementById(field).value);
+                });
+                
+                // Add agent type
+                formData.append('agentType', selectedAgentType);
+                
+                // Add files
+                Object.keys(uploadedFiles).forEach(key => {
+                    formData.append(key, uploadedFiles[key]);
+                });
+                
+                // Submit application
+                const response = await fetch('/api/agent-registration', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showSuccessModal();
+                } else {
+                    throw new Error(data.message || 'Failed to submit application');
+                }
+                
+            } catch (error) {
+                console.error('Error submitting application:', error);
+                showError('Failed to submit application: ' + error.message);
+            } finally {
+                // Reset button state
+                submitBtn.disabled = false;
+                submitText.textContent = 'Submit Application';
+                spinner.classList.add('hidden');
+            }
+        }
+
+        function showSuccessModal() {
+            document.getElementById('successModal').classList.remove('hidden');
+        }
+
+        function closeSuccessModal() {
+            document.getElementById('successModal').classList.add('hidden');
+            window.location.href = '/agent/dashboard.html';
+        }
+
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        function showError(message) {
+            // Simple alert for now - you can replace with a better notification system
+            alert(message);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Detail | African Deals Domain</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" href="/public/images/logo.png">
+  <script src="/shared/auth-utils.js"></script>
+  <script src="/shared/mode-switcher.js"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <!-- Header Component -->
+  <div id="buyer-header"></div>
+  
+  <script src="shared-components.js"></script>
+
+  <main class="pt-16 pb-8">
+    <div class="max-w-7xl mx-auto px-4">
+      <!-- Breadcrumb -->
+      <nav class="mb-6">
+        <ol class="flex items-center space-x-2 text-sm text-gray-600">
+          <li><a href="/buyer/product-list.html" class="hover:text-blue-600">Products</a></li>
+          <li><span class="mx-2">/</span></li>
+          <li id="category-breadcrumb">Category</li>
+          <li><span class="mx-2">/</span></li>
+          <li id="product-name-breadcrumb" class="text-gray-900 font-medium">Product</li>
+        </ol>
+      </nav>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Product Images -->
+        <div class="space-y-4">
+          <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+            <img id="main-image" src="/public/images/placeholder.jpg" 
+                 alt="Product" class="w-full h-96 object-cover">
+          </div>
+          
+          <div id="gallery-images" class="grid grid-cols-4 gap-2">
+            <!-- Gallery images will be loaded here -->
+          </div>
+        </div>
+
+        <!-- Product Info -->
+        <div class="space-y-6">
+          <div>
+            <h1 id="product-name" class="text-3xl font-bold text-gray-900 mb-2">Product Name</h1>
+            <p id="product-category" class="text-blue-600 font-medium">Category</p>
+          </div>
+
+          <div class="flex items-center gap-4">
+        <!-- Mode Switcher -->
+        <div class="mode-switcher-container" data-mode-switch="">
+          <!-- Mode switcher will be inserted here by JavaScript -->
+        </div>
+            <div class="flex items-center gap-2">
+              <span id="product-price" class="text-3xl font-bold text-gray-900">$0.00</span>
+              <span id="product-currency" class="text-lg text-gray-600">USD</span>
+            </div>
+            <span id="product-discount" class="text-lg text-red-500 font-medium hidden">$0.00</span>
+          </div>
+
+          <div class="bg-gray-50 rounded-lg p-4">
+            <h3 class="font-semibold text-gray-900 mb-2">Product Details</h3>
+            <div class="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span class="text-gray-600">Brand:</span>
+                <span id="product-brand" class="ml-2 font-medium">-</span>
+              </div>
+              <div>
+                <span class="text-gray-600">Condition:</span>
+                <span id="product-condition" class="ml-2 font-medium">-</span>
+              </div>
+              <div>
+                <span class="text-gray-600">MOQ:</span>
+                <span id="product-moq" class="ml-2 font-medium">-</span>
+              </div>
+              <div>
+                <span class="text-gray-600">Stock:</span>
+                <span id="product-stock" class="ml-2 font-medium">-</span>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="font-semibold text-gray-900 mb-2">Description</h3>
+            <p id="product-description" class="text-gray-700 leading-relaxed">Loading...</p>
+          </div>
+
+          <div class="bg-gray-50 rounded-lg p-4">
+            <h3 class="font-semibold text-gray-900 mb-2">Shipping Information</h3>
+            <div class="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span class="text-gray-600">Weight:</span>
+                <span id="product-weight" class="ml-2 font-medium">-</span>
+              </div>
+              <div>
+                <span class="text-gray-600">Dimensions:</span>
+                <span id="product-dimensions" class="ml-2 font-medium">-</span>
+              </div>
+              <div>
+                <span class="text-gray-600">Origin:</span>
+                <span id="product-origin" class="ml-2 font-medium">-</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex gap-4">
+            <button id="contact-seller" class="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium">
+              Contact Seller
+            </button>
+            <button id="add-to-cart" class="flex-1 bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors font-medium">
+              Add to Cart
+            </button>
+          </div>
+
+          <!-- Contact Seller Modal -->
+          <div id="contactSellerModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 hidden">
+            <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6 relative animate-fade-in">
+              <button id="closeContactSellerModal" class="absolute top-3 right-3 text-gray-400 hover:text-gray-700 text-2xl">&times;</button>
+              <h2 class="text-xl font-bold text-gray-900 mb-4">Contact Seller</h2>
+              <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Choose Inquiry Type:</label>
+                <div class="flex gap-3">
+                  <button id="autoInquiryBtn" class="flex-1 bg-blue-100 text-blue-700 py-2 rounded-lg font-semibold border border-blue-200 hover:bg-blue-200">Automatic</button>
+                  <button id="manualInquiryBtn" class="flex-1 bg-gray-100 text-gray-700 py-2 rounded-lg font-semibold border border-gray-200 hover:bg-gray-200">Manual</button>
+                </div>
+              </div>
+              <form id="contactSellerForm">
+                <div class="mb-3">
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                  <input type="text" id="inquirySubject" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                </div>
+                <div class="mb-3">
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Message</label>
+                  <textarea id="inquiryContent" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required></textarea>
+                </div>
+                <div class="flex gap-3 mt-4">
+                  <button type="submit" class="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 font-semibold">Send Inquiry</button>
+                  <button type="button" id="cancelContactSeller" class="flex-1 bg-gray-500 text-white py-2 rounded-lg hover:bg-gray-600 font-semibold">Cancel</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <div class="border-t pt-6">
+            <h3 class="font-semibold text-gray-900 mb-4">Seller Information</h3>
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" class="text-blue-600" viewBox="0 0 24 24">
+                  <circle cx="12" cy="8" r="4"/>
+                  <path d="M4 20c0-4 8-4 8-4s8 0 8 4"/>
+                </svg>
+              </div>
+              <div class="flex-1">
+                <p id="seller-name" class="font-medium text-gray-900">Loading...</p>
+                <div class="flex items-center gap-2 mt-1">
+                  <span class="text-sm text-green-600 font-medium">✓ Verified Seller</span>
+                  <span id="seller-location" class="text-sm text-gray-600">• Location</span>
+                </div>
+                <div class="flex items-center gap-4 mt-2 text-xs text-gray-500">
+                  <span id="seller-rating">⭐ 4.8 (120 reviews)</span>
+                  <span id="seller-response-time">📧 Responds within 2 hours</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Related Products -->
+      <div class="mt-12">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">Related Products</h2>
+        <div id="related-products" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <!-- Related products will be loaded here -->
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // --- GLOBAL STATE ---
+    let currentProduct = null;
+    
+    // Currency and Country Management
+    let currencyRates = {};
+    let selectedCurrency = localStorage.getItem('selectedCurrency') || 'USD';
+    let selectedCountry = localStorage.getItem('selectedCountry') || 'Rwanda';
+    let countries = [];
+
+    // --- LOAD HEADER COMPONENT ---
+    fetch('/buyer/components/header.html')
+      .then(res => res.text())
+      .then(html => {
+        document.getElementById('buyer-header').innerHTML = html;
+        console.log('Buyer header loaded successfully');
+      })
+      .catch(error => {
+        console.error('Error loading buyer header:', error);
+      });
+
+    // --- CURRENCY CONVERSION FUNCTIONS ---
+    async function fetchCurrencyRates() {
+      try {
+        const response = await fetch('https://v6.exchangerate-api.com/v6/c5f524e323378439dad2a43f/latest/USD');
+        const data = await response.json();
+        if (data && data.result === 'success') {
+          currencyRates = data.conversion_rates;
+          localStorage.setItem('currencyRates', JSON.stringify(currencyRates));
+          updateCurrencyDisplay();
+        }
+      } catch (error) {
+        console.error('Error fetching currency rates:', error);
+        // Fallback rates
+        currencyRates = { USD: 1, RWF: 1200, EUR: 0.9, KES: 130, NGN: 1500 };
+        updateCurrencyDisplay();
+      }
+    }
+
+    function updateCurrencyDisplay() {
+      const currencySymbols = { USD: '$', RWF: 'FRw', EUR: '€', KES: 'Ksh', NGN: '₦' };
+      const symbol = currencySymbols[selectedCurrency] || selectedCurrency;
+      
+      // Update product price
+      const priceElement = document.getElementById('product-price');
+      if (priceElement && currentProduct) {
+        const originalPrice = parseFloat(currentProduct.price);
+        const originalCurrency = currentProduct.currency || 'USD';
+        
+        if (originalCurrency === selectedCurrency) {
+          priceElement.textContent = `${symbol}${originalPrice.toFixed(2)}`;
+        } else {
+          // Convert currency
+          const usdRate = currencyRates[originalCurrency] || 1;
+          const targetRate = currencyRates[selectedCurrency] || 1;
+          const convertedPrice = (originalPrice / usdRate) * targetRate;
+          priceElement.textContent = `${symbol}${convertedPrice.toFixed(2)}`;
+        }
+      }
+
+      // Update currency display
+      const currencyElement = document.getElementById('product-currency');
+      if (currencyElement) {
+        currencyElement.textContent = selectedCurrency;
+      }
+
+      // Update discount price if exists
+      const discountElement = document.getElementById('product-discount');
+      if (discountElement && currentProduct && currentProduct.discount_price) {
+        const originalDiscountPrice = parseFloat(currentProduct.discount_price);
+        const originalCurrency = currentProduct.currency || 'USD';
+        
+        if (originalCurrency === selectedCurrency) {
+          discountElement.textContent = `${symbol}${originalDiscountPrice.toFixed(2)}`;
+        } else {
+          // Convert currency
+          const usdRate = currencyRates[originalCurrency] || 1;
+          const targetRate = currencyRates[selectedCurrency] || 1;
+          const convertedPrice = (originalDiscountPrice / usdRate) * targetRate;
+          discountElement.textContent = `${symbol}${convertedPrice.toFixed(2)}`;
+        }
+      }
+    }
+
+
+
+    // --- FETCH PRODUCT DETAILS ---
+    async function fetchProductDetails() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const productId = urlParams.get('id');
+      
+      if (!productId) {
+        showError('Product ID not found');
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/products/${productId}`);
+        const data = await res.json();
+        
+        if (data.success) {
+          currentProduct = data.product;
+          renderProductDetails();
+          updateCurrencyDisplay();
+          fetchRelatedProducts();
+        } else {
+          showError('Product not found');
+        }
+      } catch (error) {
+        console.error('Error fetching product:', error);
+        showError('Failed to load product details');
+      }
+    }
+
+    function renderProductDetails() {
+      const product = currentProduct;
+      
+      // Update breadcrumb
+      document.getElementById('category-breadcrumb').textContent = product.category_name || 'Category';
+      document.getElementById('product-name-breadcrumb').textContent = product.name;
+      
+      // Update main content
+      document.getElementById('product-name').textContent = product.name;
+      document.getElementById('product-category').textContent = product.category_name || 'Uncategorized';
+      
+      // Update price (will be handled by currency conversion)
+      document.getElementById('product-price').textContent = `${product.currency || 'USD'} ${product.price}`;
+      document.getElementById('product-currency').textContent = product.currency || 'USD';
+      
+      if (product.discount_price) {
+        document.getElementById('product-discount').textContent = `${product.currency || 'USD'} ${product.discount_price}`;
+        document.getElementById('product-discount').classList.remove('hidden');
+      }
+      
+      // Update product details
+      document.getElementById('product-brand').textContent = product.brand || '-';
+      document.getElementById('product-condition').textContent = product.condition || '-';
+      document.getElementById('product-moq').textContent = product.moq || '-';
+      document.getElementById('product-stock').textContent = product.stock || '-';
+      document.getElementById('product-description').textContent = product.description || 'No description available.';
+      
+      // Update shipping info
+      document.getElementById('product-weight').textContent = product.weight ? `${product.weight} kg` : '-';
+      const dimensions = [];
+      if (product.length) dimensions.push(product.length);
+      if (product.width) dimensions.push(product.width);
+      if (product.height) dimensions.push(product.height);
+      document.getElementById('product-dimensions').textContent = dimensions.length > 0 ? `${dimensions.join(' × ')} cm` : '-';
+      document.getElementById('product-origin').textContent = product.origin_country || '-';
+      
+      // Update seller info
+      document.getElementById('seller-name').textContent = product.seller_name || 'Unknown Seller';
+      document.getElementById('seller-location').textContent = `• ${product.seller_location || 'Location not specified'}`;
+      
+      // Generate seller rating and response time (in real app, this would come from backend)
+      const sellerRating = (Math.random() * 0.5 + 4.5).toFixed(1);
+      const reviewCount = Math.floor(Math.random() * 200) + 50;
+      const responseTime = Math.floor(Math.random() * 4) + 1;
+      
+      document.getElementById('seller-rating').textContent = `⭐ ${sellerRating} (${reviewCount} reviews)`;
+      document.getElementById('seller-response-time').textContent = `📧 Responds within ${responseTime} hour${responseTime > 1 ? 's' : ''}`;
+      
+      // Update images
+      if (product.main_image) {
+        const mainImage = document.getElementById('main-image');
+        mainImage.src = `/uploads/${product.main_image}`;
+        mainImage.onerror = function() {
+          this.src = '/public/images/logo.png';
+        };
+      }
+      
+      // Update gallery images
+      const galleryContainer = document.getElementById('gallery-images');
+      if (product.gallery_images && product.gallery_images.length > 0) {
+        galleryContainer.innerHTML = product.gallery_images.map(imageUrl => `
+          <div class="cursor-pointer hover:opacity-80 transition-opacity">
+            <img src="/uploads/${imageUrl}" 
+                 alt="Gallery image" 
+                 class="w-full h-20 object-cover rounded-lg border-2 border-transparent hover:border-blue-500"
+                 onclick="setMainImage('/uploads/${imageUrl}')"
+                 onerror="this.src='/public/images/logo.png'">
+          </div>
+        `).join('');
+      } else {
+        galleryContainer.innerHTML = '<p class="text-gray-500 text-sm col-span-full text-center">No additional images</p>';
+      }
+      
+      // Update page title
+      document.title = `${product.name} | African Deals Domain`;
+    }
+
+    async function fetchRelatedProducts() {
+      if (!currentProduct) return;
+      
+      try {
+        const res = await fetch(`/api/products?category_id=${currentProduct.category_id}&limit=4`);
+        const data = await res.json();
+        
+        if (data.success) {
+          renderRelatedProducts(data.products.filter(p => p.id !== currentProduct.id));
+        }
+      } catch (error) {
+        console.error('Error fetching related products:', error);
+      }
+    }
+
+    function renderRelatedProducts(products) {
+      const container = document.getElementById('related-products');
+      
+      if (products.length === 0) {
+        container.innerHTML = '<p class="text-gray-500 col-span-full text-center">No related products found.</p>';
+        return;
+      }
+      
+      container.innerHTML = products.map(product => `
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+          <img src="${product.main_image ? `/uploads/${product.main_image}` : '/public/images/placeholder.jpg'}" 
+               alt="${product.name}" class="w-full h-48 object-cover"
+               onerror="this.src='/public/images/logo.png'">
+          <div class="p-4">
+            <h3 class="font-semibold text-gray-900 mb-2 line-clamp-2">${product.name}</h3>
+            <div class="flex items-center justify-between">
+              <span class="text-lg font-bold text-gray-900">${product.currency} ${product.price}</span>
+              <button onclick="viewProduct(${product.id})" 
+                      class="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors">
+                View
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function showError(message) {
+      const main = document.querySelector('main');
+      main.innerHTML = `
+        <div class="pt-16 pb-8">
+          <div class="max-w-2xl mx-auto text-center">
+            <svg width="64" height="64" fill="none" stroke="currentColor" stroke-width="1" class="mx-auto text-gray-400 mb-4" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="15" y1="9" x2="9" y2="15"/>
+              <line x1="9" y1="9" x2="15" y2="15"/>
+            </svg>
+            <h1 class="text-2xl font-bold text-gray-900 mb-2">Error</h1>
+            <p class="text-gray-600">${message}</p>
+            <a href="/buyer/product-list.html" class="inline-block mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+              Back to Products
+            </a>
+          </div>
+        </div>
+      `;
+    }
+
+    // --- EVENT LISTENERS ---
+    document.addEventListener('DOMContentLoaded', async function() {
+      // Load buyer header
+      console.log('Loading buyer header...');
+      await injectComponent('buyer-header', '/buyer/components/header.html');
+      console.log('Buyer header loaded successfully');
+      
+      fetchCurrencyRates();
+      fetchProductDetails();
+      updateCartCount();
+      
+      // Contact seller button (open modal)
+      document.getElementById('contact-seller').addEventListener('click', function() {
+        openContactSellerModal();
+      });
+      
+      // Add to cart button
+      document.getElementById('add-to-cart').addEventListener('click', function() {
+        if (currentProduct) {
+          addToCart(currentProduct.id);
+        }
+      });
+    });
+
+    // --- CONTACT SELLER MODAL LOGIC ---
+    function openContactSellerModal() {
+      const modal = document.getElementById('contactSellerModal');
+      modal.classList.remove('hidden');
+      // Default to automatic inquiry
+      setInquiryType('auto');
+    }
+    function closeContactSellerModal() {
+      document.getElementById('contactSellerModal').classList.add('hidden');
+    }
+    document.getElementById('closeContactSellerModal').onclick = closeContactSellerModal;
+    document.getElementById('cancelContactSeller').onclick = closeContactSellerModal;
+    document.getElementById('autoInquiryBtn').onclick = function() { setInquiryType('auto'); };
+    document.getElementById('manualInquiryBtn').onclick = function() { setInquiryType('manual'); };
+    function setInquiryType(type) {
+      const subjectInput = document.getElementById('inquirySubject');
+      const contentInput = document.getElementById('inquiryContent');
+      if (type === 'auto' && currentProduct) {
+        subjectInput.value = `Inquiry about ${currentProduct.name}`;
+        contentInput.value = `Hi, I'm interested in your product "${currentProduct.name}". Could you please provide more information about availability, pricing, and shipping options?`;
+        subjectInput.readOnly = true;
+        contentInput.readOnly = true;
+        document.getElementById('autoInquiryBtn').classList.add('bg-blue-200', 'text-blue-900');
+        document.getElementById('manualInquiryBtn').classList.remove('bg-blue-200', 'text-blue-900');
+      } else {
+        subjectInput.value = '';
+        contentInput.value = '';
+        subjectInput.readOnly = false;
+        contentInput.readOnly = false;
+        document.getElementById('manualInquiryBtn').classList.add('bg-blue-200', 'text-blue-900');
+        document.getElementById('autoInquiryBtn').classList.remove('bg-blue-200', 'text-blue-900');
+      }
+    }
+    document.getElementById('contactSellerForm').onsubmit = async function(e) {
+      e.preventDefault();
+      if (!currentProduct) return;
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        showNotification('Please sign in to contact sellers', 'error');
+        return;
+      }
+      const subject = document.getElementById('inquirySubject').value;
+      const content = document.getElementById('inquiryContent').value;
+      try {
+        const response = await fetch('/api/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            recipient_id: currentProduct.seller_id,
+            subject,
+            content,
+            product_id: currentProduct.id
+          })
+        });
+        const data = await response.json();
+        if (data.success) {
+          showNotification('Message sent to seller!', 'success');
+          closeContactSellerModal();
+          setTimeout(() => {
+            window.location.href = `/buyer/messages.html`;
+          }, 1500);
+        } else {
+          showNotification(data.error || 'Failed to send message', 'error');
+        }
+      } catch (error) {
+        console.error('Error contacting seller:', error);
+        showNotification('Failed to contact seller', 'error');
+      }
+    };
+
+    // --- UTILITY FUNCTIONS ---
+    function setMainImage(imageUrl) {
+      const mainImage = document.getElementById('main-image');
+      mainImage.src = imageUrl;
+    }
+    
+    function viewProduct(productId) {
+      window.location.href = `/buyer/product-detail.html?id=${productId}`;
+    }
+
+    async function addToCart(productId) {
+      try {
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+          showNotification('Please sign in to add items to cart', 'error');
+          return;
+        }
+        
+        const response = await fetch('/api/cart/add', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            productId: productId,
+            quantity: 1
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          showNotification('Product added to cart!', 'success');
+          // Update cart count in header if it exists
+          updateCartCount();
+        } else {
+          showNotification(data.error || 'Failed to add to cart', 'error');
+        }
+      } catch (error) {
+        console.error('Error adding to cart:', error);
+        showNotification('Failed to add to cart', 'error');
+      }
+    }
+
+    async function updateCartCount() {
+      try {
+        const token = localStorage.getItem('authToken');
+        if (!token) return;
+        
+        const response = await fetch('/api/cart/count', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          // Update cart badge in header if it exists
+          const cartBadge = document.querySelector('[data-cart-count]');
+          if (cartBadge) {
+            cartBadge.textContent = data.count;
+            cartBadge.classList.toggle('hidden', data.count === 0);
+          }
+        }
+      } catch (error) {
+        console.error('Error updating cart count:', error);
+      }
+    }
+
+    function showNotification(message, type = 'info') {
+      const notification = document.createElement('div');
+      notification.className = `fixed top-4 right-4 z-50 px-4 py-2 rounded-lg text-white ${
+        type === 'success' ? 'bg-green-500' : 
+        type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+      }`;
+      notification.textContent = message;
+      
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.remove();
+      }, 3000);
+    }
+  </script>
+</body>
+</html> 

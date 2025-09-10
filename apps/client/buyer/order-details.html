@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Details | ADD Physical Products</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" href="/public/images/logo.png">
+    <script src="/public/auth-check.js"></script>
+    <style>
+        /* Custom Styles */
+        .card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+        
+        .timeline-item {
+            position: relative;
+            padding-left: 2rem;
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 0.5rem;
+            top: 0;
+            bottom: -1rem;
+            width: 2px;
+            background: linear-gradient(to bottom, #3b82f6, #8b5cf6);
+        }
+        
+        .timeline-item:last-child::before {
+            bottom: 0;
+        }
+        
+        .timeline-dot {
+            position: absolute;
+            left: 0;
+            top: 0.5rem;
+            width: 1rem;
+            height: 1rem;
+            border-radius: 50%;
+            border: 2px solid #3b82f6;
+            background: #1e40af;
+        }
+        
+        .timeline-dot.completed {
+            background: #10b981;
+            border-color: #059669;
+        }
+        
+        .timeline-dot.current {
+            background: #f59e0b;
+            border-color: #d97706;
+            animation: pulse 2s infinite;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .loading-spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .status-badge {
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .status-badge::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+        
+        .status-badge:hover::before {
+            left: 100%;
+        }
+        
+        .payment-status-pending { background: linear-gradient(135deg, #fbbf24, #f59e0b); }
+        .payment-status-awaiting { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+        .payment-status-approved { background: linear-gradient(135deg, #10b981, #059669); }
+        .payment-status-rejected { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        
+        .progress-bar {
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6, #10b981);
+            background-size: 200% 100%;
+            animation: progressShine 2s linear infinite;
+        }
+        
+        @keyframes progressShine {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        .item-card {
+            transition: all 0.3s ease;
+        }
+        
+        .item-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .modal-backdrop {
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+        
+        .upload-zone {
+            border: 2px dashed #d1d5db;
+            transition: all 0.3s ease;
+        }
+        
+        .upload-zone.dragover {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+    </style>
+    <script src="/shared/auth-utils.js"></script>
+</head>
+<body class="min-h-screen bg-gray-50">
+    <!-- Navigation Header -->
+    <nav class="card border-b sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo and Brand -->
+                <div class="flex items-center space-x-4">
+                    <a href="/public/index.html" class="flex items-center space-x-3 group">
+                        <img src="/public/images/logo.png" alt="ADD" class="h-10 w-10 rounded-xl shadow-lg group-hover:scale-110 transition-transform duration-300">
+                        <div>
+                            <h1 class="text-xl font-bold text-gray-800">ADD Physical Products</h1>
+                            <p class="text-xs text-gray-600">Buyer Portal</p>
+                        </div>
+                    </a>
+                </div>
+                
+                <!-- Breadcrumb -->
+                <div class="hidden md:flex items-center space-x-2 text-gray-600">
+                    <a href="/buyer/dashboard.html" class="hover:text-gray-800 transition-colors">Dashboard</a>
+                    <i class="fas fa-chevron-right text-xs"></i>
+                    <a href="/buyer/orders.html" class="hover:text-gray-800 transition-colors">Orders</a>
+                    <i class="fas fa-chevron-right text-xs"></i>
+                    <span class="text-gray-800">Order Details</span>
+                </div>
+                
+                <!-- User Menu -->
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <button id="user-menu-button" class="flex items-center space-x-2 text-gray-700 hover:text-gray-900 transition-colors">
+                            <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                                <i class="fas fa-user text-sm"></i>
+                            </div>
+                            <span id="user-name" class="hidden md:block">Loading...</span>
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </button>
+                        
+                        <!-- Dropdown Menu -->
+                        <div id="user-dropdown" class="absolute right-0 mt-2 w-48 card rounded-lg shadow-lg hidden">
+                            <div class="py-2">
+                                <a href="/buyer/profile.html" class="block px-4 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-colors">
+                                    <i class="fas fa-user-circle mr-2"></i>Profile
+                                </a>
+                                <a href="/buyer/settings.html" class="block px-4 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-colors">
+                                    <i class="fas fa-cog mr-2"></i>Settings
+                                </a>
+                                <hr class="my-2 border-gray-200">
+                                <button onclick="logout()" class="w-full text-left px-4 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-colors">
+                                    <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-6">
+        <div class="max-w-6xl mx-auto">
+            <!-- Loading State -->
+            <div id="loading-state" class="text-center py-12">
+                <div class="loading-spinner mx-auto mb-4"></div>
+                <p class="text-gray-600">Loading order details...</p>
+            </div>
+
+            <!-- Error State -->
+            <div id="error-state" class="text-center py-12 hidden">
+                <div class="w-24 h-24 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-exclamation-triangle text-red-500 text-3xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">Order Not Found</h3>
+                <p class="text-gray-600 mb-6">The order you're looking for doesn't exist or you don't have permission to view it.</p>
+                <a href="/buyer/orders.html" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg transition-colors inline-flex items-center">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to Orders
+                </a>
+            </div>
+
+            <!-- Order Details Content -->
+            <div id="order-content" class="hidden">
+                <!-- Order Header -->
+                <div class="card rounded-xl p-6 mb-8 fade-in">
+                    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-4 mb-4">
+                                <button onclick="goBack()" class="text-gray-600 hover:text-gray-800 transition-colors">
+                                    <i class="fas fa-arrow-left text-xl"></i>
+                                </button>
+                                <div>
+                                    <h1 id="order-title" class="text-2xl font-bold text-gray-900">Order #</h1>
+                                    <p id="order-date" class="text-gray-600">Placed on</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex flex-wrap items-center gap-3">
+                                <span id="order-status-badge" class="status-badge px-4 py-2 rounded-full text-sm font-medium">
+                                    <!-- Status will be inserted here -->
+                                </span>
+                                <span id="payment-status-badge" class="status-badge px-4 py-2 rounded-full text-sm font-medium text-white">
+                                    <!-- Payment status will be inserted here -->
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex flex-col sm:flex-row gap-3 mt-6 lg:mt-0">
+                            <button id="track-order-btn" onclick="trackOrder()" class="bg-purple-500 hover:bg-purple-600 text-white px-6 py-3 rounded-lg transition-colors">
+                                <i class="fas fa-map-marker-alt mr-2"></i>Track Order
+                            </button>
+                            <button id="upload-proof-btn" onclick="openPaymentProofModal()" class="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg transition-colors hidden">
+                                <i class="fas fa-upload mr-2"></i>Upload Payment Proof
+                            </button>
+                            <button id="download-invoice-btn" onclick="downloadInvoice()" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg transition-colors hidden">
+                                <i class="fas fa-download mr-2"></i>Download Invoice
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order Progress -->
+                <div class="card rounded-xl p-6 mb-8 fade-in">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-6">Order Progress</h2>
+                    <div class="relative">
+                        <!-- Progress Bar -->
+                        <div class="absolute top-8 left-8 right-8 h-1 bg-gray-200 rounded-full">
+                            <div id="progress-bar" class="h-full progress-bar rounded-full" style="width: 0%"></div>
+                        </div>
+                        
+                        <!-- Progress Steps -->
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div class="text-center">
+                                <div id="step-pending" class="w-16 h-16 rounded-full border-4 border-yellow-500 bg-yellow-500 flex items-center justify-center mx-auto mb-2">
+                                    <i class="fas fa-clock text-white text-xl"></i>
+                                </div>
+                                <p class="text-gray-900 text-sm font-medium">Order Placed</p>
+                                <p class="text-gray-600 text-xs">Pending confirmation</p>
+                            </div>
+                            <div class="text-center">
+                                <div id="step-confirmed" class="w-16 h-16 rounded-full border-4 border-gray-300 bg-gray-100 flex items-center justify-center mx-auto mb-2">
+                                    <i class="fas fa-check-circle text-gray-400 text-xl"></i>
+                                </div>
+                                <p class="text-gray-500 text-sm font-medium">Confirmed</p>
+                                <p class="text-gray-400 text-xs">Order confirmed</p>
+                            </div>
+                            <div class="text-center">
+                                <div id="step-shipped" class="w-16 h-16 rounded-full border-4 border-gray-300 bg-gray-100 flex items-center justify-center mx-auto mb-2">
+                                    <i class="fas fa-shipping-fast text-gray-400 text-xl"></i>
+                                </div>
+                                <p class="text-gray-500 text-sm font-medium">Shipped</p>
+                                <p class="text-gray-400 text-xs">On the way</p>
+                            </div>
+                            <div class="text-center">
+                                <div id="step-delivered" class="w-16 h-16 rounded-full border-4 border-gray-300 bg-gray-100 flex items-center justify-center mx-auto mb-2">
+                                    <i class="fas fa-box-open text-gray-400 text-xl"></i>
+                                </div>
+                                <p class="text-gray-500 text-sm font-medium">Delivered</p>
+                                <p class="text-gray-400 text-xs">Order completed</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Two Column Layout -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Left Column - Order Items & Details -->
+                    <div class="lg:col-span-2 space-y-8">
+                        <!-- Order Items -->
+                        <div class="card rounded-xl p-6 fade-in">
+                            <h2 class="text-xl font-semibold text-gray-900 mb-6">Order Items</h2>
+                            <div id="order-items" class="space-y-4">
+                                <!-- Items will be loaded here -->
+                            </div>
+                        </div>
+
+                        <!-- Order Timeline -->
+                        <div class="card rounded-xl p-6 fade-in">
+                            <h2 class="text-xl font-semibold text-gray-900 mb-6">Order Timeline</h2>
+                            <div id="order-timeline" class="space-y-6">
+                                <!-- Timeline will be loaded here -->
+                            </div>
+                        </div>
+
+                        <!-- Payment Information -->
+                        <div class="card rounded-xl p-6 fade-in">
+                            <h2 class="text-xl font-semibold text-gray-900 mb-6">Payment Information</h2>
+                            <div id="payment-info" class="space-y-4">
+                                <!-- Payment info will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column - Summary & Actions -->
+                    <div class="space-y-8">
+                        <!-- Order Summary -->
+                        <div class="card rounded-xl p-6 fade-in">
+                            <h2 class="text-xl font-semibold text-gray-900 mb-6">Order Summary</h2>
+                            <div id="order-summary" class="space-y-3">
+                                <!-- Summary will be loaded here -->
+                            </div>
+                        </div>
+
+                        <!-- Shipping Information -->
+                        <div class="card rounded-xl p-6 fade-in">
+                            <h2 class="text-xl font-semibold text-gray-900 mb-6">Shipping Information</h2>
+                            <div id="shipping-info" class="space-y-3">
+                                <!-- Shipping info will be loaded here -->
+                            </div>
+                        </div>
+
+                        <!-- Quick Actions -->
+                        <div class="card rounded-xl p-6 fade-in">
+                            <h2 class="text-xl font-semibold text-gray-900 mb-6">Quick Actions</h2>
+                            <div class="space-y-3">
+                                <button onclick="contactSupport()" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg transition-colors">
+                                    <i class="fas fa-headset mr-2"></i>Contact Support
+                                </button>
+                                <button onclick="reportIssue()" class="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-lg transition-colors">
+                                    <i class="fas fa-exclamation-triangle mr-2"></i>Report Issue
+                                </button>
+                                <button onclick="shareOrder()" class="w-full bg-gray-500 hover:bg-gray-600 text-white py-3 rounded-lg transition-colors">
+                                    <i class="fas fa-share mr-2"></i>Share Order
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Payment Proof Upload Modal -->
+    <div id="payment-proof-modal" class="fixed inset-0 bg-black/50 modal-backdrop hidden z-50 flex items-center justify-center p-4">
+        <div class="card rounded-xl max-w-md w-full p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-semibold text-gray-900">Upload Payment Proof</h3>
+                <button onclick="closePaymentProofModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="mb-4">
+                <p class="text-gray-600 text-sm mb-2">Order: <span id="modal-order-number" class="text-gray-900 font-semibold"></span></p>
+                <p class="text-gray-600 text-sm">Upload a screenshot or photo of your payment confirmation</p>
+            </div>
+            
+            <div id="upload-zone" class="upload-zone rounded-lg p-8 text-center mb-4 cursor-pointer">
+                <div id="upload-content">
+                    <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
+                    <p class="text-gray-600 mb-2">Drag & drop your payment proof here</p>
+                    <p class="text-gray-500 text-sm">or click to browse files</p>
+                    <p class="text-gray-400 text-xs mt-2">Supported: JPG, PNG, PDF (Max 10MB)</p>
+                </div>
+                <div id="upload-preview" class="hidden">
+                    <img id="preview-image" class="max-w-full h-32 object-cover rounded-lg mx-auto mb-2">
+                    <p id="file-name" class="text-gray-900 text-sm"></p>
+                    <button onclick="removeFile()" class="text-red-500 hover:text-red-700 text-sm mt-2">
+                        <i class="fas fa-trash mr-1"></i>Remove
+                    </button>
+                </div>
+            </div>
+            
+            <input type="file" id="payment-proof-input" accept="image/*,.pdf" class="hidden">
+            
+            <div class="flex space-x-3">
+                <button onclick="closePaymentProofModal()" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3 rounded-lg transition-colors">
+                    Cancel
+                </button>
+                <button id="upload-button" onclick="uploadPaymentProof()" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg transition-colors disabled:opacity-50" disabled>
+                    <span id="upload-text">Upload Proof</span>
+                    <div id="upload-spinner" class="loading-spinner mx-auto hidden" style="width: 20px; height: 20px;"></div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2">
+        <!-- Toast notifications will appear here -->
+    </div>
+
+    <script>
+        // Global variables
+        let currentOrder = null;
+        let orderId = null;
+        let selectedFile = null;
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            initializePage();
+            setupEventListeners();
+            loadOrderDetails();
+            startStatusPolling();
+        });
+
+        // Real-time status updates
+        let statusPollingInterval;
+        
+        function startStatusPolling() {
+            if (!orderId) return;
+            
+            // Poll for status updates every 30 seconds
+            statusPollingInterval = setInterval(async () => {
+                try {
+                    const token = localStorage.getItem('authToken');
+                    if (!token) return;
+                    
+                    const response = await fetch(`/api/orders/${orderId}`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.success && data.order) {
+                            const newOrder = data.order;
+                            
+                            // Check for status changes
+                            if (currentOrder) {
+                                const statusChanges = [];
+                                
+                                if (currentOrder.status !== newOrder.status) {
+                                    statusChanges.push({
+                                        type: 'order_status',
+                                        oldValue: currentOrder.status,
+                                        newValue: newOrder.status
+                                    });
+                                }
+                                
+                                if (currentOrder.payment_status !== newOrder.payment_status) {
+                                    statusChanges.push({
+                                        type: 'payment_status',
+                                        oldValue: currentOrder.payment_status,
+                                        newValue: newOrder.payment_status
+                                    });
+                                }
+                                
+                                if (statusChanges.length > 0) {
+                                    // Update current order
+                                    currentOrder = newOrder;
+                                    
+                                    // Show notifications
+                                    statusChanges.forEach(change => {
+                                        showStatusChangeNotification(change);
+                                    });
+                                    
+                                    // Re-render order details
+                                    renderOrderDetails();
+                                }
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error polling for status updates:', error);
+                }
+            }, 30000); // 30 seconds
+        }
+        
+        function showStatusChangeNotification(change) {
+            let message = '';
+            let type = 'info';
+            
+            if (change.type === 'payment_status') {
+                if (change.newValue === 'confirmed') {
+                    message = `Payment approved! Your order is now being processed.`;
+                    type = 'success';
+                } else if (change.newValue === 'rejected') {
+                    message = `Payment rejected. Please upload a new payment proof.`;
+                    type = 'error';
+                }
+            } else if (change.type === 'order_status') {
+                if (change.newValue === 'confirmed') {
+                    message = `Order confirmed and is being prepared.`;
+                    type = 'success';
+                } else if (change.newValue === 'shipped') {
+                    message = `Order has been shipped!`;
+                    type = 'success';
+                } else if (change.newValue === 'delivered') {
+                    message = `Order has been delivered!`;
+                    type = 'success';
+                }
+            }
+            
+            if (message) {
+                showToast(message, type);
+                
+                // Add visual highlight to status badges
+                setTimeout(() => {
+                    highlightStatusBadges();
+                }, 1000);
+            }
+        }
+        
+        function highlightStatusBadges() {
+            const statusBadge = document.getElementById('order-status-badge');
+            const paymentBadge = document.getElementById('payment-status-badge');
+            
+            [statusBadge, paymentBadge].forEach(badge => {
+                if (badge) {
+                    badge.style.animation = 'pulse 2s ease-in-out';
+                    badge.style.boxShadow = '0 0 20px rgba(16, 185, 129, 0.5)';
+                    
+                    setTimeout(() => {
+                        badge.style.animation = '';
+                        badge.style.boxShadow = '';
+                    }, 3000);
+                }
+            });
+        }
+        
+        // Stop polling when page is hidden/closed
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                if (statusPollingInterval) {
+                    clearInterval(statusPollingInterval);
+                }
+            } else {
+                startStatusPolling();
+            }
+        });
+
+        // Listen for cross-tab payment approval notifications
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'payment_approval_notification' && e.newValue) {
+                try {
+                    const notification = JSON.parse(e.newValue);
+                    if (notification.type === 'payment_approved' && notification.approvalType === 'MANUAL_PAYMENT') {
+                        // Show immediate notification
+                        showToast('Payment approved! Your order is now being processed.', 'success');
+                        
+                        // Refresh order details immediately
+                        setTimeout(() => {
+                            loadOrderDetails();
+                        }, 1000);
+                    }
+                } catch (error) {
+                    console.error('Error processing cross-tab notification:', error);
+                }
+            }
+        });
+
+        async function initializePage() {
+            // Check authentication using proper Auth system
+            const isAuthorized = await Auth.requireAuth('buyer');
+            if (!isAuthorized) {
+                return; // Auth system will handle redirect
+            }
+
+            // Get order ID from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            orderId = urlParams.get('order') || urlParams.get('id');
+            
+            if (!orderId) {
+                showError();
+                return;
+            }
+
+            // Load user info
+            await loadUserInfo();
+        }
+
+        function setupEventListeners() {
+            // User menu toggle
+            document.getElementById('user-menu-button').addEventListener('click', function() {
+                const dropdown = document.getElementById('user-dropdown');
+                dropdown.classList.toggle('hidden');
+            });
+
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', function(event) {
+                const userMenu = document.getElementById('user-menu-button');
+                const dropdown = document.getElementById('user-dropdown');
+                
+                if (!userMenu.contains(event.target)) {
+                    dropdown.classList.add('hidden');
+                }
+            });
+
+            // File upload
+            const uploadZone = document.getElementById('upload-zone');
+            const fileInput = document.getElementById('payment-proof-input');
+
+            uploadZone.addEventListener('click', () => fileInput.click());
+            uploadZone.addEventListener('dragover', handleDragOver);
+            uploadZone.addEventListener('dragleave', handleDragLeave);
+            uploadZone.addEventListener('drop', handleDrop);
+            fileInput.addEventListener('change', handleFileSelect);
+        }
+
+        async function loadUserInfo() {
+            try {
+                const token = Auth.getToken();
+                const user = Auth.getUser();
+                
+                if (user) {
+                    // Use cached user data first
+                    document.getElementById('user-name').textContent = user.name || user.first_name || 'User';
+                } else if (token) {
+                    // Fetch fresh user data if not cached
+                    const response = await fetch('/api/auth/profile', {
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (response.ok) {
+                        const userData = await response.json();
+                        document.getElementById('user-name').textContent = userData.user.name || userData.user.first_name || 'User';
+                        
+                        // Cache the user data
+                        localStorage.setItem('userData', JSON.stringify(userData.user));
+                    } else {
+                        console.error('Failed to load user info');
+                        handleApiError(new Error('Failed to load user info'), 'Loading User Info');
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading user info:', error);
+                handleApiError(error, 'Loading User Info');
+            }
+        }
+
+        async function loadOrderDetails() {
+            try {
+                console.log('Loading order details for ID:', orderId);
+                showLoading();
+                
+                const token = Auth.getToken();
+                if (!token) {
+                    throw new Error('No authentication token found');
+                }
+                console.log('Using token:', token ? 'Token present' : 'No token');
+                
+                const response = await fetch(`/api/orders/${orderId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                console.log('Response status:', response.status);
+                console.log('Response ok:', response.ok);
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+                    console.error('API Error:', errorData);
+                    const error = new Error(errorData.error || `HTTP ${response.status}: Order not found`);
+                    error.response = { status: response.status, data: errorData };
+                    throw error;
+                }
+
+                const data = await response.json();
+                console.log('Order data received:', data);
+                
+                if (!data.success || !data.order) {
+                    throw new Error('Invalid response format');
+                }
+                
+                currentOrder = data.order;
+                console.log('Current order set:', currentOrder);
+                
+                renderOrderDetails();
+                
+            } catch (error) {
+                console.error('Error loading order details:', error);
+                handleApiError(error, 'Loading Order Details');
+                showError(error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function renderOrderDetails() {
+            if (!currentOrder) return;
+
+            // Update header
+            document.getElementById('order-title').textContent = `Order #${currentOrder.order_number}`;
+            document.getElementById('order-date').textContent = `Placed on ${formatDate(currentOrder.created_at)}`;
+            
+            // Update status badges
+            const statusBadge = document.getElementById('order-status-badge');
+            statusBadge.textContent = formatStatus(currentOrder.status);
+            statusBadge.className = `status-badge px-4 py-2 rounded-full text-sm font-medium ${getStatusBadgeClass(currentOrder.status)}`;
+            
+            const paymentBadge = document.getElementById('payment-status-badge');
+            paymentBadge.textContent = formatPaymentStatus(currentOrder.payment_status);
+            paymentBadge.className = `status-badge px-4 py-2 rounded-full text-sm font-medium text-white ${getPaymentStatusClass(currentOrder.payment_status)}`;
+
+            // Update progress
+            updateOrderProgress();
+            
+            // Show/hide action buttons
+            updateActionButtons();
+            
+            // Render sections
+            renderOrderItems();
+            renderOrderTimeline();
+            renderPaymentInfo();
+            renderOrderSummary();
+            renderShippingInfo();
+            
+            // Show content
+            document.getElementById('order-content').classList.remove('hidden');
+        }
+
+        function updateOrderProgress() {
+            const status = currentOrder.status.toLowerCase();
+            const steps = ['pending', 'confirmed', 'shipped', 'delivered'];
+            const currentStepIndex = steps.indexOf(status);
+            const progressPercentage = currentStepIndex >= 0 ? ((currentStepIndex + 1) / steps.length) * 100 : 0;
+            
+            // Update progress bar
+            const progressBar = document.getElementById('progress-bar');
+            progressBar.style.width = `${progressPercentage}%`;
+            
+            // Update step indicators
+            steps.forEach((step, index) => {
+                const stepElement = document.getElementById(`step-${step}`);
+                const textElements = stepElement.parentElement.querySelectorAll('p');
+                
+                if (index <= currentStepIndex) {
+                    // Completed step
+                    stepElement.className = 'w-16 h-16 rounded-full border-4 border-green-500 bg-green-500 flex items-center justify-center mx-auto mb-2';
+                    textElements[0].className = 'text-gray-900 text-sm font-medium';
+                    textElements[1].className = 'text-gray-600 text-xs';
+                } else if (index === currentStepIndex + 1) {
+                    // Current step
+                    stepElement.className = 'w-16 h-16 rounded-full border-4 border-yellow-500 bg-yellow-500 flex items-center justify-center mx-auto mb-2';
+                    stepElement.style.animation = 'pulse 2s infinite';
+                    textElements[0].className = 'text-gray-900 text-sm font-medium';
+                    textElements[1].className = 'text-gray-600 text-xs';
+                } else {
+                    // Future step
+                    stepElement.className = 'w-16 h-16 rounded-full border-4 border-gray-300 bg-gray-100 flex items-center justify-center mx-auto mb-2';
+                    stepElement.style.animation = '';
+                    textElements[0].className = 'text-gray-500 text-sm font-medium';
+                    textElements[1].className = 'text-gray-400 text-xs';
+                }
+            });
+        }
+
+        function updateActionButtons() {
+            const uploadBtn = document.getElementById('upload-proof-btn');
+            const invoiceBtn = document.getElementById('download-invoice-btn');
+            
+            // Show upload button if payment is pending or rejected
+            if (currentOrder.payment_status === 'pending' || currentOrder.payment_status === 'rejected') {
+                uploadBtn.classList.remove('hidden');
+            } else {
+                uploadBtn.classList.add('hidden');
+            }
+            
+            // Show invoice button if order is delivered
+            if (currentOrder.status.toLowerCase() === 'delivered') {
+                invoiceBtn.classList.remove('hidden');
+            } else {
+                invoiceBtn.classList.add('hidden');
+            }
+        }
+
+        function renderOrderItems() {
+            const container = document.getElementById('order-items');
+            
+            if (!currentOrder.items || currentOrder.items.length === 0) {
+                container.innerHTML = '<p class="text-gray-600">No items found</p>';
+                return;
+            }
+            
+            container.innerHTML = currentOrder.items.map(item => `
+                <div class="item-card bg-gray-50 rounded-lg p-4 flex items-center space-x-4">
+                    <img src="${item.product_image || item.image_url || '/public/images/placeholder.png'}" 
+                         alt="${item.product_name}" 
+                         class="w-20 h-20 object-cover rounded-lg">
+                    <div class="flex-1">
+                        <h4 class="text-gray-900 font-semibold mb-1">${item.product_name}</h4>
+                        <p class="text-gray-600 text-sm mb-2">Seller: ${item.seller_name || 'Unknown'}</p>
+                        <div class="flex items-center justify-between">
+                            <div class="text-gray-600 text-sm">
+                                <span>Qty: ${item.quantity}</span>
+                                <span class="mx-2">×</span>
+                                <span>${formatCurrency(item.price)}</span>
+                            </div>
+                            <div class="text-gray-900 font-semibold">
+                                ${formatCurrency(item.quantity * item.price)}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderOrderTimeline() {
+            const container = document.getElementById('order-timeline');
+            
+            // Mock timeline data - in real app, this would come from the API
+            const timelineEvents = [
+                {
+                    title: 'Order Placed',
+                    description: 'Your order has been successfully placed',
+                    timestamp: currentOrder.created_at,
+                    status: 'completed',
+                    icon: 'fas fa-shopping-cart'
+                },
+                {
+                    title: 'Payment Processing',
+                    description: currentOrder.payment_status === 'approved' ? 'Payment confirmed' : 'Waiting for payment confirmation',
+                    timestamp: currentOrder.payment_approved_at || null,
+                    status: currentOrder.payment_status === 'approved' ? 'completed' : 'pending',
+                    icon: 'fas fa-credit-card'
+                },
+                {
+                    title: 'Order Confirmed',
+                    description: 'Order has been confirmed and is being prepared',
+                    timestamp: currentOrder.confirmed_at || null,
+                    status: ['confirmed', 'shipped', 'delivered'].includes(currentOrder.status.toLowerCase()) ? 'completed' : 'pending',
+                    icon: 'fas fa-check-circle'
+                },
+                {
+                    title: 'Order Shipped',
+                    description: 'Your order is on its way',
+                    timestamp: currentOrder.shipped_at || null,
+                    status: ['shipped', 'delivered'].includes(currentOrder.status.toLowerCase()) ? 'completed' : 'pending',
+                    icon: 'fas fa-shipping-fast'
+                },
+                {
+                    title: 'Order Delivered',
+                    description: 'Order has been delivered successfully',
+                    timestamp: currentOrder.delivered_at || null,
+                    status: currentOrder.status.toLowerCase() === 'delivered' ? 'completed' : 'pending',
+                    icon: 'fas fa-box-open'
+                }
+            ];
+            
+            container.innerHTML = timelineEvents.map((event, index) => `
+                <div class="timeline-item ${index === timelineEvents.length - 1 ? 'last' : ''}">
+                    <div class="timeline-dot ${event.status}"></div>
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <div class="flex items-center space-x-3 mb-2">
+                            <i class="${event.icon} text-${event.status === 'completed' ? 'green' : 'yellow'}-500"></i>
+                            <h4 class="text-gray-900 font-semibold">${event.title}</h4>
+                            ${event.timestamp ? `<span class="text-gray-500 text-sm ml-auto">${formatDate(event.timestamp)}</span>` : ''}
+                        </div>
+                        <p class="text-gray-600 text-sm">${event.description}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderPaymentInfo() {
+            const container = document.getElementById('payment-info');
+            
+            container.innerHTML = `
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-gray-500 text-sm uppercase tracking-wide mb-1">Payment Method</p>
+                            <p class="text-gray-900">${currentOrder.payment_method || 'Not specified'}</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-500 text-sm uppercase tracking-wide mb-1">Payment Status</p>
+                            <span class="status-badge px-3 py-1 rounded-full text-xs font-medium text-white ${getPaymentStatusClass(currentOrder.payment_status)}">
+                                ${formatPaymentStatus(currentOrder.payment_status)}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    ${currentOrder.payment_proof ? `
+                        <div class="mt-4">
+                            <p class="text-gray-500 text-sm uppercase tracking-wide mb-2">Payment Proof</p>
+                            <img src="${currentOrder.payment_proof}" alt="Payment Proof" 
+                                 class="max-w-xs rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                                 onclick="window.open('${currentOrder.payment_proof}', '_blank')">
+                        </div>
+                    ` : ''}
+                    
+                    ${currentOrder.payment_status === 'rejected' && currentOrder.rejection_reason ? `
+                        <div class="mt-4 bg-red-50 border border-red-200 rounded-lg p-3">
+                            <p class="text-red-700 text-sm">
+                                <i class="fas fa-exclamation-triangle mr-2"></i>
+                                Payment Rejected: ${currentOrder.rejection_reason}
+                            </p>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        function renderOrderSummary() {
+            const container = document.getElementById('order-summary');
+            
+            const subtotal = currentOrder.subtotal || currentOrder.total_amount;
+            const shipping = currentOrder.shipping_cost || 0;
+            const tax = currentOrder.tax_amount || 0;
+            const total = currentOrder.total_amount;
+            
+            container.innerHTML = `
+                <div class="space-y-3">
+                    <div class="flex justify-between text-gray-600">
+                        <span>Subtotal:</span>
+                        <span>${formatCurrency(subtotal)}</span>
+                    </div>
+                    <div class="flex justify-between text-gray-600">
+                        <span>Shipping:</span>
+                        <span>${formatCurrency(shipping)}</span>
+                    </div>
+                    <div class="flex justify-between text-gray-600">
+                        <span>Tax:</span>
+                        <span>${formatCurrency(tax)}</span>
+                    </div>
+                    <hr class="border-gray-200">
+                    <div class="flex justify-between text-gray-900 font-semibold text-lg">
+                        <span>Total:</span>
+                        <span>${formatCurrency(total)}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderShippingInfo() {
+            const container = document.getElementById('shipping-info');
+            
+            // Handle shipping address - could be JSON or string
+            let shippingAddress = 'No address provided';
+            if (currentOrder.shipping_address) {
+                if (typeof currentOrder.shipping_address === 'object') {
+                    shippingAddress = `${currentOrder.shipping_address.street || ''}, ${currentOrder.shipping_address.city || ''}, ${currentOrder.shipping_address.state || ''} ${currentOrder.shipping_address.zip || ''}`.replace(/^,\s*|,\s*$/g, '');
+                } else {
+                    shippingAddress = currentOrder.shipping_address;
+                }
+            }
+            
+            container.innerHTML = `
+                <div class="space-y-3">
+                    <div>
+                        <p class="text-gray-500 text-sm uppercase tracking-wide mb-1">Delivery Address</p>
+                        <p class="text-gray-900">${shippingAddress}</p>
+                    </div>
+                    ${currentOrder.buyer_phone || currentOrder.phone ? `
+                        <div>
+                            <p class="text-gray-500 text-sm uppercase tracking-wide mb-1">Contact Phone</p>
+                            <p class="text-gray-900">${currentOrder.buyer_phone || currentOrder.phone}</p>
+                        </div>
+                    ` : ''}
+                    ${currentOrder.tracking_number ? `
+                        <div>
+                            <p class="text-gray-500 text-sm uppercase tracking-wide mb-1">Tracking Number</p>
+                            <p class="text-gray-900 font-mono">${currentOrder.tracking_number}</p>
+                        </div>
+                    ` : ''}
+                    ${currentOrder.estimated_delivery ? `
+                        <div>
+                            <p class="text-gray-500 text-sm uppercase tracking-wide mb-1">Estimated Delivery</p>
+                            <p class="text-gray-900">${formatDate(currentOrder.estimated_delivery)}</p>
+                        </div>
+                    ` : ''}
+                    ${currentOrder.pickup_site_name ? `
+                        <div>
+                            <p class="text-gray-500 text-sm uppercase tracking-wide mb-1">Pickup Site</p>
+                            <p class="text-gray-900">${currentOrder.pickup_site_name}</p>
+                            ${currentOrder.pickup_site_address ? `<p class="text-gray-600 text-sm">${currentOrder.pickup_site_address}</p>` : ''}
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        // Action Functions
+        function trackOrder() {
+            window.location.href = `/buyer/track-order.html?order=${orderId}`;
+        }
+
+        function openPaymentProofModal() {
+            document.getElementById('modal-order-number').textContent = currentOrder.order_number;
+            document.getElementById('payment-proof-modal').classList.remove('hidden');
+            resetUploadForm();
+        }
+
+        function closePaymentProofModal() {
+            document.getElementById('payment-proof-modal').classList.add('hidden');
+            selectedFile = null;
+            resetUploadForm();
+        }
+
+        function resetUploadForm() {
+            document.getElementById('upload-content').classList.remove('hidden');
+            document.getElementById('upload-preview').classList.add('hidden');
+            document.getElementById('upload-button').disabled = true;
+            document.getElementById('payment-proof-input').value = '';
+            selectedFile = null;
+        }
+
+        // File Upload Functions
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileSelect({ target: { files } });
+            }
+        }
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Validate file type
+            const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
+            if (!allowedTypes.includes(file.type)) {
+                showToast('Please select a valid image file (JPG, PNG) or PDF', 'error');
+                return;
+            }
+
+            // Validate file size (10MB)
+            if (file.size > 10 * 1024 * 1024) {
+                showToast('File size must be less than 10MB', 'error');
+                return;
+            }
+
+            selectedFile = file;
+            showFilePreview(file);
+        }
+
+        function showFilePreview(file) {
+            document.getElementById('upload-content').classList.add('hidden');
+            document.getElementById('upload-preview').classList.remove('hidden');
+            document.getElementById('upload-button').disabled = false;
+
+            const fileName = document.getElementById('file-name');
+            fileName.textContent = file.name;
+
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const previewImage = document.getElementById('preview-image');
+                    previewImage.src = e.target.result;
+                    previewImage.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            } else {
+                document.getElementById('preview-image').classList.add('hidden');
+            }
+        }
+
+        function removeFile() {
+            selectedFile = null;
+            resetUploadForm();
+        }
+
+        async function uploadPaymentProof() {
+            if (!selectedFile || !orderId) return;
+
+            const uploadButton = document.getElementById('upload-button');
+            const uploadText = document.getElementById('upload-text');
+            const uploadSpinner = document.getElementById('upload-spinner');
+
+            try {
+                uploadButton.disabled = true;
+                uploadText.classList.add('hidden');
+                uploadSpinner.classList.remove('hidden');
+
+                const formData = new FormData();
+                formData.append('payment_proof', selectedFile);
+                formData.append('order_id', orderId);
+
+                const token = localStorage.getItem('authToken');
+                const response = await fetch('/api/orders/payment-proof', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Upload failed');
+                }
+
+                showToast('Payment proof uploaded successfully!', 'success');
+                closePaymentProofModal();
+                loadOrderDetails(); // Refresh order details
+
+            } catch (error) {
+                console.error('Error uploading payment proof:', error);
+                showToast(error.message || 'Failed to upload payment proof', 'error');
+            } finally {
+                uploadButton.disabled = false;
+                uploadText.classList.remove('hidden');
+                uploadSpinner.classList.add('hidden');
+            }
+        }
+
+        async function downloadInvoice() {
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch(`/api/orders/${orderId}/invoice`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to download invoice');
+                }
+
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `invoice-${currentOrder.order_number}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+
+            } catch (error) {
+                console.error('Error downloading invoice:', error);
+                showToast('Failed to download invoice', 'error');
+            }
+        }
+
+        function contactSupport() {
+            showToast('Redirecting to support...', 'info');
+        }
+
+        function reportIssue() {
+            showToast('Opening issue report form...', 'info');
+        }
+
+        function shareOrder() {
+            if (navigator.share) {
+                navigator.share({
+                    title: `Order #${currentOrder.order_number}`,
+                    text: `Check out my order from ADD Physical Products`,
+                    url: window.location.href
+                });
+            } else {
+                navigator.clipboard.writeText(window.location.href);
+                showToast('Order link copied to clipboard', 'success');
+            }
+        }
+
+        function goBack() {
+            window.history.back();
+        }
+
+        // Utility Functions
+        function showLoading() {
+            document.getElementById('loading-state').classList.remove('hidden');
+            document.getElementById('order-content').classList.add('hidden');
+            document.getElementById('error-state').classList.add('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading-state').classList.add('hidden');
+        }
+
+        function showError(message = 'Order not found or you do not have permission to view it.') {
+            document.getElementById('error-state').classList.remove('hidden');
+            document.getElementById('loading-state').classList.add('hidden');
+            document.getElementById('order-content').classList.add('hidden');
+            
+            // Update error message if there's an element for it
+            const errorMessageElement = document.querySelector('#error-state p');
+            if (errorMessageElement) {
+                errorMessageElement.textContent = message;
+            }
+        }
+
+        function getStatusBadgeClass(status) {
+            const statusClasses = {
+                'pending': 'bg-yellow-500 text-yellow-100',
+                'confirmed': 'bg-blue-500 text-blue-100',
+                'shipped': 'bg-purple-500 text-purple-100',
+                'delivered': 'bg-green-500 text-green-100',
+                'cancelled': 'bg-red-500 text-red-100'
+            };
+            return statusClasses[status.toLowerCase()] || 'bg-gray-500 text-gray-100';
+        }
+
+        function getPaymentStatusClass(status) {
+            const statusClasses = {
+                'pending': 'payment-status-pending',
+                'awaiting_approval': 'payment-status-awaiting',
+                'approved': 'payment-status-approved',
+                'rejected': 'payment-status-rejected'
+            };
+            return statusClasses[status] || 'bg-gray-500';
+        }
+
+        function formatStatus(status) {
+            return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+        }
+
+        function formatPaymentStatus(status) {
+            const statusMap = {
+                'pending': 'Payment Pending',
+                'awaiting_approval': 'Awaiting Approval',
+                'approved': 'Payment Approved',
+                'rejected': 'Payment Rejected'
+            };
+            return statusMap[status] || status;
+        }
+
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-RW', {
+                style: 'currency',
+                currency: 'RWF',
+                minimumFractionDigits: 0
+            }).format(parseFloat(amount)).replace('RWF', 'FRW');
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500';
+            
+            toast.className = `${bgColor} text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2 fade-in`;
+            toast.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+                <span>${message}</span>
+                <button onclick="this.parentElement.remove()" class="ml-4 text-white/80 hover:text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            document.getElementById('toast-container').appendChild(toast);
+            
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.remove();
+                }
+            }, 5000);
+        }
+
+        function logout() {
+            Auth.logout();
+        }
+
+        // Enhanced API error handling
+        function handleApiError(error, context = 'API Request') {
+            console.error(`${context} Error:`, error);
+            
+            if (error.response) {
+                const status = error.response.status;
+                const data = error.response.data;
+                
+                if (status === 401) {
+                    showToast('Session expired. Please login again.', 'error');
+                    setTimeout(() => {
+                        logout();
+                    }, 2000);
+                } else if (status === 403) {
+                    showToast('Access denied. Please check your permissions.', 'error');
+                } else if (status === 404) {
+                    showToast('Order not found. Please check the order ID.', 'error');
+                } else if (status >= 500) {
+                    showToast('Server error. Please try again later.', 'error');
+                } else {
+                    showToast(data?.message || data?.error || 'An error occurred', 'error');
+                }
+            } else if (error.request) {
+                showToast('Network error. Please check your connection.', 'error');
+            } else {
+                showToast('An unexpected error occurred.', 'error');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Applications - Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .glass-morphism {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .status-badge {
+            @apply px-3 py-1 rounded-full text-xs font-semibold;
+        }
+        
+        .status-pending { @apply bg-yellow-100 text-yellow-800; }
+        .status-under_review { @apply bg-blue-100 text-blue-800; }
+        .status-approved { @apply bg-green-100 text-green-800; }
+        .status-rejected { @apply bg-red-100 text-red-800; }
+        .status-cancelled { @apply bg-gray-100 text-gray-800; }
+        
+        .agent-type-badge {
+            @apply px-2 py-1 rounded text-xs font-medium;
+        }
+        
+        .type-fast_delivery { @apply bg-green-100 text-green-700; }
+        .type-pickup_delivery { @apply bg-blue-100 text-blue-700; }
+        .type-pickup_site_manager { @apply bg-purple-100 text-purple-700; }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .table-row:hover {
+            background-color: rgba(59, 130, 246, 0.05);
+        }
+        
+        .document-preview {
+            max-width: 200px;
+            max-height: 150px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 min-h-screen">
+    <!-- Navigation -->
+    <nav class="glass-morphism border-b border-white/20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <h1 class="text-xl font-bold text-white">Admin Dashboard</h1>
+                    </div>
+                    <div class="ml-10">
+                        <div class="flex items-baseline space-x-4">
+                            <a href="/admin/dashboard.html" class="text-white/80 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Dashboard</a>
+                            <a href="/admin/agent-applications.html" class="bg-white/20 text-white px-3 py-2 rounded-md text-sm font-medium">Agent Applications</a>
+                            <a href="/admin/users.html" class="text-white/80 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Users</a>
+                            <a href="/admin/orders.html" class="text-white/80 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Orders</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <button class="text-white/80 hover:text-white p-2">
+                        <i class="fas fa-bell"></i>
+                        <span id="notificationCount" class="hidden absolute -mt-1 -mr-1 px-2 py-1 bg-red-500 text-white text-xs rounded-full">0</span>
+                    </button>
+                    <div class="ml-4 relative">
+                        <button class="flex items-center text-white/80 hover:text-white">
+                            <i class="fas fa-user-circle mr-2"></i>
+                            <span>Admin</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <!-- Breadcrumb -->
+        <div class="px-4 mb-4">
+            <nav class="flex" aria-label="Breadcrumb">
+                <ol class="flex items-center space-x-4">
+                    <li>
+                        <div>
+                            <a href="/admin/dashboard.html" class="text-white/60 hover:text-white/80 transition-colors">
+                                <i class="fas fa-home"></i>
+                                <span class="sr-only">Home</span>
+                            </a>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="flex items-center">
+                            <i class="fas fa-chevron-right text-white/40 mx-2"></i>
+                            <span class="text-white font-medium">Agent Applications</span>
+                        </div>
+                    </li>
+                </ol>
+            </nav>
+        </div>
+        
+        <!-- Header -->
+        <div class="px-4 py-6 sm:px-0">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h1 class="text-3xl font-bold text-white">Agent Applications</h1>
+                    <p class="text-white/70 mt-2">Review and manage agent registration applications</p>
+                </div>
+                <div class="flex space-x-4">
+                    <button onclick="refreshApplications()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                        <i class="fas fa-refresh mr-2"></i>Refresh
+                    </button>
+                    <button onclick="exportApplications()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                        <i class="fas fa-download mr-2"></i>Export
+                    </button>
+                </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="glass-morphism rounded-xl p-6">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-yellow-500/20">
+                            <i class="fas fa-clock text-yellow-400 text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-white/70 text-sm">Pending Review</p>
+                            <p id="pendingCount" class="text-2xl font-bold text-white">0</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-morphism rounded-xl p-6">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-blue-500/20">
+                            <i class="fas fa-eye text-blue-400 text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-white/70 text-sm">Under Review</p>
+                            <p id="reviewCount" class="text-2xl font-bold text-white">0</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-morphism rounded-xl p-6">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-green-500/20">
+                            <i class="fas fa-check text-green-400 text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-white/70 text-sm">Approved</p>
+                            <p id="approvedCount" class="text-2xl font-bold text-white">0</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-morphism rounded-xl p-6">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-red-500/20">
+                            <i class="fas fa-times text-red-400 text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-white/70 text-sm">Rejected</p>
+                            <p id="rejectedCount" class="text-2xl font-bold text-white">0</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="glass-morphism rounded-xl p-6 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-white/70 text-sm font-medium mb-2">Status</label>
+                        <select id="statusFilter" class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400">
+                            <option value="">All Statuses</option>
+                            <option value="pending">Pending</option>
+                            <option value="under_review">Under Review</option>
+                            <option value="approved">Approved</option>
+                            <option value="rejected">Rejected</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-white/70 text-sm font-medium mb-2">Agent Type</label>
+                        <select id="typeFilter" class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400">
+                            <option value="">All Types</option>
+                            <option value="fast_delivery">Fast Delivery</option>
+                            <option value="pickup_delivery">Pickup/Delivery</option>
+                            <option value="pickup_site_manager">Site Manager</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-white/70 text-sm font-medium mb-2">Date Range</label>
+                        <select id="dateFilter" class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400">
+                            <option value="">All Time</option>
+                            <option value="today">Today</option>
+                            <option value="week">This Week</option>
+                            <option value="month">This Month</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-white/70 text-sm font-medium mb-2">Search</label>
+                        <input type="text" id="searchInput" placeholder="Search by name, email, or ref..." 
+                               class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    </div>
+                </div>
+                
+                <div class="flex justify-between items-center mt-4">
+                    <button onclick="applyFilters()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                        <i class="fas fa-filter mr-2"></i>Apply Filters
+                    </button>
+                    <button onclick="clearFilters()" class="text-white/70 hover:text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                        <i class="fas fa-times mr-2"></i>Clear Filters
+                    </button>
+                </div>
+            </div>
+
+            <!-- Applications Table -->
+            <div class="glass-morphism rounded-xl overflow-hidden">
+                <div class="px-6 py-4 border-b border-white/20">
+                    <h3 class="text-lg font-semibold text-white">Applications</h3>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-white/20">
+                        <thead class="bg-white/5">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">Application</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">Applicant</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">Type</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">Documents</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">Submitted</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="applicationsTableBody" class="bg-white/5 divide-y divide-white/10">
+                            <!-- Applications will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Loading State -->
+                <div id="loadingState" class="flex items-center justify-center py-12">
+                    <div class="text-center">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mx-auto mb-4"></div>
+                        <p class="text-white/70">Loading applications...</p>
+                    </div>
+                </div>
+                
+                <!-- Empty State -->
+                <div id="emptyState" class="hidden flex items-center justify-center py-12">
+                    <div class="text-center">
+                        <i class="fas fa-inbox text-white/30 text-4xl mb-4"></i>
+                        <p class="text-white/70">No applications found</p>
+                    </div>
+                </div>
+                
+                <!-- Pagination -->
+                <div id="pagination" class="px-6 py-4 border-t border-white/20 flex items-center justify-between">
+                    <div class="text-white/70 text-sm">
+                        Showing <span id="showingStart">0</span> to <span id="showingEnd">0</span> of <span id="totalApplications">0</span> applications
+                    </div>
+                    <div class="flex space-x-2">
+                        <button id="prevPage" onclick="changePage(-1)" class="px-3 py-1 bg-white/10 text-white rounded hover:bg-white/20 transition-colors disabled:opacity-50" disabled>
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <span id="pageInfo" class="px-3 py-1 text-white/70">Page 1 of 1</span>
+                        <button id="nextPage" onclick="changePage(1)" class="px-3 py-1 bg-white/10 text-white rounded hover:bg-white/20 transition-colors disabled:opacity-50" disabled>
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Details Modal -->
+    <div id="applicationModal" class="modal">
+        <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                <h3 class="text-lg font-semibold text-gray-900">Application Details</h3>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <div id="applicationDetails" class="p-6">
+                <!-- Application details will be loaded here -->
+            </div>
+            
+            <div class="px-6 py-4 border-t border-gray-200 flex justify-end space-x-4">
+                <button onclick="closeModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium">Close</button>
+                <button id="rejectBtn" onclick="showRejectModal()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium">
+                    <i class="fas fa-times mr-2"></i>Reject
+                </button>
+                <button id="approveBtn" onclick="showApproveModal()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium">
+                    <i class="fas fa-check mr-2"></i>Approve
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Approve Modal -->
+    <div id="approveModal" class="modal">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900">Approve Application</h3>
+            </div>
+            
+            <div class="p-6">
+                <p class="text-gray-600 mb-4">Are you sure you want to approve this agent application?</p>
+                <div>
+                    <label class="block text-gray-700 text-sm font-medium mb-2">Approval Notes (Optional)</label>
+                    <textarea id="approvalNotes" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400" placeholder="Add any notes about the approval..."></textarea>
+                </div>
+            </div>
+            
+            <div class="px-6 py-4 border-t border-gray-200 flex justify-end space-x-4">
+                <button onclick="closeApproveModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium">Cancel</button>
+                <button onclick="approveApplication()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium">
+                    <i class="fas fa-check mr-2"></i>Approve
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reject Modal -->
+    <div id="rejectModal" class="modal">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900">Reject Application</h3>
+            </div>
+            
+            <div class="p-6">
+                <p class="text-gray-600 mb-4">Please provide a reason for rejecting this application:</p>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-medium mb-2">Rejection Reason *</label>
+                    <select id="rejectionReason" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400">
+                        <option value="">Select a reason...</option>
+                        <option value="incomplete_documents">Incomplete Documents</option>
+                        <option value="invalid_documents">Invalid Documents</option>
+                        <option value="background_check_failed">Background Check Failed</option>
+                        <option value="location_not_serviceable">Location Not Serviceable</option>
+                        <option value="duplicate_application">Duplicate Application</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-gray-700 text-sm font-medium mb-2">Additional Notes</label>
+                    <textarea id="rejectionNotes" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400" placeholder="Provide additional details..."></textarea>
+                </div>
+            </div>
+            
+            <div class="px-6 py-4 border-t border-gray-200 flex justify-end space-x-4">
+                <button onclick="closeRejectModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium">Cancel</button>
+                <button onclick="rejectApplication()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium">
+                    <i class="fas fa-times mr-2"></i>Reject
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed top-4 right-4 z-50 hidden">
+        <div class="bg-white rounded-lg shadow-lg p-4 max-w-sm">
+            <div class="flex items-center">
+                <div id="toastIcon" class="flex-shrink-0 mr-3"></div>
+                <div>
+                    <p id="toastMessage" class="text-sm font-medium text-gray-900"></p>
+                </div>
+                <button onclick="hideToast()" class="ml-4 text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentApplications = [];
+        let currentPage = 1;
+        let totalPages = 1;
+        let selectedApplicationId = null;
+        const itemsPerPage = 10;
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadApplications();
+            setupEventListeners();
+            loadStatistics();
+        });
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Filter change listeners
+            document.getElementById('statusFilter').addEventListener('change', applyFilters);
+            document.getElementById('typeFilter').addEventListener('change', applyFilters);
+            document.getElementById('dateFilter').addEventListener('change', applyFilters);
+            
+            // Search input with debounce
+            let searchTimeout;
+            document.getElementById('searchInput').addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(applyFilters, 500);
+            });
+        }
+
+        // Get authentication token
+        function getAuthToken() {
+            return localStorage.getItem('adminToken') || localStorage.getItem('token');
+        }
+
+        // Load applications from API
+        async function loadApplications() {
+            try {
+                showLoading();
+                
+                const token = getAuthToken();
+                if (!token) {
+                    throw new Error('No authentication token found');
+                }
+                
+                const response = await fetch('/api/admin/agent-applications', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        throw new Error('Authentication failed. Please login again.');
+                    }
+                    throw new Error(`Failed to load applications: ${response.status}`);
+                }
+
+                const data = await response.json();
+                currentApplications = data.applications || [];
+                
+                renderApplications();
+                hideLoading();
+                
+            } catch (error) {
+                console.error('Error loading applications:', error);
+                showToast('Failed to load applications', 'error');
+                hideLoading();
+                showEmptyState();
+            }
+        }
+
+        // Render applications table
+        function renderApplications() {
+            const tbody = document.getElementById('applicationsTableBody');
+            
+            if (currentApplications.length === 0) {
+                showEmptyState();
+                return;
+            }
+
+            hideEmptyState();
+            
+            // Apply pagination
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const paginatedApplications = currentApplications.slice(startIndex, endIndex);
+            
+            tbody.innerHTML = paginatedApplications.map(app => `
+                <tr class="table-row cursor-pointer" onclick="viewApplication(${app.id})">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div>
+                            <div class="text-sm font-medium text-white">${app.application_ref}</div>
+                            <div class="text-sm text-white/70">#${app.id}</div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div>
+                            <div class="text-sm font-medium text-white">${app.first_name} ${app.last_name}</div>
+                            <div class="text-sm text-white/70">${app.email}</div>
+                            <div class="text-sm text-white/70">${app.phone}</div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="agent-type-badge type-${app.agent_type}">
+                            ${formatAgentType(app.agent_type)}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="status-badge status-${app.status}">
+                            ${formatStatus(app.status)}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <span class="text-sm text-white">${app.document_count || 0}</span>
+                            <span class="text-white/70 mx-1">/</span>
+                            <span class="text-sm text-green-400">${app.verified_documents || 0}</span>
+                            <i class="fas fa-file-alt text-white/50 ml-2"></i>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-white">${formatDate(app.created_at)}</div>
+                        <div class="text-sm text-white/70">${formatTime(app.created_at)}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div class="flex space-x-2">
+                            <button onclick="event.stopPropagation(); viewApplication(${app.id})" 
+                                    class="text-blue-400 hover:text-blue-300">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            ${app.status === 'pending' ? `
+                                <button onclick="event.stopPropagation(); quickApprove(${app.id})" 
+                                        class="text-green-400 hover:text-green-300">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                <button onclick="event.stopPropagation(); quickReject(${app.id})" 
+                                        class="text-red-400 hover:text-red-300">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            ` : ''}
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+            
+            updatePagination();
+        }
+
+        // Load and display statistics
+        async function loadStatistics() {
+            try {
+                const token = getAuthToken();
+                if (!token) {
+                    console.warn('No authentication token found for statistics');
+                    return;
+                }
+                
+                const response = await fetch('/api/admin/agent-applications/stats', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.stats) {
+                        const stats = data.stats;
+                        
+                        document.getElementById('pendingCount').textContent = stats.pending || 0;
+                        document.getElementById('reviewCount').textContent = stats.under_review || 0;
+                        document.getElementById('approvedCount').textContent = stats.approved || 0;
+                        document.getElementById('rejectedCount').textContent = stats.rejected || 0;
+                    }
+                } else if (response.status === 401) {
+                    console.error('Authentication failed for statistics');
+                    // Could redirect to login or show error message
+                }
+            } catch (error) {
+                console.error('Error loading statistics:', error);
+            }
+        }
+
+        // View application details
+        async function viewApplication(applicationId) {
+            try {
+                selectedApplicationId = applicationId;
+                
+                const response = await fetch(`/api/admin/agent-applications/${applicationId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${getAuthToken()}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to load application details');
+                }
+
+                const data = await response.json();
+                const app = data.application;
+                
+                renderApplicationDetails(app);
+                showModal('applicationModal');
+                
+            } catch (error) {
+                console.error('Error loading application details:', error);
+                showToast('Failed to load application details', 'error');
+            }
+        }
+
+        // Render application details in modal
+        function renderApplicationDetails(app) {
+            const detailsContainer = document.getElementById('applicationDetails');
+            
+            detailsContainer.innerHTML = `
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Personal Information -->
+                    <div>
+                        <h4 class="text-lg font-semibold text-gray-900 mb-4">Personal Information</h4>
+                        <div class="space-y-3">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Name:</span>
+                                <span class="font-medium">${app.first_name} ${app.last_name}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Email:</span>
+                                <span class="font-medium">${app.email}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Phone:</span>
+                                <span class="font-medium">${app.phone}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Date of Birth:</span>
+                                <span class="font-medium">${app.date_of_birth || 'Not provided'}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Gender:</span>
+                                <span class="font-medium">${app.gender || 'Not provided'}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">ID Type:</span>
+                                <span class="font-medium">${app.id_type || 'Not provided'}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">ID Number:</span>
+                                <span class="font-medium">${app.id_number || 'Not provided'}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Application Information -->
+                    <div>
+                        <h4 class="text-lg font-semibold text-gray-900 mb-4">Application Information</h4>
+                        <div class="space-y-3">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Reference:</span>
+                                <span class="font-medium">${app.application_ref}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Agent Type:</span>
+                                <span class="agent-type-badge type-${app.agent_type}">${formatAgentType(app.agent_type)}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Status:</span>
+                                <span class="status-badge status-${app.status}">${formatStatus(app.status)}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Submitted:</span>
+                                <span class="font-medium">${formatDateTime(app.created_at)}</span>
+                            </div>
+                            ${app.reviewed_at ? `
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Reviewed:</span>
+                                    <span class="font-medium">${formatDateTime(app.reviewed_at)}</span>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+
+                    <!-- Address Information -->
+                    <div>
+                        <h4 class="text-lg font-semibold text-gray-900 mb-4">Address</h4>
+                        <div class="space-y-3">
+                            <div>
+                                <span class="text-gray-600">Street:</span>
+                                <p class="font-medium">${app.street_address || 'Not provided'}</p>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">City:</span>
+                                <span class="font-medium">${app.city || 'Not provided'}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">State:</span>
+                                <span class="font-medium">${app.state || 'Not provided'}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Country:</span>
+                                <span class="font-medium">${app.country || 'Not provided'}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Location:</span>
+                                <span class="font-medium">${app.latitude}, ${app.longitude}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bank Information -->
+                    <div>
+                        <h4 class="text-lg font-semibold text-gray-900 mb-4">Bank Information</h4>
+                        <div class="space-y-3">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Bank:</span>
+                                <span class="font-medium">${app.bank_name || 'Not provided'}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Account Holder:</span>
+                                <span class="font-medium">${app.account_holder || 'Not provided'}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Account Number:</span>
+                                <span class="font-medium">${app.account_number ? '****' + app.account_number.slice(-4) : 'Not provided'}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Documents Section -->
+                <div class="mt-8">
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4">Uploaded Documents</h4>
+                    <div id="documentsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Documents will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Agent-Specific Information -->
+                ${renderAgentSpecificInfo(app)}
+
+                <!-- Review Notes -->
+                ${app.review_notes ? `
+                    <div class="mt-8">
+                        <h4 class="text-lg font-semibold text-gray-900 mb-4">Review Notes</h4>
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <p class="text-gray-700">${app.review_notes}</p>
+                        </div>
+                    </div>
+                ` : ''}
+            `;
+
+            // Load documents
+            loadApplicationDocuments(app.id);
+            
+            // Update modal buttons based on status
+            const approveBtn = document.getElementById('approveBtn');
+            const rejectBtn = document.getElementById('rejectBtn');
+            
+            if (app.status === 'pending' || app.status === 'under_review') {
+                approveBtn.style.display = 'inline-block';
+                rejectBtn.style.display = 'inline-block';
+            } else {
+                approveBtn.style.display = 'none';
+                rejectBtn.style.display = 'none';
+            }
+        }
+
+        // Render agent-specific information
+        function renderAgentSpecificInfo(app) {
+            let specificInfo = '';
+            
+            switch (app.agent_type) {
+                case 'fast_delivery':
+                    specificInfo = `
+                        <div class="mt-8">
+                            <h4 class="text-lg font-semibold text-gray-900 mb-4">Fast Delivery Information</h4>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Delivery Radius:</span>
+                                    <span class="font-medium">${app.delivery_radius || 'Not specified'} km</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Max Orders/Day:</span>
+                                    <span class="font-medium">${app.max_orders_per_day || 'Not specified'}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'pickup_delivery':
+                    specificInfo = `
+                        <div class="mt-8">
+                            <h4 class="text-lg font-semibold text-gray-900 mb-4">Transport/Delivery Information</h4>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Pickup Zone:</span>
+                                    <span class="font-medium">${app.pickup_zone || 'Not specified'}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Delivery Zone:</span>
+                                    <span class="font-medium">${app.delivery_zone || 'Not specified'}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Transport Capacity:</span>
+                                    <span class="font-medium">${app.transport_capacity || 'Not specified'}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Max Orders/Trip:</span>
+                                    <span class="font-medium">${app.max_orders_per_trip || 'Not specified'}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'pickup_site_manager':
+                    specificInfo = `
+                        <div class="mt-8">
+                            <h4 class="text-lg font-semibold text-gray-900 mb-4">Site Manager Information</h4>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Site Name:</span>
+                                    <span class="font-medium">${app.site_name || 'Not specified'}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Opening Hours:</span>
+                                    <span class="font-medium">${app.opening_hours || 'Not specified'}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Closing Hours:</span>
+                                    <span class="font-medium">${app.closing_hours || 'Not specified'}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Operating Days:</span>
+                                    <span class="font-medium">${app.operating_days || 'Not specified'}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    break;
+            }
+            
+            // Add vehicle information if applicable
+            if (app.has_vehicle) {
+                specificInfo += `
+                    <div class="mt-8">
+                        <h4 class="text-lg font-semibold text-gray-900 mb-4">Vehicle Information</h4>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Type:</span>
+                                <span class="font-medium">${app.vehicle_type || 'Not specified'}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Make:</span>
+                                <span class="font-medium">${app.vehicle_make || 'Not specified'}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Model:</span>
+                                <span class="font-medium">${app.vehicle_model || 'Not specified'}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Year:</span>
+                                <span class="font-medium">${app.vehicle_year || 'Not specified'}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Plate Number:</span>
+                                <span class="font-medium">${app.vehicle_plate || 'Not specified'}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Color:</span>
+                                <span class="font-medium">${app.vehicle_color || 'Not specified'}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            return specificInfo;
+        }
+
+        // Load application documents
+        async function loadApplicationDocuments(applicationId) {
+            try {
+                const response = await fetch(`/api/admin/agent-applications/${applicationId}/documents`, {
+                    headers: {
+                        'Authorization': `Bearer ${getAuthToken()}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    renderDocuments(data.documents);
+                }
+            } catch (error) {
+                console.error('Error loading documents:', error);
+            }
+        }
+
+        // Render documents
+        function renderDocuments(documents) {
+            const container = document.getElementById('documentsContainer');
+            
+            if (!documents || documents.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 col-span-full">No documents uploaded</p>';
+                return;
+            }
+            
+            container.innerHTML = documents.map(doc => `
+                <div class="border border-gray-200 rounded-lg p-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <h5 class="font-medium text-gray-900">${formatDocumentType(doc.document_type)}</h5>
+                        <span class="text-xs ${doc.is_verified ? 'text-green-600' : 'text-yellow-600'}">
+                            ${doc.is_verified ? 'Verified' : 'Pending'}
+                        </span>
+                    </div>
+                    
+                    ${doc.mime_type.startsWith('image/') ? `
+                        <img src="/api/admin/agent-applications/documents/${doc.id}/preview" 
+                             alt="${doc.original_name}" 
+                             class="document-preview mb-2 cursor-pointer"
+                             onclick="viewDocument('${doc.id}', '${doc.original_name}')">
+                    ` : `
+                        <div class="flex items-center justify-center h-32 bg-gray-100 rounded mb-2">
+                            <i class="fas fa-file-pdf text-red-500 text-3xl"></i>
+                        </div>
+                    `}
+                    
+                    <p class="text-sm text-gray-600 truncate">${doc.original_name}</p>
+                    <p class="text-xs text-gray-500">${formatFileSize(doc.file_size)}</p>
+                    
+                    <div class="mt-2 flex space-x-2">
+                        <button onclick="viewDocument('${doc.id}', '${doc.original_name}')" 
+                                class="text-xs text-blue-600 hover:text-blue-800">
+                            <i class="fas fa-eye mr-1"></i>View
+                        </button>
+                        <button onclick="downloadDocument('${doc.id}', '${doc.original_name}')" 
+                                class="text-xs text-green-600 hover:text-green-800">
+                            <i class="fas fa-download mr-1"></i>Download
+                        </button>
+                        ${!doc.is_verified ? `
+                            <button onclick="verifyDocument('${doc.id}')" 
+                                    class="text-xs text-purple-600 hover:text-purple-800">
+                                <i class="fas fa-check mr-1"></i>Verify
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Approve application
+        async function approveApplication() {
+            if (!selectedApplicationId) return;
+            
+            const notes = document.getElementById('approvalNotes').value;
+            
+            try {
+                const response = await fetch(`/api/admin/agent-applications/${selectedApplicationId}/approve`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${getAuthToken()}`
+                    },
+                    body: JSON.stringify({ notes })
+                });
+
+                if (response.ok) {
+                    showToast('Application approved successfully', 'success');
+                    closeApproveModal();
+                    closeModal();
+                    loadApplications();
+                    loadStatistics();
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Failed to approve application');
+                }
+            } catch (error) {
+                console.error('Error approving application:', error);
+                showToast(error.message, 'error');
+            }
+        }
+
+        // Reject application
+        async function rejectApplication() {
+            if (!selectedApplicationId) return;
+            
+            const reason = document.getElementById('rejectionReason').value;
+            const notes = document.getElementById('rejectionNotes').value;
+            
+            if (!reason) {
+                showToast('Please select a rejection reason', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/admin/agent-applications/${selectedApplicationId}/reject`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${getAuthToken()}`
+                    },
+                    body: JSON.stringify({ reason, notes })
+                });
+
+                if (response.ok) {
+                    showToast('Application rejected', 'success');
+                    closeRejectModal();
+                    closeModal();
+                    loadApplications();
+                    loadStatistics();
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Failed to reject application');
+                }
+            } catch (error) {
+                console.error('Error rejecting application:', error);
+                showToast(error.message, 'error');
+            }
+        }
+
+        // Quick approve
+        function quickApprove(applicationId) {
+            selectedApplicationId = applicationId;
+            showApproveModal();
+        }
+
+        // Quick reject
+        function quickReject(applicationId) {
+            selectedApplicationId = applicationId;
+            showRejectModal();
+        }
+
+        // Apply filters
+        function applyFilters() {
+            const statusFilter = document.getElementById('statusFilter').value;
+            const typeFilter = document.getElementById('typeFilter').value;
+            const dateFilter = document.getElementById('dateFilter').value;
+            const searchInput = document.getElementById('searchInput').value.toLowerCase();
+            
+            let filteredApplications = [...currentApplications];
+            
+            // Apply status filter
+            if (statusFilter) {
+                filteredApplications = filteredApplications.filter(app => app.status === statusFilter);
+            }
+            
+            // Apply type filter
+            if (typeFilter) {
+                filteredApplications = filteredApplications.filter(app => app.agent_type === typeFilter);
+            }
+            
+            // Apply date filter
+            if (dateFilter) {
+                const now = new Date();
+                const filterDate = new Date();
+                
+                switch (dateFilter) {
+                    case 'today':
+                        filterDate.setHours(0, 0, 0, 0);
+                        break;
+                    case 'week':
+                        filterDate.setDate(now.getDate() - 7);
+                        break;
+                    case 'month':
+                        filterDate.setMonth(now.getMonth() - 1);
+                        break;
+                }
+                
+                filteredApplications = filteredApplications.filter(app => 
+                    new Date(app.created_at) >= filterDate
+                );
+            }
+            
+            // Apply search filter
+            if (searchInput) {
+                filteredApplications = filteredApplications.filter(app => 
+                    app.first_name.toLowerCase().includes(searchInput) ||
+                    app.last_name.toLowerCase().includes(searchInput) ||
+                    app.email.toLowerCase().includes(searchInput) ||
+                    app.application_ref.toLowerCase().includes(searchInput)
+                );
+            }
+            
+            currentApplications = filteredApplications;
+            currentPage = 1;
+            renderApplications();
+        }
+
+        // Clear filters
+        function clearFilters() {
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('typeFilter').value = '';
+            document.getElementById('dateFilter').value = '';
+            document.getElementById('searchInput').value = '';
+            
+            loadApplications();
+        }
+
+        // Refresh applications
+        function refreshApplications() {
+            loadApplications();
+            loadStatistics();
+        }
+
+        // Export applications
+        function exportApplications() {
+            const csvContent = generateCSV(currentApplications);
+            downloadCSV(csvContent, 'agent-applications.csv');
+        }
+
+        // Generate CSV content
+        function generateCSV(applications) {
+            const headers = [
+                'Application Ref', 'Name', 'Email', 'Phone', 'Agent Type', 
+                'Status', 'City', 'State', 'Country', 'Submitted Date'
+            ];
+            
+            const rows = applications.map(app => [
+                app.application_ref,
+                `${app.first_name} ${app.last_name}`,
+                app.email,
+                app.phone,
+                formatAgentType(app.agent_type),
+                formatStatus(app.status),
+                app.city || '',
+                app.state || '',
+                app.country || '',
+                formatDate(app.created_at)
+            ]);
+            
+            return [headers, ...rows].map(row => 
+                row.map(field => `"${field}"`).join(',')
+            ).join('\n');
+        }
+
+        // Download CSV
+        function downloadCSV(content, filename) {
+            const blob = new Blob([content], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        // Pagination functions
+        function changePage(direction) {
+            const newPage = currentPage + direction;
+            if (newPage >= 1 && newPage <= totalPages) {
+                currentPage = newPage;
+                renderApplications();
+            }
+        }
+
+        function updatePagination() {
+            totalPages = Math.ceil(currentApplications.length / itemsPerPage);
+            
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = Math.min(startIndex + itemsPerPage, currentApplications.length);
+            
+            document.getElementById('showingStart').textContent = startIndex + 1;
+            document.getElementById('showingEnd').textContent = endIndex;
+            document.getElementById('totalApplications').textContent = currentApplications.length;
+            document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
+            
+            document.getElementById('prevPage').disabled = currentPage === 1;
+            document.getElementById('nextPage').disabled = currentPage === totalPages;
+        }
+
+        // Modal functions
+        function showModal(modalId) {
+            document.getElementById(modalId).classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('applicationModal').classList.remove('show');
+        }
+
+        function showApproveModal() {
+            document.getElementById('approvalNotes').value = '';
+            showModal('approveModal');
+        }
+
+        function closeApproveModal() {
+            document.getElementById('approveModal').classList.remove('show');
+        }
+
+        function showRejectModal() {
+            document.getElementById('rejectionReason').value = '';
+            document.getElementById('rejectionNotes').value = '';
+            showModal('rejectModal');
+        }
+
+        function closeRejectModal() {
+            document.getElementById('rejectModal').classList.remove('show');
+        }
+
+        // Utility functions
+        function showLoading() {
+            document.getElementById('loadingState').style.display = 'flex';
+            document.getElementById('applicationsTableBody').style.display = 'none';
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('applicationsTableBody').style.display = 'table-row-group';
+        }
+
+        function showEmptyState() {
+            document.getElementById('emptyState').classList.remove('hidden');
+            document.getElementById('applicationsTableBody').style.display = 'none';
+        }
+
+        function hideEmptyState() {
+            document.getElementById('emptyState').classList.add('hidden');
+            document.getElementById('applicationsTableBody').style.display = 'table-row-group';
+        }
+
+        function formatAgentType(type) {
+            const types = {
+                'fast_delivery': 'Fast Delivery',
+                'pickup_delivery': 'Pickup/Delivery',
+                'pickup_site_manager': 'Site Manager'
+            };
+            return types[type] || type;
+        }
+
+        function formatStatus(status) {
+            const statuses = {
+                'pending': 'Pending',
+                'under_review': 'Under Review',
+                'approved': 'Approved',
+                'rejected': 'Rejected',
+                'cancelled': 'Cancelled'
+            };
+            return statuses[status] || status;
+        }
+
+        function formatDocumentType(type) {
+            const types = {
+                'profile_photo': 'Profile Photo',
+                'id_document_front': 'ID Front',
+                'id_document_back': 'ID Back',
+                'drivers_license': 'Driver\'s License',
+                'vehicle_registration': 'Vehicle Registration',
+                'business_license': 'Business License',
+                'bank_statement': 'Bank Statement'
+            };
+            return types[type] || type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        }
+
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleDateString();
+        }
+
+        function formatTime(dateString) {
+            return new Date(dateString).toLocaleTimeString();
+        }
+
+        function formatDateTime(dateString) {
+            return new Date(dateString).toLocaleString();
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            const toastIcon = document.getElementById('toastIcon');
+            
+            toastMessage.textContent = message;
+            
+            const icons = {
+                'success': '<i class="fas fa-check-circle text-green-500"></i>',
+                'error': '<i class="fas fa-exclamation-circle text-red-500"></i>',
+                'warning': '<i class="fas fa-exclamation-triangle text-yellow-500"></i>',
+                'info': '<i class="fas fa-info-circle text-blue-500"></i>'
+            };
+            
+            toastIcon.innerHTML = icons[type] || icons['info'];
+            
+            toast.classList.remove('hidden');
+            toast.classList.add('fade-in');
+            
+            setTimeout(() => {
+                hideToast();
+            }, 5000);
+        }
+
+        function hideToast() {
+            const toast = document.getElementById('toast');
+            toast.classList.add('hidden');
+            toast.classList.remove('fade-in');
+        }
+
+        // Document functions
+        function viewDocument(documentId, filename) {
+            window.open(`/api/admin/agent-applications/documents/${documentId}/view`, '_blank');
+        }
+
+        function downloadDocument(documentId, filename) {
+            const link = document.createElement('a');
+            link.href = `/api/admin/agent-applications/documents/${documentId}/download`;
+            link.download = filename;
+            link.click();
+        }
+
+        async function verifyDocument(documentId) {
+            try {
+                const response = await fetch(`/api/admin/agent-applications/documents/${documentId}/verify`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${getAuthToken()}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    showToast('Document verified successfully', 'success');
+                    // Reload the application details
+                    if (selectedApplicationId) {
+                        viewApplication(selectedApplicationId);
+                    }
+                } else {
+                    throw new Error('Failed to verify document');
+                }
+            } catch (error) {
+                console.error('Error verifying document:', error);
+                showToast('Failed to verify document', 'error');
+            }
+        }
+    </script>
+</body>
+</html>

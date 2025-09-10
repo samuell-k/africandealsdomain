@@ -1,0 +1,231 @@
+<!-- include('header') -->
+<!DOCTYPE html>
+<html lang="en" class="admin-page">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Logs | African Deals Domain</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="admin-input-fix.css" rel="stylesheet">
+</head>
+<body class="flex flex-col min-h-screen bg-gray-50">
+  <main class="flex-1 container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-4">System Logs</h1>
+    <form action="/admin/logs/logs.html" method="GET" class="mb-6 flex gap-2">
+      <input name="q" type="text" placeholder="Type action, user, or date (YYYY-MM-DD)" onkeyup="handleLogSearch(this.value)" oninput="handleLogSearch(this.value)" class="flex-1 px-4 py-2 border rounded focus:outline-none focus:ring" value="<%=- query || '' %>">
+      <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition">Search</button>
+    </form>
+    <div class="overflow-x-auto">
+      <table class="min-w-full bg-white rounded shadow">
+        <thead>
+          <tr>
+            <th class="px-4 py-2 text-left">Date</th>
+            <th class="px-4 py-2 text-left">User</th>
+            <th class="px-4 py-2 text-left">Action</th>
+            <th class="px-4 py-2 text-left">Details</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% logs.forEach(function(log) { %>
+            <tr class="border-t">
+              <td class="px-4 py-2"><%=- log.date || '' %></td>
+              <td class="px-4 py-2"><%=- log.user || '' %></td>
+              <td class="px-4 py-2"><%=- log.action || '' %></td>
+              <td class="px-4 py-2"><%=- log.details || '' %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+      <% if (logs.length === 0) { %>
+        <div class="text-center text-gray-500 py-8">No logs found.</div>
+      <% } %>
+    </div>
+    <% if (pagination && pagination.totalPages > 1) { %>
+      <nav class="flex gap-2 justify-center mt-6">
+        <% for (let i = 1; i <= pagination.totalPages; i++) { %>
+          <a href="?page=<%=- i || '' %>" class="px-3 py-1 rounded border <%=- i === pagination.currentPage ? 'bg-blue-600 text-white' : 'bg-white text-blue-600 hover:bg-blue-100' || '' %>"><%=- i || '' %></a>
+        <% } %>
+      </nav>
+    <% } %>
+  </main>
+  <!-- include('footer') -->
+
+<script>
+// Utility Functions for Enhanced Functionality
+function showNotification(message, type = 'info') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 ${
+        type === 'success' ? 'bg-green-500 text-white' :
+        type === 'error' ? 'bg-red-500 text-white' :
+        type === 'warning' ? 'bg-yellow-500 text-black' :
+        'bg-blue-500 text-white'
+    }`;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+// Generic search handlers
+function handleProductSearch(query) {
+    console.log('Searching products:', query);
+    if (query.length > 2) {
+        // Implement product search logic
+        showNotification('Searching for: ' + query, 'info');
+    }
+}
+
+function handleSellerSearch(query) {
+    console.log('Searching sellers:', query);
+    if (query.length > 2) {
+        showNotification('Searching sellers: ' + query, 'info');
+    }
+}
+
+function handleAgentSearch(query) {
+    console.log('Searching agents:', query);
+    if (query.length > 2) {
+        showNotification('Searching agents: ' + query, 'info');
+    }
+}
+
+function handleOrderSearch(query) {
+    console.log('Searching orders:', query);
+    if (query.length > 2) {
+        showNotification('Searching orders: ' + query, 'info');
+    }
+}
+
+function handleUserSearch(query) {
+    console.log('Searching users:', query);
+    if (query.length > 2) {
+        showNotification('Searching users: ' + query, 'info');
+    }
+}
+
+// Generic form handlers
+function handleSave() {
+    showNotification('Save functionality will be implemented soon', 'info');
+}
+
+function handleEdit() {
+    showNotification('Edit functionality will be implemented soon', 'info');
+}
+
+function handleDelete() {
+    if (confirm('Are you sure you want to delete this item?')) {
+        showNotification('Delete functionality will be implemented soon', 'info');
+    }
+}
+
+function handleCancel() {
+    if (confirm('Are you sure you want to cancel? Unsaved changes will be lost.')) {
+        history.back();
+    }
+}
+</script>
+
+<script>
+// ================================================
+// COMPREHENSIVE SEARCH & UTILITY FUNCTIONS
+// ================================================
+
+
+// Log Search Implementation
+const handleLogSearch = debounce(async (query) => {
+    if (query.length < 2) {
+        clearSearchResults('logs');
+        return;
+    }
+    
+    try {
+        showSearchLoading('logs');
+        const response = await fetch(`/api/admin/logs/search?q=${encodeURIComponent(query)}&limit=10`);
+        
+        if (!response.ok) throw new Error('Search failed');
+        
+        const data = await response.json();
+        displaySearchResults('logs', data.logs || [], query);
+    } catch (error) {
+        console.error('Log search error:', error);
+        showNotification('Log search failed. Please try again.', 'error');
+        clearSearchResults('logs');
+    }
+}, 300);
+
+// Enhanced notification system
+function showNotification(message, type = 'info', duration = 5000) {
+    // Remove existing notifications
+    const existing = document.querySelectorAll('.system-notification');
+    existing.forEach(n => n.remove());
+    
+    const notification = document.createElement('div');
+    notification.className = `system-notification fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 max-w-sm ${
+        type === 'success' ? 'bg-green-500 text-white' :
+        type === 'error' ? 'bg-red-500 text-white' :
+        type === 'warning' ? 'bg-yellow-500 text-black' :
+        'bg-blue-500 text-white'
+    }`;
+    
+    const icon = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' }[type] || 'ℹ️';
+    
+    notification.innerHTML = `
+        <div class="flex items-center space-x-3">
+            <span class="text-lg">${icon}</span>
+            <div class="flex-1">
+                <div class="font-medium">${message}</div>
+            </div>
+            <button onclick="this.closest('.system-notification').remove()" 
+                    class="text-white/80 hover:text-white text-xl leading-none">&times;</button>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    if (duration > 0) {
+        setTimeout(() => {
+            if (notification.parentElement) {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => notification.remove(), 300);
+            }
+        }, duration);
+    }
+}
+
+// Global error handlers
+window.addEventListener('error', (event) => {
+    console.error('Global error:', event.error);
+    showNotification('An unexpected error occurred', 'error');
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+    console.error('Unhandled promise rejection:', event.reason);
+    showNotification('Operation failed unexpectedly', 'error');
+});
+
+// Utility functions for common operations
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+function sanitizeInput(input) {
+    return input.replace(/[<>]/g, '').trim();
+}
+</script>
+</body>
+</html> 

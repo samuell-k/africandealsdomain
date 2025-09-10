@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en" class="admin-page">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Logs | Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="admin-auth-check.js"></script>
+    <script src="admin-utils.js"></script>
+    <style>
+        :root {
+            --primary-color: #080b3b;
+            --secondary-color: #1e40af;
+            --accent-color: #3b82f6;
+        }
+        
+        .glass-morphism {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        }
+        .sidebar {
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .nav-item {
+            transition: all 0.3s ease;
+        }
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+        .nav-item.active {
+            background: rgba(255, 255, 255, 0.2);
+            border-left: 3px solid #3b82f6;
+        }
+        .loading-spinner {
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 2px solid #3b82f6;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .form-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+        }
+        .log-level-badge {
+            @apply px-2 py-1 rounded-full text-xs font-medium;
+        }
+        .level-error { @apply bg-red-500/20 text-red-400; }
+        .level-warning { @apply bg-yellow-500/20 text-yellow-400; }
+        .level-info { @apply bg-blue-500/20 text-blue-400; }
+        .level-debug { @apply bg-gray-500/20 text-gray-400; }
+        .level-success { @apply bg-green-500/20 text-green-400; }
+        .log-entry {
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+        .log-entry:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .log-entry.level-error {
+            border-left-color: #ef4444;
+        }
+        .log-entry.level-warning {
+            border-left-color: #f59e0b;
+        }
+        .log-entry.level-info {
+            border-left-color: #3b82f6;
+        }
+        .log-entry.level-debug {
+            border-left-color: #6b7280;
+        }
+        .log-entry.level-success {
+            border-left-color: #10b981;
+        }
+        .filter-tab {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .filter-tab:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .filter-tab.active {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: var(--accent-color);
+        }
+        .live-indicator {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .log-details {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        .log-details.expanded {
+            max-height: 400px;
+        }
+        .json-viewer {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+    </style>
+</head>
+
+<body class="gradient-bg min-h-screen">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <div class="sidebar w-64 lg:w-80 flex-shrink-0 hidden md:flex flex-col">
+            <div class="p-6 border-b border-white/10">
+                <h2 class="text-xl font-bold text-white">Admin Panel</h2>
+            </div>
+            
+            <nav class="flex-1 p-4 space-y-2">
+                <a href="dashboard.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="user-management.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-users"></i>
+                    <span>User Management</span>
+                </a>
+                <a href="manual-payment-approval.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-credit-card"></i>
+                    <span>Payment Approval</span>
+                </a>
+                <a href="products.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-box"></i>
+                    <span>Products</span>
+                </a>
+                <a href="order-management.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Orders</span>
+                </a>
+                <a href="agents.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-user-tie"></i>
+                    <span>Agents</span>
+                </a>
+                <a href="categories.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-tags"></i>
+                    <span>Categories</span>
+                </a>
+                <a href="brands.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-trademark"></i>
+                    <span>Brands</span>
+                </a>
+                <a href="reviews.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-star"></i>
+                    <span>Reviews</span>
+                </a>
+                <a href="sellers.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-store"></i>
+                    <span>Sellers</span>
+                </a>
+                <a href="support-tickets.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-ticket-alt"></i>
+                    <span>Support Tickets</span>
+                </a>
+                <a href="logs.html" class="nav-item active flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-file-alt"></i>
+                    <span>System Logs</span>
+                </a>
+                <a href="reports.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Reports</span>
+                </a>
+                <a href="settings.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
+            
+            <!-- Header -->
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 space-y-4 sm:space-y-0">
+                <div>
+                    <div class="flex items-center space-x-3 mb-2">
+                        <h1 class="text-2xl sm:text-3xl font-bold text-white">System Logs</h1>
+                        <div class="flex items-center space-x-2">
+                            <div class="live-indicator" id="live-indicator"></div>
+                            <span class="text-white/70 text-sm" id="live-status">Live Monitoring</span>
+                        </div>
+                    </div>
+                    <p class="text-white/70">Monitor system events, errors, and activities</p>
+                </div>
+                <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                    <button onclick="toggleLiveMode()" id="live-toggle" class="bg-green-500 hover:bg-green-600 text-white px-3 sm:px-4 py-2 rounded-lg transition text-sm flex items-center justify-center">
+                        <i class="fas fa-play mr-2"></i>Live
+                    </button>
+                    <button onclick="exportLogs()" class="bg-gray-500 hover:bg-gray-600 text-white px-3 sm:px-4 py-2 rounded-lg transition text-sm flex items-center justify-center">
+                        <i class="fas fa-download mr-2"></i>Export
+                    </button>
+                    <button onclick="clearLogs()" class="bg-red-500 hover:bg-red-600 text-white px-3 sm:px-4 py-2 rounded-lg transition text-sm flex items-center justify-center">
+                        <i class="fas fa-trash mr-2"></i>Clear
+                    </button>
+                    <button onclick="loadLogs()" class="bg-blue-500 hover:bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-lg transition text-sm flex items-center justify-center">
+                        <i class="fas fa-refresh mr-2"></i>Refresh
+                    </button>
+                </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6 mb-6">
+                <div class="glass-morphism rounded-xl p-4 sm:p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-white/70 text-xs sm:text-sm">Total Logs</p>
+                            <p class="text-white text-lg sm:text-2xl font-bold" id="total-logs">0</p>
+                        </div>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-file-alt text-blue-400 text-lg sm:text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-morphism rounded-xl p-4 sm:p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-white/70 text-xs sm:text-sm">Errors</p>
+                            <p class="text-white text-lg sm:text-2xl font-bold" id="error-logs">0</p>
+                        </div>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-red-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-exclamation-triangle text-red-400 text-lg sm:text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-morphism rounded-xl p-4 sm:p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-white/70 text-xs sm:text-sm">Warnings</p>
+                            <p class="text-white text-lg sm:text-2xl font-bold" id="warning-logs">0</p>
+                        </div>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-exclamation text-yellow-400 text-lg sm:text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-morphism rounded-xl p-4 sm:p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-white/70 text-xs sm:text-sm">Info</p>
+                            <p class="text-white text-lg sm:text-2xl font-bold" id="info-logs">0</p>
+                        </div>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-info-circle text-green-400 text-lg sm:text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-morphism rounded-xl p-4 sm:p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-white/70 text-xs sm:text-sm">Debug</p>
+                            <p class="text-white text-lg sm:text-2xl font-bold" id="debug-logs">0</p>
+                        </div>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gray-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-bug text-gray-400 text-lg sm:text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Tabs -->
+            <div class="flex flex-wrap gap-2 mb-6">
+                <div class="filter-tab active" data-filter="" onclick="switchFilter('')">
+                    <span class="text-white font-medium">All Logs</span>
+                    <span id="all-count" class="ml-2 text-white/50 text-sm">(0)</span>
+                </div>
+                <div class="filter-tab" data-filter="error" onclick="switchFilter('error')">
+                    <span class="text-white font-medium">Errors</span>
+                    <span id="error-count" class="ml-2 text-white/50 text-sm">(0)</span>
+                </div>
+                <div class="filter-tab" data-filter="warning" onclick="switchFilter('warning')">
+                    <span class="text-white font-medium">Warnings</span>
+                    <span id="warning-count" class="ml-2 text-white/50 text-sm">(0)</span>
+                </div>
+                <div class="filter-tab" data-filter="info" onclick="switchFilter('info')">
+                    <span class="text-white font-medium">Info</span>
+                    <span id="info-count" class="ml-2 text-white/50 text-sm">(0)</span>
+                </div>
+                <div class="filter-tab" data-filter="debug" onclick="switchFilter('debug')">
+                    <span class="text-white font-medium">Debug</span>
+                    <span id="debug-count" class="ml-2 text-white/50 text-sm">(0)</span>
+                </div>
+            </div>
+
+            <!-- Search and Filters -->
+            <div class="glass-morphism rounded-xl p-4 sm:p-6 mb-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-white/70 text-sm mb-2">Search Logs</label>
+                        <input type="text" id="search-logs" placeholder="Search message or details..." 
+                               class="w-full p-3 rounded-lg form-input text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-white/70 text-sm mb-2">From Date</label>
+                        <input type="datetime-local" id="date-from" 
+                               class="w-full p-3 rounded-lg form-input text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-white/70 text-sm mb-2">To Date</label>
+                        <input type="datetime-local" id="date-to" 
+                               class="w-full p-3 rounded-lg form-input text-sm">
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="applyFilters()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg text-sm font-medium">
+                            <i class="fas fa-search mr-2"></i>Filter
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Logs List -->
+            <div class="glass-morphism rounded-xl overflow-hidden">
+                <div class="p-4 sm:p-6 border-b border-white/10">
+                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-3 sm:space-y-0">
+                        <h3 class="text-lg sm:text-xl font-bold text-white">System Logs</h3>
+                        <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                            <button onclick="autoScroll()" id="auto-scroll-btn" class="bg-purple-500 hover:bg-purple-600 text-white px-3 sm:px-4 py-2 rounded-lg text-sm flex items-center justify-center">
+                                <i class="fas fa-arrow-down mr-2"></i>Auto Scroll
+                            </button>
+                            <button onclick="exportLogs()" class="bg-gray-500 hover:bg-gray-600 text-white px-3 sm:px-4 py-2 rounded-lg text-sm flex items-center justify-center">
+                                <i class="fas fa-download mr-2"></i>Export
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="logs-container" class="max-h-[600px] overflow-y-auto">
+                    <div class="text-center py-8">
+                        <div class="loading-spinner mx-auto mb-4"></div>
+                        <p class="text-white/70">Loading system logs...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div id="pagination-container" class="mt-6 hidden">
+                <div class="flex justify-center space-x-2">
+                    <button onclick="previousPage()" id="prev-btn" class="px-3 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 disabled:opacity-50">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <span id="page-info" class="px-4 py-2 text-white"></span>
+                    <button onclick="nextPage()" id="next-btn" class="px-3 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 disabled:opacity-50">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // Global variables
+    let allLogs = [];
+    let currentFilter = '';
+    let currentPage = 1;
+    let totalPages = 1;
+    let isLiveMode = false;
+    let liveInterval = null;
+    let autoScrollEnabled = false;
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('🚀 System Logs page initializing...');
+        
+        // Check authentication first
+        if (!checkAuthentication()) return;
+        
+        // Set default date range (last 24 hours)
+        const now = new Date();
+        const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        document.getElementById('date-from').value = yesterday.toISOString().slice(0, 16);
+        document.getElementById('date-to').value = now.toISOString().slice(0, 16);
+        
+        // Load data
+        loadLogs();
+        setupEventListeners();
+    });
+
+    // Check authentication
+    function checkAuthentication() {
+        const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
+        const userRole = localStorage.getItem('userRole');
+        
+        if (!token) {
+            console.log('❌ No authentication token found');
+            window.location.href = '/auth/auth-admin.html';
+            return false;
+        }
+        
+        if (userRole !== 'admin') {
+            console.log('❌ Insufficient permissions');
+            window.location.href = '/auth/auth-admin.html';
+            return false;
+        }
+        
+        console.log('✅ Authentication verified');
+        return true;
+    }
+
+    // Setup event listeners
+    function setupEventListeners() {
+        document.getElementById('search-logs').addEventListener('input', debounce(applyFilters, 500));
+        document.getElementById('date-from').addEventListener('change', applyFilters);
+        document.getElementById('date-to').addEventListener('change', applyFilters);
+    }
+
+    // Load logs from API
+    async function loadLogs(page = 1) {
+        try {
+            console.log('📊 Loading system logs...');
+            
+            const params = new URLSearchParams({
+                page: page,
+                limit: 50
+            });
+            
+            // Add filters
+            if (currentFilter) params.append('level', currentFilter);
+            
+            const search = document.getElementById('search-logs')?.value;
+            if (search) params.append('search', search);
+            
+            const dateFrom = document.getElementById('date-from')?.value;
+            if (dateFrom) params.append('date_from', dateFrom);
+            
+            const dateTo = document.getElementById('date-to')?.value;
+            if (dateTo) params.append('date_to', dateTo);
+
+            const response = await makeAuthenticatedRequest(`/api/admin/system-logs?${params}`);
+
+            if (response.success) {
+                allLogs = response.logs || [];
+                
+                // Update pagination
+                if (response.pagination) {
+                    currentPage = response.pagination.current_page;
+                    totalPages = response.pagination.total_pages;
+                    updatePagination();
+                }
+                
+                renderLogs(allLogs);
+                updateStatistics(allLogs);
+                
+                // Auto scroll to bottom if enabled
+                if (autoScrollEnabled) {
+                    scrollToBottom();
+                }
+                
+                console.log('✅ System logs loaded successfully');
+            } else {
+                throw new Error(response.message || 'Failed to load system logs');
+            }
+
+        } catch (error) {
+            console.error('❌ Error loading system logs:', error);
+            document.getElementById('logs-container').innerHTML = 
+                createErrorState(error.message, 'loadLogs()');
+            showToast('Failed to load logs: ' + error.message, 'error');
+        }
+    }
+
+    // Switch filter
+    function switchFilter(filter) {
+        currentFilter = filter;
+        currentPage = 1;
+        
+        // Update active tab
+        document.querySelectorAll('.filter-tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        document.querySelector(`[data-filter="${filter}"]`).classList.add('active');
+        
+        // Apply filter
+        loadLogs(1);
+    }
+
+    // Apply filters
+    function applyFilters() {
+        currentPage = 1;
+        loadLogs(1);
+    }
+
+    // Render logs
+    function renderLogs(logs) {
+        const container = document.getElementById('logs-container');
+        
+        if (!logs || logs.length === 0) {
+            container.innerHTML = createEmptyState(
+                'logs', 
+                'No System Logs Found', 
+                'No logs match your current filters.',
+                '<button onclick="loadLogs()" class="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"><i class="fas fa-refresh mr-2"></i>Refresh</button>'
+            );
+            return;
+        }
+
+        const logsHTML = logs.map(log => `
+            <div class="log-entry level-${log.level} p-4 border-b border-white/10 hover:bg-white/5 cursor-pointer" onclick="toggleLogDetails('log-${log.id}')">
+                <div class="flex items-start justify-between">
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center space-x-3 mb-2">
+                            <span class="log-level-badge level-${log.level}">${formatLogLevel(log.level)}</span>
+                            <span class="text-white/50 text-xs">${formatDate(log.created_at)}</span>
+                            <button onclick="event.stopPropagation(); toggleLogDetails('log-${log.id}')" class="text-white/50 hover:text-white">
+                                <i class="fas fa-chevron-down transform transition-transform" id="chevron-${log.id}"></i>
+                            </button>
+                        </div>
+                        <div class="text-white font-medium mb-1 truncate">${log.message}</div>
+                        ${log.details ? `<div class="text-white/70 text-sm truncate">Details available...</div>` : ''}
+                    </div>
+                </div>
+                
+                <div id="log-${log.id}" class="log-details mt-3">
+                    <div class="bg-white/5 rounded-lg p-3">
+                        ${log.details ? `
+                            <div class="mb-3">
+                                <h5 class="text-white font-semibold mb-2">Details:</h5>
+                                <div class="json-viewer text-white/80">${formatLogDetails(log.details)}</div>
+                            </div>
+                        ` : ''}
+                        <div class="flex items-center justify-between text-xs text-white/50">
+                            <span>Log ID: ${log.id}</span>
+                            <span>Timestamp: ${new Date(log.created_at).toISOString()}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+
+        container.innerHTML = logsHTML;
+        updateFilterCounts(logs);
+    }
+
+    // Toggle log details
+    function toggleLogDetails(logId) {
+        const details = document.getElementById(logId);
+        const chevron = document.getElementById(`chevron-${logId.split('-')[1]}`);
+        
+        if (details.classList.contains('expanded')) {
+            details.classList.remove('expanded');
+            chevron.style.transform = 'rotate(0deg)';
+        } else {
+            details.classList.add('expanded');
+            chevron.style.transform = 'rotate(180deg)';
+        }
+    }
+
+    // Format log level
+    function formatLogLevel(level) {
+        const levelMap = {
+            'error': 'ERROR',
+            'warning': 'WARNING',
+            'info': 'INFO',
+            'debug': 'DEBUG',
+            'success': 'SUCCESS'
+        };
+        return levelMap[level] || level.toUpperCase();
+    }
+
+    // Format log details
+    function formatLogDetails(details) {
+        try {
+            if (typeof details === 'string') {
+                // Try to parse as JSON
+                const parsed = JSON.parse(details);
+                return JSON.stringify(parsed, null, 2);
+            }
+            return JSON.stringify(details, null, 2);
+        } catch (e) {
+            return details;
+        }
+    }
+
+    // Update statistics
+    function updateStatistics(logs) {
+        const totalLogs = logs.length;
+        const errorLogs = logs.filter(l => l.level === 'error').length;
+        const warningLogs = logs.filter(l => l.level === 'warning').length;
+        const infoLogs = logs.filter(l => l.level === 'info').length;
+        const debugLogs = logs.filter(l => l.level === 'debug').length;
+
+        document.getElementById('total-logs').textContent = totalLogs;
+        document.getElementById('error-logs').textContent = errorLogs;
+        document.getElementById('warning-logs').textContent = warningLogs;
+        document.getElementById('info-logs').textContent = infoLogs;
+        document.getElementById('debug-logs').textContent = debugLogs;
+    }
+
+    // Update filter counts
+    function updateFilterCounts(logs) {
+        const counts = {
+            all: logs.length,
+            error: logs.filter(l => l.level === 'error').length,
+            warning: logs.filter(l => l.level === 'warning').length,
+            info: logs.filter(l => l.level === 'info').length,
+            debug: logs.filter(l => l.level === 'debug').length
+        };
+
+        document.getElementById('all-count').textContent = `(${counts.all})`;
+        document.getElementById('error-count').textContent = `(${counts.error})`;
+        document.getElementById('warning-count').textContent = `(${counts.warning})`;
+        document.getElementById('info-count').textContent = `(${counts.info})`;
+        document.getElementById('debug-count').textContent = `(${counts.debug})`;
+    }
+
+    // Toggle live mode
+    function toggleLiveMode() {
+        isLiveMode = !isLiveMode;
+        const button = document.getElementById('live-toggle');
+        const indicator = document.getElementById('live-indicator');
+        const status = document.getElementById('live-status');
+
+        if (isLiveMode) {
+            button.innerHTML = '<i class="fas fa-pause mr-2"></i>Pause';
+            button.className = 'bg-red-500 hover:bg-red-600 text-white px-3 sm:px-4 py-2 rounded-lg transition text-sm flex items-center justify-center';
+            status.textContent = 'Live Monitoring Active';
+            
+            // Start live updates every 5 seconds
+            liveInterval = setInterval(() => {
+                loadLogs(currentPage);
+            }, 5000);
+            
+        } else {
+            button.innerHTML = '<i class="fas fa-play mr-2"></i>Live';
+            button.className = 'bg-green-500 hover:bg-green-600 text-white px-3 sm:px-4 py-2 rounded-lg transition text-sm flex items-center justify-center';
+            status.textContent = 'Live Monitoring';
+            
+            if (liveInterval) {
+                clearInterval(liveInterval);
+                liveInterval = null;
+            }
+        }
+    }
+
+    // Auto scroll functionality
+    function autoScroll() {
+        autoScrollEnabled = !autoScrollEnabled;
+        const button = document.getElementById('auto-scroll-btn');
+        
+        if (autoScrollEnabled) {
+            button.innerHTML = '<i class="fas fa-arrow-up mr-2"></i>Stop Auto Scroll';
+            button.className = 'bg-red-500 hover:bg-red-600 text-white px-3 sm:px-4 py-2 rounded-lg text-sm flex items-center justify-center';
+            scrollToBottom();
+        } else {
+            button.innerHTML = '<i class="fas fa-arrow-down mr-2"></i>Auto Scroll';
+            button.className = 'bg-purple-500 hover:bg-purple-600 text-white px-3 sm:px-4 py-2 rounded-lg text-sm flex items-center justify-center';
+        }
+    }
+
+    // Scroll to bottom
+    function scrollToBottom() {
+        const container = document.getElementById('logs-container');
+        container.scrollTop = container.scrollHeight;
+    }
+
+    // Pagination functions
+    function updatePagination() {
+        const container = document.getElementById('pagination-container');
+        const pageInfo = document.getElementById('page-info');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+
+        if (totalPages > 1) {
+            container.classList.remove('hidden');
+            pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+            prevBtn.disabled = currentPage === 1;
+            nextBtn.disabled = currentPage === totalPages;
+        } else {
+            container.classList.add('hidden');
+        }
+    }
+
+    function previousPage() {
+        if (currentPage > 1) {
+            loadLogs(currentPage - 1);
+        }
+    }
+
+    function nextPage() {
+        if (currentPage < totalPages) {
+            loadLogs(currentPage + 1);
+        }
+    }
+
+    // Export logs
+    async function exportLogs() {
+        try {
+            const params = {
+                level: currentFilter || undefined,
+                date_from: document.getElementById('date-from')?.value || undefined,
+                date_to: document.getElementById('date-to')?.value || undefined
+            };
+
+            const response = await makeAuthenticatedRequest('/api/admin/system-logs/export', {
+                method: 'POST',
+                body: JSON.stringify(params)
+            });
+
+            if (response.success) {
+                const exportData = response.data.map(log => ({
+                    'Timestamp': new Date(log.created_at).toISOString(),
+                    'Level': formatLogLevel(log.level),
+                    'Message': log.message,
+                    'Details': log.details || ''
+                }));
+
+                exportToCSV(exportData, `system_logs_export_${new Date().toISOString().split('T')[0]}.csv`);
+                showToast(`Exported ${response.count} log entries`, 'success');
+            } else {
+                throw new Error(response.message || 'Failed to export logs');
+            }
+
+        } catch (error) {
+            console.error('❌ Error exporting logs:', error);
+            showToast('Error exporting logs: ' + error.message, 'error');
+        }
+    }
+
+    // Clear logs
+    async function clearLogs() {
+        const days = prompt('Clear logs older than how many days? (Enter number):', '30');
+        if (!days || isNaN(days)) return;
+        
+        const level = prompt('Clear only specific level? (error/warning/info/debug or leave empty for all):', '');
+        
+        if (!confirm(`Are you sure you want to clear logs ${level ? `with level "${level}" ` : ''}older than ${days} days? This action cannot be undone.`)) {
+            return;
+        }
+
+        try {
+            const response = await makeAuthenticatedRequest('/api/admin/system-logs', {
+                method: 'DELETE',
+                body: JSON.stringify({
+                    older_than_days: parseInt(days),
+                    level: level || undefined
+                })
+            });
+
+            if (response.success) {
+                showToast(response.message, 'success');
+                loadLogs(1);
+            } else {
+                throw new Error(response.message || 'Failed to clear logs');
+            }
+
+        } catch (error) {
+            console.error('❌ Error clearing logs:', error);
+            showToast('Error clearing logs: ' + error.message, 'error');
+        }
+    }
+
+    // Utility functions
+    function makeAuthenticatedRequest(url, options = {}) {
+        const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+        
+        if (!token) {
+            throw new Error('No authentication token available');
+        }
+
+        const defaultOptions = {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        };
+
+        return fetch(`http://localhost:3001${url}`, { ...defaultOptions, ...options })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            });
+    }
+
+    function createEmptyState(type, title, description, actions = '') {
+        return `
+            <div class="text-center py-12">
+                <div class="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-file-alt text-white/30 text-3xl"></i>
+                </div>
+                <h3 class="text-white text-xl font-semibold mb-2">${title}</h3>
+                <p class="text-white/60 mb-6 max-w-md mx-auto">${description}</p>
+                ${actions}
+            </div>
+        `;
+    }
+
+    function createErrorState(message, retry = null) {
+        return `
+            <div class="text-center py-12">
+                <div class="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-exclamation-triangle text-red-400 text-3xl"></i>
+                </div>
+                <h3 class="text-white text-xl font-semibold mb-2">Error Loading Data</h3>
+                <p class="text-white/60 mb-6 max-w-md mx-auto">${message}</p>
+                ${retry ? `<button onclick="${retry}" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg"><i class="fas fa-refresh mr-2"></i>Try Again</button>` : ''}
+            </div>
+        `;
+    }
+
+    function showToast(message, type = 'info') {
+        console.log(`[${type.toUpperCase()}] ${message}`);
+        
+        const toast = document.createElement('div');
+        toast.className = `fixed top-4 right-4 z-50 px-6 py-4 rounded-lg text-white ${
+            type === 'success' ? 'bg-green-500' : 
+            type === 'error' ? 'bg-red-500' : 
+            type === 'warning' ? 'bg-yellow-500' : 'bg-blue-500'
+        }`;
+        toast.textContent = message;
+        
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    function formatDate(dateString) {
+        if (!dateString) return 'N/A';
+        return new Date(dateString).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+    }
+
+    function exportToCSV(data, filename) {
+        const csv = convertToCSV(data);
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        window.URL.revokeObjectURL(url);
+    }
+
+    function convertToCSV(data) {
+        if (!data.length) return '';
+        
+        const headers = Object.keys(data[0]);
+        const csvContent = [
+            headers.join(','),
+            ...data.map(row => 
+                headers.map(header => `"${row[header] || ''}"`).join(',')
+            )
+        ].join('\n');
+        
+        return csvContent;
+    }
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', function() {
+        if (liveInterval) {
+            clearInterval(liveInterval);
+        }
+    });
+
+    // Make functions globally available
+    window.loadLogs = loadLogs;
+    window.switchFilter = switchFilter;
+    window.applyFilters = applyFilters;
+    window.toggleLogDetails = toggleLogDetails;
+    window.toggleLiveMode = toggleLiveMode;
+    window.autoScroll = autoScroll;
+    window.previousPage = previousPage;
+    window.nextPage = nextPage;
+    window.exportLogs = exportLogs;
+    window.clearLogs = clearLogs;
+
+</script>
+
+</body>
+</html>

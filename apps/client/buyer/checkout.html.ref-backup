@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout | African Deals Domain</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" href="/public/images/logo.png">
+  <script src="/shared/auth-utils.js"></script>
+  <script src="/shared/mode-switcher.js"></script>
+  <script src="/shared/buyer-navigation.js"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <!-- Navigation Container -->
+  <div id="navigation-container"></div>
+
+  <main class="pt-16 pb-8">
+    <div class="max-w-7xl mx-auto px-4">
+      <!-- Page Header -->
+      <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">Checkout</h1>
+        <p class="text-gray-600">Complete your purchase</p>
+        
+        <!-- Progress Bar -->
+        <div class="mt-4">
+          <div class="flex items-center justify-between text-sm">
+            <div class="flex items-center space-x-2 text-green-600">
+              <i class="fas fa-check-circle"></i>
+              <span>Cart Review</span>
+            </div>
+            <div class="flex-1 h-1 bg-gray-200 mx-4">
+              <div class="h-full bg-green-500 w-full"></div>
+            </div>
+            <div class="flex items-center space-x-2 text-green-600">
+              <i class="fas fa-check-circle"></i>
+              <span>Delivery Method</span>
+            </div>
+            <div class="flex-1 h-1 bg-gray-200 mx-4">
+              <div class="h-full bg-green-500 w-full"></div>
+            </div>
+            <div class="flex items-center space-x-2 text-green-600 font-semibold">
+              <i class="fas fa-credit-card"></i>
+              <span>Payment</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Checkout Content -->
+      <div id="checkout-content" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Checkout Form -->
+        <div class="lg:col-span-2">
+          <!-- Delivery Method Summary -->
+          <div id="delivery-summary" class="bg-white rounded-xl shadow-lg p-6 mb-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+              <i class="fas fa-truck text-green-600 mr-2"></i>
+              Selected Delivery Method
+            </h2>
+            <div id="delivery-method-display" class="bg-gray-50 rounded-lg p-4">
+              <!-- Delivery method details will be loaded here -->
+            </div>
+            <button type="button" id="change-delivery-method" class="mt-3 text-blue-600 hover:text-blue-700 text-sm font-medium">
+              <i class="fas fa-edit mr-1"></i>
+              Change Delivery Method
+            </button>
+          </div>
+          
+          <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-6">Contact Information</h2>
+            
+            <form id="checkout-form" class="space-y-6">
+              <!-- Personal Information -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label for="firstName" class="block text-sm font-medium text-gray-700 mb-1">First Name *</label>
+                  <input type="text" id="firstName" name="firstName" required 
+                         class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                  <label for="lastName" class="block text-sm font-medium text-gray-700 mb-1">Last Name *</label>
+                  <input type="text" id="lastName" name="lastName" required 
+                         class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+              </div>
+              
+              <div>
+                <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email Address *</label>
+                <input type="email" id="email" name="email" required 
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+              </div>
+              
+              <div>
+                <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Phone Number *</label>
+                <input type="tel" id="phone" name="phone" required 
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+              </div>
+              
+              <!-- Address Information -->
+              <div>
+                <label for="address" class="block text-sm font-medium text-gray-700 mb-1">Street Address *</label>
+                <input type="text" id="address" name="address" required 
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+              </div>
+              
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label for="city" class="block text-sm font-medium text-gray-700 mb-1">City *</label>
+                  <input type="text" id="city" name="city" required 
+                         class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                  <label for="state" class="block text-sm font-medium text-gray-700 mb-1">State/Province *</label>
+                  <input type="text" id="state" name="state" required 
+                         class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                  <label for="zipCode" class="block text-sm font-medium text-gray-700 mb-1">ZIP/Postal Code *</label>
+                  <input type="text" id="zipCode" name="zipCode" required 
+                         class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+              </div>
+              
+              <div>
+                <label for="country" class="block text-sm font-medium text-gray-700 mb-1">Country *</label>
+                <select id="country" name="country" required 
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                  <option value="">Select Country</option>
+                  <option value="Nigeria">Nigeria</option>
+                  <option value="Kenya">Kenya</option>
+                  <option value="Ghana">Ghana</option>
+                  <option value="Rwanda">Rwanda</option>
+                  <option value="Uganda">Uganda</option>
+                  <option value="Tanzania">Tanzania</option>
+                  <option value="Ethiopia">Ethiopia</option>
+                  <option value="South Africa">South Africa</option>
+                  <option value="Egypt">Egypt</option>
+                  <option value="Morocco">Morocco</option>
+                </select>
+              </div>
+            </form>
+          </div>
+
+          <!-- Payment Method -->
+          <div class="bg-white rounded-xl shadow-lg p-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-6">Payment Method</h2>
+            
+            <div class="space-y-4">
+              <div class="flex items-center">
+                <input type="radio" id="creditCard" name="paymentMethod" value="credit_card" checked 
+                       class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500">
+                <label for="creditCard" class="ml-3 text-sm font-medium text-gray-700">Credit/Debit Card</label>
+              </div>
+              
+              <div class="flex items-center">
+                <input type="radio" id="paypal" name="paymentMethod" value="paypal" 
+                       class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500">
+                <label for="paypal" class="ml-3 text-sm font-medium text-gray-700">PayPal</label>
+              </div>
+              
+              <div class="flex items-center">
+                <input type="radio" id="mobileMoney" name="paymentMethod" value="mobile_money" 
+                       class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500">
+                <label for="mobileMoney" class="ml-3 text-sm font-medium text-gray-700">Mobile Money</label>
+              </div>
+              
+              <div class="flex items-center">
+                <input type="radio" id="bankTransfer" name="paymentMethod" value="bank_transfer" 
+                       class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500">
+                <label for="bankTransfer" class="ml-3 text-sm font-medium text-gray-700">Bank Transfer</label>
+              </div>
+            </div>
+            
+            <!-- Credit Card Fields (shown by default) -->
+            <div id="creditCardFields" class="mt-6 space-y-4">
+              <div>
+                <label for="cardNumber" class="block text-sm font-medium text-gray-700 mb-1">Card Number *</label>
+                <input type="text" id="cardNumber" name="cardNumber" placeholder="1234 5678 9012 3456" 
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+              </div>
+              
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label for="expiryDate" class="block text-sm font-medium text-gray-700 mb-1">Expiry Date *</label>
+                  <input type="text" id="expiryDate" name="expiryDate" placeholder="MM/YY" 
+                         class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                  <label for="cvv" class="block text-sm font-medium text-gray-700 mb-1">CVV *</label>
+                  <input type="text" id="cvv" name="cvv" placeholder="123" 
+                         class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="lg:col-span-1">
+          <div class="bg-white rounded-xl shadow-lg p-6 sticky top-20">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">Order Summary</h2>
+            
+            <div id="order-items" class="space-y-3 mb-6">
+              <!-- Order items will be loaded here -->
+            </div>
+            
+            <div class="border-t pt-4 space-y-3">
+              <div class="flex justify-between text-sm">
+                <span>Subtotal</span>
+                <span id="subtotal">$0.00</span>
+              </div>
+              <div class="flex justify-between text-sm">
+                <span>Shipping</span>
+                <span id="shipping">$0.00</span>
+              </div>
+              <div class="flex justify-between text-sm">
+                <span>Tax</span>
+                <span id="tax">$0.00</span>
+              </div>
+              <div class="border-t pt-3">
+                <div class="flex justify-between font-semibold text-lg">
+                  <span>Total</span>
+                  <span id="total">$0.00</span>
+                </div>
+              </div>
+            </div>
+            
+            <button id="place-order-btn" class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium mt-6 disabled:opacity-50 disabled:cursor-not-allowed">
+              Place Order
+            </button>
+            
+            <div class="mt-4 text-center">
+              <a href="/buyer/cart.html" class="text-blue-600 hover:text-blue-700 text-sm">
+                ← Back to Cart
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Loading Overlay -->
+  <div id="loading-overlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg p-6 flex items-center space-x-3">
+      <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+      <span>Processing your order...</span>
+    </div>
+  </div>
+
+  <script>
+    // --- GLOBAL STATE ---
+    let cartItems = [];
+    let userInfo = {};
+    let deliverySelection = null;
+    let orderData = null;
+    let selectedCurrency = localStorage.getItem('selectedCurrency') || 'USD';
+    let selectedCurrencySymbol = { USD: '$', RWF: 'FRw', EUR: '€', KES: 'Ksh', NGN: '₦' }[selectedCurrency] || '$';
+
+    // --- DELIVERY METHOD INTEGRATION ---
+    function loadDeliverySelection() {
+      const deliveryData = localStorage.getItem('deliverySelection');
+      const orderDataStored = localStorage.getItem('orderData');
+      
+      if (!deliveryData || !orderDataStored) {
+        // Redirect back to delivery method selection
+        alert('Please select a delivery method first.');
+        window.location.href = '/buyer/delivery-method-selection.html';
+        return false;
+      }
+      
+      deliverySelection = JSON.parse(deliveryData);
+      orderData = JSON.parse(orderDataStored);
+      
+      displayDeliveryMethod();
+      return true;
+    }
+
+    function displayDeliveryMethod() {
+      const displayElement = document.getElementById('delivery-method-display');
+      
+      if (deliverySelection.method === 'pickup') {
+        displayElement.innerHTML = `
+          <div class="flex items-start space-x-3">
+            <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+              <i class="fas fa-store text-green-600"></i>
+            </div>
+            <div class="flex-1">
+              <h3 class="font-semibold text-gray-900">Pickup Delivery</h3>
+              <p class="text-sm text-gray-600 mt-1">Your order will be delivered to a pickup location</p>
+              <div class="mt-2 p-2 bg-blue-50 rounded-lg">
+                <p class="text-sm font-medium text-blue-900">Pickup Location:</p>
+                <p class="text-sm text-blue-700">Site ID: ${deliverySelection.pickupSiteId}</p>
+              </div>
+              <div class="mt-2 flex items-center space-x-4 text-sm">
+                <span class="text-green-600 font-semibold">
+                  <i class="fas fa-check mr-1"></i>
+                  FREE Delivery
+                </span>
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (deliverySelection.method === 'home') {
+        displayElement.innerHTML = `
+          <div class="flex items-start space-x-3">
+            <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+              <i class="fas fa-home text-blue-600"></i>
+            </div>
+            <div class="flex-1">
+              <h3 class="font-semibold text-gray-900">Home Delivery</h3>
+              <p class="text-sm text-gray-600 mt-1">Your order will be delivered to your home</p>
+              <div class="mt-2 p-2 bg-blue-50 rounded-lg">
+                <p class="text-sm font-medium text-blue-900">Delivery Address:</p>
+                <p class="text-sm text-blue-700">
+                  ${deliverySelection.deliveryAddress.street}<br>
+                  ${deliverySelection.deliveryAddress.city}, ${deliverySelection.deliveryAddress.state}
+                </p>
+              </div>
+              <div class="mt-2 flex items-center space-x-4 text-sm">
+                <span class="text-blue-600 font-semibold">
+                  <i class="fas fa-truck mr-1"></i>
+                  Delivery Fee: ₦${deliverySelection.deliveryFee.toFixed(2)}
+                </span>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    // Change delivery method handler
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('change-delivery-method').addEventListener('click', function() {
+        if (confirm('Are you sure you want to change your delivery method? This will take you back to the delivery selection page.')) {
+          window.location.href = '/buyer/delivery-method-selection.html';
+        }
+      });
+    });
+
+    // --- LOAD HEADER COMPONENT ---
+    fetch('/buyer/components/header.html')
+      .then(res => res.text())
+      .then(html => {
+        document.getElementById('buyer-header').innerHTML = html;
+      });
+
+    // --- FETCH CART ITEMS ---
+    async function fetchCartItems() {
+      try {
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+          window.location.href = '/auth/auth-buyer.html';
+          return;
+        }
+        
+        const response = await fetch('/api/cart', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          cartItems = data.items || [];
+          
+          if (cartItems.length === 0) {
+            window.location.href = '/buyer/cart.html';
+            return;
+          }
+          
+          renderOrderSummary();
+          loadUserInfo();
+        } else {
+          console.error('Failed to fetch cart items');
+          showNotification('Failed to load cart items', 'error');
+        }
+      } catch (error) {
+        console.error('Error fetching cart items:', error);
+        showNotification('Failed to load cart items', 'error');
+      }
+    }
+
+    // --- LOAD USER INFO ---
+    async function loadUserInfo() {
+      try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch('/api/auth/profile', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          userInfo = data || {};
+          populateUserInfo();
+        }
+      } catch (error) {
+        console.error('Error loading user info:', error);
+      }
+    }
+
+    // --- POPULATE USER INFO ---
+    function populateUserInfo() {
+      if (userInfo.name) {
+        const nameParts = userInfo.name.split(' ');
+        document.getElementById('firstName').value = nameParts[0] || '';
+        document.getElementById('lastName').value = nameParts.slice(1).join(' ') || '';
+      }
+      if (userInfo.email) {
+        document.getElementById('email').value = userInfo.email;
+      }
+      if (userInfo.phone) {
+        document.getElementById('phone').value = userInfo.phone;
+      }
+      if (userInfo.address) {
+        document.getElementById('address').value = userInfo.address;
+      }
+      if (userInfo.city) {
+        document.getElementById('city').value = userInfo.city;
+      }
+      if (userInfo.country) {
+        document.getElementById('country').value = userInfo.country;
+      }
+    }
+
+    // --- RENDER ORDER SUMMARY ---
+    function renderOrderSummary() {
+      const container = document.getElementById('order-items');
+      
+      container.innerHTML = cartItems.map(item => `
+        <div class="flex items-center gap-3">
+        <!-- Mode Switcher -->
+        <div class="mode-switcher-container" data-mode-switch="">
+          <!-- Mode switcher will be inserted here by JavaScript -->
+        </div>
+          <img src="${item.main_image ? `/uploads/${item.main_image}` : '/public/images/placeholder.jpg'}" 
+               alt="${item.name}" 
+               class="w-12 h-12 object-cover rounded"
+               onerror="this.src='/public/images/logo.png'">
+          <div class="flex-1">
+            <h4 class="font-medium text-gray-900 text-sm">${item.name}</h4>
+            <p class="text-gray-600 text-xs">Qty: ${item.quantity}</p>
+          </div>
+          <div class="text-right">
+            <p class="font-semibold text-gray-900 text-sm">${item.currency} ${(item.price * item.quantity).toFixed(2)}</p>
+          </div>
+        </div>
+      `).join('');
+      
+      updateOrderSummary();
+    }
+
+    // --- UPDATE ORDER SUMMARY ---
+    function updateOrderSummary() {
+      const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      const deliveryFee = deliverySelection ? deliverySelection.deliveryFee : 0;
+      const tax = subtotal * 0.1; // 10% tax
+      const total = subtotal + deliveryFee + tax;
+      
+      document.getElementById('subtotal').textContent = `₦${subtotal.toFixed(2)}`;
+      document.getElementById('shipping').textContent = deliveryFee === 0 ? 'FREE' : `₦${deliveryFee.toFixed(2)}`;
+      document.getElementById('tax').textContent = `₦${tax.toFixed(2)}`;
+      document.getElementById('total').textContent = `₦${total.toFixed(2)}`;
+    }
+
+    // --- PAYMENT METHOD TOGGLE ---
+    document.querySelectorAll('input[name="paymentMethod"]').forEach(radio => {
+      radio.addEventListener('change', function() {
+        const creditCardFields = document.getElementById('creditCardFields');
+        if (this.value === 'credit_card') {
+          creditCardFields.style.display = 'block';
+        } else {
+          creditCardFields.style.display = 'none';
+        }
+      });
+    });
+
+    // --- PLACE ORDER ---
+    document.getElementById('place-order-btn').addEventListener('click', async function() {
+      if (!validateForm()) {
+        return;
+      }
+      
+      const loadingOverlay = document.getElementById('loading-overlay');
+      loadingOverlay.classList.remove('hidden');
+      
+      try {
+        const formData = new FormData(document.getElementById('checkout-form'));
+        const orderData = {
+          shipping: {
+            firstName: formData.get('firstName'),
+            lastName: formData.get('lastName'),
+            email: formData.get('email'),
+            phone: formData.get('phone'),
+            address: formData.get('address'),
+            city: formData.get('city'),
+            state: formData.get('state'),
+            zipCode: formData.get('zipCode'),
+            country: formData.get('country')
+          },
+          payment: {
+            method: document.querySelector('input[name="paymentMethod"]:checked').value,
+            cardNumber: formData.get('cardNumber'),
+            expiryDate: formData.get('expiryDate'),
+            cvv: formData.get('cvv')
+          },
+          items: cartItems,
+          total: calculateTotal(),
+          // Include delivery method selection data
+          delivery_method: deliverySelection.method,
+          pickup_site_id: deliverySelection.pickupSiteId || null,
+          delivery_address: deliverySelection.deliveryAddress || null,
+          marketplace_type: 'physical'
+        };
+        
+        const token = localStorage.getItem('authToken');
+        const response = await fetch('/api/orders', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(orderData)
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          showNotification('Order placed successfully!', 'success');
+          
+          // Clear cart
+          await fetch('/api/cart/clear', {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          
+          // Store order data for payment page
+          localStorage.setItem('pendingOrder', JSON.stringify(data.order));
+          
+          // Redirect to payment page
+          setTimeout(() => {
+            window.location.href = `/buyer/payment.html?orderId=${data.order.id}`;
+          }, 2000);
+        } else {
+          const errorData = await response.json();
+          showNotification(errorData.error || 'Failed to place order', 'error');
+        }
+      } catch (error) {
+        console.error('Error placing order:', error);
+        showNotification('Failed to place order', 'error');
+      } finally {
+        loadingOverlay.classList.add('hidden');
+      }
+    });
+
+    // --- VALIDATE FORM ---
+    function validateForm() {
+      const requiredFields = [
+        'firstName', 'lastName', 'email', 'phone', 
+        'address', 'city', 'state', 'zipCode', 'country'
+      ];
+      
+      let isValid = true;
+      
+      requiredFields.forEach(field => {
+        const element = document.getElementById(field);
+        if (!element.value.trim()) {
+          element.classList.add('border-red-500');
+          isValid = false;
+        } else {
+          element.classList.remove('border-red-500');
+        }
+      });
+      
+      // Validate payment method
+      const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked');
+      if (!paymentMethod) {
+        showNotification('Please select a payment method', 'error');
+        return false;
+      }
+      
+      // Validate credit card if selected
+      if (paymentMethod.value === 'credit_card') {
+        const cardNumber = document.getElementById('cardNumber').value;
+        const expiryDate = document.getElementById('expiryDate').value;
+        const cvv = document.getElementById('cvv').value;
+        
+        if (!cardNumber || !expiryDate || !cvv) {
+          showNotification('Please fill in all credit card details', 'error');
+          return false;
+        }
+      }
+      
+      if (!isValid) {
+        showNotification('Please fill in all required fields', 'error');
+      }
+      
+      return isValid;
+    }
+
+    // --- CALCULATE TOTAL ---
+    function calculateTotal() {
+      const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      const deliveryFee = deliverySelection ? deliverySelection.deliveryFee : 0;
+      const tax = subtotal * 0.1;
+      return subtotal + deliveryFee + tax;
+    }
+
+    // --- NOTIFICATION FUNCTION ---
+    function showNotification(message, type = 'info') {
+      const notification = document.createElement('div');
+      notification.className = `fixed top-4 right-4 z-50 px-4 py-2 rounded-lg text-white ${
+        type === 'success' ? 'bg-green-500' : 
+        type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+      }`;
+      notification.textContent = message;
+      
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.remove();
+      }, 5000);
+    }
+
+    // --- INITIALIZE PAGE ---
+    document.addEventListener('DOMContentLoaded', function() {
+      // Initialize navigation
+      BuyerNavigation.inject('navigation-container', {
+        currentPage: 'checkout',
+        userName: 'Account'
+      });
+      
+      // Load delivery selection first
+      if (!loadDeliverySelection()) {
+        return; // Will redirect to delivery selection page
+      }
+      
+      fetchCartItems();
+    });
+  </script>
+</body>
+</html>

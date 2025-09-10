@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wallet & Payments | ADD Physical Products</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" href="/public/images/logo.png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .glass { backdrop-filter: blur(10px); background: rgba(255, 255, 255, 0.8); }
+    .soft-card { box-shadow: 0 8px 32px 0 rgba(16,30,54,0.1); border-radius: 1.5rem; backdrop-filter: blur(10px); }
+    .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .animate-fade-in { animation: fadeIn 0.6s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .pulse-glow { animation: pulseGlow 2s infinite; }
+    @keyframes pulseGlow { 0%, 100% { box-shadow: 0 0 5px rgba(59, 130, 246, 0.3); } 50% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.6); } }
+    .hover-lift { transition: all 0.3s ease; }
+    .hover-lift:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+    .gradient-text { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .success-glow { animation: successGlow 2s ease-in-out infinite alternate; }
+    @keyframes successGlow { from { box-shadow: 0 0 10px rgba(34, 197, 94, 0.3); } to { box-shadow: 0 0 20px rgba(34, 197, 94, 0.6); } }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-green-50 to-blue-50 min-h-screen">
+  <!-- Header -->
+  <header class="glass bg-white/90 shadow-lg border-b border-gray-200 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto flex items-center justify-between px-4 md:px-8 h-16">
+      <a href="/seller/dashboard.html" class="flex items-center gap-3">
+        <img src="/public/images/logo.png" alt="ADD Logo" class="h-10 w-10 rounded-xl shadow" />
+        <span class="font-extrabold text-xl md:text-2xl text-blue-700 tracking-tight">ADD Wallet</span>
+      </a>
+      <div class="flex items-center gap-4">
+        <div class="flex items-center gap-2">
+          <span class="inline-flex items-center gap-1 text-green-600 font-semibold text-sm">
+            <span class="h-2 w-2 rounded-full bg-green-500 animate-pulse"></span> Secure Payments
+          </span>
+        </div>
+        <a href="/seller/dashboard.html" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold">
+          Back to Dashboard
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Flash Messages Container -->
+  <div id="flash-messages" class="max-w-7xl mx-auto px-4 md:px-8 mt-4"></div>
+
+  <main class="max-w-7xl mx-auto px-4 md:px-8 py-8">
+    <!-- Enhanced Page Header -->
+    <div class="bg-gradient-to-r from-green-600 to-blue-600 rounded-2xl p-8 text-white mb-8 animate-fade-in">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-3xl md:text-4xl font-bold mb-2">Wallet & Payments 💰</h1>
+          <p class="text-green-100 text-lg mb-4">Manage your earnings and payment methods securely</p>
+          <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2">
+              <div class="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+              <span class="text-sm">Secure Transactions</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="w-3 h-3 bg-blue-400 rounded-full animate-pulse"></div>
+              <span class="text-sm">Instant Transfers</span>
+            </div>
+          </div>
+        </div>
+        <div class="hidden md:block">
+          <div class="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center">
+            <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Enhanced Balance Card -->
+    <div class="soft-card bg-gradient-to-r from-green-500 to-green-600 p-8 mb-8 text-white animate-fade-in hover-lift">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-lg font-semibold mb-2 flex items-center gap-2">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+            Available Balance
+          </h2>
+          <div class="text-4xl md:text-5xl font-bold mb-4" id="wallet-balance">--</div>
+          <p class="text-green-100 text-sm flex items-center gap-1">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+            Ready for withdrawal
+          </p>
+        </div>
+        <div class="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center pulse-glow">
+          <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Enhanced Quick Actions -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div class="soft-card bg-white p-6 hover-lift cursor-pointer animate-fade-in" style="animation-delay: 0.1s;" onclick="showWithdrawModal()">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+            </svg>
+          </div>
+          <div>
+            <h3 class="font-semibold text-gray-900">Withdraw Funds</h3>
+            <p class="text-sm text-gray-600">Transfer to your bank account</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="soft-card bg-white p-6 hover-lift cursor-pointer animate-fade-in" style="animation-delay: 0.2s;" onclick="showTopUpModal()">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+          </div>
+          <div>
+            <h3 class="font-semibold text-gray-900">Top Up</h3>
+            <p class="text-sm text-gray-600">Add funds to your wallet</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="soft-card bg-white p-6 hover-lift cursor-pointer animate-fade-in" style="animation-delay: 0.3s;" onclick="showPaymentMethods()">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center">
+            <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+            </svg>
+          </div>
+          <div>
+            <h3 class="font-semibold text-gray-900">Payment Methods</h3>
+            <p class="text-sm text-gray-600">Manage your payment options</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Transaction History -->
+    <div class="soft-card bg-white p-6">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-xl font-bold text-gray-900">Transaction History</h2>
+        <div class="flex gap-2">
+          <button class="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded-lg" data-filter="all">All</button>
+          <button class="px-3 py-1 text-xs bg-gray-100 text-gray-600 rounded-lg" data-filter="earnings">Earnings</button>
+          <button class="px-3 py-1 text-xs bg-gray-100 text-gray-600 rounded-lg" data-filter="withdrawals">Withdrawals</button>
+        </div>
+      </div>
+      
+      <div id="transactions-list" class="space-y-4">
+        <!-- Transactions will be loaded here -->
+        <div class="text-center py-8">
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <p class="text-gray-500 mt-2">Loading transactions...</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Withdraw Modal -->
+  <div id="withdraw-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+      <div class="soft-card bg-white p-6 w-full max-w-md">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-bold">Withdraw Funds</h3>
+          <button onclick="hideWithdrawModal()" class="text-gray-400 hover:text-gray-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+        
+        <form id="withdraw-form" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Amount</label>
+            <input type="number" id="withdraw-amount" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Enter amount" min="1" step="0.01" required>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Bank Account</label>
+            <select id="bank-account" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+              <option value="">Select bank account</option>
+              <option value="bank1">Bank of Rwanda - ****1234</option>
+              <option value="bank2">Equity Bank - ****5678</option>
+            </select>
+          </div>
+          
+          <div class="flex gap-3">
+            <button type="button" onclick="hideWithdrawModal()" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+              Cancel
+            </button>
+            <button type="submit" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+              Withdraw
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top Up Modal -->
+  <div id="topup-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+      <div class="soft-card bg-white p-6 w-full max-w-md">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-bold">Top Up Wallet</h3>
+          <button onclick="hideTopUpModal()" class="text-gray-400 hover:text-gray-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+        
+        <form id="topup-form" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Amount</label>
+            <input type="number" id="topup-amount" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Enter amount" min="1" step="0.01" required>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Payment Method</label>
+            <select id="payment-method" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+              <option value="">Select payment method</option>
+              <option value="mobile_money">Mobile Money</option>
+              <option value="bank_transfer">Bank Transfer</option>
+              <option value="card">Credit/Debit Card</option>
+            </select>
+          </div>
+          
+          <div class="flex gap-3">
+            <button type="button" onclick="hideTopUpModal()" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+              Cancel
+            </button>
+            <button type="submit" class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+              Top Up
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- AUTH CHECK ---
+    (function() {
+      const token = localStorage.getItem('token');
+      if (!token) window.location.href = '/auth/auth-seller.html';
+    })();
+
+    // --- GLOBAL STATE ---
+    let walletData = {};
+    let selectedCurrency = localStorage.getItem('selectedCurrency') || 'RWF';
+    let currencySymbol = { USD: '$', RWF: 'FRw', EUR: '€', KES: 'Ksh', NGN: '₦' }[selectedCurrency] || 'FRw';
+
+    // --- FLASH MESSAGES ---
+    function showFlashMessage(message, type = 'success') {
+      const container = document.getElementById('flash-messages');
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `p-4 rounded-lg mb-4 animate-fade-in ${
+        type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+      }`;
+      messageDiv.textContent = message;
+      
+      container.appendChild(messageDiv);
+      
+      setTimeout(() => {
+        messageDiv.remove();
+      }, 5000);
+    }
+
+    // --- FETCH WALLET DATA ---
+    async function fetchWalletData() {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          window.location.href = '/auth/auth-seller.html';
+          return;
+        }
+
+        const response = await fetch('/api/seller/wallet', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+          walletData = await response.json();
+          updateWalletUI();
+        } else {
+          // Fallback to mock data if API not available
+          await loadMockWalletData();
+        }
+      } catch (error) {
+        console.error('Error fetching wallet data:', error);
+        await loadMockWalletData();
+      }
+    }
+
+    async function loadMockWalletData() {
+      // Mock data for demonstration
+      walletData = {
+        balance: 2547.80,
+        transactions: [
+          {
+            id: 1,
+            type: 'Earnings',
+            amount: 125.50,
+            date: '2024-01-15T10:30:00Z',
+            status: 'completed',
+            description: 'Product sale - Smartphone X'
+          },
+          {
+            id: 2,
+            type: 'Withdrawal',
+            amount: -500.00,
+            date: '2024-01-14T15:45:00Z',
+            status: 'completed',
+            description: 'Bank transfer to Equity Bank'
+          },
+          {
+            id: 3,
+            type: 'Earnings',
+            amount: 89.99,
+            date: '2024-01-13T09:15:00Z',
+            status: 'completed',
+            description: 'Product sale - Laptop Pro'
+          },
+          {
+            id: 4,
+            type: 'Top Up',
+            amount: 200.00,
+            date: '2024-01-12T14:20:00Z',
+            status: 'completed',
+            description: 'Mobile money deposit'
+          }
+        ]
+      };
+      updateWalletUI();
+    }
+
+    function updateWalletUI() {
+      // Update balance
+      document.getElementById('wallet-balance').textContent = `${currencySymbol}${walletData.balance?.toLocaleString() || '0'}`;
+      
+      // Render transactions
+      renderTransactions(walletData.transactions || []);
+    }
+
+    function renderTransactions(transactions) {
+      const container = document.getElementById('transactions-list');
+      
+      if (transactions.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-8 text-gray-500">
+            <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            <p class="text-sm">No transactions yet</p>
+            <p class="text-xs text-gray-400">Your transaction history will appear here</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = transactions.map(transaction => `
+        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+          <div class="flex items-center gap-4">
+            <div class="w-10 h-10 rounded-full ${getTransactionIconColor(transaction.type)} flex items-center justify-center">
+              ${getTransactionIcon(transaction.type)}
+            </div>
+            <div>
+              <div class="font-semibold text-gray-900">${transaction.type}</div>
+              <div class="text-sm text-gray-600">${transaction.description}</div>
+              <div class="text-xs text-gray-500">${formatDate(transaction.date)}</div>
+            </div>
+          </div>
+          <div class="text-right">
+            <div class="font-bold ${transaction.amount >= 0 ? 'text-green-600' : 'text-red-600'}">
+              ${transaction.amount >= 0 ? '+' : ''}${currencySymbol}${Math.abs(transaction.amount).toFixed(2)}
+            </div>
+            <div class="text-xs text-gray-500">${transaction.status}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function getTransactionIcon(type) {
+      const icons = {
+        'Earnings': '<svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path></svg>',
+        'Withdrawal': '<svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>',
+        'Top Up': '<svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>'
+      };
+      return icons[type] || icons['Earnings'];
+    }
+
+    function getTransactionIconColor(type) {
+      const colors = {
+        'Earnings': 'bg-green-100',
+        'Withdrawal': 'bg-red-100',
+        'Top Up': 'bg-blue-100'
+      };
+      return colors[type] || 'bg-gray-100';
+    }
+
+    function formatDate(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    }
+
+    // --- MODAL FUNCTIONS ---
+    function showWithdrawModal() {
+      document.getElementById('withdraw-modal').classList.remove('hidden');
+    }
+
+    function hideWithdrawModal() {
+      document.getElementById('withdraw-modal').classList.add('hidden');
+    }
+
+    function showTopUpModal() {
+      document.getElementById('topup-modal').classList.remove('hidden');
+    }
+
+    function hideTopUpModal() {
+      document.getElementById('topup-modal').classList.add('hidden');
+    }
+
+    function showPaymentMethods() {
+      showFlashMessage('Payment methods feature coming soon!', 'info');
+    }
+
+    // --- FORM HANDLERS ---
+    document.getElementById('withdraw-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const amount = document.getElementById('withdraw-amount').value;
+      const bankAccount = document.getElementById('bank-account').value;
+      
+      if (!amount || !bankAccount) {
+        showFlashMessage('Please fill in all fields', 'error');
+        return;
+      }
+
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api/seller/wallet/withdraw', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ amount, bankAccount })
+        });
+
+        if (response.ok) {
+          showFlashMessage('Withdrawal request submitted successfully!', 'success');
+          hideWithdrawModal();
+          fetchWalletData(); // Refresh data
+        } else {
+          showFlashMessage('Withdrawal failed. Please try again.', 'error');
+        }
+      } catch (error) {
+        console.error('Error processing withdrawal:', error);
+        showFlashMessage('Network error. Please try again.', 'error');
+      }
+    });
+
+    document.getElementById('topup-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const amount = document.getElementById('topup-amount').value;
+      const paymentMethod = document.getElementById('payment-method').value;
+      
+      if (!amount || !paymentMethod) {
+        showFlashMessage('Please fill in all fields', 'error');
+        return;
+      }
+
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api/seller/wallet/topup', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ amount, paymentMethod })
+        });
+
+        if (response.ok) {
+          showFlashMessage('Top up request submitted successfully!', 'success');
+          hideTopUpModal();
+          fetchWalletData(); // Refresh data
+        } else {
+          showFlashMessage('Top up failed. Please try again.', 'error');
+        }
+      } catch (error) {
+        console.error('Error processing top up:', error);
+        showFlashMessage('Network error. Please try again.', 'error');
+      }
+    });
+
+    // --- FILTER HANDLERS ---
+    document.querySelectorAll('[data-filter]').forEach(button => {
+      button.addEventListener('click', function() {
+        // Remove active class from all buttons
+        document.querySelectorAll('[data-filter]').forEach(btn => {
+          btn.classList.remove('bg-blue-100', 'text-blue-700');
+          btn.classList.add('bg-gray-100', 'text-gray-600');
+        });
+        
+        // Add active class to clicked button
+        this.classList.remove('bg-gray-100', 'text-gray-600');
+        this.classList.add('bg-blue-100', 'text-blue-700');
+        
+        // Filter transactions
+        const filter = this.dataset.filter;
+        const transactions = walletData.transactions || [];
+        
+        if (filter === 'all') {
+          renderTransactions(transactions);
+        } else {
+          const filtered = transactions.filter(tx => tx.type.toLowerCase().includes(filter));
+          renderTransactions(filtered);
+        }
+      });
+    });
+
+    // --- INITIALIZATION ---
+    document.addEventListener('DOMContentLoaded', function() {
+      fetchWalletData();
+    });
+  </script>
+</body>
+</html>

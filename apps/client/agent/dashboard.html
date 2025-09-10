@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Dashboard Router | African Deals Domain</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .spinner {
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="min-h-screen gradient-bg">
+    <div class="flex items-center justify-center min-h-screen">
+        <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-8 max-w-md w-full mx-4 text-center fade-in">
+            <!-- Loading State -->
+            <div id="loading-state">
+                <div class="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-shipping-fast text-white text-3xl"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-white mb-4">Agent Dashboard</h1>
+                <p class="text-white/80 mb-6">Redirecting to your specialized dashboard...</p>
+                <div class="spinner mx-auto mb-4"></div>
+                <p class="text-white/60 text-sm">Please wait while we load your dashboard</p>
+            </div>
+
+            <!-- Error State -->
+            <div id="error-state" class="hidden">
+                <div class="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-exclamation-triangle text-red-400 text-3xl"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-white mb-4">Access Error</h1>
+                <p id="error-message" class="text-white/80 mb-6">Unable to determine your agent type</p>
+                <div class="space-y-3">
+                    <button onclick="retryRedirection()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-300">
+                        <i class="fas fa-redo mr-2"></i>Try Again
+                    </button>
+                    <a href="/auth/auth-agent.html" class="block w-full bg-white/20 hover:bg-white/30 text-white font-semibold py-3 px-6 rounded-lg transition duration-300">
+                        <i class="fas fa-sign-in-alt mr-2"></i>Back to Login
+                    </a>
+                </div>
+            </div>
+
+            <!-- Agent Type Selection (Fallback) -->
+            <div id="selection-state" class="hidden">
+                <div class="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-user-cog text-white text-3xl"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-white mb-4">Select Your Dashboard</h1>
+                <p class="text-white/80 mb-6">Choose your agent type to access the appropriate dashboard</p>
+                <div class="space-y-3">
+                    <button onclick="redirectToDashboard('fast_delivery')" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-300 text-left">
+                        <i class="fas fa-motorcycle mr-3"></i>
+                        <div>
+                            <div class="font-bold">Fast Delivery Agent</div>
+                            <div class="text-sm opacity-80">Grocery & Local Market Delivery</div>
+                        </div>
+                    </button>
+                    <button onclick="redirectToDashboard('pickup_delivery')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-300 text-left">
+                        <i class="fas fa-truck mr-3"></i>
+                        <div>
+                            <div class="font-bold">Pickup Delivery Agent</div>
+                            <div class="text-sm opacity-80">Physical Products Collection & Delivery</div>
+                        </div>
+                    </button>
+                    <button onclick="redirectToDashboard('pickup_site_manager')" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-300 text-left">
+                        <i class="fas fa-store mr-3"></i>
+                        <div>
+                            <div class="font-bold">Pickup Site Manager</div>
+                            <div class="text-sm opacity-80">Smart Assistant & Community Agent</div>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Agent Dashboard Router
+        class AgentDashboardRouter {
+            constructor() {
+                this.init();
+            }
+
+            async init() {
+                console.log('[AGENT-ROUTER] Initializing agent dashboard router...');
+                
+                // Check authentication first
+                if (!this.checkAuthentication()) {
+                    this.redirectToLogin('Authentication required');
+                    return;
+                }
+
+                // Get user data and determine agent type
+                const userData = this.getUserData();
+                if (!userData || userData.role !== 'agent') {
+                    this.showError('Invalid user role. Agent access required.');
+                    return;
+                }
+
+                // Route based on agent type
+                await this.routeToAgentDashboard(userData);
+            }
+
+            checkAuthentication() {
+                // Check both possible token storage keys for compatibility
+                const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+                const userData = localStorage.getItem('userData') || localStorage.getItem('user');
+                
+                return !!(token && userData);
+            }
+
+            getUserData() {
+                try {
+                    // Try both possible storage keys
+                    let userData = localStorage.getItem('userData');
+                    if (!userData) {
+                        userData = localStorage.getItem('user');
+                    }
+                    
+                    return userData ? JSON.parse(userData) : null;
+                } catch (error) {
+                    console.error('[AGENT-ROUTER] Error parsing user data:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+                    return null;
+                }
+            }
+
+            async routeToAgentDashboard(userData) {
+                console.log('[AGENT-ROUTER] User data:', userData);
+                
+                let agentType = userData.agent_type;
+                
+                // If agent type is not in user data, try to fetch it from the server
+                if (!agentType) {
+                    console.log('[AGENT-ROUTER] Agent type not found in user data, fetching from server...');
+                    agentType = await this.fetchAgentTypeFromServer();
+                }
+
+                // Route to appropriate dashboard
+                if (agentType) {
+                    this.redirectToDashboard(agentType);
+                } else {
+                    console.log('[AGENT-ROUTER] Could not determine agent type, redirecting to selection page');
+                    this.redirectToAgentTypeSelection();
+                }
+            }
+
+            async fetchAgentTypeFromServer() {
+                try {
+                    const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+                    const response = await fetch('/api/agents/profile', {
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        console.log('[AGENT-ROUTER] Agent profile data:', data);
+                        
+                        if (data.agent && data.agent.agent_type) {
+                            // Update user data with agent type
+                            const userData = this.getUserData();
+                            userData.agent_type = data.agent.agent_type;
+                            
+                            // Store with both keys for compatibility
+                            localStorage.setItem('userData', JSON.stringify(userData));
+                            localStorage.setItem('user', JSON.stringify(userData));
+                            
+                            return data.agent.agent_type;
+                        }
+                    } else {
+                        console.error('[AGENT-ROUTER] Failed to fetch agent profile:', response.status);
+                
+                // Enhanced error reporting
+                if (response.status) {
+                    const errorDetails = {
+                        message: response.status.message || 'Unknown error',
+                        stack: response.status.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        response.status.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+                    }
+                } catch (error) {
+                    console.error('[AGENT-ROUTER] Error fetching agent type:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+                }
+                
+                return null;
+            }
+
+            redirectToDashboard(agentType) {
+                console.log(`[AGENT-ROUTER] Redirecting to dashboard for agent type: ${agentType}`);
+                
+                const dashboardUrls = {
+                    'fast_delivery': '/agent/fast-delivery-dashboard-complete.html',
+                    'pickup_delivery': '/agent/pickup-delivery-dashboard.html',
+                    'pickup_site_manager': '/agent/psm-dashboard.html'
+                };
+
+                const redirectUrl = dashboardUrls[agentType];
+                
+                if (redirectUrl) {
+                    // Add a small delay for better UX
+                    setTimeout(() => {
+                        window.location.href = redirectUrl;
+                    }, 1000);
+                } else {
+                    this.showError(`Unknown agent type: ${agentType}`);
+                }
+            }
+
+            showAgentTypeSelection() {
+                document.getElementById('loading-state').classList.add('hidden');
+                document.getElementById('error-state').classList.add('hidden');
+                document.getElementById('selection-state').classList.remove('hidden');
+            }
+
+            showError(message) {
+                document.getElementById('loading-state').classList.add('hidden');
+                document.getElementById('selection-state').classList.add('hidden');
+                document.getElementById('error-message').textContent = message;
+                document.getElementById('error-state').classList.remove('hidden');
+            }
+
+            redirectToLogin(reason) {
+                console.log(`[AGENT-ROUTER] Redirecting to login: ${reason}`);
+                setTimeout(() => {
+                    window.location.href = '/auth/auth-agent.html';
+                }, 1500);
+            }
+
+            redirectToAgentTypeSelection() {
+                console.log('[AGENT-ROUTER] Redirecting to agent type selection...');
+                setTimeout(() => {
+                    window.location.href = '/agent/select-agent-type.html';
+                }, 1000);
+            }
+        }
+
+        // Global functions for button clicks
+        function redirectToDashboard(agentType) {
+            const router = new AgentDashboardRouter();
+            router.redirectToDashboard(agentType);
+        }
+
+        function retryRedirection() {
+            location.reload();
+        }
+
+        // Initialize router when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            new AgentDashboardRouter();
+        });
+    </script>
+
+<script>
+// Enhanced Notification System
+function showNotification(message, type = 'info', duration = 4000) {
+    // Remove existing notifications
+    const existingNotifications = document.querySelectorAll('.system-notification');
+    existingNotifications.forEach(notification => notification.remove());
+    
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `system-notification fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 max-w-md ${
+        type === 'success' ? 'bg-green-500 text-white' :
+        type === 'error' ? 'bg-red-500 text-white' :
+        type === 'warning' ? 'bg-yellow-500 text-black' :
+        'bg-blue-500 text-white'
+    }`;
+    
+    // Add icon based on type
+    const icon = {
+        success: '✅',
+        error: '❌',
+        warning: '⚠️',
+        info: 'ℹ️'
+    }[type] || 'ℹ️';
+    
+    notification.innerHTML = `
+        <div class="flex items-center space-x-2">
+            <span class="text-lg">${icon}</span>
+            <span class="flex-1">${message}</span>
+            <button onclick="this.parentElement.parentElement.remove()" class="text-white/80 hover:text-white text-lg leading-none">&times;</button>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto-remove after duration
+    if (duration > 0) {
+        setTimeout(() => {
+            if (notification.parentElement) {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => notification.remove(), 300);
+            }
+        }, duration);
+    }
+    
+    return notification;
+}
+
+// Global error handler
+window.addEventListener('error', function(event) {
+    console.error('Global error:', event.error);
+                
+                // Enhanced error reporting
+                if (event.error) {
+                    const errorDetails = {
+                        message: event.error.message || 'Unknown error',
+                        stack: event.error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        event.error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+    showNotification('An unexpected error occurred', 'error');
+});
+
+// Global unhandled promise rejection handler
+window.addEventListener('unhandledrejection', function(event) {
+    console.error('Unhandled promise rejection:', event.reason);
+                
+                // Enhanced error reporting
+                if (event.reason) {
+                    const errorDetails = {
+                        message: event.reason.message || 'Unknown error',
+                        stack: event.reason.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        event.reason.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+    showNotification('Operation failed unexpectedly', 'error');
+});
+</script>
+</body>
+</html>

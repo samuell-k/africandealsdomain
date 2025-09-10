@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Support Ticket Detail | ADD Physical Products</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .fade-in { animation: fadeIn 0.5s; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .glass { backdrop-filter: blur(10px); background: rgba(255, 255, 255, 0.8); }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+  <!-- Header -->
+  <header class="glass bg-white/80 shadow-md border-b border-gray-200 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto flex items-center justify-between px-4 py-3 md:py-4">
+      <a href="/seller/dashboard.html" class="flex items-center gap-3">
+        <img src="/public/images/logo.png" alt="ADD Logo" class="h-10 w-10 md:h-12 md:w-12 rounded-xl shadow" />
+        <span class="font-extrabold text-xl md:text-2xl text-[#0e2038]">ADD Physical Products</span>
+      </a>
+      <div class="flex items-center gap-2 md:gap-4">
+        <a href="/seller/support-tickets.html" class="px-3 py-2 md:px-4 md:py-2 rounded-lg font-semibold text-[#0e2038] border-2 border-[#0e2038] bg-transparent hover:bg-[#0e2038] hover:text-white transition-colors">Back to Tickets</a>
+        <button id="logout-btn" class="px-3 py-2 md:px-4 md:py-2 rounded-lg font-semibold text-white bg-gradient-to-r from-[#0e2038] to-[#23325c] hover:shadow-lg transition-shadow">Logout</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Notification Container -->
+  <div id="notification-container" class="fixed top-4 right-4 z-50"></div>
+
+  <main class="flex-1 container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto">
+      <!-- Loading State -->
+      <div id="loading-state" class="text-center py-12">
+        <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <p class="mt-2 text-gray-600">Loading ticket details...</p>
+      </div>
+
+      <!-- Ticket Details -->
+      <div id="ticket-details" class="hidden">
+        <!-- Page Header -->
+        <div class="mb-8">
+          <div class="flex items-center gap-4 mb-4">
+            <a href="/seller/support-tickets.html" class="text-blue-600 hover:text-blue-700 flex items-center gap-2">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+              </svg>
+              Back to Tickets
+            </a>
+          </div>
+          <div class="flex items-center justify-between">
+            <div>
+              <h1 class="text-3xl md:text-4xl font-bold text-[#0e2038] mb-2" id="ticket-title">Support Ticket</h1>
+              <p class="text-gray-600">Manage and respond to customer support request</p>
+            </div>
+            <div class="flex items-center gap-3">
+              <span id="ticket-status" class="px-3 py-1 text-sm font-medium rounded-full"></span>
+              <span id="ticket-priority" class="px-3 py-1 text-sm font-medium rounded-full"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ticket Info Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                </svg>
+              </div>
+              <div>
+                <p class="text-sm font-medium text-gray-600">Customer</p>
+                <p class="font-semibold text-gray-900" id="customer-name">Loading...</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+              </div>
+              <div>
+                <p class="text-sm font-medium text-gray-600">Created</p>
+                <p class="font-semibold text-gray-900" id="created-date">Loading...</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+              </div>
+              <div>
+                <p class="text-sm font-medium text-gray-600">Last Updated</p>
+                <p class="font-semibold text-gray-900" id="updated-date">Loading...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ticket Content -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 mb-6">
+          <div class="p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Ticket Details</h3>
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                <p class="text-gray-900 font-medium" id="ticket-subject">Loading...</p>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <p class="text-gray-900" id="ticket-description">Loading...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Messages Section -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 mb-6">
+          <div class="p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Messages</h3>
+            <div id="messages-container" class="space-y-4">
+              <!-- Messages will be loaded here -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Reply Form -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+          <div class="p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Send Reply</h3>
+            <form id="reply-form">
+              <div class="mb-4">
+                <label for="reply-message" class="block text-sm font-medium text-gray-700 mb-2">Message</label>
+                <textarea 
+                  id="reply-message" 
+                  name="message" 
+                  rows="4" 
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  placeholder="Type your reply..."
+                  required
+                ></textarea>
+              </div>
+              <div class="flex items-center gap-3">
+                <button 
+                  type="submit" 
+                  class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                >
+                  Send Reply
+                </button>
+                <button 
+                  type="button" 
+                  id="update-status-btn"
+                  class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
+                >
+                  Update Status
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error State -->
+      <div id="error-state" class="hidden text-center py-12">
+        <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Ticket Not Found</h3>
+        <p class="text-gray-600 mb-4">The support ticket you're looking for doesn't exist or you don't have permission to view it.</p>
+        <a href="/seller/support-tickets.html" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+          Back to Tickets
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Global state
+    let currentTicket = null;
+    let ticketId = null;
+
+    // DOM elements
+    const loadingState = document.getElementById('loading-state');
+    const ticketDetails = document.getElementById('ticket-details');
+    const errorState = document.getElementById('error-state');
+    const replyForm = document.getElementById('reply-form');
+    const updateStatusBtn = document.getElementById('update-status-btn');
+
+    // Check authentication
+    function checkAuth() {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        window.location.href = '/auth/auth-seller.html';
+        return false;
+      }
+      return true;
+    }
+
+    // Get ticket ID from URL
+    function getTicketId() {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get('id');
+    }
+
+    // Show notification
+    function showNotification(message, type = 'info') {
+      const notification = document.createElement('div');
+      let bgColor = 'bg-blue-500';
+      let icon = 'ℹ️';
+      
+      if (type === 'success') {
+        bgColor = 'bg-green-500';
+        icon = '✅';
+      } else if (type === 'error') {
+        bgColor = 'bg-red-500';
+        icon = '❌';
+      } else if (type === 'warning') {
+        bgColor = 'bg-yellow-500';
+        icon = '⚠️';
+      }
+      
+      notification.className = `px-4 py-2 rounded-lg text-white ${bgColor} shadow-lg flex items-center gap-2 animate-fade-in`;
+      notification.innerHTML = `<span>${icon}</span><span>${message}</span>`;
+      
+      const container = document.getElementById('notification-container');
+      container.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.remove();
+      }, 3000);
+    }
+
+    // Load ticket details
+    async function loadTicketDetails() {
+      try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch(`/api/seller/support-tickets/${ticketId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to load ticket details');
+        }
+
+        const data = await response.json();
+        currentTicket = data.ticket;
+        
+        renderTicketDetails();
+        hideLoading();
+      } catch (error) {
+        console.error('Error loading ticket details:', error);
+        showNotification('Failed to load ticket details', 'error');
+        hideLoading();
+        showErrorState();
+      }
+    }
+
+    // Render ticket details
+    function renderTicketDetails() {
+      if (!currentTicket) return;
+
+      // Update page title
+      document.getElementById('ticket-title').textContent = `Support Ticket #${currentTicket.id}`;
+      document.getElementById('ticket-subject').textContent = currentTicket.subject;
+      document.getElementById('ticket-description').textContent = currentTicket.description || 'No description provided';
+      document.getElementById('customer-name').textContent = currentTicket.customer_name || 'Unknown Customer';
+      document.getElementById('created-date').textContent = formatDate(currentTicket.created_at);
+      document.getElementById('updated-date').textContent = formatDate(currentTicket.updated_at);
+
+      // Update status and priority badges
+      updateStatusBadge(currentTicket.status);
+      if (currentTicket.priority) {
+        updatePriorityBadge(currentTicket.priority);
+      }
+
+      // Render messages
+      renderMessages(currentTicket.messages || []);
+
+      ticketDetails.classList.remove('hidden');
+    }
+
+    // Update status badge
+    function updateStatusBadge(status) {
+      const statusElement = document.getElementById('ticket-status');
+      const colors = {
+        'open': 'bg-red-100 text-red-800',
+        'in_progress': 'bg-yellow-100 text-yellow-800',
+        'resolved': 'bg-green-100 text-green-800',
+        'closed': 'bg-gray-100 text-gray-800'
+      };
+      
+      statusElement.className = `px-3 py-1 text-sm font-medium rounded-full ${colors[status] || 'bg-gray-100 text-gray-800'}`;
+      statusElement.textContent = status.replace('_', ' ').toUpperCase();
+    }
+
+    // Update priority badge
+    function updatePriorityBadge(priority) {
+      const priorityElement = document.getElementById('ticket-priority');
+      const colors = {
+        'low': 'bg-green-100 text-green-800',
+        'medium': 'bg-yellow-100 text-yellow-800',
+        'high': 'bg-orange-100 text-orange-800',
+        'urgent': 'bg-red-100 text-red-800'
+      };
+      
+      priorityElement.className = `px-3 py-1 text-sm font-medium rounded-full ${colors[priority] || 'bg-gray-100 text-gray-800'}`;
+      priorityElement.textContent = priority.toUpperCase();
+    }
+
+    // Render messages
+    function renderMessages(messages) {
+      const container = document.getElementById('messages-container');
+      
+      if (messages.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-8 text-gray-500">
+            <p>No messages yet.</p>
+          </div>
+        `;
+        return;
+      }
+
+      const html = messages.map(message => `
+        <div class="border border-gray-200 rounded-lg p-4 ${message.sender_type === 'seller' ? 'bg-blue-50' : 'bg-gray-50'}">
+          <div class="flex items-start justify-between mb-2">
+            <div class="flex items-center gap-2">
+              <span class="font-semibold text-gray-900">${message.sender_name}</span>
+              <span class="px-2 py-1 text-xs font-medium rounded-full ${message.sender_type === 'seller' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}">
+                ${message.sender_type === 'seller' ? 'Seller' : 'Customer'}
+              </span>
+            </div>
+            <span class="text-xs text-gray-500">${formatDate(message.created_at)}</span>
+          </div>
+          <p class="text-gray-900">${message.content}</p>
+        </div>
+      `).join('');
+
+      container.innerHTML = html;
+    }
+
+    // Format date
+    function formatDate(dateString) {
+      if (!dateString) return 'N/A';
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
+    // Send reply
+    async function sendReply(message) {
+      try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch(`/api/seller/support-tickets/${ticketId}/reply`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ message })
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to send reply');
+        }
+
+        const data = await response.json();
+        showNotification('Reply sent successfully', 'success');
+        
+        // Reload ticket details to show new message
+        await loadTicketDetails();
+        
+        return true;
+      } catch (error) {
+        console.error('Error sending reply:', error);
+        showNotification('Failed to send reply', 'error');
+        return false;
+      }
+    }
+
+    // Update ticket status
+    async function updateTicketStatus(status) {
+      try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch(`/api/seller/support-tickets/${ticketId}/status`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ status })
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to update status');
+        }
+
+        const data = await response.json();
+        showNotification('Status updated successfully', 'success');
+        
+        // Reload ticket details
+        await loadTicketDetails();
+        
+        return true;
+      } catch (error) {
+        console.error('Error updating status:', error);
+        showNotification('Failed to update status', 'error');
+        return false;
+      }
+    }
+
+    // Show/hide loading state
+    function hideLoading() {
+      loadingState.classList.add('hidden');
+    }
+
+    function showErrorState() {
+      errorState.classList.remove('hidden');
+    }
+
+    // Event listeners
+    replyForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const messageInput = document.getElementById('reply-message');
+      const message = messageInput.value.trim();
+      
+      if (!message) {
+        showNotification('Please enter a message', 'warning');
+        return;
+      }
+
+      const success = await sendReply(message);
+      if (success) {
+        messageInput.value = '';
+      }
+    });
+
+    updateStatusBtn.addEventListener('click', async () => {
+      const statuses = ['open', 'in_progress', 'resolved', 'closed'];
+      const currentStatus = currentTicket.status;
+      const currentIndex = statuses.indexOf(currentStatus);
+      const nextStatus = statuses[(currentIndex + 1) % statuses.length];
+      
+      const success = await updateTicketStatus(nextStatus);
+    });
+
+    // Logout functionality
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('userData');
+      window.location.href = '/';
+    });
+
+    // Initialize
+    if (checkAuth()) {
+      ticketId = getTicketId();
+      if (ticketId) {
+        loadTicketDetails();
+      } else {
+        showErrorState();
+        hideLoading();
+      }
+    }
+  </script>
+</body>
+</html>

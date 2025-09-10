@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Pending | African Deals Domain</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .glass-morphism {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .status-pending { background: #fef3c7; color: #92400e; }
+        .status-under_review { background: #dbeafe; color: #1e40af; }
+        .status-approved { background: #d1fae5; color: #065f46; }
+        .status-rejected { background: #fee2e2; color: #991b1b; }
+        .status-requires_resubmission { background: #fef3c7; color: #92400e; }
+    </style>
+</head>
+<body class="min-h-screen gradient-bg">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <div class="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-clock text-white text-3xl pulse-animation"></i>
+            </div>
+            <h1 class="text-4xl font-bold text-white mb-2">Application Under Review</h1>
+            <p class="text-white/80 text-lg">Your agent application is being processed</p>
+        </div>
+
+        <!-- Status Card -->
+        <div class="max-w-2xl mx-auto">
+            <div class="glass-morphism rounded-2xl p-8 mb-8">
+                <div id="statusContent">
+                    <!-- Dynamic content will be loaded here -->
+                    <div class="text-center">
+                        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+                        <p class="text-white">Loading your application status...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="text-center space-y-4">
+                <button onclick="checkStatus()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors">
+                    <i class="fas fa-refresh mr-2"></i>Refresh Status
+                </button>
+                
+                <div class="flex justify-center space-x-4">
+                    <a href="auth-agent.html" class="text-white/70 hover:text-white text-sm">
+                        <i class="fas fa-arrow-left mr-2"></i>Back to Login
+                    </a>
+                    <a href="mailto:support@africandeals.com" class="text-white/70 hover:text-white text-sm">
+                        <i class="fas fa-envelope mr-2"></i>Contact Support
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Information Cards -->
+        <div class="max-w-4xl mx-auto mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Review Process -->
+            <div class="glass-morphism rounded-xl p-6 text-center">
+                <div class="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-search text-blue-400 text-xl"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-white mb-3">Review Process</h3>
+                <p class="text-white/80 text-sm">Our team carefully reviews all documents and information to ensure platform security and quality.</p>
+            </div>
+
+            <!-- Timeline -->
+            <div class="glass-morphism rounded-xl p-6 text-center">
+                <div class="w-12 h-12 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-clock text-yellow-400 text-xl"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-white mb-3">Review Timeline</h3>
+                <p class="text-white/80 text-sm">Applications are typically reviewed within 2-3 business days. Complex cases may take longer.</p>
+            </div>
+
+            <!-- Next Steps -->
+            <div class="glass-morphism rounded-xl p-6 text-center">
+                <div class="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-check-circle text-green-400 text-xl"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-white mb-3">Next Steps</h3>
+                <p class="text-white/80 text-sm">Once approved, you'll receive login credentials and access to your agent dashboard.</p>
+            </div>
+        </div>
+
+        <!-- FAQ Section -->
+        <div class="max-w-3xl mx-auto mt-12">
+            <div class="glass-morphism rounded-2xl p-8">
+                <h2 class="text-2xl font-bold text-white mb-6 text-center">Frequently Asked Questions</h2>
+                
+                <div class="space-y-6">
+                    <div class="border-b border-white/20 pb-4">
+                        <h3 class="text-lg font-semibold text-white mb-2">How long does the review process take?</h3>
+                        <p class="text-white/80">Most applications are reviewed within 2-3 business days. However, if additional verification is needed, it may take up to 5 business days.</p>
+                    </div>
+                    
+                    <div class="border-b border-white/20 pb-4">
+                        <h3 class="text-lg font-semibold text-white mb-2">What happens if my application is rejected?</h3>
+                        <p class="text-white/80">If your application is rejected, you'll receive an email with the specific reasons. You can address these issues and resubmit your application.</p>
+                    </div>
+                    
+                    <div class="border-b border-white/20 pb-4">
+                        <h3 class="text-lg font-semibold text-white mb-2">Can I update my application after submission?</h3>
+                        <p class="text-white/80">Once submitted, applications cannot be modified. If changes are needed, our team will contact you or request a resubmission.</p>
+                    </div>
+                    
+                    <div>
+                        <h3 class="text-lg font-semibold text-white mb-2">How will I be notified of the decision?</h3>
+                        <p class="text-white/80">You'll receive notifications via email and SMS. You can also check your status on this page at any time.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentUserId = null;
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Try to get user ID from URL parameters or localStorage
+            const urlParams = new URLSearchParams(window.location.search);
+            currentUserId = urlParams.get('userId') || localStorage.getItem('pendingAgentUserId');
+            
+            if (currentUserId) {
+                checkStatus();
+                // Set up auto-refresh every 30 seconds
+                setInterval(checkStatus, 30000);
+            } else {
+                showNoUserError();
+            }
+        });
+
+        // Check application status
+        async function checkStatus() {
+            if (!currentUserId) {
+                showNoUserError();
+                return;
+            }
+
+            try {
+                const response = await (async () => {
+                    try {
+                        const response = await fetch('/api/auth/registration-status/${currentUserId}', {});
+                        
+                        if (!response.ok) {
+                            const errorText = await response.text();
+                            let errorMessage = 'Request failed';
+                            
+                            try {
+                                const errorData = JSON.parse(errorText);
+                                errorMessage = errorData.message || errorData.error || errorMessage;
+                            } catch (e) {
+                                errorMessage = errorText || `HTTP ${response.status}: ${response.statusText}`;
+                            }
+                            
+                            throw new Error(errorMessage);
+                        }
+                        
+                        return response;
+                    } catch (error) {
+                        console.error('API call failed:', {
+                            url: '/api/auth/registration-status/${currentUserId}',
+                            error: error.message,
+                            timestamp: new Date().toISOString()
+                        });
+                        
+                        showNotification(
+                            error.message || 'Request failed. Please try again.',
+                            'error'
+                        );
+                        
+                        throw error;
+                    }
+                })();
+                const result = await response.json();
+                
+                if (response.ok) {
+                    displayStatus(result.data);
+                } else {
+                    showError('Failed to load application status');
+                }
+            } catch (error) {
+                console.error('Error checking status:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+                showError('Error loading application status');
+            }
+        }
+
+        // Display application status
+        function displayStatus(statusData) {
+            const statusContent = document.getElementById('statusContent');
+            
+            const statusClass = `status-${statusData.verification_status}`;
+            const statusText = statusData.verification_status.replace('_', ' ').toUpperCase();
+            
+            let statusIcon, statusMessage, actionButtons = '';
+            
+            switch(statusData.verification_status) {
+                case 'pending':
+                    statusIcon = 'fas fa-clock text-yellow-400';
+                    statusMessage = 'Your application has been received and is waiting for review.';
+                    break;
+                case 'under_review':
+                    statusIcon = 'fas fa-search text-blue-400';
+                    statusMessage = 'Our team is currently reviewing your application and documents.';
+                    break;
+                case 'approved':
+                    statusIcon = 'fas fa-check-circle text-green-400';
+                    statusMessage = 'Congratulations! Your application has been approved.';
+                    actionButtons = `
+                        <div class="mt-6">
+                            <a href="auth-agent.html" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors inline-block">
+                                <i class="fas fa-sign-in-alt mr-2"></i>Login to Dashboard
+                            </a>
+                        </div>
+                    `;
+                    break;
+                case 'rejected':
+                    statusIcon = 'fas fa-times-circle text-red-400';
+                    statusMessage = 'Unfortunately, your application has been rejected.';
+                    actionButtons = `
+                        <div class="mt-6">
+                            <a href="agent-registration-enhanced.html" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors inline-block">
+                                <i class="fas fa-redo mr-2"></i>Submit New Application
+                            </a>
+                        </div>
+                    `;
+                    break;
+                case 'requires_resubmission':
+                    statusIcon = 'fas fa-exclamation-triangle text-yellow-400';
+                    statusMessage = 'Your application requires additional information or corrections.';
+                    actionButtons = `
+                        <div class="mt-6">
+                            <a href="agent-registration-enhanced.html" class="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors inline-block">
+                                <i class="fas fa-edit mr-2"></i>Update Application
+                            </a>
+                        </div>
+                    `;
+                    break;
+            }
+
+            statusContent.innerHTML = `
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="${statusIcon} text-3xl"></i>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium ${statusClass}">
+                            ${statusText}
+                        </span>
+                    </div>
+                    
+                    <h2 class="text-2xl font-bold text-white mb-4">Hello, ${statusData.first_name}!</h2>
+                    <p class="text-white/80 text-lg mb-6">${statusMessage}</p>
+                    
+                    ${statusData.admin_notes ? `
+                        <div class="bg-white/10 rounded-lg p-4 mb-6">
+                            <h3 class="text-white font-semibold mb-2">Admin Notes:</h3>
+                            <p class="text-white/80">${statusData.admin_notes}</p>
+                        </div>
+                    ` : ''}
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+                        <div class="bg-white/5 rounded-lg p-4">
+                            <h4 class="text-white font-semibold mb-2">Application Details</h4>
+                            <p class="text-white/70 text-sm">Agent Type: ${statusData.agent_type.replace('_', ' ')}</p>
+                            <p class="text-white/70 text-sm">Submitted: ${new Date(statusData.submitted_at).toLocaleDateString()}</p>
+                            ${statusData.reviewed_at ? `<p class="text-white/70 text-sm">Reviewed: ${new Date(statusData.reviewed_at).toLocaleDateString()}</p>` : ''}
+                        </div>
+                        
+                        <div class="bg-white/5 rounded-lg p-4">
+                            <h4 class="text-white font-semibold mb-2">Contact Information</h4>
+                            <p class="text-white/70 text-sm">Support: support@africandeals.com</p>
+                            <p class="text-white/70 text-sm">Phone: +250 788 123 456</p>
+                            <p class="text-white/70 text-sm">Hours: Mon-Fri 8AM-6PM</p>
+                        </div>
+                    </div>
+                    
+                    ${actionButtons}
+                </div>
+            `;
+        }
+
+        // Show error when no user ID is available
+        function showNoUserError() {
+            const statusContent = document.getElementById('statusContent');
+            statusContent.innerHTML = `
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="fas fa-exclamation-triangle text-red-400 text-3xl"></i>
+                    </div>
+                    
+                    <h2 class="text-2xl font-bold text-white mb-4">Unable to Load Status</h2>
+                    <p class="text-white/80 mb-6">We couldn't find your application. Please make sure you're using the correct link from your confirmation email.</p>
+                    
+                    <div class="space-y-4">
+                        <a href="agent-registration-enhanced.html" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors inline-block">
+                            <i class="fas fa-plus mr-2"></i>Submit New Application
+                        </a>
+                        <br>
+                        <a href="mailto:support@africandeals.com" class="text-white/70 hover:text-white text-sm">
+                            <i class="fas fa-envelope mr-2"></i>Contact Support
+                        </a>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Show general error
+        function showError(message) {
+            const statusContent = document.getElementById('statusContent');
+            statusContent.innerHTML = `
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="fas fa-exclamation-circle text-red-400 text-3xl"></i>
+                    </div>
+                    
+                    <h2 class="text-2xl font-bold text-white mb-4">Error</h2>
+                    <p class="text-white/80 mb-6">${message}</p>
+                    
+                    <button onclick="checkStatus()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors">
+                        <i class="fas fa-refresh mr-2"></i>Try Again
+                    </button>
+                </div>
+            `;
+        }
+    </script>
+
+<script>
+// Enhanced Notification System
+function showNotification(message, type = 'info', duration = 4000) {
+    // Remove existing notifications
+    const existingNotifications = document.querySelectorAll('.system-notification');
+    existingNotifications.forEach(notification => notification.remove());
+    
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `system-notification fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 max-w-md ${
+        type === 'success' ? 'bg-green-500 text-white' :
+        type === 'error' ? 'bg-red-500 text-white' :
+        type === 'warning' ? 'bg-yellow-500 text-black' :
+        'bg-blue-500 text-white'
+    }`;
+    
+    // Add icon based on type
+    const icon = {
+        success: '✅',
+        error: '❌',
+        warning: '⚠️',
+        info: 'ℹ️'
+    }[type] || 'ℹ️';
+    
+    notification.innerHTML = `
+        <div class="flex items-center space-x-2">
+            <span class="text-lg">${icon}</span>
+            <span class="flex-1">${message}</span>
+            <button onclick="this.parentElement.parentElement.remove()" class="text-white/80 hover:text-white text-lg leading-none">&times;</button>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto-remove after duration
+    if (duration > 0) {
+        setTimeout(() => {
+            if (notification.parentElement) {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => notification.remove(), 300);
+            }
+        }, duration);
+    }
+    
+    return notification;
+}
+
+// Global error handler
+window.addEventListener('error', function(event) {
+    console.error('Global error:', event.error);
+                
+                // Enhanced error reporting
+                if (event.error) {
+                    const errorDetails = {
+                        message: event.error.message || 'Unknown error',
+                        stack: event.error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        event.error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+    showNotification('An unexpected error occurred', 'error');
+});
+
+// Global unhandled promise rejection handler
+window.addEventListener('unhandledrejection', function(event) {
+    console.error('Unhandled promise rejection:', event.reason);
+                
+                // Enhanced error reporting
+                if (event.reason) {
+                    const errorDetails = {
+                        message: event.reason.message || 'Unknown error',
+                        stack: event.reason.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        event.reason.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+    showNotification('Operation failed unexpectedly', 'error');
+});
+</script>
+</body>
+</html>

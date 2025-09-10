@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Referral Earnings | ADD Physical Products</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    .glass { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+    .fade-in { animation: fadeIn 0.6s ease-in-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .sidebar-link.active { background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; }
+    .sidebar-link:hover { background: #f3f4f6; }
+    .sidebar-link.active:hover { background: linear-gradient(135deg, #2563eb, #1e40af); }
+    .earnings-gradient { background: linear-gradient(135deg, #10b981, #059669); }
+    .pending-gradient { background: linear-gradient(135deg, #f59e0b, #d97706); }
+    .paid-gradient { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+    
+    /* Mobile-specific improvements */
+    @media (max-width: 640px) {
+      .mobile-scroll { -webkit-overflow-scrolling: touch; }
+      button { min-height: 44px; }
+      .mobile-card-spacing { margin-bottom: 1rem; }
+      .mobile-text-scale { font-size: 0.875rem; line-height: 1.25rem; }
+    }
+    
+    /* Tablet improvements */
+    @media (min-width: 641px) and (max-width: 1024px) {
+      .tablet-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+  <script src="/shared/auth-utils.js"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  
+  <div class="flex h-screen">
+    <!-- Sidebar -->
+    <div class="hidden lg:block w-64 bg-white shadow-lg">
+      <!-- Logo -->
+      <div class="p-6 border-b border-gray-200">
+        <div class="flex items-center gap-3">
+          <img src="/public/images/logo.png" alt="ADD Logo" class="h-10 w-10 rounded-xl shadow" />
+          <div>
+            <h1 class="font-bold text-lg text-[#0e2038]">ADD Physical</h1>
+            <p class="text-sm text-gray-600">Buyer Dashboard</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <nav class="p-4 space-y-2">
+        <a href="/buyer/buyers-home.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200">
+          <i class="fas fa-home text-lg"></i>
+          <span class="font-medium">Dashboard</span>
+        </a>
+        <a href="/buyer/products.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200">
+          <i class="fas fa-shopping-bag text-lg"></i>
+          <span class="font-medium">Products</span>
+        </a>
+        <a href="/buyer/cart.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200">
+          <i class="fas fa-shopping-cart text-lg"></i>
+          <span class="font-medium">Cart</span>
+          <span id="cart-badge" class="bg-red-500 text-white text-xs rounded-full px-2 py-1 ml-auto hidden">0</span>
+        </a>
+        <a href="/buyer/orders.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200">
+          <i class="fas fa-receipt text-lg"></i>
+          <span class="font-medium">Orders</span>
+        </a>
+        <a href="/buyer/wishlist.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200">
+          <i class="fas fa-heart text-lg"></i>
+          <span class="font-medium">Wishlist</span>
+        </a>
+        <a href="/buyer/profile.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200">
+          <i class="fas fa-user text-lg"></i>
+          <span class="font-medium">Profile</span>
+        </a>
+        <a href="/buyer/referrals.html" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200">
+          <i class="fas fa-share-alt text-lg"></i>
+          <span class="font-medium">Referrals</span>
+        </a>
+      </nav>
+
+      <!-- User Info -->
+      <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 bg-white">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
+            <i class="fas fa-user text-white"></i>
+          </div>
+          <div class="flex-1">
+            <p class="font-medium text-gray-900" id="sidebar-user-name">Loading...</p>
+            <p class="text-sm text-gray-600">Buyer Account</p>
+          </div>
+        </div>
+        <button onclick="logout()" class="w-full bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg font-medium transition-colors">
+          <i class="fas fa-sign-out-alt mr-2"></i>Logout
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Header -->
+    <div class="lg:hidden bg-white shadow-sm border-b border-gray-200 p-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <img src="/public/images/logo.png" alt="ADD Logo" class="h-8 w-8 rounded-lg shadow" />
+          <div>
+            <h1 class="font-bold text-lg text-[#0e2038]">Referrals</h1>
+            <p class="text-xs text-gray-600">Earn by sharing</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="openShareGuideModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors">
+            <i class="fas fa-question-circle mr-1"></i>Guide
+          </button>
+          <button onclick="toggleMobileMenu()" class="p-2 rounded-lg hover:bg-gray-100">
+            <i class="fas fa-bars text-gray-600"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+      <!-- Desktop Top Header -->
+      <header class="hidden lg:block bg-white shadow-sm border-b border-gray-200 px-6 py-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h1 class="text-2xl font-bold text-gray-900">Referral Earnings</h1>
+            <p class="text-gray-600">Share products and earn commissions on successful referrals</p>
+          </div>
+          <button onclick="openShareGuideModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+            <i class="fas fa-question-circle mr-2"></i>How it Works
+          </button>
+        </div>
+      </header>
+
+      <!-- Loading State -->
+      <div id="loadingState" class="flex-1 flex items-center justify-center">
+        <div class="text-center">
+          <div class="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p class="text-gray-600 text-lg">Loading your referral data...</p>
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <main id="mainContent" class="flex-1 overflow-y-auto p-3 sm:p-6 fade-in hidden">
+        <div class="max-w-6xl mx-auto space-y-4 sm:space-y-6">
+          
+          <!-- Earnings Overview -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+            <div class="earnings-gradient rounded-2xl p-4 sm:p-6 text-white">
+              <div class="flex items-center justify-between mb-4">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center">
+                  <i class="fas fa-wallet text-lg sm:text-2xl"></i>
+                </div>
+                <button onclick="openWithdrawModal()" id="withdraw-btn" 
+                        class="bg-white bg-opacity-20 hover:bg-opacity-30 px-2 py-1 sm:px-3 sm:py-1 rounded-lg text-xs sm:text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled>
+                  Withdraw
+                </button>
+              </div>
+              <div class="text-2xl sm:text-3xl font-bold mb-1" id="available-balance">0 RWF</div>
+              <div class="text-xs sm:text-sm opacity-90">Available Balance</div>
+              <div class="text-xs opacity-75 mt-1">Ready for withdrawal</div>
+            </div>
+
+            <div class="paid-gradient rounded-2xl p-4 sm:p-6 text-white">
+              <div class="flex items-center justify-between mb-4">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center">
+                  <i class="fas fa-chart-line text-lg sm:text-2xl"></i>
+                </div>
+              </div>
+              <div class="text-2xl sm:text-3xl font-bold mb-1" id="total-earned">0 RWF</div>
+              <div class="text-xs sm:text-sm opacity-90">Total Earned</div>
+              <div class="text-xs opacity-75 mt-1">All time earnings</div>
+            </div>
+
+            <div class="pending-gradient rounded-2xl p-4 sm:p-6 text-white">
+              <div class="flex items-center justify-between mb-4">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center">
+                  <i class="fas fa-clock text-lg sm:text-2xl"></i>
+                </div>
+              </div>
+              <div class="text-2xl sm:text-3xl font-bold mb-1" id="pending-amount">0 RWF</div>
+              <div class="text-xs sm:text-sm opacity-90">Pending Payment</div>
+              <div class="text-xs opacity-75 mt-1">Awaiting admin approval</div>
+            </div>
+
+            <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl p-4 sm:p-6 text-white">
+              <div class="flex items-center justify-between mb-4">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center">
+                  <i class="fas fa-mouse-pointer text-lg sm:text-2xl"></i>
+                </div>
+              </div>
+              <div class="text-2xl sm:text-3xl font-bold mb-1" id="total-clicks">0</div>
+              <div class="text-xs sm:text-sm opacity-90">Total Clicks</div>
+              <div class="text-xs opacity-75 mt-1">Link visits</div>
+            </div>
+
+            <div class="bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-2xl p-4 sm:p-6 text-white">
+              <div class="flex items-center justify-between mb-4">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center">
+                  <i class="fas fa-user-plus text-lg sm:text-2xl"></i>
+                </div>
+              </div>
+              <div class="text-2xl sm:text-3xl font-bold mb-1" id="total-registrations">0</div>
+              <div class="text-xs sm:text-sm opacity-90">Registrations</div>
+              <div class="text-xs opacity-75 mt-1">New users signed up</div>
+            </div>
+
+            <div class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl p-4 sm:p-6 text-white">
+              <div class="flex items-center justify-between mb-4">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center">
+                  <i class="fas fa-users text-lg sm:text-2xl"></i>
+                </div>
+              </div>
+              <div class="text-2xl sm:text-3xl font-bold mb-1" id="successful-referrals">0</div>
+              <div class="text-xs sm:text-sm opacity-90">Successful Referrals</div>
+              <div class="text-xs opacity-75 mt-1">Completed purchases</div>
+            </div>
+          </div>
+
+          <!-- Withdrawal History -->
+          <div class="bg-white rounded-2xl shadow-lg p-4 sm:p-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-3">
+              <h3 class="text-lg font-bold text-gray-900">Withdrawal History</h3>
+              <button onclick="openWithdrawModal()" id="main-withdraw-btn" 
+                      class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg text-sm sm:text-base font-medium transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed w-full sm:w-auto"
+                      disabled>
+                <i class="fas fa-money-bill-wave mr-2"></i>Request Withdrawal
+              </button>
+            </div>
+            
+            <div id="withdrawal-history" class="space-y-4">
+              <!-- Withdrawal history will be loaded here -->
+            </div>
+          </div>
+
+          <!-- Referral Activity -->
+          <div class="bg-white rounded-2xl shadow-lg p-4 sm:p-6">
+            <h3 class="text-lg font-bold text-gray-900 mb-4 sm:mb-6">Recent Referral Activity</h3>
+            
+            <div id="referral-activity" class="space-y-3 sm:space-y-4">
+              <!-- Referral activity will be loaded here -->
+            </div>
+          </div>
+
+          <!-- How It Works -->
+          <div class="bg-white rounded-2xl shadow-lg p-4 sm:p-6">
+            <h3 class="text-lg font-bold text-gray-900 mb-4 sm:mb-6">How Referral Earnings Work</h3>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+              <div class="text-center p-3 sm:p-0">
+                <div class="w-12 h-12 sm:w-16 sm:h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                  <i class="fas fa-share-alt text-lg sm:text-2xl text-blue-600"></i>
+                </div>
+                <h4 class="font-semibold text-gray-900 mb-2 text-sm sm:text-base">1. Share Products</h4>
+                <p class="text-xs sm:text-sm text-gray-600">Share any product with your unique referral link on social media or with friends</p>
+              </div>
+              
+              <div class="text-center p-3 sm:p-0">
+                <div class="w-12 h-12 sm:w-16 sm:h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                  <i class="fas fa-user-plus text-lg sm:text-2xl text-green-600"></i>
+                </div>
+                <h4 class="font-semibold text-gray-900 mb-2 text-sm sm:text-base">2. Friend Registers</h4>
+                <p class="text-xs sm:text-sm text-gray-600">Your friend clicks your link and registers on our platform</p>
+              </div>
+              
+              <div class="text-center p-3 sm:p-0">
+                <div class="w-12 h-12 sm:w-16 sm:h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                  <i class="fas fa-shopping-cart text-lg sm:text-2xl text-purple-600"></i>
+                </div>
+                <h4 class="font-semibold text-gray-900 mb-2 text-sm sm:text-base">3. Friend Purchases</h4>
+                <p class="text-xs sm:text-sm text-gray-600">Your friend makes a purchase and payment is confirmed</p>
+              </div>
+              
+              <div class="text-center p-3 sm:p-0">
+                <div class="w-12 h-12 sm:w-16 sm:h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                  <i class="fas fa-money-bill-wave text-lg sm:text-2xl text-yellow-600"></i>
+                </div>
+                <h4 class="font-semibold text-gray-900 mb-2 text-sm sm:text-base">4. You Earn Commission</h4>
+                <p class="text-xs sm:text-sm text-gray-600">Earn 15% of platform commission when your referral completes a purchase</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- Error State -->
+      <div id="errorState" class="flex-1 flex items-center justify-center hidden">
+        <div class="text-center max-w-md mx-auto p-6">
+          <div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i class="fas fa-exclamation-triangle text-3xl text-red-600"></i>
+          </div>
+          <h3 class="text-xl font-bold text-gray-800 mb-2">Oops! Something went wrong</h3>
+          <p class="text-gray-600 mb-6" id="errorMessage">We couldn't load your referral data. Please try again.</p>
+          <button onclick="loadReferralData()" class="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors">
+            <i class="fas fa-redo mr-2"></i>
+            Try Again
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Withdrawal Modal -->
+  <div id="withdrawModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden p-4">
+    <div class="bg-white rounded-2xl p-4 sm:p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between mb-4 sm:mb-6">
+        <h3 class="text-lg sm:text-xl font-bold text-gray-900">Request Withdrawal</h3>
+        <button onclick="closeWithdrawModal()" class="text-gray-400 hover:text-gray-600">
+          <i class="fas fa-times text-lg sm:text-xl"></i>
+        </button>
+      </div>
+
+      <form id="withdrawForm" class="space-y-4">
+        <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+          <div class="flex items-center gap-2 mb-2">
+            <i class="fas fa-info-circle text-green-600"></i>
+            <span class="font-semibold text-green-800">Available Balance</span>
+          </div>
+          <div class="text-2xl font-bold text-green-700" id="modal-available-balance">0 RWF</div>
+          <p class="text-sm text-green-600 mt-1">This amount will be withdrawn to your mobile money account</p>
+        </div>
+
+        <div>
+          <label for="withdraw-phone" class="block text-sm font-medium text-gray-700 mb-2">
+            Mobile Money Number <span class="text-red-500">*</span>
+          </label>
+          <input type="tel" id="withdraw-phone" name="phone_number" required
+                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                 placeholder="Enter your mobile money number">
+          <p class="text-xs text-gray-500 mt-1">Enter the number where you want to receive the payment</p>
+        </div>
+
+        <div>
+          <label for="payment-method" class="block text-sm font-medium text-gray-700 mb-2">Payment Method</label>
+          <select id="payment-method" name="payment_method" 
+                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+            <option value="mobile_money">Mobile Money</option>
+            <option value="bank_transfer">Bank Transfer</option>
+            <option value="cash">Cash Pickup</option>
+          </select>
+        </div>
+
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <div class="flex items-start gap-2">
+            <i class="fas fa-exclamation-triangle text-yellow-600 mt-1"></i>
+            <div class="text-sm text-yellow-800">
+              <p class="font-semibold mb-1">Important Notes:</p>
+              <ul class="list-disc list-inside space-y-1 text-xs">
+                <li>Minimum withdrawal amount is 1,000 RWF</li>
+                <li>Withdrawals are processed manually by admin</li>
+                <li>Processing time: 1-3 business days</li>
+                <li>You'll receive SMS confirmation when processed</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-3 pt-4">
+          <button type="button" onclick="closeWithdrawModal()" 
+                  class="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm sm:text-base">
+            Cancel
+          </button>
+          <button type="submit" 
+                  class="flex-1 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm sm:text-base">
+            <i class="fas fa-paper-plane mr-2"></i>
+            Submit Request
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- How It Works Modal -->
+  <div id="shareGuideModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden p-4">
+    <div class="bg-white rounded-2xl p-4 sm:p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="text-xl font-bold text-gray-900">How to Share & Earn</h3>
+        <button onclick="closeShareGuideModal()" class="text-gray-400 hover:text-gray-600">
+          <i class="fas fa-times text-xl"></i>
+        </button>
+      </div>
+
+      <div class="space-y-6">
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h4 class="font-semibold text-blue-900 mb-2">Step 1: Find a Product to Share</h4>
+          <p class="text-sm text-blue-800">Go to any product page and click the "Share & Earn" button to get your unique referral link.</p>
+        </div>
+
+        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+          <h4 class="font-semibold text-green-900 mb-2">Step 2: Share Your Link</h4>
+          <p class="text-sm text-green-800">Share your referral link on WhatsApp, Facebook, Twitter, or copy and send it directly to friends.</p>
+        </div>
+
+        <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+          <h4 class="font-semibold text-purple-900 mb-2">Step 3: Earn Commission</h4>
+          <p class="text-sm text-purple-800">When someone registers and makes a purchase using your link, you earn 15% of the platform commission.</p>
+        </div>
+
+        <!-- Commission calculation section hidden for security -->
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4" style="display: none;">
+          <h4 class="font-semibold text-yellow-900 mb-2">Commission Calculation Example</h4>
+          <div class="text-sm text-yellow-800 space-y-1">
+            <p>• Product price: 10,000 RWF</p>
+            <p>• Platform commission (21%): 2,100 RWF</p>
+            <p>• Your referral commission (15% of platform): 315 RWF</p>
+          </div>
+        </div>
+
+        <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+          <h4 class="font-semibold text-gray-900 mb-2">Withdrawal Information</h4>
+          <div class="text-sm text-gray-800 space-y-1">
+            <p>• Minimum withdrawal: 1,000 RWF</p>
+            <p>• Processing time: 1-3 business days</p>
+            <p>• Payment methods: Mobile Money, Bank Transfer, Cash</p>
+            <p>• All withdrawals are manually processed by admin</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-end pt-6">
+        <button onclick="closeShareGuideModal()" 
+                class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+          Got it!
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Navigation Menu -->
+  <div id="mobileMenu" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden lg:hidden">
+    <div class="fixed inset-y-0 left-0 w-64 bg-white shadow-lg transform -translate-x-full transition-transform duration-300" id="mobileMenuPanel">
+      <!-- Logo -->
+      <div class="p-6 border-b border-gray-200">
+        <div class="flex items-center gap-3">
+          <img src="/public/images/logo.png" alt="ADD Logo" class="h-10 w-10 rounded-xl shadow" />
+          <div>
+            <h1 class="font-bold text-lg text-[#0e2038]">ADD Physical</h1>
+            <p class="text-sm text-gray-600">Buyer Dashboard</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <nav class="p-4 space-y-2">
+        <a href="/buyer/buyers-home.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200">
+          <i class="fas fa-home text-lg"></i>
+          <span class="font-medium">Dashboard</span>
+        </a>
+        <a href="/buyer/products.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200">
+          <i class="fas fa-shopping-bag text-lg"></i>
+          <span class="font-medium">Products</span>
+        </a>
+        <a href="/buyer/cart.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200">
+          <i class="fas fa-shopping-cart text-lg"></i>
+          <span class="font-medium">Cart</span>
+        </a>
+        <a href="/buyer/orders.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200">
+          <i class="fas fa-box text-lg"></i>
+          <span class="font-medium">Orders</span>
+        </a>
+        <a href="/buyer/wishlist.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200">
+          <i class="fas fa-heart text-lg"></i>
+          <span class="font-medium">Wishlist</span>
+        </a>
+        <a href="/buyer/referrals.html" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200">
+          <i class="fas fa-users text-lg"></i>
+          <span class="font-medium">Referrals</span>
+        </a>
+        <a href="/buyer/profile.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200">
+          <i class="fas fa-user text-lg"></i>
+          <span class="font-medium">Profile</span>
+        </a>
+      </nav>
+
+      <!-- Logout Button -->
+      <div class="absolute bottom-6 left-4 right-4">
+        <button onclick="logout()" class="w-full bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg font-medium transition-colors">
+          <i class="fas fa-sign-out-alt mr-2"></i>Logout
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script>
+    // Global variables
+    let currentUser = null;
+    let referralData = null;
+    let isLoading = false;
+
+    // Wait for auth-utils to load
+    async function waitForAuthUtils() {
+      let attempts = 0;
+      while (typeof authUtils === 'undefined' && attempts < 50) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        attempts++;
+      }
+      if (typeof authUtils === 'undefined') {
+        throw new Error('Auth utilities failed to load');
+      }
+      return authUtils;
+    }
+
+    // Get auth token
+    function getAuthToken() {
+      return localStorage.getItem('authToken');
+    }
+
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', async function() {
+      try {
+        // Wait for auth-utils to load
+        const authUtils = await waitForAuthUtils();
+        
+        // Check authentication
+        if (!authUtils.isAuthenticated()) {
+          authUtils.redirectToLogin();
+          return;
+        }
+
+        // Set current user
+        currentUser = authUtils.getUserData();
+
+        // Update sidebar user info
+        updateSidebarUserInfo();
+        
+        // Update cart badge
+        await updateCartBadge();
+
+        // Load referral data
+        await loadReferralData();
+        
+      } catch (error) {
+        console.error('Error initializing page:', error);
+        showError('Failed to initialize page. Please refresh and try again.');
+      }
+    });
+
+    // Update sidebar user information
+    function updateSidebarUserInfo() {
+      if (currentUser) {
+        const sidebarUserName = document.getElementById('sidebar-user-name');
+        if (sidebarUserName) {
+          sidebarUserName.textContent = currentUser.name || currentUser.username || 'User';
+        }
+      }
+    }
+
+    // Update cart badge
+    async function updateCartBadge() {
+      try {
+        const token = getAuthToken();
+        const response = await fetch('/api/cart', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const badge = document.getElementById('cart-badge');
+          if (badge) {
+            if (data.items && data.items.length > 0) {
+              badge.textContent = data.items.length;
+              badge.classList.remove('hidden');
+            } else {
+              badge.classList.add('hidden');
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error updating cart badge:', error);
+      }
+    }
+
+    // Load referral data
+    async function loadReferralData() {
+      if (isLoading) return;
+      
+      try {
+        isLoading = true;
+        showLoading();
+        
+        const token = getAuthToken();
+        if (!token) {
+          throw new Error('No authentication token');
+        }
+        
+        // Load all referral data in parallel
+        const [balanceResponse, earningsResponse, withdrawalsResponse] = await Promise.all([
+          fetch('/api/referrals/withdrawal-balance', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          }),
+          fetch('/api/referrals/earnings', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          }),
+          fetch('/api/referrals/withdrawals', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          })
+        ]);
+
+        // Process responses with fallback data
+        if (balanceResponse.ok) {
+          const balanceData = await balanceResponse.json();
+          if (balanceData.success) {
+            updateBalanceDisplay(balanceData);
+          } else {
+            updateBalanceDisplay({
+              available_balance: 0,
+              completed_referrals: 0,
+              can_withdraw: false
+            });
+          }
+        } else {
+          console.warn('Balance endpoint failed, using fallback data');
+          updateBalanceDisplay({
+            available_balance: 0,
+            completed_referrals: 0,
+            can_withdraw: false
+          });
+        }
+
+        if (earningsResponse.ok) {
+          const earningsData = await earningsResponse.json();
+          if (earningsData.success) {
+            updateEarningsDisplay(earningsData);
+          } else {
+            updateEarningsDisplay({
+              total_earnings: 0,
+              pending_earnings: 0,
+              recent_referrals: []
+            });
+          }
+        } else {
+          console.warn('Earnings endpoint failed, using fallback data');
+          updateEarningsDisplay({
+            total_earnings: 0,
+            pending_earnings: 0,
+            recent_referrals: []
+          });
+        }
+
+        if (withdrawalsResponse.ok) {
+          const withdrawalsData = await withdrawalsResponse.json();
+          if (withdrawalsData.success) {
+            updateWithdrawalsDisplay(withdrawalsData.withdrawals);
+          } else {
+            updateWithdrawalsDisplay([]);
+          }
+        } else {
+          console.warn('Withdrawals endpoint failed, using fallback data');
+          updateWithdrawalsDisplay([]);
+        }
+
+        hideLoading();
+        
+      } catch (error) {
+        console.error('Error loading referral data:', error);
+        showError('Failed to load referral data');
+      } finally {
+        isLoading = false;
+      }
+    }
+
+    // Update balance display
+    function updateBalanceDisplay(data) {
+      const formatPrice = (price) => new Intl.NumberFormat('en-US').format(parseFloat(price) || 0);
+      
+      // Update available balance
+      const availableBalanceElement = document.getElementById('available-balance');
+      if (availableBalanceElement) {
+        availableBalanceElement.textContent = `${formatPrice(data.available_balance)} RWF`;
+      }
+      
+      const modalAvailableBalanceElement = document.getElementById('modal-available-balance');
+      if (modalAvailableBalanceElement) {
+        modalAvailableBalanceElement.textContent = `${formatPrice(data.available_balance)} RWF`;
+      }
+      
+      // Update successful referrals count
+      const successfulReferralsElement = document.getElementById('successful-referrals');
+      if (successfulReferralsElement) {
+        successfulReferralsElement.textContent = data.completed_referrals || 0;
+      }
+      
+      // Update withdrawal button states - No minimum withdrawal restriction
+      const withdrawBtns = [document.getElementById('withdraw-btn'), document.getElementById('main-withdraw-btn')].filter(btn => btn);
+      const currentBalance = parseFloat(data.available_balance) || 0;
+      
+      withdrawBtns.forEach(btn => {
+        if (data.can_withdraw && currentBalance > 0) {
+          btn.disabled = false;
+          btn.classList.remove('disabled:bg-gray-400', 'disabled:cursor-not-allowed', 'opacity-50');
+          btn.classList.add('hover:bg-green-700', 'cursor-pointer');
+          btn.title = `Withdraw ${formatPrice(currentBalance)} RWF`;
+          btn.onclick = openWithdrawModal;
+          console.log(`Withdrawal button enabled for ${formatPrice(currentBalance)} RWF`);
+        } else {
+          btn.disabled = true;
+          btn.classList.add('disabled:bg-gray-400', 'disabled:cursor-not-allowed', 'opacity-50');
+          btn.classList.remove('hover:bg-green-700', 'cursor-pointer');
+          btn.title = currentBalance <= 0 ? 'No balance available for withdrawal' : 'Withdrawal not available';
+          btn.onclick = () => {
+            showToast(`❌ ${currentBalance <= 0 ? 'No balance available for withdrawal' : 'Withdrawal not available at this time'}`, 'error');
+          };
+          console.log(`Withdrawal button disabled - balance: ${formatPrice(currentBalance)} RWF`);
+        }
+      });
+    }
+
+    // Update earnings display
+    function updateEarningsDisplay(data) {
+      const formatPrice = (price) => new Intl.NumberFormat('en-US').format(parseFloat(price) || 0);
+      
+      // Handle both direct data and summary structure
+      const totalEarnings = data.total_earnings || (data.summary && data.summary.total_earned) || 0;
+      const pendingEarnings = data.pending_earnings || (data.summary && data.summary.pending_payment) || 0;
+      const recentReferrals = data.recent_referrals || data.recent_activity || [];
+      
+      // Update total earned
+      const totalEarnedElement = document.getElementById('total-earned');
+      if (totalEarnedElement) {
+        totalEarnedElement.textContent = `${formatPrice(totalEarnings)} RWF`;
+      }
+      
+      // Update pending amount
+      const pendingAmountElement = document.getElementById('pending-amount');
+      if (pendingAmountElement) {
+        pendingAmountElement.textContent = `${formatPrice(pendingEarnings)} RWF`;
+      }
+
+      // Update new tracking stats
+      if (data.summary) {
+        // Update total clicks
+        const totalClicksElement = document.getElementById('total-clicks');
+        if (totalClicksElement) {
+          totalClicksElement.textContent = data.summary.total_clicks || 0;
+        }
+
+        // Update total registrations
+        const totalRegistrationsElement = document.getElementById('total-registrations');
+        if (totalRegistrationsElement) {
+          totalRegistrationsElement.textContent = data.summary.total_registrations || 0;
+        }
+
+        // Update successful referrals
+        const successfulReferralsElement = document.getElementById('successful-referrals');
+        if (successfulReferralsElement) {
+          successfulReferralsElement.textContent = data.summary.completed_referrals || 0;
+        }
+      }
+
+      // Update referral activity
+      updateReferralActivity(recentReferrals);
+    }
+
+    // Update withdrawals display
+    function updateWithdrawalsDisplay(withdrawals) {
+      const container = document.getElementById('withdrawal-history');
+      const formatPrice = (price) => new Intl.NumberFormat('en-US').format(parseFloat(price) || 0);
+      
+      if (withdrawals.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-8 text-gray-500">
+            <i class="fas fa-money-bill-wave text-4xl mb-4"></i>
+            <p>No withdrawal requests yet</p>
+            <p class="text-sm">Make your first withdrawal when you reach 1,000 RWF</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = withdrawals.map(withdrawal => {
+        const statusColors = {
+          pending: 'bg-yellow-100 text-yellow-800',
+          approved: 'bg-blue-100 text-blue-800',
+          paid: 'bg-green-100 text-green-800',
+          rejected: 'bg-red-100 text-red-800'
+        };
+
+        const statusIcons = {
+          pending: 'fas fa-clock',
+          approved: 'fas fa-check',
+          paid: 'fas fa-check-circle',
+          rejected: 'fas fa-times-circle'
+        };
+
+        return `
+          <div class="border border-gray-200 rounded-lg p-4">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                  <i class="fas fa-money-bill-wave text-gray-600"></i>
+                </div>
+                <div>
+                  <div class="font-semibold text-gray-900">${formatPrice(withdrawal.amount)} RWF</div>
+                  <div class="text-sm text-gray-600">${withdrawal.phone_number}</div>
+                </div>
+              </div>
+              <div class="text-right">
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${statusColors[withdrawal.status]}">
+                  <i class="${statusIcons[withdrawal.status]} mr-1"></i>
+                  ${withdrawal.status.charAt(0).toUpperCase() + withdrawal.status.slice(1)}
+                </span>
+                <div class="text-xs text-gray-500 mt-1">
+                  ${new Date(withdrawal.requested_at).toLocaleDateString()}
+                </div>
+              </div>
+            </div>
+            ${withdrawal.admin_notes ? `
+              <div class="mt-2 p-2 bg-gray-50 rounded text-sm text-gray-600">
+                <strong>Admin Note:</strong> ${withdrawal.admin_notes}
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Update referral activity
+    function updateReferralActivity(referrals) {
+      const container = document.getElementById('referral-activity');
+      const formatPrice = (price) => new Intl.NumberFormat('en-US').format(parseFloat(price) || 0);
+      
+      if (referrals.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-8 text-gray-500">
+            <i class="fas fa-share-alt text-4xl mb-4"></i>
+            <p>No referral activity yet</p>
+            <p class="text-sm">Start sharing products to earn commissions</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = referrals.map(referral => {
+        const statusColors = {
+          pending: 'bg-yellow-100 text-yellow-800',
+          registered: 'bg-blue-100 text-blue-800',
+          completed: 'bg-green-100 text-green-800',
+          paid: 'bg-green-100 text-green-800'
+        };
+
+        return `
+          <div class="border border-gray-200 rounded-lg p-4">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                  <i class="fas fa-user text-blue-600"></i>
+                </div>
+                <div>
+                  <div class="font-semibold text-gray-900">${referral.email || 'Anonymous'}</div>
+                  <div class="text-sm text-gray-600">
+                    ${referral.bonus_type === 'product_share' ? 'Product Share' : 'General Referral'}
+                  </div>
+                </div>
+              </div>
+              <div class="text-right">
+                <div class="font-semibold text-gray-900">${formatPrice(referral.bonus_earned)} RWF</div>
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${statusColors[referral.status]}">
+                  ${referral.status.charAt(0).toUpperCase() + referral.status.slice(1)}
+                </span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Open withdrawal modal
+    function openWithdrawModal() {
+      console.log('Opening withdrawal modal...');
+      
+      try {
+        const modal = document.getElementById('withdrawModal');
+        if (!modal) {
+          console.error('Withdrawal modal not found');
+          showToast('❌ Withdrawal modal not found', 'error');
+          return;
+        }
+        
+        modal.classList.remove('hidden');
+        console.log('Withdrawal modal opened successfully');
+        
+        // Pre-fill phone number if available
+        const phoneInput = document.getElementById('withdraw-phone');
+        if (phoneInput && currentUser && currentUser.phone) {
+          phoneInput.value = currentUser.phone;
+        }
+        
+        // Load current balance into modal
+        loadWithdrawalBalance();
+        
+      } catch (error) {
+        console.error('Error opening withdrawal modal:', error);
+        showToast('❌ Failed to open withdrawal modal', 'error');
+      }
+    }
+
+    // Load withdrawal balance for modal
+    async function loadWithdrawalBalance() {
+      try {
+        const token = getAuthToken();
+        if (!token) return;
+        
+        const response = await fetch('/api/referrals/withdrawal-balance', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            const formatPrice = (price) => new Intl.NumberFormat('en-US').format(parseFloat(price) || 0);
+            const modalBalanceElement = document.getElementById('modal-available-balance');
+            if (modalBalanceElement) {
+              modalBalanceElement.textContent = `${formatPrice(data.available_balance)} RWF`;
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error loading withdrawal balance:', error);
+      }
+    }
+
+    // Close withdrawal modal
+    function closeWithdrawModal() {
+      const modal = document.getElementById('withdrawModal');
+      modal.classList.add('hidden');
+      
+      // Reset form
+      document.getElementById('withdrawForm').reset();
+    }
+
+    // Open share guide modal
+    function openShareGuideModal() {
+      document.getElementById('shareGuideModal').classList.remove('hidden');
+    }
+
+    // Close share guide modal
+    function closeShareGuideModal() {
+      document.getElementById('shareGuideModal').classList.add('hidden');
+    }
+
+    // Handle withdrawal form submission
+    document.getElementById('withdrawForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const formData = new FormData(e.target);
+      const phoneNumber = formData.get('phone_number');
+      const paymentMethod = formData.get('payment_method');
+
+      if (!phoneNumber) {
+        showToast('❌ Please enter your phone number', 'error');
+        return;
+      }
+
+      try {
+        const token = getAuthToken();
+        if (!token) {
+          throw new Error('No authentication token');
+        }
+        
+        const response = await fetch('/api/referrals/request-withdrawal', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            phone_number: phoneNumber,
+            payment_method: paymentMethod
+          })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          showToast('✅ Withdrawal request submitted successfully!', 'success');
+          closeWithdrawModal();
+          
+          // Reload referral data to update balances
+          await loadReferralData();
+        } else {
+          showToast(`❌ ${data.error || 'Failed to submit withdrawal request'}`, 'error');
+        }
+
+      } catch (error) {
+        console.error('Error submitting withdrawal request:', error);
+        showToast('❌ Failed to submit withdrawal request', 'error');
+      }
+    });
+
+    // Show loading state
+    function showLoading() {
+      document.getElementById('loadingState').classList.remove('hidden');
+      document.getElementById('mainContent').classList.add('hidden');
+      document.getElementById('errorState').classList.add('hidden');
+    }
+
+    // Hide loading state
+    function hideLoading() {
+      document.getElementById('loadingState').classList.add('hidden');
+      document.getElementById('mainContent').classList.remove('hidden');
+      document.getElementById('errorState').classList.add('hidden');
+    }
+
+    // Show error state
+    function showError(message) {
+      document.getElementById('errorMessage').textContent = message;
+      document.getElementById('loadingState').classList.add('hidden');
+      document.getElementById('mainContent').classList.add('hidden');
+      document.getElementById('errorState').classList.remove('hidden');
+    }
+
+    // Show toast notification
+    function showToast(message, type = 'info') {
+      const toast = document.createElement('div');
+      toast.className = `fixed top-4 right-4 z-50 px-4 py-2 rounded-lg shadow-lg text-white font-medium ${
+        type === 'success' ? 'bg-green-600' : 
+        type === 'error' ? 'bg-red-600' : 'bg-blue-600'
+      }`;
+      toast.textContent = message;
+      
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.remove();
+      }, 3000);
+    }
+
+    // Mobile menu functions
+    function toggleMobileMenu() {
+      const mobileMenu = document.getElementById('mobileMenu');
+      const mobileMenuPanel = document.getElementById('mobileMenuPanel');
+      
+      if (mobileMenu.classList.contains('hidden')) {
+        mobileMenu.classList.remove('hidden');
+        setTimeout(() => {
+          mobileMenuPanel.classList.remove('-translate-x-full');
+        }, 10);
+      } else {
+        mobileMenuPanel.classList.add('-translate-x-full');
+        setTimeout(() => {
+          mobileMenu.classList.add('hidden');
+        }, 300);
+      }
+    }
+
+    // Close mobile menu when clicking outside
+    document.getElementById('mobileMenu')?.addEventListener('click', function(e) {
+      if (e.target === this) {
+        toggleMobileMenu();
+      }
+    });
+
+    // Logout function
+    async function logout() {
+      try {
+        const authUtils = await waitForAuthUtils();
+        authUtils.logout();
+      } catch (error) {
+        console.error('Error during logout:', error);
+        // Fallback logout
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userData');
+        window.location.href = '/auth/login.html';
+      }
+    }
+  </script>
+</body>
+</html>

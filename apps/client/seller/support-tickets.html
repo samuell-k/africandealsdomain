@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Support Tickets | ADD Physical Products</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .fade-in { animation: fadeIn 0.5s; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .glass { backdrop-filter: blur(10px); background: rgba(255, 255, 255, 0.8); }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+  <!-- Header -->
+  <header class="glass bg-white/80 shadow-md border-b border-gray-200 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto flex items-center justify-between px-4 py-3 md:py-4">
+      <a href="/seller/dashboard.html" class="flex items-center gap-3">
+        <img src="/public/images/logo.png" alt="ADD Logo" class="h-10 w-10 md:h-12 md:w-12 rounded-xl shadow" />
+        <span class="font-extrabold text-xl md:text-2xl text-[#0e2038]">ADD Physical Products</span>
+      </a>
+      <div class="flex items-center gap-2 md:gap-4">
+        <a href="/seller/dashboard.html" class="px-3 py-2 md:px-4 md:py-2 rounded-lg font-semibold text-[#0e2038] border-2 border-[#0e2038] bg-transparent hover:bg-[#0e2038] hover:text-white transition-colors">Dashboard</a>
+        <button id="logout-btn" class="px-3 py-2 md:px-4 md:py-2 rounded-lg font-semibold text-white bg-gradient-to-r from-[#0e2038] to-[#23325c] hover:shadow-lg transition-shadow">Logout</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Notification Container -->
+  <div id="notification-container" class="fixed top-4 right-4 z-50"></div>
+
+  <main class="flex-1 container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto">
+      <!-- Page Header -->
+      <div class="mb-8">
+        <h1 class="text-3xl md:text-4xl font-bold text-[#0e2038] mb-2">Support Tickets</h1>
+        <p class="text-gray-600">Manage and respond to customer support requests</p>
+      </div>
+
+      <!-- Stats Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Total Tickets</p>
+              <p class="text-2xl font-bold text-[#0e2038]" id="total-tickets">0</p>
+            </div>
+            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+              <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Open Tickets</p>
+              <p class="text-2xl font-bold text-orange-600" id="open-tickets">0</p>
+            </div>
+            <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+              <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Resolved</p>
+              <p class="text-2xl font-bold text-green-600" id="resolved-tickets">0</p>
+            </div>
+            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+              <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-6">
+        <div class="flex flex-wrap gap-4 items-center">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <select id="status-filter" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              <option value="">All Status</option>
+              <option value="open">Open</option>
+              <option value="in_progress">In Progress</option>
+              <option value="resolved">Resolved</option>
+              <option value="closed">Closed</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+            <select id="priority-filter" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              <option value="">All Priority</option>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="urgent">Urgent</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
+            <select id="date-filter" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              <option value="">All Time</option>
+              <option value="today">Today</option>
+              <option value="week">This Week</option>
+              <option value="month">This Month</option>
+            </select>
+          </div>
+          <button id="clear-filters" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
+            Clear Filters
+          </button>
+        </div>
+      </div>
+
+      <!-- Tickets List -->
+      <div id="tickets-container" class="space-y-4">
+        <!-- Loading State -->
+        <div id="loading-state" class="text-center py-12">
+          <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <p class="mt-2 text-gray-600">Loading support tickets...</p>
+        </div>
+
+        <!-- Empty State -->
+        <div id="empty-state" class="hidden text-center py-12">
+          <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">No Support Tickets</h3>
+          <p class="text-gray-600">You don't have any support tickets yet.</p>
+        </div>
+
+        <!-- Tickets will be loaded here -->
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Global state
+    let tickets = [];
+    let filteredTickets = [];
+
+    // DOM elements
+    const ticketsContainer = document.getElementById('tickets-container');
+    const loadingState = document.getElementById('loading-state');
+    const emptyState = document.getElementById('empty-state');
+    const statusFilter = document.getElementById('status-filter');
+    const priorityFilter = document.getElementById('priority-filter');
+    const dateFilter = document.getElementById('date-filter');
+    const clearFiltersBtn = document.getElementById('clear-filters');
+
+    // Check authentication
+    function checkAuth() {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        window.location.href = '/auth/auth-seller.html';
+        return false;
+      }
+      return true;
+    }
+
+    // Show notification
+    function showNotification(message, type = 'info') {
+      const notification = document.createElement('div');
+      let bgColor = 'bg-blue-500';
+      let icon = 'ℹ️';
+      
+      if (type === 'success') {
+        bgColor = 'bg-green-500';
+        icon = '✅';
+      } else if (type === 'error') {
+        bgColor = 'bg-red-500';
+        icon = '❌';
+      } else if (type === 'warning') {
+        bgColor = 'bg-yellow-500';
+        icon = '⚠️';
+      }
+      
+      notification.className = `px-4 py-2 rounded-lg text-white ${bgColor} shadow-lg flex items-center gap-2 animate-fade-in`;
+      notification.innerHTML = `<span>${icon}</span><span>${message}</span>`;
+      
+      const container = document.getElementById('notification-container');
+      container.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.remove();
+      }, 3000);
+    }
+
+    // Load support tickets
+    async function loadSupportTickets() {
+      try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch('/api/seller/support-tickets', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to load support tickets');
+        }
+
+        const data = await response.json();
+        tickets = data.tickets || [];
+        filteredTickets = [...tickets];
+        
+        updateStats();
+        renderTickets();
+        hideLoading();
+      } catch (error) {
+        console.error('Error loading support tickets:', error);
+        showNotification('Failed to load support tickets', 'error');
+        hideLoading();
+        showEmptyState();
+      }
+    }
+
+    // Update statistics
+    function updateStats() {
+      const total = tickets.length;
+      const open = tickets.filter(ticket => ticket.status === 'open').length;
+      const resolved = tickets.filter(ticket => ticket.status === 'resolved').length;
+
+      document.getElementById('total-tickets').textContent = total;
+      document.getElementById('open-tickets').textContent = open;
+      document.getElementById('resolved-tickets').textContent = resolved;
+    }
+
+    // Render tickets
+    function renderTickets() {
+      if (filteredTickets.length === 0) {
+        showEmptyState();
+        return;
+      }
+
+      const html = filteredTickets.map(ticket => `
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow animate-fade-in">
+          <div class="p-6">
+            <div class="flex items-start justify-between">
+              <div class="flex-1">
+                <div class="flex items-center gap-3 mb-2">
+                  <h3 class="font-semibold text-lg text-gray-900">#${ticket.id} - ${ticket.subject}</h3>
+                  <span class="px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(ticket.status)}">
+                    ${ticket.status}
+                  </span>
+                  ${ticket.priority ? `<span class="px-2 py-1 text-xs font-medium rounded-full ${getPriorityColor(ticket.priority)}">
+                    ${ticket.priority}
+                  </span>` : ''}
+                </div>
+                <p class="text-gray-600 text-sm mb-2">${ticket.description || 'No description provided'}</p>
+                <div class="flex items-center gap-4 text-xs text-gray-500">
+                  <span>Created: ${formatDate(ticket.created_at)}</span>
+                  ${ticket.updated_at ? `<span>Updated: ${formatDate(ticket.updated_at)}</span>` : ''}
+                  ${ticket.customer_name ? `<span>Customer: ${ticket.customer_name}</span>` : ''}
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <a href="/seller/support-tickets-detail.html?id=${ticket.id}" 
+                   class="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors">
+                  View Details
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      ticketsContainer.innerHTML = html;
+      hideEmptyState();
+    }
+
+    // Get status color
+    function getStatusColor(status) {
+      const colors = {
+        'open': 'bg-red-100 text-red-800',
+        'in_progress': 'bg-yellow-100 text-yellow-800',
+        'resolved': 'bg-green-100 text-green-800',
+        'closed': 'bg-gray-100 text-gray-800'
+      };
+      return colors[status] || 'bg-gray-100 text-gray-800';
+    }
+
+    // Get priority color
+    function getPriorityColor(priority) {
+      const colors = {
+        'low': 'bg-green-100 text-green-800',
+        'medium': 'bg-yellow-100 text-yellow-800',
+        'high': 'bg-orange-100 text-orange-800',
+        'urgent': 'bg-red-100 text-red-800'
+      };
+      return colors[priority] || 'bg-gray-100 text-gray-800';
+    }
+
+    // Format date
+    function formatDate(dateString) {
+      if (!dateString) return 'N/A';
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
+    // Filter tickets
+    function filterTickets() {
+      const status = statusFilter.value;
+      const priority = priorityFilter.value;
+      const dateRange = dateFilter.value;
+
+      filteredTickets = tickets.filter(ticket => {
+        let matches = true;
+
+        if (status && ticket.status !== status) {
+          matches = false;
+        }
+
+        if (priority && ticket.priority !== priority) {
+          matches = false;
+        }
+
+        if (dateRange) {
+          const ticketDate = new Date(ticket.created_at);
+          const now = new Date();
+          
+          switch (dateRange) {
+            case 'today':
+              matches = matches && ticketDate.toDateString() === now.toDateString();
+              break;
+            case 'week':
+              const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+              matches = matches && ticketDate >= weekAgo;
+              break;
+            case 'month':
+              const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+              matches = matches && ticketDate >= monthAgo;
+              break;
+          }
+        }
+
+        return matches;
+      });
+
+      renderTickets();
+    }
+
+    // Clear filters
+    function clearFilters() {
+      statusFilter.value = '';
+      priorityFilter.value = '';
+      dateFilter.value = '';
+      filteredTickets = [...tickets];
+      renderTickets();
+    }
+
+    // Show/hide loading state
+    function hideLoading() {
+      loadingState.classList.add('hidden');
+    }
+
+    function showEmptyState() {
+      emptyState.classList.remove('hidden');
+    }
+
+    function hideEmptyState() {
+      emptyState.classList.add('hidden');
+    }
+
+    // Event listeners
+    statusFilter.addEventListener('change', filterTickets);
+    priorityFilter.addEventListener('change', filterTickets);
+    dateFilter.addEventListener('change', filterTickets);
+    clearFiltersBtn.addEventListener('click', clearFilters);
+
+    // Logout functionality
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('userData');
+      window.location.href = '/';
+    });
+
+    // Initialize
+    if (checkAuth()) {
+      loadSupportTickets();
+    }
+  </script>
+</body>
+</html>

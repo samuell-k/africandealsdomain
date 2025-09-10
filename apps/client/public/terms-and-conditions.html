@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Terms and Conditions | ADD Physical Products</title>
+  <link rel="icon" href="/public/images/logo.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .fade-in { animation: fadeIn 0.5s; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .section-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
+    .section-content.active { max-height: 2000px; }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+  <!-- Header -->
+  <header class="w-full glass bg-white/80 shadow-md border-b border-gray-200 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto flex items-center justify-between px-4 py-3 md:py-4">
+      <a href="/" class="flex items-center gap-3">
+        <img src="/public/images/logo.png" alt="ADD Physical Product Logo" class="h-10 w-10 md:h-12 md:w-12 rounded-xl shadow" />
+        <span class="font-extrabold text-xl md:text-2xl text-[#0e2038]">ADD Physical Products</span>
+      </a>
+      <div class="flex items-center gap-2 md:gap-4">
+        <a href="/auth/auth-buyer.html" class="px-3 py-2 md:px-4 md:py-2 rounded-lg font-semibold text-[#0e2038] border-2 border-[#0e2038] bg-transparent hover:bg-[#0e2038] hover:text-white transition-colors">Sign In</a>
+        <a href="/auth/auth-buyer.html" class="px-3 py-2 md:px-4 md:py-2 rounded-lg font-semibold text-white bg-gradient-to-r from-[#0e2038] to-[#23325c] hover:shadow-lg transition-shadow">Create Account</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-4xl mx-auto w-full px-4 py-8 md:py-12 fade-in">
+    <!-- Hero Section -->
+    <div class="text-center mb-12">
+      <h1 class="text-4xl md:text-5xl font-extrabold mb-4 text-[#0e2038]">Terms and Conditions</h1>
+      <p class="text-lg text-gray-600 mb-8">Please read these terms carefully before using ADD Physical Products</p>
+      <div class="text-sm text-gray-500">Last updated: January 2025</div>
+    </div>
+
+    <!-- Table of Contents -->
+    <div class="bg-white rounded-xl p-6 md:p-8 shadow-sm mb-8">
+      <h2 class="text-2xl font-bold mb-6 text-[#0e2038]">Table of Contents</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="space-y-2">
+          <button onclick="scrollToSection('acceptance')" class="text-left text-blue-600 hover:underline">1. Acceptance of Terms</button>
+          <button onclick="scrollToSection('services')" class="text-left text-blue-600 hover:underline">2. Description of Services</button>
+          <button onclick="scrollToSection('accounts')" class="text-left text-blue-600 hover:underline">3. User Accounts</button>
+          <button onclick="scrollToSection('conduct')" class="text-left text-blue-600 hover:underline">4. User Conduct</button>
+          <button onclick="scrollToSection('intellectual')" class="text-left text-blue-600 hover:underline">5. Intellectual Property</button>
+        </div>
+        <div class="space-y-2">
+          <button onclick="scrollToSection('privacy')" class="text-left text-blue-600 hover:underline">6. Privacy Policy</button>
+          <button onclick="scrollToSection('payment')" class="text-left text-blue-600 hover:underline">7. Payment Terms</button>
+          <button onclick="scrollToSection('shipping')" class="text-left text-blue-600 hover:underline">8. Shipping & Delivery</button>
+          <button onclick="scrollToSection('returns')" class="text-left text-blue-600 hover:underline">9. Returns & Refunds</button>
+          <button onclick="scrollToSection('liability')" class="text-left text-blue-600 hover:underline">10. Limitation of Liability</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Terms Sections -->
+    <div class="space-y-8">
+      <!-- Section 1 -->
+      <section id="acceptance" class="bg-white rounded-xl p-6 md:p-8 shadow-sm">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-2xl font-bold text-[#0e2038]">1. Acceptance of Terms</h2>
+          <button onclick="toggleSection(this)" class="text-blue-600 hover:text-blue-800">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </button>
+        </div>
+        <div class="section-content active">
+          <p class="text-gray-700 mb-4">By accessing and using ADD Physical Products ("the Platform"), you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.</p>
+          <p class="text-gray-700 mb-4">These terms apply to all users of the Platform, including without limitation users who are browsers, vendors, customers, merchants, and/or contributors of content.</p>
+          <p class="text-gray-700">We reserve the right to update, change or replace any part of these Terms of Service by posting updates and/or changes to our website. It is your responsibility to check this page periodically for changes.</p>
+        </div>
+      </section>
+
+      <!-- Section 2 -->
+      <section id="services" class="bg-white rounded-xl p-6 md:p-8 shadow-sm">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-2xl font-bold text-[#0e2038]">2. Description of Services</h2>
+          <button onclick="toggleSection(this)" class="text-blue-600 hover:text-blue-800">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </button>
+        </div>
+        <div class="section-content">
+          <p class="text-gray-700 mb-4">ADD Physical Products is an e-commerce platform that connects buyers and sellers across Africa. Our services include:</p>
+          <ul class="list-disc pl-6 text-gray-700 space-y-2 mb-4">
+            <li>Online marketplace for physical products</li>
+            <li>Payment processing and secure transactions</li>
+            <li>Order management and tracking</li>
+            <li>Customer support and dispute resolution</li>
+            <li>Logistics and delivery coordination</li>
+          </ul>
+          <p class="text-gray-700">We provide the platform for transactions but are not directly involved in the sale of products between buyers and sellers.</p>
+        </div>
+      </section>
+
+      <!-- Section 3 -->
+      <section id="accounts" class="bg-white rounded-xl p-6 md:p-8 shadow-sm">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-2xl font-bold text-[#0e2038]">3. User Accounts</h2>
+          <button onclick="toggleSection(this)" class="text-blue-600 hover:text-blue-800">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </button>
+        </div>
+        <div class="section-content">
+          <p class="text-gray-700 mb-4">To access certain features of the Platform, you must create an account. You agree to:</p>
+          <ul class="list-disc pl-6 text-gray-700 space-y-2 mb-4">
+            <li>Provide accurate, current, and complete information</li>
+            <li>Maintain and promptly update your account information</li>
+            <li>Keep your password secure and confidential</li>
+            <li>Accept responsibility for all activities under your account</li>
+            <li>Notify us immediately of any unauthorized use</li>
+          </ul>
+          <p class="text-gray-700">We reserve the right to terminate accounts that violate these terms or for any other reason at our sole discretion.</p>
+        </div>
+      </section>
+
+      <!-- Section 4 -->
+      <section id="conduct" class="bg-white rounded-xl p-6 md:p-8 shadow-sm">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-2xl font-bold text-[#0e2038]">4. User Conduct</h2>
+          <button onclick="toggleSection(this)" class="text-blue-600 hover:text-blue-800">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </button>
+        </div>
+        <div class="section-content">
+          <p class="text-gray-700 mb-4">You agree not to use the Platform to:</p>
+          <ul class="list-disc pl-6 text-gray-700 space-y-2 mb-4">
+            <li>Violate any applicable laws or regulations</li>
+            <li>Infringe upon the rights of others</li>
+            <li>Upload false, misleading, or fraudulent information</li>
+            <li>Attempt to gain unauthorized access to our systems</li>
+            <li>Interfere with the proper functioning of the Platform</li>
+            <li>Engage in any form of harassment or discrimination</li>
+          </ul>
+          <p class="text-gray-700">Violation of these terms may result in account suspension or termination.</p>
+        </div>
+      </section>
+
+      <!-- Section 5 -->
+      <section id="intellectual" class="bg-white rounded-xl p-6 md:p-8 shadow-sm">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-2xl font-bold text-[#0e2038]">5. Intellectual Property</h2>
+          <button onclick="toggleSection(this)" class="text-blue-600 hover:text-blue-800">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </button>
+        </div>
+        <div class="section-content">
+          <p class="text-gray-700 mb-4">The Platform and its original content, features, and functionality are owned by ADD Physical Products and are protected by international copyright, trademark, patent, trade secret, and other intellectual property laws.</p>
+          <p class="text-gray-700 mb-4">You retain ownership of content you submit to the Platform, but grant us a license to use, display, and distribute such content in connection with the Platform.</p>
+          <p class="text-gray-700">You may not reproduce, distribute, or create derivative works from our content without express written permission.</p>
+        </div>
+      </section>
+
+      <!-- Section 6 -->
+      <section id="privacy" class="bg-white rounded-xl p-6 md:p-8 shadow-sm">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-2xl font-bold text-[#0e2038]">6. Privacy Policy</h2>
+          <button onclick="toggleSection(this)" class="text-blue-600 hover:text-blue-800">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </button>
+        </div>
+        <div class="section-content">
+          <p class="text-gray-700 mb-4">Your privacy is important to us. Please review our <a href="/public/privacy-policy.html" class="text-blue-600 hover:underline">Privacy Policy</a>, which also governs your use of the Platform, to understand our practices.</p>
+          <p class="text-gray-700">By using the Platform, you consent to the collection and use of information in accordance with our Privacy Policy.</p>
+        </div>
+      </section>
+
+      <!-- Section 7 -->
+      <section id="payment" class="bg-white rounded-xl p-6 md:p-8 shadow-sm">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-2xl font-bold text-[#0e2038]">7. Payment Terms</h2>
+          <button onclick="toggleSection(this)" class="text-blue-600 hover:text-blue-800">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </button>
+        </div>
+        <div class="section-content">
+          <p class="text-gray-700 mb-4">All payments must be made through our secure payment system. We accept various payment methods including:</p>
+          <ul class="list-disc pl-6 text-gray-700 space-y-2 mb-4">
+            <li>Mobile money (M-Pesa, Airtel Money, etc.)</li>
+            <li>Bank transfers</li>
+            <li>Credit and debit cards</li>
+            <li>Digital wallets</li>
+          </ul>
+          <p class="text-gray-700 mb-4">Prices are displayed in local currencies and may be subject to taxes and fees. We reserve the right to change prices at any time.</p>
+          <p class="text-gray-700">Refunds will be processed according to our <a href="/public/returns-policy.html" class="text-blue-600 hover:underline">Returns Policy</a>.</p>
+        </div>
+      </section>
+
+      <!-- Section 8 -->
+      <section id="shipping" class="bg-white rounded-xl p-6 md:p-8 shadow-sm">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-2xl font-bold text-[#0e2038]">8. Shipping & Delivery</h2>
+          <button onclick="toggleSection(this)" class="text-blue-600 hover:text-blue-800">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </button>
+        </div>
+        <div class="section-content">
+          <p class="text-gray-700 mb-4">Shipping times and costs vary by location and delivery method. Please refer to our <a href="/public/shipping-policy.html" class="text-blue-600 hover:underline">Shipping Policy</a> for detailed information.</p>
+          <p class="text-gray-700 mb-4">We work with reliable shipping partners to ensure safe and timely delivery. However, we are not responsible for delays caused by circumstances beyond our control.</p>
+          <p class="text-gray-700">Risk of loss and title for items purchased pass to you upon delivery to the carrier.</p>
+        </div>
+      </section>
+
+      <!-- Section 9 -->
+      <section id="returns" class="bg-white rounded-xl p-6 md:p-8 shadow-sm">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-2xl font-bold text-[#0e2038]">9. Returns & Refunds</h2>
+          <button onclick="toggleSection(this)" class="text-blue-600 hover:text-blue-800">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </button>
+        </div>
+        <div class="section-content">
+          <p class="text-gray-700 mb-4">We offer a 30-day return policy for most items. Please review our <a href="/public/returns-policy.html" class="text-blue-600 hover:underline">Returns Policy</a> for complete details.</p>
+          <p class="text-gray-700 mb-4">To initiate a return, contact our customer support team. Refunds will be processed within 5-10 business days after we receive the returned item.</p>
+          <p class="text-gray-700">Some items may not be eligible for return due to their nature or condition.</p>
+        </div>
+      </section>
+
+      <!-- Section 10 -->
+      <section id="liability" class="bg-white rounded-xl p-6 md:p-8 shadow-sm">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-2xl font-bold text-[#0e2038]">10. Limitation of Liability</h2>
+          <button onclick="toggleSection(this)" class="text-blue-600 hover:text-blue-800">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </button>
+        </div>
+        <div class="section-content">
+          <p class="text-gray-700 mb-4">In no event shall ADD Physical Products be liable for any indirect, incidental, special, consequential, or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses.</p>
+          <p class="text-gray-700 mb-4">Our total liability to you for any claims arising from the use of the Platform shall not exceed the amount you paid us in the 12 months preceding the claim.</p>
+          <p class="text-gray-700">This limitation applies to all causes of action, whether based in contract, tort, or otherwise.</p>
+        </div>
+      </section>
+    </div>
+
+    <!-- Contact Section -->
+    <div class="mt-12 bg-gradient-to-r from-blue-600 to-green-500 rounded-xl p-8 text-center text-white">
+      <h3 class="text-2xl font-bold mb-4">Questions About These Terms?</h3>
+      <p class="mb-6 text-blue-100">If you have any questions about these Terms and Conditions, please contact us.</p>
+      <a href="/public/contact.html" class="inline-block bg-white text-blue-600 font-semibold px-6 py-3 rounded-lg hover:bg-gray-100 transition-colors">
+        Contact Us
+      </a>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white/90 border-t border-gray-200 mt-12 pt-8 pb-4 px-2 md:px-6">
+    <div class="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-sm">
+      <div>
+        <h3 class="font-bold text-gray-800 mb-2 flex items-center gap-1">Support</h3>
+        <ul class="space-y-1">
+          <li><a href="/public/faq.html" class="hover:underline flex items-center gap-1">Help Center & FAQ</a></li>
+          <li><a href="/public/contact.html" class="hover:underline flex items-center gap-1">Contact Us</a></li>
+          <li><a href="/buyer/support.html" class="hover:underline flex items-center gap-1">Live Chat</a></li>
+          <li><a href="/buyer/orders.html" class="hover:underline flex items-center gap-1">Check Order Status</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="font-bold text-gray-800 mb-2 flex items-center gap-1">Business</h3>
+        <ul class="space-y-1">
+          <li><a href="/seller/add-product.html" class="hover:underline flex items-center gap-1">Start Selling</a></li>
+          <li><a href="/seller/profile.html" class="hover:underline flex items-center gap-1">Become a Verified Supplier</a></li>
+          <li><a href="/public/how-it-works.html" class="hover:underline flex items-center gap-1">How It Works</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="font-bold text-gray-800 mb-2 flex items-center gap-1">Legal & Policies</h3>
+        <ul class="space-y-1">
+          <li><a href="/public/privacy-policy.html" class="hover:underline flex items-center gap-1">Privacy Policy</a></li>
+          <li><a href="/public/terms-and-conditions.html" class="hover:underline flex items-center gap-1">Terms & Conditions</a></li>
+          <li><a href="/public/shipping-policy.html" class="hover:underline flex items-center gap-1">Shipping Policy</a></li>
+          <li><a href="/public/returns-policy.html" class="hover:underline flex items-center gap-1">Returns Policy</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="font-bold text-gray-800 mb-2 flex items-center gap-1">About & Connect</h3>
+        <ul class="space-y-1">
+          <li><a href="/public/about.html" class="hover:underline flex items-center gap-1">About Us</a></li>
+          <li><a href="/public/contact.html" class="hover:underline flex items-center gap-1">Contact</a></li>
+          <li><span class="flex items-center gap-1">Rwanda, Kenya, Nigeria</span></li>
+          <li><span class="flex items-center gap-1">Kigali, Nairobi, Lagos</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="text-center text-xs text-gray-500 mt-4">&copy; 2025 African Deals Domain. All rights reserved.</div>
+  </footer>
+
+  <script>
+    function toggleSection(button) {
+      const content = button.parentElement.nextElementSibling;
+      const icon = button.querySelector('svg');
+      
+      content.classList.toggle('active');
+      icon.classList.toggle('rotate-180');
+    }
+
+    function scrollToSection(sectionId) {
+      document.getElementById(sectionId).scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start'
+      });
+    }
+
+    // Auto-expand section if it's linked from URL
+    document.addEventListener('DOMContentLoaded', function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const section = urlParams.get('section');
+      
+      if (section) {
+        const targetSection = document.getElementById(section);
+        if (targetSection) {
+          targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          const content = targetSection.querySelector('.section-content');
+          const button = targetSection.querySelector('button');
+          const icon = button.querySelector('svg');
+          
+          content.classList.add('active');
+          icon.classList.add('rotate-180');
+        }
+      }
+    });
+  </script>
+
+<script>
+// Enhanced Notification System
+function showNotification(message, type = 'info', duration = 4000) {
+    // Remove existing notifications
+    const existingNotifications = document.querySelectorAll('.system-notification');
+    existingNotifications.forEach(notification => notification.remove());
+    
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `system-notification fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 max-w-md ${
+        type === 'success' ? 'bg-green-500 text-white' :
+        type === 'error' ? 'bg-red-500 text-white' :
+        type === 'warning' ? 'bg-yellow-500 text-black' :
+        'bg-blue-500 text-white'
+    }`;
+    
+    // Add icon based on type
+    const icon = {
+        success: '✅',
+        error: '❌',
+        warning: '⚠️',
+        info: 'ℹ️'
+    }[type] || 'ℹ️';
+    
+    notification.innerHTML = `
+        <div class="flex items-center space-x-2">
+            <span class="text-lg">${icon}</span>
+            <span class="flex-1">${message}</span>
+            <button onclick="this.parentElement.parentElement.remove()" class="text-white/80 hover:text-white text-lg leading-none">&times;</button>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto-remove after duration
+    if (duration > 0) {
+        setTimeout(() => {
+            if (notification.parentElement) {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => notification.remove(), 300);
+            }
+        }, duration);
+    }
+    
+    return notification;
+}
+
+// Global error handler
+window.addEventListener('error', function(event) {
+    console.error('Global error:', event.error);
+                
+                // Enhanced error reporting
+                if (event.error) {
+                    const errorDetails = {
+                        message: event.error.message || 'Unknown error',
+                        stack: event.error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        event.error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+    showNotification('An unexpected error occurred', 'error');
+});
+
+// Global unhandled promise rejection handler
+window.addEventListener('unhandledrejection', function(event) {
+    console.error('Unhandled promise rejection:', event.reason);
+                
+                // Enhanced error reporting
+                if (event.reason) {
+                    const errorDetails = {
+                        message: event.reason.message || 'Unknown error',
+                        stack: event.reason.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        event.reason.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+    showNotification('Operation failed unexpectedly', 'error');
+});
+</script>
+</body>
+</html>

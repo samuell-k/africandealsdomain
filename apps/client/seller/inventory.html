@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inventory Management | African Deals Domain</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" href="/public/images/logo.png">
+  <style>
+    .soft-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); }
+    .hover-lift { transition: all 0.3s ease; }
+    .hover-lift:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15); }
+    .animate-fade-in { animation: fadeIn 0.6s ease-in-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .gradient-text { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .success-glow { box-shadow: 0 0 20px rgba(34, 197, 94, 0.3); }
+    .pulse-glow { animation: pulse-glow 2s infinite; }
+    @keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 5px rgba(59, 130, 246, 0.5); } 50% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.8); } }
+  </style>
+  <script src="/shared/auth-utils.js"></script>
+  
+  <script src="/shared/enhanced-navigation.js"></script>
+</head>
+<body class="flex flex-col min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+  <!-- Navigation Container -->
+  <div id="navigation-container"></div>
+
+  <main class="flex-1 max-w-7xl mx-auto w-full px-4 md:px-8 py-8">
+    <div class="soft-card rounded-2xl p-6 mb-8 animate-fade-in">
+      <div class="flex items-center gap-4">
+        <div class="bg-gradient-to-r from-blue-500 to-blue-600 p-3 rounded-xl">
+          <svg width="28" height="28" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24">
+            <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-3xl font-bold gradient-text">Inventory Management</h1>
+          <p class="text-gray-600 mt-1">Track and manage your product inventory</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="message" class="mb-6 text-center text-sm font-semibold"></div>
+
+    <!-- Inventory Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div class="soft-card rounded-xl p-6 hover-lift animate-fade-in">
+        <div class="flex items-center gap-4">
+          <div class="bg-gradient-to-r from-blue-500 to-blue-600 p-3 rounded-lg">
+            <svg width="24" height="24" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-2xl font-bold text-gray-900" id="total-products">0</h3>
+            <p class="text-sm text-gray-600">Total Products</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="soft-card rounded-xl p-6 hover-lift animate-fade-in">
+        <div class="flex items-center gap-4">
+          <div class="bg-gradient-to-r from-green-500 to-green-600 p-3 rounded-lg">
+            <svg width="24" height="24" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-2xl font-bold text-gray-900" id="in-stock">0</h3>
+            <p class="text-sm text-gray-600">In Stock</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="soft-card rounded-xl p-6 hover-lift animate-fade-in">
+        <div class="flex items-center gap-4">
+          <div class="bg-gradient-to-r from-yellow-500 to-yellow-600 p-3 rounded-lg">
+            <svg width="24" height="24" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-2xl font-bold text-gray-900" id="low-stock">0</h3>
+            <p class="text-sm text-gray-600">Low Stock</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="soft-card rounded-xl p-6 hover-lift animate-fade-in">
+        <div class="flex items-center gap-4">
+          <div class="bg-gradient-to-r from-red-500 to-red-600 p-3 rounded-lg">
+            <svg width="24" height="24" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-2xl font-bold text-gray-900" id="out-of-stock">0</h3>
+            <p class="text-sm text-gray-600">Out of Stock</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="soft-card rounded-xl p-6 mb-8 animate-fade-in">
+      <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
+        <div>
+          <h2 class="text-2xl font-bold text-gray-900 mb-2">Inventory Actions</h2>
+          <p class="text-gray-600">Manage your product inventory efficiently</p>
+        </div>
+        <div class="flex gap-4">
+          <button id="add-inventory-btn" class="bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold py-3 px-6 rounded-lg hover:shadow-md transition-all duration-200 flex items-center gap-2">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+            </svg>
+            Add Inventory
+          </button>
+          <button id="bulk-update-btn" class="bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold py-3 px-6 rounded-lg hover:shadow-md transition-all duration-200 flex items-center gap-2">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+            Bulk Update
+          </button>
+          <button id="refresh-inventory-btn" class="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-4 py-2 rounded-lg hover:shadow-md transition-all duration-200 flex items-center gap-2">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.914L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.914L3 16"/>
+            </svg>
+            Refresh
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter Controls -->
+    <div class="soft-card rounded-xl p-6 mb-8 animate-fade-in">
+      <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
+        <div class="flex items-center gap-4">
+          <select id="category-filter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <option value="">All Categories</option>
+          </select>
+          
+          <select id="stock-filter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <option value="">All Stock Levels</option>
+            <option value="in_stock">In Stock</option>
+            <option value="low_stock">Low Stock</option>
+            <option value="out_of_stock">Out of Stock</option>
+          </select>
+          
+          <select id="status-filter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <option value="">All Status</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+            <option value="draft">Draft</option>
+          </select>
+        </div>
+        
+        <div class="flex items-center gap-2">
+          <input type="text" id="search-inventory" placeholder="Search products..." class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+          <button id="search-btn" class="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-lg hover:shadow-md transition-all duration-200">
+            Search
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Inventory Table -->
+    <div class="soft-card rounded-xl p-6 animate-fade-in">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-bold text-gray-900">Product Inventory</h2>
+        <div class="flex items-center gap-2">
+          <span class="text-sm text-gray-500">Showing</span>
+          <select id="items-per-page" class="px-2 py-1 border border-gray-300 rounded text-sm">
+            <option value="10">10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+          </select>
+          <span class="text-sm text-gray-500">items</span>
+        </div>
+      </div>
+
+      <div id="inventory-container">
+        <div id="loading-inventory" class="text-center py-12">
+          <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <p class="mt-2 text-gray-600">Loading inventory...</p>
+        </div>
+        
+        <div id="empty-inventory" class="text-center py-12 hidden">
+          <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" class="text-gray-400" viewBox="0 0 24 24">
+              <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+            </svg>
+          </div>
+          <h3 class="text-xl font-semibold text-gray-900 mb-2">No products in inventory</h3>
+          <p class="text-gray-600 mb-4">Start by adding products to your inventory.</p>
+          <button id="add-first-product-btn" class="bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold py-3 px-6 rounded-lg hover:shadow-md transition-all duration-200">
+            Add First Product
+          </button>
+        </div>
+        
+        <div id="inventory-table" class="overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="inventory-tbody" class="bg-white divide-y divide-gray-200">
+              <!-- Inventory rows will be populated here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Add Inventory Modal -->
+  <div id="inventory-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+    <div class="flex items-center justify-center min-h-screen p-4">
+      <div class="soft-card rounded-2xl p-8 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-2xl font-bold text-gray-900">Add Inventory</h3>
+          <button id="close-inventory-modal" class="text-gray-400 hover:text-gray-600">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M18 6L6 18M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+        
+        <form id="inventory-form" class="space-y-6">
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Product</label>
+            <select id="product-select" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+              <option value="">Select a product</option>
+            </select>
+          </div>
+          
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Quantity</label>
+              <input type="number" id="quantity-input" min="0" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter quantity" required>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Reorder Level</label>
+              <input type="number" id="reorder-level" min="0" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Reorder level" required>
+            </div>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Location</label>
+            <input type="text" id="location-input" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Warehouse location">
+          </div>
+          
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Notes</label>
+            <textarea id="notes-input" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Additional notes"></textarea>
+          </div>
+        </form>
+        
+        <div class="flex gap-4 mt-6">
+          <button id="submit-inventory" class="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold py-3 px-6 rounded-lg hover:shadow-md transition-all duration-200">
+            Add Inventory
+          </button>
+          <button id="cancel-inventory" class="flex-1 bg-gray-200 text-gray-700 font-semibold py-3 px-6 rounded-lg hover:bg-gray-300 transition-all duration-200">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function initializeNavigation() {
+      SellerNavigation.inject('navigation-container', {
+        currentPage: 'inventory',
+        userName: 'Seller',
+        storeName: 'My Store'
+      });
+    }
+    
+    function formatCurrency(amount) {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD'
+      }).format(amount);
+    }
+    
+    function getStockStatusColor(stock, reorderLevel) {
+      if (stock === 0) return 'bg-red-100 text-red-800';
+      if (stock <= reorderLevel) return 'bg-yellow-100 text-yellow-800';
+      return 'bg-green-100 text-green-800';
+    }
+    
+    function getStockStatusText(stock, reorderLevel) {
+      if (stock === 0) return 'Out of Stock';
+      if (stock <= reorderLevel) return 'Low Stock';
+      return 'In Stock';
+    }
+    
+    function renderInventoryRow(product) {
+      const stockStatusColor = getStockStatusColor(product.stock, product.reorder_level || 5);
+      const stockStatusText = getStockStatusText(product.stock, product.reorder_level || 5);
+      
+      return `
+        <tr class="hover:bg-gray-50">
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="flex items-center">
+              <img src="${product.main_image || '/public/images/logo.png'}" alt="${product.name}" class="w-10 h-10 object-cover rounded-lg mr-3" onerror="this.src='/public/images/logo.png'">
+              <div>
+                <div class="text-sm font-medium text-gray-900">${product.name}</div>
+                <div class="text-sm text-gray-500">SKU: ${product.sku || 'N/A'}</div>
+              </div>
+            </div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${product.category_name || 'Uncategorized'}</td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <span class="px-2 py-1 text-xs font-medium rounded-full ${stockStatusColor}">
+              ${product.stock || 0}
+            </span>
+            <div class="text-xs text-gray-500 mt-1">${stockStatusText}</div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatCurrency(product.price || 0)}</td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <span class="px-2 py-1 text-xs font-medium rounded-full ${product.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">
+              ${product.status === 'active' ? 'Active' : 'Inactive'}
+            </span>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+            <div class="flex gap-2">
+              <button class="text-blue-600 hover:text-blue-900 edit-inventory-btn" data-id="${product.id}">Edit</button>
+              <button class="text-green-600 hover:text-green-900 add-stock-btn" data-id="${product.id}">Add Stock</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }
+    
+    async function loadInventoryData() {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch('/api/seller/inventory', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (!res.ok) throw new Error('Failed to load inventory data');
+        
+        const data = await res.json();
+        
+        // Update stats
+        document.getElementById('total-products').textContent = data.total_products || 0;
+        document.getElementById('in-stock').textContent = data.in_stock || 0;
+        document.getElementById('low-stock').textContent = data.low_stock || 0;
+        document.getElementById('out-of-stock').textContent = data.out_of_stock || 0;
+        
+      } catch (error) {
+        console.error('Error loading inventory data:', error);
+      }
+    }
+    
+    async function loadInventory() {
+      const loadingInventory = document.getElementById('loading-inventory');
+      const emptyInventory = document.getElementById('empty-inventory');
+      const inventoryTable = document.getElementById('inventory-table');
+      const inventoryTbody = document.getElementById('inventory-tbody');
+      
+      loadingInventory.classList.remove('hidden');
+      emptyInventory.classList.add('hidden');
+      inventoryTable.classList.add('hidden');
+      inventoryTbody.innerHTML = '';
+      
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch('/api/seller/inventory/list', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (!res.ok) throw new Error('Failed to load inventory');
+        
+        const data = await res.json();
+        const products = data.products || [];
+        
+        loadingInventory.classList.add('hidden');
+        
+        if (products.length === 0) {
+          emptyInventory.classList.remove('hidden');
+          return;
+        }
+        
+        inventoryTable.classList.remove('hidden');
+        inventoryTbody.innerHTML = products.map(product => renderInventoryRow(product)).join('');
+        
+      } catch (error) {
+        console.error('Error loading inventory:', error);
+        loadingInventory.classList.add('hidden');
+        emptyInventory.classList.remove('hidden');
+      }
+    }
+    
+    async function loadProducts() {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch('/api/seller/products', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (!res.ok) throw new Error('Failed to load products');
+        
+        const data = await res.json();
+        const products = data.products || [];
+        
+        const productSelect = document.getElementById('product-select');
+        productSelect.innerHTML = '<option value="">Select a product</option>' +
+          products.map(product => 
+            `<option value="${product.id}">${product.name} - ${formatCurrency(product.price)}</option>`
+          ).join('');
+        
+      } catch (error) {
+        console.error('Error loading products:', error);
+        document.getElementById('product-select').innerHTML = '<option value="">Error loading products</option>';
+      }
+    }
+    
+    function openInventoryModal() {
+      document.getElementById('inventory-modal').classList.remove('hidden');
+      loadProducts();
+    }
+    
+    async function submitInventory() {
+      const productId = document.getElementById('product-select').value;
+      const quantity = document.getElementById('quantity-input').value;
+      const reorderLevel = document.getElementById('reorder-level').value;
+      const location = document.getElementById('location-input').value;
+      const notes = document.getElementById('notes-input').value;
+      
+      if (!productId || !quantity || !reorderLevel) {
+        alert('Please fill in all required fields');
+        return;
+      }
+      
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch('/api/seller/inventory/add', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            product_id: productId,
+            quantity: parseInt(quantity),
+            reorder_level: parseInt(reorderLevel),
+            location: location,
+            notes: notes
+          })
+        });
+        
+        if (!res.ok) throw new Error('Failed to add inventory');
+        
+        document.getElementById('inventory-modal').classList.add('hidden');
+        document.getElementById('inventory-form').reset();
+        
+        const msg = document.getElementById('message');
+        msg.textContent = '✅ Inventory added successfully!';
+        msg.classList.add('text-green-600', 'success-glow');
+        
+        setTimeout(() => {
+          msg.textContent = '';
+          msg.className = 'mb-6 text-center text-sm font-semibold';
+        }, 3000);
+        
+        // Reload data
+        loadInventoryData();
+        loadInventory();
+        
+      } catch (error) {
+        console.error('Error adding inventory:', error);
+        alert('Failed to add inventory');
+      }
+    }
+    
+    // Event listeners
+    document.getElementById('add-inventory-btn').addEventListener('click', openInventoryModal);
+    document.getElementById('add-first-product-btn').addEventListener('click', openInventoryModal);
+    document.getElementById('refresh-inventory-btn').addEventListener('click', function() {
+      loadInventoryData();
+      loadInventory();
+    });
+    document.getElementById('close-inventory-modal').addEventListener('click', function() {
+      document.getElementById('inventory-modal').classList.add('hidden');
+    });
+    document.getElementById('cancel-inventory').addEventListener('click', function() {
+      document.getElementById('inventory-modal').classList.add('hidden');
+    });
+    document.getElementById('submit-inventory').addEventListener('click', submitInventory);
+    
+    // Close modal when clicking outside
+    document.getElementById('inventory-modal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        this.classList.add('hidden');
+      }
+    });
+    
+    document.addEventListener('DOMContentLoaded', async function() {
+      initializeNavigation();
+      loadInventoryData();
+      loadInventory();
+    });
+  </script>
+</body>
+</html> 

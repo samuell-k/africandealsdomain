@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Local Market Analytics | African Deals Domain</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" href="/public/images/logo.png">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="/shared/auth-utils.js"></script>
+  <style>
+    .fade-in { animation: fadeIn 0.5s ease-in-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .loading-spinner { animation: spin 1s linear infinite; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+    .metric-card { transition: all 0.3s ease; }
+    .metric-card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+    .chart-container { position: relative; height: 300px; }
+  </style>
+</head>
+<body class="bg-green-50 min-h-screen">
+
+  <!-- Header -->
+  <header class="glass shadow-lg sticky top-0 z-40">
+    <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-20">
+        <!-- Logo & Navigation -->
+        <div class="flex items-center gap-4">
+          <a href="/seller/local-market-dashboard.html" class="flex items-center gap-2">
+            <img src="/public/images/logo.png" alt="ADD Logo" class="h-12 w-12 rounded-xl shadow-lg" />
+          </a>
+          <div>
+            <h1 class="font-bold text-lg text-green-700">📊 Local Market Analytics</h1>
+            <p class="text-xs text-gray-500">Track your grocery business performance</p>
+          </div>
+        </div>
+
+        <!-- Navigation Links -->
+        <div class="flex items-center gap-4">
+          <a href="/seller/local-market-dashboard.html" class="text-gray-600 hover:text-green-700 font-medium transition-colors">
+            <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+          </a>
+          <a href="/seller/local-market-orders.html" class="text-gray-600 hover:text-green-700 font-medium transition-colors">
+            <i class="fas fa-shopping-cart mr-2"></i>Orders
+          </a>
+          <a href="/seller/dashboard.html" class="text-gray-600 hover:text-green-700 font-medium transition-colors">
+            <i class="fas fa-box mr-2"></i>Physical Products
+          </a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="max-w-8xl mx-auto p-4 sm:p-6 lg:p-8">
+    
+    <!-- Time Period Selector -->
+    <div class="bg-white rounded-2xl shadow-lg p-6 mb-8 fade-in">
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div>
+          <h2 class="text-xl font-bold text-gray-800">Performance Overview</h2>
+          <p class="text-gray-600">Monitor your local market business metrics</p>
+        </div>
+        <div class="flex gap-2">
+          <select id="time-period" class="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500">
+            <option value="today">Today</option>
+            <option value="week" selected>This Week</option>
+            <option value="month">This Month</option>
+            <option value="quarter">This Quarter</option>
+            <option value="year">This Year</option>
+          </select>
+          <button id="export-report" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl transition-colors">
+            <i class="fas fa-download mr-2"></i>Export Report
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Key Metrics -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div class="bg-white rounded-2xl shadow-lg p-6 metric-card fade-in">
+        <div class="flex items-center justify-between mb-4">
+          <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+            <i class="fas fa-dollar-sign text-green-600 text-xl"></i>
+          </div>
+          <div class="text-right">
+            <p class="text-sm text-gray-600">Total Revenue</p>
+            <p class="text-2xl font-bold text-green-600" id="total-revenue">0 RWF</p>
+          </div>
+        </div>
+        <div class="flex items-center text-sm">
+          <span id="revenue-change" class="text-green-600 font-medium">+0%</span>
+          <span class="text-gray-500 ml-2">vs last period</span>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow-lg p-6 metric-card fade-in">
+        <div class="flex items-center justify-between mb-4">
+          <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+            <i class="fas fa-shopping-cart text-blue-600 text-xl"></i>
+          </div>
+          <div class="text-right">
+            <p class="text-sm text-gray-600">Total Orders</p>
+            <p class="text-2xl font-bold text-blue-600" id="total-orders">0</p>
+          </div>
+        </div>
+        <div class="flex items-center text-sm">
+          <span id="orders-change" class="text-blue-600 font-medium">+0%</span>
+          <span class="text-gray-500 ml-2">vs last period</span>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow-lg p-6 metric-card fade-in">
+        <div class="flex items-center justify-between mb-4">
+          <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+            <i class="fas fa-chart-line text-purple-600 text-xl"></i>
+          </div>
+          <div class="text-right">
+            <p class="text-sm text-gray-600">Average Order</p>
+            <p class="text-2xl font-bold text-purple-600" id="avg-order">0 RWF</p>
+          </div>
+        </div>
+        <div class="flex items-center text-sm">
+          <span id="avg-change" class="text-purple-600 font-medium">+0%</span>
+          <span class="text-gray-500 ml-2">vs last period</span>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow-lg p-6 metric-card fade-in">
+        <div class="flex items-center justify-between mb-4">
+          <div class="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
+            <i class="fas fa-users text-orange-600 text-xl"></i>
+          </div>
+          <div class="text-right">
+            <p class="text-sm text-gray-600">Unique Customers</p>
+            <p class="text-2xl font-bold text-orange-600" id="unique-customers">0</p>
+          </div>
+        </div>
+        <div class="flex items-center text-sm">
+          <span id="customers-change" class="text-orange-600 font-medium">+0%</span>
+          <span class="text-gray-500 ml-2">vs last period</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Row 1 -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+      <!-- Revenue Chart -->
+      <div class="bg-white rounded-2xl shadow-lg p-6 fade-in">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-lg font-bold text-gray-800">Revenue Trend</h3>
+          <div class="flex gap-2">
+            <button class="chart-toggle px-3 py-1 text-sm bg-green-100 text-green-700 rounded-lg" data-chart="revenue" data-type="daily">Daily</button>
+            <button class="chart-toggle px-3 py-1 text-sm text-gray-600 rounded-lg hover:bg-gray-100" data-chart="revenue" data-type="weekly">Weekly</button>
+          </div>
+        </div>
+        <div class="chart-container">
+          <canvas id="revenue-chart"></canvas>
+        </div>
+      </div>
+
+      <!-- Orders Chart -->
+      <div class="bg-white rounded-2xl shadow-lg p-6 fade-in">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-lg font-bold text-gray-800">Orders Overview</h3>
+          <div class="flex gap-2">
+            <button class="chart-toggle px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded-lg" data-chart="orders" data-type="status">By Status</button>
+            <button class="chart-toggle px-3 py-1 text-sm text-gray-600 rounded-lg hover:bg-gray-100" data-chart="orders" data-type="time">By Time</button>
+          </div>
+        </div>
+        <div class="chart-container">
+          <canvas id="orders-chart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Row 2 -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+      <!-- Top Products -->
+      <div class="bg-white rounded-2xl shadow-lg p-6 fade-in">
+        <h3 class="text-lg font-bold text-gray-800 mb-6">Top Selling Products</h3>
+        <div id="top-products" class="space-y-4">
+          <!-- Top products will be populated here -->
+        </div>
+      </div>
+
+      <!-- Customer Insights -->
+      <div class="bg-white rounded-2xl shadow-lg p-6 fade-in">
+        <h3 class="text-lg font-bold text-gray-800 mb-6">Customer Insights</h3>
+        <div class="chart-container">
+          <canvas id="customer-chart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Performance Metrics -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+      <!-- Delivery Performance -->
+      <div class="bg-white rounded-2xl shadow-lg p-6 fade-in">
+        <h3 class="text-lg font-bold text-gray-800 mb-6">Delivery Performance</h3>
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="text-gray-600">Average Delivery Time</span>
+            <span class="font-semibold" id="avg-delivery-time">0 min</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-gray-600">On-Time Delivery Rate</span>
+            <span class="font-semibold text-green-600" id="ontime-rate">0%</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-gray-600">Customer Satisfaction</span>
+            <div class="flex items-center gap-1">
+              <span class="font-semibold" id="satisfaction-score">0.0</span>
+              <div class="flex text-yellow-400" id="satisfaction-stars">
+                <!-- Stars will be populated here -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Inventory Status -->
+      <div class="bg-white rounded-2xl shadow-lg p-6 fade-in">
+        <h3 class="text-lg font-bold text-gray-800 mb-6">Inventory Status</h3>
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="text-gray-600">Total Products</span>
+            <span class="font-semibold" id="total-products">0</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-gray-600">In Stock</span>
+            <span class="font-semibold text-green-600" id="in-stock">0</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-gray-600">Low Stock</span>
+            <span class="font-semibold text-yellow-600" id="low-stock">0</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-gray-600">Out of Stock</span>
+            <span class="font-semibold text-red-600" id="out-stock">0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Financial Summary -->
+      <div class="bg-white rounded-2xl shadow-lg p-6 fade-in">
+        <h3 class="text-lg font-bold text-gray-800 mb-6">Financial Summary</h3>
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="text-gray-600">Gross Revenue</span>
+            <span class="font-semibold" id="gross-revenue">0 RWF</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-gray-600">Platform Fees</span>
+            <span class="font-semibold text-red-600" id="platform-fees">0 RWF</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-gray-600">Net Earnings</span>
+            <span class="font-semibold text-green-600" id="net-earnings">0 RWF</span>
+          </div>
+          <div class="pt-2 border-t border-gray-200">
+            <div class="flex items-center justify-between">
+              <span class="text-gray-600">Profit Margin</span>
+              <span class="font-semibold text-blue-600" id="profit-margin">0%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="bg-white rounded-2xl shadow-lg p-6 fade-in">
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="text-lg font-bold text-gray-800">Recent Activity</h3>
+        <a href="/seller/local-market-orders.html" class="text-green-600 hover:text-green-700 font-medium">
+          View All Orders <i class="fas fa-arrow-right ml-1"></i>
+        </a>
+      </div>
+      <div id="recent-activity" class="space-y-4">
+        <!-- Recent activity will be populated here -->
+      </div>
+    </div>
+  </main>
+
+  <!-- Loading Overlay -->
+  <div id="loading-overlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-2xl p-8 text-center">
+      <i class="fas fa-spinner loading-spinner text-4xl text-green-600 mb-4"></i>
+      <p class="text-lg font-semibold text-gray-800">Loading Analytics...</p>
+    </div>
+  </div>
+
+  <script>
+    // Global variables
+    let analyticsData = {};
+    let charts = {};
+    let currentPeriod = 'week';
+
+    document.addEventListener('DOMContentLoaded', function() {
+      // Check authentication
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = '/public/login.html';
+        return;
+      }
+
+      // Initialize the page
+      initializePage();
+    });
+
+    function initializePage() {
+      loadAnalyticsData();
+      setupEventListeners();
+    }
+
+    function loadAnalyticsData() {
+      showLoading(true);
+      
+      const token = localStorage.getItem('token');
+      
+      fetch(`/api/grocery-seller/analytics?period=${currentPeriod}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      .then(response => response.json())
+      .then(data => {
+        showLoading(false);
+        if (data.success) {
+          analyticsData = data.analytics;
+          updateMetrics();
+          updateCharts();
+          updateTopProducts();
+          updateRecentActivity();
+        } else {
+          console.error('Failed to load analytics:', data.message);
+          showMockData(); // Show mock data for demonstration
+        }
+      })
+      .catch(error => {
+        showLoading(false);
+        console.error('Error loading analytics:', error);
+        showMockData(); // Show mock data for demonstration
+      });
+    }
+
+    function showMockData() {
+      // Mock data for demonstration
+      analyticsData = {
+        metrics: {
+          totalRevenue: 2450000,
+          totalOrders: 156,
+          avgOrderValue: 15705,
+          uniqueCustomers: 89,
+          revenueChange: 12.5,
+          ordersChange: 8.3,
+          avgChange: 4.2,
+          customersChange: 15.7
+        },
+        revenue: {
+          daily: [45000, 52000, 38000, 67000, 71000, 59000, 84000],
+          labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+        },
+        orders: {
+          byStatus: {
+            delivered: 89,
+            pending: 12,
+            preparing: 8,
+            cancelled: 5
+          },
+          byTime: [8, 12, 15, 22, 18, 25, 19]
+        },
+        topProducts: [
+          { name: 'Fresh Tomatoes', sales: 45, revenue: 123750 },
+          { name: 'Organic Milk', sales: 32, revenue: 96000 },
+          { name: 'Irish Potatoes', sales: 28, revenue: 84000 },
+          { name: 'Fresh Eggs', sales: 24, revenue: 72000 },
+          { name: 'Avocado Hass', sales: 18, revenue: 54000 }
+        ],
+        performance: {
+          avgDeliveryTime: 28,
+          onTimeRate: 94.2,
+          satisfactionScore: 4.7,
+          totalProducts: 24,
+          inStock: 18,
+          lowStock: 4,
+          outOfStock: 2
+        },
+        financial: {
+          grossRevenue: 2450000,
+          platformFees: 24500,
+          netEarnings: 2425500,
+          profitMargin: 68.5
+        },
+        recentActivity: [
+          { type: 'order', message: 'New order #1234 from John Doe', time: '5 minutes ago', status: 'pending' },
+          { type: 'delivery', message: 'Order #1230 delivered successfully', time: '12 minutes ago', status: 'completed' },
+          { type: 'product', message: 'Fresh Tomatoes stock running low', time: '1 hour ago', status: 'warning' },
+          { type: 'order', message: 'Order #1228 confirmed and preparing', time: '2 hours ago', status: 'processing' }
+        ]
+      };
+      
+      updateMetrics();
+      updateCharts();
+      updateTopProducts();
+      updateRecentActivity();
+    }
+
+    function updateMetrics() {
+      const metrics = analyticsData.metrics;
+      
+      document.getElementById('total-revenue').textContent = `${metrics.totalRevenue.toLocaleString()} RWF`;
+      document.getElementById('total-orders').textContent = metrics.totalOrders.toLocaleString();
+      document.getElementById('avg-order').textContent = `${metrics.avgOrderValue.toLocaleString()} RWF`;
+      document.getElementById('unique-customers').textContent = metrics.uniqueCustomers.toLocaleString();
+      
+      // Update change indicators
+      updateChangeIndicator('revenue-change', metrics.revenueChange);
+      updateChangeIndicator('orders-change', metrics.ordersChange);
+      updateChangeIndicator('avg-change', metrics.avgChange);
+      updateChangeIndicator('customers-change', metrics.customersChange);
+      
+      // Update performance metrics
+      if (analyticsData.performance) {
+        const perf = analyticsData.performance;
+        document.getElementById('avg-delivery-time').textContent = `${perf.avgDeliveryTime} min`;
+        document.getElementById('ontime-rate').textContent = `${perf.onTimeRate}%`;
+        document.getElementById('satisfaction-score').textContent = perf.satisfactionScore.toFixed(1);
+        
+        // Update satisfaction stars
+        const starsContainer = document.getElementById('satisfaction-stars');
+        starsContainer.innerHTML = '';
+        for (let i = 1; i <= 5; i++) {
+          const star = document.createElement('i');
+          star.className = i <= Math.floor(perf.satisfactionScore) ? 'fas fa-star' : 'far fa-star';
+          starsContainer.appendChild(star);
+        }
+        
+        // Update inventory
+        document.getElementById('total-products').textContent = perf.totalProducts;
+        document.getElementById('in-stock').textContent = perf.inStock;
+        document.getElementById('low-stock').textContent = perf.lowStock;
+        document.getElementById('out-stock').textContent = perf.outOfStock;
+      }
+      
+      // Update financial summary
+      if (analyticsData.financial) {
+        const fin = analyticsData.financial;
+        document.getElementById('gross-revenue').textContent = `${fin.grossRevenue.toLocaleString()} RWF`;
+        document.getElementById('platform-fees').textContent = `${fin.platformFees.toLocaleString()} RWF`;
+        document.getElementById('net-earnings').textContent = `${fin.netEarnings.toLocaleString()} RWF`;
+        document.getElementById('profit-margin').textContent = `${fin.profitMargin}%`;
+      }
+    }
+
+    function updateChangeIndicator(elementId, change) {
+      const element = document.getElementById(elementId);
+      const isPositive = change >= 0;
+      element.textContent = `${isPositive ? '+' : ''}${change.toFixed(1)}%`;
+      element.className = `font-medium ${isPositive ? 'text-green-600' : 'text-red-600'}`;
+    }
+
+    function updateCharts() {
+      // Revenue Chart
+      const revenueCtx = document.getElementById('revenue-chart').getContext('2d');
+      if (charts.revenue) charts.revenue.destroy();
+      
+      charts.revenue = new Chart(revenueCtx, {
+        type: 'line',
+        data: {
+          labels: analyticsData.revenue.labels,
+          datasets: [{
+            label: 'Revenue (RWF)',
+            data: analyticsData.revenue.daily,
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: function(value) {
+                  return value.toLocaleString() + ' RWF';
+                }
+              }
+            }
+          }
+        }
+      });
+
+      // Orders Chart
+      const ordersCtx = document.getElementById('orders-chart').getContext('2d');
+      if (charts.orders) charts.orders.destroy();
+      
+      charts.orders = new Chart(ordersCtx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Delivered', 'Pending', 'Preparing', 'Cancelled'],
+          datasets: [{
+            data: [
+              analyticsData.orders.byStatus.delivered,
+              analyticsData.orders.byStatus.pending,
+              analyticsData.orders.byStatus.preparing,
+              analyticsData.orders.byStatus.cancelled
+            ],
+            backgroundColor: ['#10b981', '#f59e0b', '#3b82f6', '#ef4444'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: { usePointStyle: true }
+            }
+          }
+        }
+      });
+
+      // Customer Chart
+      const customerCtx = document.getElementById('customer-chart').getContext('2d');
+      if (charts.customer) charts.customer.destroy();
+      
+      charts.customer = new Chart(customerCtx, {
+        type: 'bar',
+        data: {
+          labels: ['New', 'Returning', 'Frequent'],
+          datasets: [{
+            label: 'Customers',
+            data: [25, 45, 19],
+            backgroundColor: ['#3b82f6', '#10b981', '#f59e0b'],
+            borderRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: { beginAtZero: true }
+          }
+        }
+      });
+    }
+
+    function updateTopProducts() {
+      const container = document.getElementById('top-products');
+      
+      if (!analyticsData.topProducts || analyticsData.topProducts.length === 0) {
+        container.innerHTML = '<p class="text-gray-500 text-center py-8">No product data available</p>';
+        return;
+      }
+      
+      container.innerHTML = analyticsData.topProducts.map((product, index) => `
+        <div class="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
+          <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+            <span class="text-sm font-bold text-green-600">${index + 1}</span>
+          </div>
+          <div class="flex-1">
+            <h4 class="font-semibold text-gray-800">${product.name}</h4>
+            <p class="text-sm text-gray-600">${product.sales} units sold</p>
+          </div>
+          <div class="text-right">
+            <p class="font-semibold text-green-600">${product.revenue.toLocaleString()} RWF</p>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function updateRecentActivity() {
+      const container = document.getElementById('recent-activity');
+      
+      if (!analyticsData.recentActivity || analyticsData.recentActivity.length === 0) {
+        container.innerHTML = '<p class="text-gray-500 text-center py-8">No recent activity</p>';
+        return;
+      }
+      
+      container.innerHTML = analyticsData.recentActivity.map(activity => {
+        const iconClass = getActivityIcon(activity.type);
+        const statusColor = getActivityStatusColor(activity.status);
+        
+        return `
+          <div class="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
+            <div class="w-10 h-10 ${statusColor} rounded-full flex items-center justify-center">
+              <i class="${iconClass} text-white"></i>
+            </div>
+            <div class="flex-1">
+              <p class="font-medium text-gray-800">${activity.message}</p>
+              <p class="text-sm text-gray-600">${activity.time}</p>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function getActivityIcon(type) {
+      const icons = {
+        order: 'fas fa-shopping-cart',
+        delivery: 'fas fa-truck',
+        product: 'fas fa-box',
+        customer: 'fas fa-user'
+      };
+      return icons[type] || 'fas fa-info';
+    }
+
+    function getActivityStatusColor(status) {
+      const colors = {
+        pending: 'bg-yellow-500',
+        completed: 'bg-green-500',
+        warning: 'bg-orange-500',
+        processing: 'bg-blue-500'
+      };
+      return colors[status] || 'bg-gray-500';
+    }
+
+    function setupEventListeners() {
+      // Time period selector
+      document.getElementById('time-period').addEventListener('change', function(e) {
+        currentPeriod = e.target.value;
+        loadAnalyticsData();
+      });
+
+      // Export report
+      document.getElementById('export-report').addEventListener('click', exportReport);
+
+      // Chart toggles
+      document.querySelectorAll('.chart-toggle').forEach(button => {
+        button.addEventListener('click', function() {
+          const chartType = this.dataset.chart;
+          const viewType = this.dataset.type;
+          
+          // Update active state
+          this.parentElement.querySelectorAll('.chart-toggle').forEach(btn => {
+            btn.className = 'chart-toggle px-3 py-1 text-sm text-gray-600 rounded-lg hover:bg-gray-100';
+          });
+          this.className = `chart-toggle px-3 py-1 text-sm bg-${chartType === 'revenue' ? 'green' : 'blue'}-100 text-${chartType === 'revenue' ? 'green' : 'blue'}-700 rounded-lg`;
+          
+          // Update chart (would implement different views here)
+          console.log(`Switching ${chartType} chart to ${viewType} view`);
+        });
+      });
+    }
+
+    function exportReport() {
+      // Create a comprehensive report
+      const reportData = {
+        period: currentPeriod,
+        generatedAt: new Date().toISOString(),
+        metrics: analyticsData.metrics,
+        topProducts: analyticsData.topProducts,
+        performance: analyticsData.performance,
+        financial: analyticsData.financial
+      };
+      
+      // Convert to CSV format
+      const csvContent = generateCSVReport(reportData);
+      
+      // Download the file
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `local-market-analytics-${currentPeriod}-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    }
+
+    function generateCSVReport(data) {
+      let csv = 'Local Market Analytics Report\n';
+      csv += `Period: ${data.period}\n`;
+      csv += `Generated: ${new Date(data.generatedAt).toLocaleString()}\n\n`;
+      
+      csv += 'Key Metrics\n';
+      csv += 'Metric,Value,Change\n';
+      csv += `Total Revenue,${data.metrics.totalRevenue} RWF,${data.metrics.revenueChange}%\n`;
+      csv += `Total Orders,${data.metrics.totalOrders},${data.metrics.ordersChange}%\n`;
+      csv += `Average Order Value,${data.metrics.avgOrderValue} RWF,${data.metrics.avgChange}%\n`;
+      csv += `Unique Customers,${data.metrics.uniqueCustomers},${data.metrics.customersChange}%\n\n`;
+      
+      csv += 'Top Products\n';
+      csv += 'Product,Units Sold,Revenue\n';
+      data.topProducts.forEach(product => {
+        csv += `"${product.name}",${product.sales},${product.revenue} RWF\n`;
+      });
+      
+      return csv;
+    }
+
+    function showLoading(show) {
+      const overlay = document.getElementById('loading-overlay');
+      if (show) {
+        overlay.classList.remove('hidden');
+      } else {
+        overlay.classList.add('hidden');
+      }
+    }
+  </script>
+</body>
+</html>

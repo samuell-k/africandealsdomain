@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy | ADD Physical Products</title>
+  <link rel="icon" href="/public/images/logo.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .fade-in { animation: fadeIn 0.5s; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .section-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
+    .section-content.active { max-height: 2000px; }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+  <!-- Header -->
+  <header class="w-full glass bg-white/80 shadow-md border-b border-gray-200 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto flex items-center justify-between px-4 py-3 md:py-4">
+      <a href="/" class="flex items-center gap-3">
+        <img src="/public/images/logo.png" alt="ADD Physical Product Logo" class="h-10 w-10 md:h-12 md:w-12 rounded-xl shadow" />
+        <span class="font-extrabold text-xl md:text-2xl text-[#0e2038]">ADD Physical Products</span>
+      </a>
+      <div class="flex items-center gap-2 md:gap-4">
+        <a href="/auth/auth-buyer.html" class="px-3 py-2 md:px-4 md:py-2 rounded-lg font-semibold text-[#0e2038] border-2 border-[#0e2038] bg-transparent hover:bg-[#0e2038] hover:text-white transition-colors">Sign In</a>
+        <a href="/auth/auth-buyer.html" class="px-3 py-2 md:px-4 md:py-2 rounded-lg font-semibold text-white bg-gradient-to-r from-[#0e2038] to-[#23325c] hover:shadow-lg transition-shadow">Create Account</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-4xl mx-auto w-full px-4 py-8 md:py-12 fade-in">
+    <!-- Hero Section -->
+    <div class="text-center mb-12">
+      <h1 class="text-4xl md:text-5xl font-extrabold mb-4 text-[#0e2038]">Privacy Policy</h1>
+      <p class="text-lg text-gray-600 mb-8">Your privacy matters. Learn how we protect your data and empower your choices.</p>
+      <div class="text-sm text-gray-500">Last updated: January 2025</div>
+    </div>
+
+    <!-- Quick Overview -->
+    <div class="bg-gradient-to-r from-blue-600 to-green-500 rounded-xl p-8 text-white mb-8">
+      <h2 class="text-2xl font-bold mb-4">Privacy Overview</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="text-center">
+          <div class="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center mx-auto mb-3">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+            </svg>
+          </div>
+          <h3 class="font-semibold mb-1">Secure Data</h3>
+          <p class="text-blue-100 text-sm">Encrypted and protected</p>
+        </div>
+        <div class="text-center">
+          <div class="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center mx-auto mb-3">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <h3 class="font-semibold mb-1">Your Control</h3>
+          <p class="text-blue-100 text-sm">Manage your data</p>
+        </div>
+        <div class="text-center">
+          <div class="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center mx-auto mb-3">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <h3 class="font-semibold mb-1">Transparent</h3>
+          <p class="text-blue-100 text-sm">Clear policies</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Privacy Sections -->
+    <div class="space-y-8">
+      <!-- Information We Collect -->
+      <section class="bg-white rounded-xl p-6 md:p-8 shadow-sm">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-2xl font-bold text-[#0e2038] flex items-center gap-3">
+            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            Information We Collect
+          </h2>
+          <button onclick="toggleSection(this)" class="text-blue-600 hover:text-blue-800">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </button>
+        </div>
+        <div class="section-content active">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-blue-50 rounded-lg p-4">
+              <h3 class="font-semibold text-blue-900 mb-2">Personal Information</h3>
+              <ul class="text-blue-800 text-sm space-y-1">
+                <li>• Name and contact details</li>
+                <li>• Email address and phone number</li>
+                <li>• Shipping and billing addresses</li>
+                <li>• Payment information (encrypted)</li>
+                <li>• Profile information and preferences</li>
+              </ul>
+            </div>
+            <div class="bg-green-50 rounded-lg p-4">
+              <h3 class="font-semibold text-green-900 mb-2">Usage Information</h3>
+              <ul class="text-green-800 text-sm space-y-1">
+                <li>• Browsing and search history</li>
+                <li>• Device and browser information</li>
+                <li>• IP address and location data</li>
+                <li>• Cookies and tracking technologies</li>
+                <li>• Transaction and order history</li>
+              </ul>
+            </div>
+          </div>
+          <p class="text-gray-700 mt-4">We collect this information to provide you with the best possible service and to improve our platform.</p>
+        </div>
+      </section>
+
+      <!-- How We Use Your Data -->
+      <section class="bg-white rounded-xl p-6 md:p-8 shadow-sm">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-2xl font-bold text-[#0e2038] flex items-center gap-3">
+            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+            </svg>
+            How We Use Your Data
+          </h2>
+          <button onclick="toggleSection(this)" class="text-blue-600 hover:text-blue-800">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </button>
+        </div>
+        <div class="section-content">
+          <div class="space-y-4">
+            <div class="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
+              <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                </svg>
+              </div>
+              <div>
+                <h3 class="font-semibold text-gray-900 mb-1">Order Processing</h3>
+                <p class="text-gray-600 text-sm">To process your orders, handle payments, and deliver products to your address.</p>
+              </div>
+            </div>
+            <div class="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
+              <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                </svg>
+              </div>
+              <div>
+                <h3 class="font-semibold text-gray-900 mb-1">Personalization</h3>
+                <p class="text-gray-600 text-sm">To personalize your experience, show relevant products, and improve our recommendations.</p>
+              </div>
+            </div>
+            <div class="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
+              <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                </svg>
+              </div>
+              <div>
+                <h3 class="font-semibold text-gray-900 mb-1">Platform Improvement</h3>
+                <p class="text-gray-600 text-sm">To analyze usage patterns, fix bugs, and enhance our platform's functionality.</p>
+              </div>
+            </div>
+            <div class="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
+              <div class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                </svg>
+              </div>
+              <div>
+                <h3 class="font-semibold text-gray-900 mb-1">Security & Fraud Prevention</h3>
+                <p class="text-gray-600 text-sm">To protect your account, prevent fraud, and ensure platform security.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Data Sharing -->
+      <section class="bg-white rounded-xl p-6 md:p-8 shadow-sm">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-2xl font-bold text-[#0e2038] flex items-center gap-3">
+            <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"></path>
+            </svg>
+            Data Sharing & Third Parties
+          </h2>
+          <button onclick="toggleSection(this)" class="text-blue-600 hover:text-blue-800">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </button>
+        </div>
+        <div class="section-content">
+          <div class="space-y-4">
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-4">
+              <h3 class="font-semibold text-blue-900 mb-2">Service Providers</h3>
+              <p class="text-blue-800 text-sm">We may share data with trusted service providers who help us operate our platform, such as payment processors, shipping partners, and cloud hosting services.</p>
+            </div>
+            <div class="bg-green-50 border-l-4 border-green-500 p-4">
+              <h3 class="font-semibold text-green-900 mb-2">Legal Requirements</h3>
+              <p class="text-green-800 text-sm">We may disclose your information if required by law, court order, or government request, or to protect our rights and safety.</p>
+            </div>
+            <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4">
+              <h3 class="font-semibold text-yellow-900 mb-2">Business Transfers</h3>
+              <p class="text-yellow-800 text-sm">In the event of a merger, acquisition, or sale of assets, your information may be transferred as part of the business transaction.</p>
+            </div>
+            <div class="bg-red-50 border-l-4 border-red-500 p-4">
+              <h3 class="font-semibold text-red-900 mb-2">Never Sold</h3>
+              <p class="text-red-800 text-sm">We will never sell your personal information to third parties for marketing purposes.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Your Rights -->
+      <section class="bg-white rounded-xl p-6 md:p-8 shadow-sm">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-2xl font-bold text-[#0e2038] flex items-center gap-3">
+            <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            Your Privacy Rights
+          </h2>
+          <button onclick="toggleSection(this)" class="text-blue-600 hover:text-blue-800">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </button>
+        </div>
+        <div class="section-content">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-gray-50 rounded-lg p-4">
+              <h3 class="font-semibold text-gray-900 mb-2">Access & Control</h3>
+              <ul class="text-gray-600 text-sm space-y-2">
+                <li>• View and download your data</li>
+                <li>• Update your information</li>
+                <li>• Delete your account</li>
+                <li>• Opt out of communications</li>
+              </ul>
+            </div>
+            <div class="bg-gray-50 rounded-lg p-4">
+              <h3 class="font-semibold text-gray-900 mb-2">Data Protection</h3>
+              <ul class="text-gray-600 text-sm space-y-2">
+                <li>• Request data correction</li>
+                <li>• Restrict processing</li>
+                <li>• Data portability</li>
+                <li>• Object to processing</li>
+              </ul>
+            </div>
+          </div>
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
+            <h3 class="font-semibold text-blue-900 mb-2">How to Exercise Your Rights</h3>
+            <p class="text-blue-800 text-sm mb-4">You can exercise these rights by contacting our privacy team through your account settings or by emailing us at privacy@addphysicalproducts.com</p>
+            <a href="/public/contact.html" class="inline-block bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm">Contact Privacy Team</a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Data Security -->
+      <section class="bg-white rounded-xl p-6 md:p-8 shadow-sm">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-2xl font-bold text-[#0e2038] flex items-center gap-3">
+            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+            </svg>
+            Data Security
+          </h2>
+          <button onclick="toggleSection(this)" class="text-blue-600 hover:text-blue-800">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </button>
+        </div>
+        <div class="section-content">
+          <div class="space-y-4">
+            <div class="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
+              <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+              </div>
+              <div>
+                <h3 class="font-semibold text-gray-900 mb-1">Encryption</h3>
+                <p class="text-gray-600 text-sm">All data is encrypted in transit and at rest using industry-standard protocols.</p>
+              </div>
+            </div>
+            <div class="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
+              <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                </svg>
+              </div>
+              <div>
+                <h3 class="font-semibold text-gray-900 mb-1">Access Controls</h3>
+                <p class="text-gray-600 text-sm">Strict access controls ensure only authorized personnel can access your data.</p>
+              </div>
+            </div>
+            <div class="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
+              <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                </svg>
+              </div>
+              <div>
+                <h3 class="font-semibold text-gray-900 mb-1">Regular Audits</h3>
+                <p class="text-gray-600 text-sm">We conduct regular security audits and penetration testing to maintain high security standards.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Cookies & Tracking -->
+      <section class="bg-white rounded-xl p-6 md:p-8 shadow-sm">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-2xl font-bold text-[#0e2038] flex items-center gap-3">
+            <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            Cookies & Tracking
+          </h2>
+          <button onclick="toggleSection(this)" class="text-blue-600 hover:text-blue-800">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </button>
+        </div>
+        <div class="section-content">
+          <div class="space-y-4">
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <h3 class="font-semibold text-yellow-900 mb-2">Essential Cookies</h3>
+              <p class="text-yellow-800 text-sm">These cookies are necessary for the website to function properly and cannot be disabled.</p>
+            </div>
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h3 class="font-semibold text-blue-900 mb-2">Analytics Cookies</h3>
+              <p class="text-blue-800 text-sm">Help us understand how visitors interact with our website to improve user experience.</p>
+            </div>
+            <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+              <h3 class="font-semibold text-green-900 mb-2">Marketing Cookies</h3>
+              <p class="text-green-800 text-sm">Used to deliver personalized advertisements and track marketing campaign performance.</p>
+            </div>
+            <p class="text-gray-700">You can manage your cookie preferences through your browser settings or our cookie consent banner.</p>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Contact Section -->
+    <div class="mt-12 bg-gradient-to-r from-blue-600 to-green-500 rounded-xl p-8 text-center text-white">
+      <h3 class="text-2xl font-bold mb-4">Questions About Privacy?</h3>
+      <p class="mb-6 text-blue-100">Our privacy team is here to help with any questions about your data</p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="/public/contact.html" class="inline-block bg-white text-blue-600 font-semibold px-6 py-3 rounded-lg hover:bg-gray-100 transition-colors">Contact Privacy Team</a>
+        <a href="/public/faq.html" class="inline-block border-2 border-white text-white font-semibold px-6 py-3 rounded-lg hover:bg-white hover:text-blue-600 transition-colors">View FAQ</a>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white/90 border-t border-gray-200 mt-12 pt-8 pb-4 px-2 md:px-6">
+    <div class="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-sm">
+      <div>
+        <h3 class="font-bold text-gray-800 mb-2 flex items-center gap-1">Support</h3>
+        <ul class="space-y-1">
+          <li><a href="/public/faq.html" class="hover:underline flex items-center gap-1">Help Center & FAQ</a></li>
+          <li><a href="/public/contact.html" class="hover:underline flex items-center gap-1">Contact Us</a></li>
+          <li><a href="/buyer/support.html" class="hover:underline flex items-center gap-1">Live Chat</a></li>
+          <li><a href="/buyer/orders.html" class="hover:underline flex items-center gap-1">Check Order Status</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="font-bold text-gray-800 mb-2 flex items-center gap-1">Business</h3>
+        <ul class="space-y-1">
+          <li><a href="/seller/add-product.html" class="hover:underline flex items-center gap-1">Start Selling</a></li>
+          <li><a href="/seller/profile.html" class="hover:underline flex items-center gap-1">Become a Verified Supplier</a></li>
+          <li><a href="/public/how-it-works.html" class="hover:underline flex items-center gap-1">How It Works</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="font-bold text-gray-800 mb-2 flex items-center gap-1">Legal & Policies</h3>
+        <ul class="space-y-1">
+          <li><a href="/public/privacy-policy.html" class="hover:underline flex items-center gap-1">Privacy Policy</a></li>
+          <li><a href="/public/terms-and-conditions.html" class="hover:underline flex items-center gap-1">Terms & Conditions</a></li>
+          <li><a href="/public/shipping-policy.html" class="hover:underline flex items-center gap-1">Shipping Policy</a></li>
+          <li><a href="/public/returns-policy.html" class="hover:underline flex items-center gap-1">Returns Policy</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="font-bold text-gray-800 mb-2 flex items-center gap-1">About & Connect</h3>
+        <ul class="space-y-1">
+          <li><a href="/public/about.html" class="hover:underline flex items-center gap-1">About Us</a></li>
+          <li><a href="/public/contact.html" class="hover:underline flex items-center gap-1">Contact</a></li>
+          <li><span class="flex items-center gap-1">Rwanda, Kenya, Nigeria</span></li>
+          <li><span class="flex items-center gap-1">Kigali, Nairobi, Lagos</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="text-center text-xs text-gray-500 mt-4">&copy; 2025 African Deals Domain. All rights reserved.</div>
+  </footer>
+
+  <script>
+    function toggleSection(button) {
+      const content = button.parentElement.nextElementSibling;
+      const icon = button.querySelector('svg');
+      
+      content.classList.toggle('active');
+      icon.classList.toggle('rotate-180');
+    }
+
+    // Auto-expand section if it's linked from URL
+    document.addEventListener('DOMContentLoaded', function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const section = urlParams.get('section');
+      
+      if (section) {
+        const targetSection = document.getElementById(section);
+        if (targetSection) {
+          targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          const content = targetSection.querySelector('.section-content');
+          const button = targetSection.querySelector('button');
+          const icon = button.querySelector('svg');
+          
+          content.classList.add('active');
+          icon.classList.add('rotate-180');
+        }
+      }
+    });
+  </script>
+
+<script>
+// Enhanced Notification System
+function showNotification(message, type = 'info', duration = 4000) {
+    // Remove existing notifications
+    const existingNotifications = document.querySelectorAll('.system-notification');
+    existingNotifications.forEach(notification => notification.remove());
+    
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `system-notification fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 max-w-md ${
+        type === 'success' ? 'bg-green-500 text-white' :
+        type === 'error' ? 'bg-red-500 text-white' :
+        type === 'warning' ? 'bg-yellow-500 text-black' :
+        'bg-blue-500 text-white'
+    }`;
+    
+    // Add icon based on type
+    const icon = {
+        success: '✅',
+        error: '❌',
+        warning: '⚠️',
+        info: 'ℹ️'
+    }[type] || 'ℹ️';
+    
+    notification.innerHTML = `
+        <div class="flex items-center space-x-2">
+            <span class="text-lg">${icon}</span>
+            <span class="flex-1">${message}</span>
+            <button onclick="this.parentElement.parentElement.remove()" class="text-white/80 hover:text-white text-lg leading-none">&times;</button>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto-remove after duration
+    if (duration > 0) {
+        setTimeout(() => {
+            if (notification.parentElement) {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => notification.remove(), 300);
+            }
+        }, duration);
+    }
+    
+    return notification;
+}
+
+// Global error handler
+window.addEventListener('error', function(event) {
+    console.error('Global error:', event.error);
+                
+                // Enhanced error reporting
+                if (event.error) {
+                    const errorDetails = {
+                        message: event.error.message || 'Unknown error',
+                        stack: event.error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        event.error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+    showNotification('An unexpected error occurred', 'error');
+});
+
+// Global unhandled promise rejection handler
+window.addEventListener('unhandledrejection', function(event) {
+    console.error('Unhandled promise rejection:', event.reason);
+                
+                // Enhanced error reporting
+                if (event.reason) {
+                    const errorDetails = {
+                        message: event.reason.message || 'Unknown error',
+                        stack: event.reason.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        event.reason.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+    showNotification('Operation failed unexpectedly', 'error');
+});
+</script>
+</body>
+</html>

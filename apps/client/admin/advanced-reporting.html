@@ -1,0 +1,1838 @@
+<!DOCTYPE html>
+<html lang="en" class="admin-page">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Reporting & Custom Reports | Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="admin-auth-check.js"></script>
+    <script src="admin-utils.js"></script>
+    <style>
+        :root {
+            --primary-color: #080b3b;
+            --secondary-color: #1e40af;
+            --accent-color: #3b82f6;
+        }
+        
+        .glass-morphism {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        }
+        .sidebar {
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .nav-item {
+            transition: all 0.3s ease;
+        }
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+        .nav-item.active {
+            background: rgba(255, 255, 255, 0.2);
+            border-left: 3px solid #3b82f6;
+        }
+        .loading-spinner {
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 2px solid #3b82f6;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .form-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+        }
+        .report-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .report-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        .status-badge {
+            @apply px-3 py-1 rounded-full text-xs font-medium;
+        }
+        .status-ready { @apply bg-green-500/20 text-green-400; }
+        .status-generating { @apply bg-yellow-500/20 text-yellow-400; }
+        .status-scheduled { @apply bg-blue-500/20 text-blue-400; }
+        .status-failed { @apply bg-red-500/20 text-red-400; }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .tab-btn {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .tab-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .tab-btn.active {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: var(--accent-color);
+        }
+        .live-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #22c55e;
+            display: inline-block;
+            margin-right: 6px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .real-time-badge {
+            background: linear-gradient(45deg, #22c55e, #16a34a);
+            color: white;
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 1rem;
+            font-weight: 600;
+        }
+        .report-builder {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(16, 185, 129, 0.1));
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+        .filter-chip {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            margin: 0.125rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .filter-chip:hover {
+            background: rgba(59, 130, 246, 0.3);
+            transform: scale(1.05);
+        }
+        .filter-chip.active {
+            background: #3b82f6;
+            color: white;
+        }
+        .report-template {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .report-template:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .report-template.selected {
+            background: rgba(59, 130, 246, 0.2);
+            border: 2px solid #3b82f6;
+        }
+        .schedule-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+        }
+        .export-format {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .export-format:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .export-format.selected {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: #3b82f6;
+        }
+        .progress-bar {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            height: 8px;
+        }
+        .progress-fill {
+            background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+        .visualization-preview {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .metric-selector {
+            padding: 0.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .metric-selector:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .metric-selector.selected {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: #3b82f6;
+        }
+        .drag-drop-zone {
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .drag-drop-zone.drag-over {
+            border-color: var(--accent-color);
+            background: rgba(59, 130, 246, 0.1);
+        }
+    </style>
+</head>
+
+<body class="gradient-bg min-h-screen">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <div class="sidebar w-64 lg:w-80 flex-shrink-0 hidden md:flex flex-col">
+            <div class="p-6 border-b border-white/10">
+                <h2 class="text-xl font-bold text-white">Admin Panel</h2>
+            </div>
+            
+            <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+                <a href="dashboard.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="user-management.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-users"></i>
+                    <span>User Management</span>
+                </a>
+                <a href="manual-payment-approval.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-credit-card"></i>
+                    <span>Payment Approval</span>
+                </a>
+                <a href="payment-credentials.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-wallet"></i>
+                    <span>Payment Credentials</span>
+                </a>
+                <a href="products.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-box"></i>
+                    <span>Products</span>
+                </a>
+                <a href="order-management.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Orders</span>
+                </a>
+                <a href="agents.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-user-tie"></i>
+                    <span>Agents</span>
+                </a>
+                <a href="categories.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-tags"></i>
+                    <span>Categories</span>
+                </a>
+                <a href="brands.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-trademark"></i>
+                    <span>Brands</span>
+                </a>
+                <a href="reviews.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-star"></i>
+                    <span>Reviews</span>
+                </a>
+                <a href="sellers.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-store"></i>
+                    <span>Sellers</span>
+                </a>
+                <a href="support-tickets.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-ticket-alt"></i>
+                    <span>Support Tickets</span>
+                </a>
+                <a href="logs.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-file-alt"></i>
+                    <span>System Logs</span>
+                </a>
+                <a href="promotions.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-tags"></i>
+                    <span>Promotions</span>
+                </a>
+                <a href="cms-management.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-edit"></i>
+                    <span>CMS Management</span>
+                </a>
+                <a href="notification-management.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-bell"></i>
+                    <span>Notifications</span>
+                </a>
+                <a href="backup-restore.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-database"></i>
+                    <span>Backup & Restore</span>
+                </a>
+                <a href="security-api.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Security & API</span>
+                </a>
+                <a href="performance-analytics.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Performance & Analytics</span>
+                </a>
+                <a href="system-integrations.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-plug"></i>
+                    <span>System Integrations</span>
+                </a>
+                <a href="file-manager.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-folder-open"></i>
+                    <span>File Manager</span>
+                </a>
+                <a href="email-templates.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-envelope-open-text"></i>
+                    <span>Email Templates</span>
+                </a>
+                <a href="tax-currency-management.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-coins"></i>
+                    <span>Tax & Currency</span>
+                </a>
+                <a href="shipping-delivery.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-truck"></i>
+                    <span>Shipping & Delivery</span>
+                </a>
+                <a href="import-export.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span>Import/Export</span>
+                </a>
+                <a href="inventory-management.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-warehouse"></i>
+                    <span>Inventory Management</span>
+                </a>
+                <a href="customer-support.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-headset"></i>
+                    <span>Customer Support</span>
+                </a>
+                <a href="data-analytics.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Data Analytics</span>
+                </a>
+                <a href="advanced-reporting.html" class="nav-item active flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-file-chart-pie"></i>
+                    <span>Advanced Reporting</span>
+                </a>
+                <a href="settings.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
+            
+            <!-- Header -->
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 space-y-4 sm:space-y-0">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-white mb-2 flex items-center">
+                        Advanced Reporting & Custom Reports
+                        <span class="live-indicator ml-3"></span>
+                        <span class="real-time-badge ml-2">AI-Powered</span>
+                    </h1>
+                    <p class="text-white/70">Create, customize, and automate comprehensive business reports</p>
+                </div>
+                <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                    <button onclick="openReportBuilder()" class="bg-green-500 hover:bg-green-600 text-white px-3 sm:px-4 py-2 rounded-lg transition text-sm flex items-center justify-center">
+                        <i class="fas fa-plus mr-2"></i>Create Report
+                    </button>
+                    <button onclick="openScheduler()" class="bg-blue-500 hover:bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-lg transition text-sm flex items-center justify-center">
+                        <i class="fas fa-calendar mr-2"></i>Schedule
+                    </button>
+                    <button onclick="refreshReports()" class="bg-purple-500 hover:bg-purple-600 text-white px-3 sm:px-4 py-2 rounded-lg transition text-sm flex items-center justify-center">
+                        <i class="fas fa-refresh mr-2"></i>Refresh
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
+                <div class="glass-morphism rounded-xl p-4 sm:p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-white/70 text-sm">Total Reports</h3>
+                        <div class="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-file-alt text-blue-400"></i>
+                        </div>
+                    </div>
+                    <p class="text-white text-2xl font-bold" id="total-reports">156</p>
+                    <p class="text-white/60 text-xs">Active reports</p>
+                </div>
+                
+                <div class="glass-morphism rounded-xl p-4 sm:p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-white/70 text-sm">Scheduled Reports</h3>
+                        <div class="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-clock text-green-400"></i>
+                        </div>
+                    </div>
+                    <p class="text-white text-2xl font-bold" id="scheduled-reports">28</p>
+                    <p class="text-white/60 text-xs">Automated delivery</p>
+                </div>
+                
+                <div class="glass-morphism rounded-xl p-4 sm:p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-white/70 text-sm">Generated Today</h3>
+                        <div class="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-download text-yellow-400"></i>
+                        </div>
+                    </div>
+                    <p class="text-white text-2xl font-bold" id="daily-reports">42</p>
+                    <p class="text-white/60 text-xs">Reports today</p>
+                </div>
+                
+                <div class="glass-morphism rounded-xl p-4 sm:p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-white/70 text-sm">Custom Templates</h3>
+                        <div class="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-paint-brush text-purple-400"></i>
+                        </div>
+                    </div>
+                    <p class="text-white text-2xl font-bold" id="custom-templates">18</p>
+                    <p class="text-white/60 text-xs">Saved templates</p>
+                </div>
+            </div>
+
+            <!-- Tab Navigation -->
+            <div class="flex flex-wrap gap-2 mb-6">
+                <div class="tab-btn active" data-tab="builder" onclick="switchTab('builder')">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-tools"></i>
+                        <span class="text-white font-medium">Report Builder</span>
+                    </div>
+                </div>
+                <div class="tab-btn" data-tab="templates" onclick="switchTab('templates')">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-layer-group"></i>
+                        <span class="text-white font-medium">Templates</span>
+                        <span class="text-white/50 text-sm">(18)</span>
+                    </div>
+                </div>
+                <div class="tab-btn" data-tab="scheduled" onclick="switchTab('scheduled')">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span class="text-white font-medium">Scheduled</span>
+                        <span class="text-white/50 text-sm">(28)</span>
+                    </div>
+                </div>
+                <div class="tab-btn" data-tab="history" onclick="switchTab('history')">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-history"></i>
+                        <span class="text-white font-medium">History</span>
+                        <span class="text-white/50 text-sm">(156)</span>
+                    </div>
+                </div>
+                <div class="tab-btn" data-tab="insights" onclick="switchTab('insights')">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-lightbulb"></i>
+                        <span class="text-white font-medium">AI Insights</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Contents -->
+            
+            <!-- Report Builder Tab -->
+            <div id="builder-tab" class="tab-content active">
+                <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                    
+                    <!-- Report Configuration -->
+                    <div class="xl:col-span-2 report-builder">
+                        <h3 class="text-xl font-bold text-white mb-6">Custom Report Builder</h3>
+                        
+                        <div class="space-y-6">
+                            <!-- Basic Settings -->
+                            <div>
+                                <h4 class="text-white font-medium mb-3">Basic Settings</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-white/70 text-sm mb-2">Report Name</label>
+                                        <input type="text" id="report-name" 
+                                               class="w-full p-3 rounded-lg form-input" 
+                                               placeholder="e.g., Monthly Sales Report">
+                                    </div>
+                                    <div>
+                                        <label class="block text-white/70 text-sm mb-2">Report Type</label>
+                                        <select id="report-type" class="w-full p-3 rounded-lg form-input" onchange="updateMetrics()">
+                                            <option value="">Select Report Type</option>
+                                            <option value="sales">Sales Report</option>
+                                            <option value="customer">Customer Analytics</option>
+                                            <option value="product">Product Performance</option>
+                                            <option value="financial">Financial Summary</option>
+                                            <option value="inventory">Inventory Report</option>
+                                            <option value="marketing">Marketing Analytics</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Date Range -->
+                            <div>
+                                <h4 class="text-white font-medium mb-3">Date Range</h4>
+                                <div class="flex flex-wrap gap-2 mb-4">
+                                    <div class="filter-chip" onclick="selectDateRange('last7days')">Last 7 Days</div>
+                                    <div class="filter-chip" onclick="selectDateRange('last30days')">Last 30 Days</div>
+                                    <div class="filter-chip" onclick="selectDateRange('last90days')">Last 90 Days</div>
+                                    <div class="filter-chip" onclick="selectDateRange('thisyear')">This Year</div>
+                                    <div class="filter-chip" onclick="selectDateRange('custom')">Custom Range</div>
+                                </div>
+                                <div id="custom-date-range" class="hidden grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-white/70 text-sm mb-2">Start Date</label>
+                                        <input type="date" id="start-date" class="w-full p-3 rounded-lg form-input">
+                                    </div>
+                                    <div>
+                                        <label class="block text-white/70 text-sm mb-2">End Date</label>
+                                        <input type="date" id="end-date" class="w-full p-3 rounded-lg form-input">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Metrics Selection -->
+                            <div>
+                                <h4 class="text-white font-medium mb-3">Select Metrics</h4>
+                                <div id="metrics-container" class="space-y-2">
+                                    <!-- Will be populated based on report type -->
+                                </div>
+                            </div>
+
+                            <!-- Filters -->
+                            <div>
+                                <h4 class="text-white font-medium mb-3">Filters</h4>
+                                <div id="filters-container" class="space-y-3">
+                                    <!-- Will be populated based on report type -->
+                                </div>
+                            </div>
+
+                            <!-- Grouping & Sorting -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-white/70 text-sm mb-2">Group By</label>
+                                    <select id="group-by" class="w-full p-3 rounded-lg form-input">
+                                        <option value="">No Grouping</option>
+                                        <option value="date">Date</option>
+                                        <option value="category">Category</option>
+                                        <option value="product">Product</option>
+                                        <option value="customer">Customer</option>
+                                        <option value="location">Location</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-white/70 text-sm mb-2">Sort By</label>
+                                    <select id="sort-by" class="w-full p-3 rounded-lg form-input">
+                                        <option value="date_desc">Date (Newest First)</option>
+                                        <option value="date_asc">Date (Oldest First)</option>
+                                        <option value="value_desc">Value (High to Low)</option>
+                                        <option value="value_asc">Value (Low to High)</option>
+                                        <option value="name_asc">Name (A to Z)</option>
+                                        <option value="name_desc">Name (Z to A)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Export Format -->
+                            <div>
+                                <h4 class="text-white font-medium mb-3">Export Format</h4>
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                    <div class="export-format" onclick="selectExportFormat('pdf')">
+                                        <i class="fas fa-file-pdf text-red-400 mr-2"></i>
+                                        <span class="text-white text-sm">PDF</span>
+                                    </div>
+                                    <div class="export-format" onclick="selectExportFormat('excel')">
+                                        <i class="fas fa-file-excel text-green-400 mr-2"></i>
+                                        <span class="text-white text-sm">Excel</span>
+                                    </div>
+                                    <div class="export-format" onclick="selectExportFormat('csv')">
+                                        <i class="fas fa-file-csv text-blue-400 mr-2"></i>
+                                        <span class="text-white text-sm">CSV</span>
+                                    </div>
+                                    <div class="export-format" onclick="selectExportFormat('json')">
+                                        <i class="fas fa-code text-yellow-400 mr-2"></i>
+                                        <span class="text-white text-sm">JSON</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="flex space-x-3 pt-4 border-t border-white/10">
+                                <button onclick="previewReport()" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-4 py-3 rounded-lg">
+                                    <i class="fas fa-eye mr-2"></i>Preview Report
+                                </button>
+                                <button onclick="generateReport()" class="flex-1 bg-green-500 hover:bg-green-600 text-white px-4 py-3 rounded-lg">
+                                    <i class="fas fa-cog mr-2"></i>Generate Report
+                                </button>
+                                <button onclick="saveTemplate()" class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-3 rounded-lg">
+                                    <i class="fas fa-save mr-2"></i>Save Template
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Preview Panel -->
+                    <div>
+                        <div class="glass-morphism rounded-xl p-6">
+                            <h3 class="text-xl font-bold text-white mb-4">Report Preview</h3>
+                            
+                            <div class="visualization-preview mb-6">
+                                <div class="text-center text-white/60">
+                                    <i class="fas fa-chart-bar text-4xl mb-3"></i>
+                                    <p>Configure your report settings to see preview</p>
+                                </div>
+                            </div>
+
+                            <div id="report-summary" class="space-y-3 mb-6">
+                                <!-- Report summary will be populated here -->
+                            </div>
+
+                            <div class="drag-drop-zone">
+                                <i class="fas fa-upload text-white/40 text-3xl mb-3"></i>
+                                <p class="text-white/60 text-sm mb-2">Drop your data files here</p>
+                                <p class="text-white/40 text-xs">Supports CSV, Excel, JSON files</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Templates Tab -->
+            <div id="templates-tab" class="tab-content">
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    <div id="report-templates-container">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scheduled Tab -->
+            <div id="scheduled-tab" class="tab-content">
+                <div class="glass-morphism rounded-xl overflow-hidden">
+                    <div class="p-4 sm:p-6 border-b border-white/10">
+                        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-3 sm:space-y-0">
+                            <h3 class="text-lg sm:text-xl font-bold text-white">Scheduled Reports</h3>
+                            <div class="flex space-x-2">
+                                <button onclick="addSchedule()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm">
+                                    <i class="fas fa-plus mr-2"></i>Add Schedule
+                                </button>
+                                <button onclick="bulkSchedule()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">
+                                    <i class="fas fa-calendar mr-2"></i>Bulk Schedule
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="scheduled-reports-container" class="p-6">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- History Tab -->
+            <div id="history-tab" class="tab-content">
+                <div class="glass-morphism rounded-xl overflow-hidden">
+                    <div class="p-4 sm:p-6 border-b border-white/10">
+                        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-3 sm:space-y-0">
+                            <h3 class="text-lg sm:text-xl font-bold text-white">Report History</h3>
+                            <div class="flex space-x-2">
+                                <select id="history-filter" class="form-input px-3 py-2 rounded-lg text-sm" onchange="filterHistory()">
+                                    <option value="">All Reports</option>
+                                    <option value="today">Today</option>
+                                    <option value="week">This Week</option>
+                                    <option value="month">This Month</option>
+                                    <option value="success">Successful</option>
+                                    <option value="failed">Failed</option>
+                                </select>
+                                <button onclick="exportHistory()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm">
+                                    <i class="fas fa-download mr-2"></i>Export History
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="report-history-container" class="p-6">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Insights Tab -->
+            <div id="insights-tab" class="tab-content">
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                    
+                    <!-- Report Recommendations -->
+                    <div class="glass-morphism rounded-xl p-6">
+                        <h3 class="text-xl font-bold text-white mb-4">AI Report Recommendations</h3>
+                        <div id="ai-recommendations" class="space-y-4">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Usage Analytics -->
+                    <div class="glass-morphism rounded-xl p-6">
+                        <h3 class="text-xl font-bold text-white mb-4">Reporting Usage Analytics</h3>
+                        <div id="usage-analytics" class="space-y-4">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Smart Insights -->
+                    <div class="glass-morphism rounded-xl p-6">
+                        <h3 class="text-xl font-bold text-white mb-4">Smart Insights</h3>
+                        <div id="smart-insights" class="space-y-3">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Performance Optimization -->
+                    <div class="glass-morphism rounded-xl p-6">
+                        <h3 class="text-xl font-bold text-white mb-4">Performance Optimization</h3>
+                        <div id="performance-optimization" class="space-y-3">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // Global variables
+    let currentTab = 'builder';
+    let reportTemplates = [];
+    let scheduledReports = [];
+    let reportHistory = [];
+    let selectedMetrics = [];
+    let selectedFilters = {};
+    let selectedExportFormat = 'pdf';
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('📊 Advanced Reporting & Custom Reports initializing...');
+        
+        // Check authentication first
+        if (!checkAuthentication()) return;
+        
+        // Load data
+        loadAllReportingData();
+        setupEventListeners();
+        
+        console.log('✅ Advanced Reporting & Custom Reports initialized');
+    });
+
+    // Check authentication
+    function checkAuthentication() {
+        const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
+        const userRole = localStorage.getItem('userRole');
+        
+        if (!token) {
+            console.log('❌ No authentication token found');
+            window.location.href = '/auth/auth-admin.html';
+            return false;
+        }
+        
+        if (userRole !== 'admin') {
+            console.log('❌ Insufficient permissions');
+            window.location.href = '/auth/auth-admin.html';
+            return false;
+        }
+        
+        console.log('✅ Authentication verified');
+        return true;
+    }
+
+    // Setup event listeners
+    function setupEventListeners() {
+        // Date range inputs
+        document.getElementById('start-date').addEventListener('change', updateReportPreview);
+        document.getElementById('end-date').addEventListener('change', updateReportPreview);
+        
+        // Report type selection
+        document.getElementById('report-type').addEventListener('change', updateMetrics);
+    }
+
+    // Load all reporting data
+    async function loadAllReportingData() {
+        try {
+            await Promise.all([
+                loadReportTemplates(),
+                loadScheduledReports(),
+                loadReportHistory(),
+                loadAIRecommendations(),
+                loadUsageAnalytics()
+            ]);
+        } catch (error) {
+            console.error('❌ Error loading reporting data:', error);
+            showToast('Error loading reporting data', 'error');
+        }
+    }
+
+    // Load report templates
+    async function loadReportTemplates() {
+        try {
+            console.log('📋 Loading report templates...');
+            
+            reportTemplates = [
+                {
+                    id: 1,
+                    name: 'Executive Summary',
+                    category: 'Executive',
+                    type: 'financial',
+                    description: 'High-level overview of key business metrics',
+                    metrics: ['revenue', 'profit', 'orders', 'customers'],
+                    frequency: 'monthly',
+                    popularity: 95,
+                    thumbnail: 'fas fa-chart-line',
+                    created_by: 'System',
+                    last_used: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
+                },
+                {
+                    id: 2,
+                    name: 'Sales Performance Report',
+                    category: 'Sales',
+                    type: 'sales',
+                    description: 'Detailed analysis of sales performance and trends',
+                    metrics: ['revenue', 'orders', 'conversion_rate', 'avg_order_value'],
+                    frequency: 'weekly',
+                    popularity: 88,
+                    thumbnail: 'fas fa-shopping-cart',
+                    created_by: 'Sales Team',
+                    last_used: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000)
+                },
+                {
+                    id: 3,
+                    name: 'Customer Analytics Dashboard',
+                    category: 'Customer',
+                    type: 'customer',
+                    description: 'Customer behavior and segmentation analysis',
+                    metrics: ['new_customers', 'retention_rate', 'ltv', 'satisfaction'],
+                    frequency: 'monthly',
+                    popularity: 82,
+                    thumbnail: 'fas fa-users',
+                    created_by: 'Marketing Team',
+                    last_used: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
+                },
+                {
+                    id: 4,
+                    name: 'Product Performance Matrix',
+                    category: 'Product',
+                    type: 'product',
+                    description: 'Product-wise sales and inventory analysis',
+                    metrics: ['units_sold', 'revenue_by_product', 'inventory_turnover', 'margin'],
+                    frequency: 'weekly',
+                    popularity: 76,
+                    thumbnail: 'fas fa-box',
+                    created_by: 'Product Team',
+                    last_used: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
+                },
+                {
+                    id: 5,
+                    name: 'Inventory Status Report',
+                    category: 'Inventory',
+                    type: 'inventory',
+                    description: 'Current inventory levels and reorder alerts',
+                    metrics: ['stock_levels', 'low_stock_alerts', 'overstock', 'turnover_rate'],
+                    frequency: 'daily',
+                    popularity: 91,
+                    thumbnail: 'fas fa-warehouse',
+                    created_by: 'Inventory Team',
+                    last_used: new Date(Date.now() - 6 * 60 * 60 * 1000)
+                },
+                {
+                    id: 6,
+                    name: 'Marketing Campaign ROI',
+                    category: 'Marketing',
+                    type: 'marketing',
+                    description: 'Marketing campaign performance and ROI analysis',
+                    metrics: ['campaign_roi', 'cac', 'conversion_rate', 'attribution'],
+                    frequency: 'monthly',
+                    popularity: 74,
+                    thumbnail: 'fas fa-bullhorn',
+                    created_by: 'Marketing Team',
+                    last_used: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+                }
+            ];
+
+            renderReportTemplates();
+            
+        } catch (error) {
+            console.error('❌ Error loading report templates:', error);
+        }
+    }
+
+    // Load scheduled reports
+    async function loadScheduledReports() {
+        try {
+            console.log('📅 Loading scheduled reports...');
+            
+            scheduledReports = [
+                {
+                    id: 1,
+                    name: 'Daily Sales Summary',
+                    template: 'Sales Performance Report',
+                    frequency: 'daily',
+                    time: '08:00',
+                    recipients: ['admin@africandeals.com', 'sales@africandeals.com'],
+                    format: 'pdf',
+                    status: 'active',
+                    last_run: new Date(Date.now() - 24 * 60 * 60 * 1000),
+                    next_run: new Date(Date.now() + 2 * 60 * 60 * 1000),
+                    success_rate: 98.5
+                },
+                {
+                    id: 2,
+                    name: 'Weekly Executive Report',
+                    template: 'Executive Summary',
+                    frequency: 'weekly',
+                    time: '09:00',
+                    recipients: ['ceo@africandeals.com', 'management@africandeals.com'],
+                    format: 'pdf',
+                    status: 'active',
+                    last_run: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+                    next_run: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+                    success_rate: 100
+                },
+                {
+                    id: 3,
+                    name: 'Monthly Customer Analytics',
+                    template: 'Customer Analytics Dashboard',
+                    frequency: 'monthly',
+                    time: '10:00',
+                    recipients: ['marketing@africandeals.com'],
+                    format: 'excel',
+                    status: 'active',
+                    last_run: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+                    next_run: new Date(Date.now() + 23 * 24 * 60 * 60 * 1000),
+                    success_rate: 96.2
+                },
+                {
+                    id: 4,
+                    name: 'Hourly Inventory Check',
+                    template: 'Inventory Status Report',
+                    frequency: 'hourly',
+                    time: 'Every hour',
+                    recipients: ['inventory@africandeals.com'],
+                    format: 'csv',
+                    status: 'paused',
+                    last_run: new Date(Date.now() - 2 * 60 * 60 * 1000),
+                    next_run: null,
+                    success_rate: 94.8
+                }
+            ];
+
+            renderScheduledReports();
+            
+        } catch (error) {
+            console.error('❌ Error loading scheduled reports:', error);
+        }
+    }
+
+    // Load report history
+    async function loadReportHistory() {
+        try {
+            console.log('📜 Loading report history...');
+            
+            reportHistory = [
+                {
+                    id: 1,
+                    name: 'Daily Sales Summary - August 17, 2025',
+                    type: 'sales',
+                    generated_at: new Date(Date.now() - 6 * 60 * 60 * 1000),
+                    format: 'pdf',
+                    size: '2.3 MB',
+                    status: 'ready',
+                    generated_by: 'Scheduler',
+                    recipients: 2,
+                    download_count: 8
+                },
+                {
+                    id: 2,
+                    name: 'Weekly Executive Report - Week 33',
+                    type: 'financial',
+                    generated_at: new Date(Date.now() - 12 * 60 * 60 * 1000),
+                    format: 'pdf',
+                    size: '4.7 MB',
+                    status: 'ready',
+                    generated_by: 'Admin User',
+                    recipients: 3,
+                    download_count: 12
+                },
+                {
+                    id: 3,
+                    name: 'Product Performance Analysis',
+                    type: 'product',
+                    generated_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+                    format: 'excel',
+                    size: '8.9 MB',
+                    status: 'ready',
+                    generated_by: 'Product Team',
+                    recipients: 5,
+                    download_count: 15
+                },
+                {
+                    id: 4,
+                    name: 'Customer Segmentation Report',
+                    type: 'customer',
+                    generated_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+                    format: 'pdf',
+                    size: '3.1 MB',
+                    status: 'generating',
+                    generated_by: 'Marketing Team',
+                    recipients: 4,
+                    download_count: 0,
+                    progress: 73
+                },
+                {
+                    id: 5,
+                    name: 'Inventory Reorder Alert',
+                    type: 'inventory',
+                    generated_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
+                    format: 'csv',
+                    size: '456 KB',
+                    status: 'failed',
+                    generated_by: 'Scheduler',
+                    recipients: 1,
+                    download_count: 0,
+                    error: 'Database connection timeout'
+                }
+            ];
+
+            renderReportHistory();
+            
+        } catch (error) {
+            console.error('❌ Error loading report history:', error);
+        }
+    }
+
+    // Load AI recommendations
+    async function loadAIRecommendations() {
+        try {
+            const recommendations = [
+                {
+                    id: 1,
+                    type: 'optimization',
+                    title: 'Report Frequency Optimization',
+                    description: 'Your Daily Sales Summary could be optimized to run every 6 hours instead of daily for better insights.',
+                    impact: 'medium',
+                    confidence: 87,
+                    action: 'Adjust frequency'
+                },
+                {
+                    id: 2,
+                    type: 'insight',
+                    title: 'New Report Suggestion',
+                    description: 'Based on your data patterns, consider creating a "Weekend Performance" report to capture weekend sales trends.',
+                    impact: 'high',
+                    confidence: 92,
+                    action: 'Create report'
+                },
+                {
+                    id: 3,
+                    type: 'performance',
+                    title: 'Query Optimization',
+                    description: 'Your Product Performance Matrix can be 40% faster by adjusting the data query structure.',
+                    impact: 'low',
+                    confidence: 78,
+                    action: 'Optimize query'
+                },
+                {
+                    id: 4,
+                    type: 'engagement',
+                    title: 'Report Usage Alert',
+                    description: 'Monthly Customer Analytics report has low engagement (23% open rate). Consider format changes.',
+                    impact: 'medium',
+                    confidence: 84,
+                    action: 'Redesign report'
+                }
+            ];
+
+            renderAIRecommendations(recommendations);
+            
+        } catch (error) {
+            console.error('❌ Error loading AI recommendations:', error);
+        }
+    }
+
+    // Load usage analytics
+    async function loadUsageAnalytics() {
+        try {
+            const analytics = {
+                most_used_reports: [
+                    { name: 'Daily Sales Summary', usage: 95 },
+                    { name: 'Inventory Status Report', usage: 87 },
+                    { name: 'Executive Summary', usage: 76 },
+                    { name: 'Product Performance Matrix', usage: 64 }
+                ],
+                report_formats: [
+                    { format: 'PDF', percentage: 68 },
+                    { format: 'Excel', percentage: 24 },
+                    { format: 'CSV', percentage: 6 },
+                    { format: 'JSON', percentage: 2 }
+                ],
+                generation_time: {
+                    avg_time: '2.4 minutes',
+                    fastest: '0.8 minutes',
+                    slowest: '8.7 minutes'
+                },
+                success_rate: 96.3
+            };
+
+            renderUsageAnalytics(analytics);
+            
+        } catch (error) {
+            console.error('❌ Error loading usage analytics:', error);
+        }
+    }
+
+    // Render functions
+    function renderReportTemplates() {
+        const container = document.getElementById('report-templates-container');
+        
+        const templatesHTML = reportTemplates.map(template => `
+            <div class="report-template glass-morphism rounded-lg p-6" onclick="selectTemplate(${template.id})">
+                <div class="flex items-start space-x-4 mb-4">
+                    <div class="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                        <i class="${template.thumbnail} text-blue-400 text-xl"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-white font-semibold mb-1">${template.name}</h3>
+                        <p class="text-white/60 text-sm">${template.description}</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-white font-bold">${template.popularity}%</div>
+                        <div class="text-white/50 text-xs">Popular</div>
+                    </div>
+                </div>
+
+                <div class="space-y-2 mb-4">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-white/70">Category:</span>
+                        <span class="text-white">${template.category}</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-white/70">Frequency:</span>
+                        <span class="text-white capitalize">${template.frequency}</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-white/70">Created by:</span>
+                        <span class="text-white">${template.created_by}</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-white/70">Last used:</span>
+                        <span class="text-white">${formatTimeAgo(template.last_used)}</span>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <p class="text-white/50 text-xs mb-2">Included Metrics:</p>
+                    <div class="flex flex-wrap gap-1">
+                        ${template.metrics.map(metric => `
+                            <span class="px-2 py-1 bg-blue-500/20 text-blue-400 text-xs rounded">${formatMetricName(metric)}</span>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <div class="flex space-x-2">
+                    <button onclick="event.stopPropagation(); useTemplate(${template.id})" 
+                            class="flex-1 bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm">
+                        <i class="fas fa-play mr-1"></i>Use Template
+                    </button>
+                    <button onclick="event.stopPropagation(); editTemplate(${template.id})" 
+                            class="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-sm">
+                        <i class="fas fa-edit mr-1"></i>Customize
+                    </button>
+                    <button onclick="event.stopPropagation(); duplicateTemplate(${template.id})" 
+                            class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded text-sm">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+            </div>
+        `).join('');
+        
+        container.innerHTML = templatesHTML;
+    }
+
+    function renderScheduledReports() {
+        const container = document.getElementById('scheduled-reports-container');
+        
+        if (!scheduledReports || scheduledReports.length === 0) {
+            container.innerHTML = createEmptyState(
+                'scheduled', 
+                'No Scheduled Reports', 
+                'Set up automated report generation and delivery.',
+                '<button onclick="addSchedule()" class="mt-4 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg"><i class="fas fa-plus mr-2"></i>Add Schedule</button>'
+            );
+            return;
+        }
+
+        const scheduledHTML = `
+            <div class="space-y-4">
+                ${scheduledReports.map(report => `
+                    <div class="schedule-card">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-3 mb-2">
+                                    <h4 class="text-white font-semibold">${report.name}</h4>
+                                    <span class="status-badge status-${report.status}">
+                                        ${report.status.charAt(0).toUpperCase() + report.status.slice(1)}
+                                    </span>
+                                </div>
+                                <p class="text-white/60 text-sm">Template: ${report.template}</p>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-white/50 text-xs">Success Rate</div>
+                                <div class="text-white font-bold">${report.success_rate}%</div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
+                            <div>
+                                <span class="text-white/50">Frequency:</span>
+                                <p class="text-white font-medium capitalize">${report.frequency}</p>
+                            </div>
+                            <div>
+                                <span class="text-white/50">Time:</span>
+                                <p class="text-white font-medium">${report.time}</p>
+                            </div>
+                            <div>
+                                <span class="text-white/50">Format:</span>
+                                <p class="text-white font-medium">${report.format.toUpperCase()}</p>
+                            </div>
+                            <div>
+                                <span class="text-white/50">Recipients:</span>
+                                <p class="text-white font-medium">${report.recipients.length}</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm mb-4">
+                            <div>
+                                <span class="text-white/50">Last Run:</span>
+                                <p class="text-white">${formatTimeAgo(report.last_run)}</p>
+                            </div>
+                            <div>
+                                <span class="text-white/50">Next Run:</span>
+                                <p class="text-white">${report.next_run ? formatDateTime(report.next_run) : 'Paused'}</p>
+                            </div>
+                        </div>
+
+                        <div class="flex space-x-2">
+                            <button onclick="runNow(${report.id})" 
+                                    class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm">
+                                <i class="fas fa-play mr-1"></i>Run Now
+                            </button>
+                            <button onclick="editSchedule(${report.id})" 
+                                    class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-sm">
+                                <i class="fas fa-edit mr-1"></i>Edit
+                            </button>
+                            <button onclick="toggleSchedule(${report.id})" 
+                                    class="bg-${report.status === 'active' ? 'yellow' : 'green'}-500 hover:bg-${report.status === 'active' ? 'yellow' : 'green'}-600 text-white px-3 py-2 rounded text-sm">
+                                <i class="fas fa-${report.status === 'active' ? 'pause' : 'play'} mr-1"></i>
+                                ${report.status === 'active' ? 'Pause' : 'Resume'}
+                            </button>
+                            <button onclick="deleteSchedule(${report.id})" 
+                                    class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded text-sm">
+                                <i class="fas fa-trash mr-1"></i>Delete
+                            </button>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        
+        container.innerHTML = scheduledHTML;
+    }
+
+    function renderReportHistory() {
+        const container = document.getElementById('report-history-container');
+        
+        const historyHTML = `
+            <div class="space-y-4">
+                ${reportHistory.map(report => `
+                    <div class="report-card glass-morphism rounded-lg p-6" onclick="viewReport(${report.id})">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-3 mb-2">
+                                    <h4 class="text-white font-semibold">${report.name}</h4>
+                                    <span class="status-badge status-${report.status}">
+                                        ${formatStatus(report.status)}
+                                    </span>
+                                </div>
+                                <p class="text-white/60 text-sm">Generated ${formatTimeAgo(report.generated_at)}</p>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-white font-bold">${report.size}</div>
+                                <div class="text-white/50 text-xs">${report.format.toUpperCase()}</div>
+                            </div>
+                        </div>
+
+                        ${report.status === 'generating' ? `
+                            <div class="mb-4">
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-white/70">Progress</span>
+                                    <span class="text-white">${report.progress}%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: ${report.progress}%"></div>
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        ${report.status === 'failed' ? `
+                            <div class="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg">
+                                <div class="flex items-center space-x-2">
+                                    <i class="fas fa-exclamation-triangle text-red-400"></i>
+                                    <span class="text-red-400 font-medium">Generation Failed</span>
+                                </div>
+                                <p class="text-red-300 text-sm mt-1">${report.error}</p>
+                            </div>
+                        ` : ''}
+
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
+                            <div>
+                                <span class="text-white/50">Type:</span>
+                                <p class="text-white font-medium capitalize">${report.type}</p>
+                            </div>
+                            <div>
+                                <span class="text-white/50">Generated by:</span>
+                                <p class="text-white font-medium">${report.generated_by}</p>
+                            </div>
+                            <div>
+                                <span class="text-white/50">Recipients:</span>
+                                <p class="text-white font-medium">${report.recipients}</p>
+                            </div>
+                            <div>
+                                <span class="text-white/50">Downloads:</span>
+                                <p class="text-white font-medium">${report.download_count}</p>
+                            </div>
+                        </div>
+
+                        <div class="flex space-x-2">
+                            ${report.status === 'ready' ? `
+                                <button onclick="event.stopPropagation(); downloadReport(${report.id})" 
+                                        class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm">
+                                    <i class="fas fa-download mr-1"></i>Download
+                                </button>
+                                <button onclick="event.stopPropagation(); shareReport(${report.id})" 
+                                        class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-sm">
+                                    <i class="fas fa-share mr-1"></i>Share
+                                </button>
+                            ` : report.status === 'failed' ? `
+                                <button onclick="event.stopPropagation(); retryGeneration(${report.id})" 
+                                        class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded text-sm">
+                                    <i class="fas fa-redo mr-1"></i>Retry
+                                </button>
+                            ` : `
+                                <button onclick="event.stopPropagation(); cancelGeneration(${report.id})" 
+                                        class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded text-sm">
+                                    <i class="fas fa-stop mr-1"></i>Cancel
+                                </button>
+                            `}
+                            <button onclick="event.stopPropagation(); duplicateReport(${report.id})" 
+                                    class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded text-sm">
+                                <i class="fas fa-copy mr-1"></i>Duplicate
+                            </button>
+                            <button onclick="event.stopPropagation(); deleteReport(${report.id})" 
+                                    class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded text-sm">
+                                <i class="fas fa-trash mr-1"></i>Delete
+                            </button>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        
+        container.innerHTML = historyHTML;
+    }
+
+    function renderAIRecommendations(recommendations) {
+        const container = document.getElementById('ai-recommendations');
+        
+        const recommendationsHTML = recommendations.map(rec => `
+            <div class="glass-morphism rounded-lg p-4 border-l-4 border-${getRecommendationColor(rec.type)}">
+                <div class="flex items-start space-x-3">
+                    <div class="w-8 h-8 bg-${getRecommendationColor(rec.type)}/20 rounded-full flex items-center justify-center">
+                        <i class="fas fa-${getRecommendationIcon(rec.type)} text-${getRecommendationColor(rec.type)}-400"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="text-white font-medium text-sm mb-1">${rec.title}</h4>
+                        <p class="text-white/70 text-xs mb-3">${rec.description}</p>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-4 text-xs">
+                                <span class="text-${getImpactColor(rec.impact)}-400 font-medium">
+                                    ${rec.impact.toUpperCase()} IMPACT
+                                </span>
+                                <span class="text-white/50">${rec.confidence}% confidence</span>
+                            </div>
+                            <button onclick="applyRecommendation(${rec.id})" 
+                                    class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-xs">
+                                ${rec.action}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+        
+        container.innerHTML = recommendationsHTML;
+    }
+
+    function renderUsageAnalytics(analytics) {
+        const usageContainer = document.getElementById('usage-analytics');
+        const smartInsightsContainer = document.getElementById('smart-insights');
+        const performanceContainer = document.getElementById('performance-optimization');
+        
+        // Usage Analytics
+        usageContainer.innerHTML = `
+            <div class="space-y-4">
+                <div>
+                    <h4 class="text-white font-medium text-sm mb-3">Most Used Reports</h4>
+                    ${analytics.most_used_reports.map(report => `
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-white/70 text-sm">${report.name}</span>
+                            <div class="flex items-center space-x-2">
+                                <div class="w-20 h-2 bg-white/20 rounded-full overflow-hidden">
+                                    <div class="h-full bg-blue-500 rounded-full" style="width: ${report.usage}%"></div>
+                                </div>
+                                <span class="text-white text-sm">${report.usage}%</span>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <div>
+                    <h4 class="text-white font-medium text-sm mb-3">Format Preferences</h4>
+                    <div class="grid grid-cols-2 gap-2">
+                        ${analytics.report_formats.map(format => `
+                            <div class="text-center p-2 bg-white/5 rounded">
+                                <div class="text-white font-bold">${format.percentage}%</div>
+                                <div class="text-white/60 text-xs">${format.format}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Smart Insights
+        smartInsightsContainer.innerHTML = `
+            <div class="space-y-3">
+                <div class="glass-morphism p-3 rounded-lg border-l-4 border-green-500">
+                    <div class="flex items-center space-x-2 mb-2">
+                        <i class="fas fa-trending-up text-green-400"></i>
+                        <span class="text-white font-medium text-sm">Report Engagement Up</span>
+                    </div>
+                    <p class="text-white/70 text-xs">Average report open rate increased 23% this month</p>
+                </div>
+                
+                <div class="glass-morphism p-3 rounded-lg border-l-4 border-blue-500">
+                    <div class="flex items-center space-x-2 mb-2">
+                        <i class="fas fa-clock text-blue-400"></i>
+                        <span class="text-white font-medium text-sm">Peak Usage Time</span>
+                    </div>
+                    <p class="text-white/70 text-xs">Most reports are accessed between 9:00-11:00 AM</p>
+                </div>
+                
+                <div class="glass-morphism p-3 rounded-lg border-l-4 border-yellow-500">
+                    <div class="flex items-center space-x-2 mb-2">
+                        <i class="fas fa-mobile-alt text-yellow-400"></i>
+                        <span class="text-white font-medium text-sm">Mobile Access Growing</span>
+                    </div>
+                    <p class="text-white/70 text-xs">34% of report views are now from mobile devices</p>
+                </div>
+            </div>
+        `;
+
+        // Performance Optimization
+        performanceContainer.innerHTML = `
+            <div class="space-y-3">
+                <div class="text-center p-4 bg-white/5 rounded-lg">
+                    <div class="text-white text-2xl font-bold">${analytics.generation_time.avg_time}</div>
+                    <div class="text-white/60 text-xs">Average Generation Time</div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-2 text-sm">
+                    <div class="text-center p-2 bg-green-500/20 rounded">
+                        <div class="text-green-400 font-bold">${analytics.generation_time.fastest}</div>
+                        <div class="text-white/70 text-xs">Fastest</div>
+                    </div>
+                    <div class="text-center p-2 bg-red-500/20 rounded">
+                        <div class="text-red-400 font-bold">${analytics.generation_time.slowest}</div>
+                        <div class="text-white/70 text-xs">Slowest</div>
+                    </div>
+                </div>
+                
+                <div class="text-center p-3 bg-blue-500/20 rounded-lg">
+                    <div class="text-blue-400 text-xl font-bold">${analytics.success_rate}%</div>
+                    <div class="text-white/60 text-xs">Success Rate</div>
+                </div>
+            </div>
+        `;
+    }
+
+    // Report builder functions
+    function updateMetrics() {
+        const reportType = document.getElementById('report-type').value;
+        const container = document.getElementById('metrics-container');
+        
+        if (!reportType) {
+            container.innerHTML = '<p class="text-white/60 text-sm">Select a report type to see available metrics</p>';
+            return;
+        }
+        
+        const metricsByType = {
+            sales: [
+                { id: 'revenue', name: 'Total Revenue', description: 'Sum of all sales revenue' },
+                { id: 'orders', name: 'Order Count', description: 'Total number of orders' },
+                { id: 'aov', name: 'Average Order Value', description: 'Revenue divided by orders' },
+                { id: 'conversion_rate', name: 'Conversion Rate', description: 'Orders divided by visitors' },
+                { id: 'refunds', name: 'Refunds', description: 'Total refunded amount' }
+            ],
+            customer: [
+                { id: 'new_customers', name: 'New Customers', description: 'First-time customers' },
+                { id: 'returning_customers', name: 'Returning Customers', description: 'Repeat customers' },
+                { id: 'ltv', name: 'Customer Lifetime Value', description: 'Average customer value' },
+                { id: 'retention_rate', name: 'Retention Rate', description: 'Customer retention percentage' },
+                { id: 'churn_rate', name: 'Churn Rate', description: 'Customer loss percentage' }
+            ],
+            product: [
+                { id: 'units_sold', name: 'Units Sold', description: 'Total units sold' },
+                { id: 'revenue_by_product', name: 'Revenue by Product', description: 'Revenue breakdown by product' },
+                { id: 'inventory_turnover', name: 'Inventory Turnover', description: 'Inventory movement rate' },
+                { id: 'profit_margin', name: 'Profit Margin', description: 'Product profitability' },
+                { id: 'return_rate', name: 'Return Rate', description: 'Product return percentage' }
+            ],
+            financial: [
+                { id: 'gross_revenue', name: 'Gross Revenue', description: 'Total revenue before deductions' },
+                { id: 'net_revenue', name: 'Net Revenue', description: 'Revenue after costs' },
+                { id: 'profit', name: 'Profit', description: 'Net profit amount' },
+                { id: 'expenses', name: 'Expenses', description: 'Total operational expenses' },
+                { id: 'roi', name: 'Return on Investment', description: 'Investment return percentage' }
+            ],
+            inventory: [
+                { id: 'stock_levels', name: 'Stock Levels', description: 'Current inventory quantities' },
+                { id: 'low_stock_alerts', name: 'Low Stock Items', description: 'Products below reorder point' },
+                { id: 'overstock', name: 'Overstock Items', description: 'Excess inventory items' },
+                { id: 'stockouts', name: 'Stockouts', description: 'Out of stock products' },
+                { id: 'turnover_rate', name: 'Turnover Rate', description: 'Inventory movement speed' }
+            ],
+            marketing: [
+                { id: 'campaign_roi', name: 'Campaign ROI', description: 'Marketing campaign returns' },
+                { id: 'cac', name: 'Customer Acquisition Cost', description: 'Cost to acquire customers' },
+                { id: 'impressions', name: 'Impressions', description: 'Ad impression count' },
+                { id: 'clicks', name: 'Clicks', description: 'Ad click count' },
+                { id: 'conversions', name: 'Conversions', description: 'Marketing-driven conversions' }
+            ]
+        };
+        
+        const metrics = metricsByType[reportType] || [];
+        
+        const metricsHTML = metrics.map(metric => `
+            <div class="metric-selector" onclick="toggleMetric('${metric.id}')">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <input type="checkbox" class="metric-checkbox" id="metric-${metric.id}">
+                        <div>
+                            <div class="text-white font-medium text-sm">${metric.name}</div>
+                            <div class="text-white/60 text-xs">${metric.description}</div>
+                        </div>
+                    </div>
+                    <i class="fas fa-chart-line text-blue-400"></i>
+                </div>
+            </div>
+        `).join('');
+        
+        container.innerHTML = metricsHTML;
+        updateFiltersContainer(reportType);
+    }
+
+    function updateFiltersContainer(reportType) {
+        const container = document.getElementById('filters-container');
+        
+        const filtersByType = {
+            sales: ['Date Range', 'Product Category', 'Customer Segment', 'Sales Channel'],
+            customer: ['Registration Date', 'Customer Type', 'Location', 'Purchase History'],
+            product: ['Category', 'Brand', 'Price Range', 'Availability'],
+            financial: ['Account Type', 'Transaction Type', 'Amount Range', 'Currency'],
+            inventory: ['Location', 'Category', 'Stock Level', 'Supplier'],
+            marketing: ['Campaign Type', 'Channel', 'Budget Range', 'Target Audience']
+        };
+        
+        const filters = filtersByType[reportType] || [];
+        
+        const filtersHTML = filters.map(filter => `
+            <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                <span class="text-white text-sm">${filter}</span>
+                <button onclick="configureFilter('${filter}')" class="text-blue-400 text-sm hover:text-blue-300">
+                    <i class="fas fa-cog mr-1"></i>Configure
+                </button>
+            </div>
+        `).join('');
+        
+        container.innerHTML = filtersHTML;
+    }
+
+    // Tab switching
+    function switchTab(tab) {
+        currentTab = tab;
+        
+        // Update active tab
+        document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+        document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+        
+        // Show/hide tab content
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.remove('active');
+        });
+        document.getElementById(`${tab}-tab`).classList.add('active');
+    }
+
+    // Helper functions
+    function selectDateRange(range) {
+        // Remove active class from all chips
+        document.querySelectorAll('.filter-chip').forEach(chip => {
+            chip.classList.remove('active');
+        });
+        
+        // Add active class to selected chip
+        event.target.classList.add('active');
+        
+        // Show custom date range if selected
+        const customRange = document.getElementById('custom-date-range');
+        if (range === 'custom') {
+            customRange.classList.remove('hidden');
+        } else {
+            customRange.classList.add('hidden');
+        }
+    }
+
+    function selectExportFormat(format) {
+        selectedExportFormat = format;
+        
+        // Update UI
+        document.querySelectorAll('.export-format').forEach(el => {
+            el.classList.remove('selected');
+        });
+        event.target.closest('.export-format').classList.add('selected');
+    }
+
+    function toggleMetric(metricId) {
+        const checkbox = document.getElementById(`metric-${metricId}`);
+        const selector = checkbox.closest('.metric-selector');
+        
+        checkbox.checked = !checkbox.checked;
+        
+        if (checkbox.checked) {
+            selector.classList.add('selected');
+            selectedMetrics.push(metricId);
+        } else {
+            selector.classList.remove('selected');
+            selectedMetrics = selectedMetrics.filter(id => id !== metricId);
+        }
+        
+        updateReportPreview();
+    }
+
+    function updateReportPreview() {
+        const reportName = document.getElementById('report-name').value;
+        const reportType = document.getElementById('report-type').value;
+        const summaryContainer = document.getElementById('report-summary');
+        
+        if (!reportName || !reportType || selectedMetrics.length === 0) {
+            summaryContainer.innerHTML = '<p class="text-white/60 text-sm">Configure report settings to see summary</p>';
+            return;
+        }
+        
+        const summaryHTML = `
+            <div class="space-y-2">
+                <div class="flex justify-between text-sm">
+                    <span class="text-white/70">Report Name:</span>
+                    <span class="text-white">${reportName}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-white/70">Type:</span>
+                    <span class="text-white capitalize">${reportType}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-white/70">Metrics:</span>
+                    <span class="text-white">${selectedMetrics.length} selected</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-white/70">Format:</span>
+                    <span class="text-white">${selectedExportFormat.toUpperCase()}</span>
+                </div>
+            </div>
+        `;
+        
+        summaryContainer.innerHTML = summaryHTML;
+    }
+
+    function formatTimeAgo(dateString) {
+        if (!dateString) return 'Unknown';
+        
+        const now = new Date();
+        const date = new Date(dateString);
+        const diffInSeconds = Math.floor((now - date) / 1000);
+        
+        if (diffInSeconds < 60) return 'Just now';
+        if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+        if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+        return `${Math.floor(diffInSeconds / 86400)}d ago`;
+    }
+
+    function formatDateTime(dateString) {
+        return new Date(dateString).toLocaleString();
+    }
+
+    function formatStatus(status) {
+        const statusMap = {
+            'ready': 'Ready',
+            'generating': 'Generating',
+            'failed': 'Failed',
+            'scheduled': 'Scheduled'
+        };
+        return statusMap[status] || status;
+    }
+
+    function formatMetricName(metric) {
+        return metric.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    }
+
+    function getRecommendationColor(type) {
+        const colors = {
+            'optimization': 'blue-500',
+            'insight': 'green-500',
+            'performance': 'yellow-500',
+            'engagement': 'purple-500'
+        };
+        return colors[type] || 'gray-500';
+    }
+
+    function getRecommendationIcon(type) {
+        const icons = {
+            'optimization': 'cog',
+            'insight': 'lightbulb',
+            'performance': 'tachometer-alt',
+            'engagement': 'heart'
+        };
+        return icons[type] || 'info-circle';
+    }
+
+    function getImpactColor(impact) {
+        const colors = {
+            'high': 'red',
+            'medium': 'yellow',
+            'low': 'green'
+        };
+        return colors[impact] || 'gray';
+    }
+
+    function createEmptyState(type, title, description, actions = '') {
+        return `
+            <div class="text-center py-12">
+                <div class="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-${type === 'scheduled' ? 'calendar' : 'file-alt'} text-white/30 text-3xl"></i>
+                </div>
+                <h3 class="text-white text-xl font-semibold mb-2">${title}</h3>
+                <p class="text-white/60 mb-6 max-w-md mx-auto">${description}</p>
+                ${actions}
+            </div>
+        `;
+    }
+
+    function showToast(message, type = 'info') {
+        console.log(`[${type.toUpperCase()}] ${message}`);
+        
+        const toast = document.createElement('div');
+        toast.className = `fixed top-4 right-4 z-50 px-6 py-4 rounded-lg text-white ${
+            type === 'success' ? 'bg-green-500' : 
+            type === 'error' ? 'bg-red-500' : 
+            type === 'warning' ? 'bg-yellow-500' : 'bg-blue-500'
+        }`;
+        toast.textContent = message;
+        
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+
+    // Make functions globally available
+    window.switchTab = switchTab;
+    window.updateMetrics = updateMetrics;
+    window.selectDateRange = selectDateRange;
+    window.selectExportFormat = selectExportFormat;
+    window.toggleMetric = toggleMetric;
+    window.selectTemplate = (id) => showToast(`Template ${id} selected`, 'info');
+    window.useTemplate = (id) => showToast(`Using template ${id}`, 'success');
+    window.editTemplate = (id) => showToast(`Editing template ${id}`, 'info');
+    window.duplicateTemplate = (id) => showToast(`Template ${id} duplicated`, 'success');
+    window.openReportBuilder = () => switchTab('builder');
+    window.openScheduler = () => switchTab('scheduled');
+    window.refreshReports = () => { loadAllReportingData(); showToast('Reports refreshed', 'success'); };
+    window.previewReport = () => showToast('Report preview generated', 'success');
+    window.generateReport = () => showToast('Report generation started', 'success');
+    window.saveTemplate = () => showToast('Template saved successfully', 'success');
+    window.configureFilter = (filter) => showToast(`Configuring ${filter} filter`, 'info');
+    window.addSchedule = () => showToast('Add schedule modal opened', 'info');
+    window.runNow = (id) => showToast(`Running scheduled report ${id}`, 'success');
+    window.editSchedule = (id) => showToast(`Editing schedule ${id}`, 'info');
+    window.toggleSchedule = (id) => showToast(`Schedule ${id} toggled`, 'success');
+    window.deleteSchedule = (id) => showToast(`Schedule ${id} deleted`, 'warning');
+    window.viewReport = (id) => showToast(`Viewing report ${id}`, 'info');
+    window.downloadReport = (id) => showToast(`Downloading report ${id}`, 'success');
+    window.shareReport = (id) => showToast(`Sharing report ${id}`, 'info');
+    window.retryGeneration = (id) => showToast(`Retrying report ${id}`, 'warning');
+    window.cancelGeneration = (id) => showToast(`Cancelled report ${id}`, 'warning');
+    window.duplicateReport = (id) => showToast(`Report ${id} duplicated`, 'success');
+    window.deleteReport = (id) => showToast(`Report ${id} deleted`, 'warning');
+    window.applyRecommendation = (id) => showToast(`Applied recommendation ${id}`, 'success');
+    window.filterHistory = () => showToast('History filtered', 'info');
+    window.exportHistory = () => showToast('Exporting report history', 'success');
+    window.bulkSchedule = () => showToast('Bulk schedule interface opened', 'info');
+
+</script>
+
+</body>
+</html>

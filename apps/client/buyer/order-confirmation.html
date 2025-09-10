@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Confirmation - Buyer Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .order-card {
+            transition: all 0.3s ease;
+        }
+        .order-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        .delivery-code {
+            font-family: 'Courier New', monospace;
+            font-size: 2rem;
+            font-weight: bold;
+            letter-spacing: 0.3em;
+            color: #1e40af;
+            text-align: center;
+            padding: 1rem;
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            border: 2px dashed #3b82f6;
+            border-radius: 0.5rem;
+        }
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        .status-pending { background-color: #fef3c7; color: #92400e; }
+        .status-enroute { background-color: #ddd6fe; color: #5b21b6; }
+        .status-delivered { background-color: #d1fae5; color: #065f46; }
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation Header -->
+    <nav class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <button onclick="goBack()" class="mr-4 p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <h1 class="text-xl font-semibold text-gray-900">
+                        <i class="fas fa-clipboard-check text-green-600 mr-2"></i>
+                        Order Confirmation
+                    </h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm text-gray-500" id="buyer-name">Loading...</span>
+                    <button onclick="logout()" class="text-red-600 hover:text-red-700">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <!-- Page Header -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-bold text-gray-900 mb-2">Order Confirmation & Tracking</h2>
+            <p class="text-gray-600">Track your orders and provide delivery codes to agents</p>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-2 bg-yellow-100 rounded-lg">
+                        <i class="fas fa-clock text-yellow-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Pending Delivery</p>
+                        <p class="text-2xl font-semibold text-gray-900" id="pending-count">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-2 bg-purple-100 rounded-lg">
+                        <i class="fas fa-truck text-purple-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">En Route</p>
+                        <p class="text-2xl font-semibold text-gray-900" id="enroute-count">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-2 bg-green-100 rounded-lg">
+                        <i class="fas fa-check-circle text-green-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Delivered</p>
+                        <p class="text-2xl font-semibold text-gray-900" id="delivered-count">0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Orders List -->
+        <div class="bg-white shadow rounded-lg">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">
+                    <i class="fas fa-list-alt mr-2"></i>
+                    Your Orders
+                </h3>
+            </div>
+            <div class="p-6">
+                <div id="orders-loading" class="text-center py-8">
+                    <i class="fas fa-spinner fa-spin text-2xl text-gray-400 mb-4"></i>
+                    <p class="text-gray-500">Loading your orders...</p>
+                </div>
+                <div id="orders-container" class="space-y-6" style="display: none;"></div>
+                <div id="no-orders" class="text-center py-8" style="display: none;">
+                    <i class="fas fa-shopping-cart text-4xl text-gray-300 mb-4"></i>
+                    <p class="text-gray-500">No orders found</p>
+                    <a href="dashboard.html" class="text-blue-600 hover:text-blue-700 mt-2 inline-block">
+                        Go to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Details Modal -->
+    <div id="order-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">
+                        <i class="fas fa-info-circle text-blue-600 mr-2"></i>
+                        Order Details
+                    </h3>
+                    <button onclick="closeOrderModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <div id="modal-content" class="space-y-6">
+                    <!-- Content will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../shared/auth-utils.js"></script>
+    <script src="../shared/api-client.js"></script>
+    <script>
+        let currentOrders = [];
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuthentication();
+            loadBuyerInfo();
+            loadOrders();
+            setupAutoRefresh();
+        });
+
+        function checkAuthentication() {
+            const token = localStorage.getItem('token');
+            const userRole = localStorage.getItem('userRole');
+            
+            if (!token || userRole !== 'buyer') {
+                window.location.href = '../auth/auth-buyer.html';
+                return;
+            }
+        }
+
+        function loadBuyerInfo() {
+            const userName = localStorage.getItem('userName') || 'Buyer';
+            document.getElementById('buyer-name').textContent = userName;
+        }
+
+        async function loadOrders() {
+            try {
+                const response = await makeAuthenticatedRequest('/api/delivery-confirmation-otp/buyer/orders');
+                
+                if (response.success) {
+                    currentOrders = response.orders;
+                    displayOrders(response.orders);
+                    updateStatistics(response.orders);
+                } else {
+                    showError('Failed to load orders: ' + response.message);
+                }
+            } catch (error) {
+                console.error('Error loading orders:', error);
+                showError('Failed to load orders');
+            } finally {
+                document.getElementById('orders-loading').style.display = 'none';
+            }
+        }
+
+        function displayOrders(orders) {
+            const container = document.getElementById('orders-container');
+            
+            if (orders.length === 0) {
+                document.getElementById('no-orders').style.display = 'block';
+                return;
+            }
+
+            container.style.display = 'block';
+            container.innerHTML = orders.map(order => `
+                <div class="order-card bg-white border border-gray-200 rounded-lg p-6">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h4 class="text-lg font-semibold text-gray-900">${order.order_number}</h4>
+                            <p class="text-sm text-gray-600">
+                                <i class="fas fa-calendar mr-1"></i>
+                                ${formatDate(order.estimated_delivery_time)}
+                            </p>
+                        </div>
+                        <span class="status-badge ${getStatusClass(order.status)}">
+                            <i class="fas ${getStatusIcon(order.status)}"></i>
+                            ${formatStatus(order.status)}
+                        </span>
+                    </div>
+                    
+                    <!-- Delivery Code Section -->
+                    ${order.delivery_code ? `
+                        <div class="mb-6">
+                            <div class="text-center mb-4">
+                                <h5 class="text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-key mr-1"></i>
+                                    Your Delivery Code
+                                </h5>
+                                <div class="delivery-code ${order.status.includes('EN_ROUTE') ? 'pulse-animation' : ''}">
+                                    ${order.delivery_code}
+                                </div>
+                                <p class="text-xs text-gray-500 mt-2">
+                                    ${order.status.includes('EN_ROUTE') ? 
+                                        '<i class="fas fa-exclamation-circle mr-1"></i>Agent is on the way! Have this code ready.' :
+                                        'Provide this code to the delivery agent'
+                                    }
+                                </p>
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    <!-- Order Information -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <p class="text-sm font-medium text-gray-700">Items:</p>
+                            <p class="text-sm text-gray-600">${order.items || 'Loading items...'}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-700">Agent:</p>
+                            <p class="text-sm text-gray-600">
+                                ${order.agent_name ? 
+                                    `${order.agent_name} ${order.agent_phone ? '• ' + order.agent_phone : ''}` : 
+                                    'Not assigned yet'
+                                }
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- Delivery Status Timeline -->
+                    <div class="mb-4">
+                        <div class="flex items-center space-x-2 text-sm">
+                            <div class="flex items-center ${order.status === 'PICKED_FROM_SELLER' || order.status.includes('EN_ROUTE') || order.status === 'DELIVERED' ? 'text-green-600' : 'text-gray-400'}">
+                                <i class="fas fa-check-circle mr-1"></i>
+                                <span>Picked up</span>
+                            </div>
+                            <div class="flex-1 h-px ${order.status.includes('EN_ROUTE') || order.status === 'DELIVERED' ? 'bg-green-600' : 'bg-gray-300'}"></div>
+                            <div class="flex items-center ${order.status.includes('EN_ROUTE') || order.status === 'DELIVERED' ? 'text-green-600' : 'text-gray-400'}">
+                                <i class="fas fa-truck mr-1"></i>
+                                <span>En route</span>
+                            </div>
+                            <div class="flex-1 h-px ${order.status === 'DELIVERED' ? 'bg-green-600' : 'bg-gray-300'}"></div>
+                            <div class="flex items-center ${order.status === 'DELIVERED' ? 'text-green-600' : 'text-gray-400'}">
+                                <i class="fas fa-home mr-1"></i>
+                                <span>Delivered</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="flex justify-between items-center">
+                        <div class="text-sm text-gray-500">
+                            Total: <span class="font-semibold">$${parseFloat(order.total_amount).toFixed(2)}</span>
+                        </div>
+                        <div class="space-x-2">
+                            <button 
+                                onclick="viewOrderDetails(${order.id})"
+                                class="bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200 focus:ring-2 focus:ring-gray-500"
+                            >
+                                <i class="fas fa-eye mr-2"></i>
+                                View Details
+                            </button>
+                            ${order.delivery_code && order.status.includes('EN_ROUTE') ? `
+                                <button 
+                                    onclick="copyDeliveryCode('${order.delivery_code}')"
+                                    class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-500"
+                                >
+                                    <i class="fas fa-copy mr-2"></i>
+                                    Copy Code
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateStatistics(orders) {
+            const pending = orders.filter(o => o.status === 'PICKED_FROM_SELLER').length;
+            const enroute = orders.filter(o => o.status.includes('EN_ROUTE')).length;
+            const delivered = orders.filter(o => o.status === 'DELIVERED').length;
+            
+            document.getElementById('pending-count').textContent = pending;
+            document.getElementById('enroute-count').textContent = enroute;
+            document.getElementById('delivered-count').textContent = delivered;
+        }
+
+        function viewOrderDetails(orderId) {
+            const order = currentOrders.find(o => o.id === orderId);
+            if (!order) return;
+
+            const modalContent = document.getElementById('modal-content');
+            modalContent.innerHTML = `
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h4 class="font-medium text-gray-900 mb-2">Order Information</h4>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="text-gray-600">Order Number:</span>
+                            <span class="font-medium ml-2">${order.order_number}</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">Total Amount:</span>
+                            <span class="font-medium ml-2">$${parseFloat(order.total_amount).toFixed(2)}</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">Status:</span>
+                            <span class="font-medium ml-2">${formatStatus(order.status)}</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">Delivery Method:</span>
+                            <span class="font-medium ml-2">${order.delivery_method || 'Standard'}</span>
+                        </div>
+                    </div>
+                </div>
+
+                ${order.delivery_code ? `
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <h4 class="font-medium text-gray-900 mb-2">
+                            <i class="fas fa-key mr-2"></i>
+                            Delivery Verification
+                        </h4>
+                        <div class="text-center">
+                            <div class="delivery-code mb-2">${order.delivery_code}</div>
+                            <p class="text-sm text-gray-600">
+                                Show this code to the delivery agent when they arrive
+                            </p>
+                        </div>
+                    </div>
+                ` : ''}
+
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h4 class="font-medium text-gray-900 mb-2">Delivery Information</h4>
+                    <div class="space-y-2 text-sm">
+                        <div>
+                            <span class="text-gray-600">Address:</span>
+                            <p class="mt-1">${order.delivery_address || order.shipping_address || 'No address provided'}</p>
+                        </div>
+                        ${order.agent_name ? `
+                            <div>
+                                <span class="text-gray-600">Agent:</span>
+                                <span class="font-medium ml-2">${order.agent_name}</span>
+                                ${order.agent_phone ? `<span class="text-gray-500 ml-2">${order.agent_phone}</span>` : ''}
+                            </div>
+                        ` : ''}
+                        ${order.estimated_delivery_time ? `
+                            <div>
+                                <span class="text-gray-600">Estimated Delivery:</span>
+                                <span class="font-medium ml-2">${formatDate(order.estimated_delivery_time)}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+
+                ${order.items ? `
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h4 class="font-medium text-gray-900 mb-2">Order Items</h4>
+                        <p class="text-sm text-gray-600">${order.items}</p>
+                    </div>
+                ` : ''}
+
+                ${order.agent_delivery_notes ? `
+                    <div class="bg-green-50 p-4 rounded-lg">
+                        <h4 class="font-medium text-gray-900 mb-2">
+                            <i class="fas fa-sticky-note mr-2"></i>
+                            Delivery Notes
+                        </h4>
+                        <p class="text-sm text-gray-600">${order.agent_delivery_notes}</p>
+                    </div>
+                ` : ''}
+            `;
+
+            document.getElementById('order-modal').classList.remove('hidden');
+        }
+
+        function closeOrderModal() {
+            document.getElementById('order-modal').classList.add('hidden');
+        }
+
+        function copyDeliveryCode(code) {
+            navigator.clipboard.writeText(code).then(() => {
+                showSuccess('Delivery code copied to clipboard!');
+            }).catch(() => {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showSuccess('Delivery code copied to clipboard!');
+            });
+        }
+
+        function setupAutoRefresh() {
+            // Refresh orders every 30 seconds
+            setInterval(() => {
+                loadOrders();
+            }, 30000);
+        }
+
+        // Utility functions
+        function getStatusClass(status) {
+            if (status === 'DELIVERED') return 'status-delivered';
+            if (status.includes('EN_ROUTE')) return 'status-enroute';
+            return 'status-pending';
+        }
+
+        function getStatusIcon(status) {
+            if (status === 'DELIVERED') return 'fa-check-circle';
+            if (status.includes('EN_ROUTE')) return 'fa-truck';
+            return 'fa-clock';
+        }
+
+        function formatStatus(status) {
+            return status.replace(/_/g, ' ').toLowerCase()
+                .replace(/\b\w/g, l => l.toUpperCase());
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'Not set';
+            const date = new Date(dateString);
+            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        }
+
+        function showError(message) {
+            alert('Error: ' + message);
+        }
+
+        function showSuccess(message) {
+            // Create a simple toast notification
+            const toast = document.createElement('div');
+            toast.className = 'fixed top-4 right-4 bg-green-600 text-white px-4 py-2 rounded-md shadow-lg z-50';
+            toast.innerHTML = `<i class="fas fa-check mr-2"></i>${message}`;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                document.body.removeChild(toast);
+            }, 3000);
+        }
+
+        function goBack() {
+            window.history.back();
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = '../auth/auth-buyer.html';
+        }
+    </script>
+</body>
+</html>

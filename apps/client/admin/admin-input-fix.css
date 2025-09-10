@@ -1,0 +1,111 @@
+/* Admin Input Field Visibility Fix */
+/* This file fixes the white text on white background issue in admin pages */
+
+/* Fix for all input fields in admin pages */
+.admin-page input[type="text"],
+.admin-page input[type="email"],
+.admin-page input[type="password"],
+.admin-page input[type="number"],
+.admin-page input[type="tel"],
+.admin-page input[type="url"],
+.admin-page input[type="date"],
+.admin-page input[type="datetime-local"],
+.admin-page input[type="time"],
+.admin-page input[type="search"],
+.admin-page textarea,
+.admin-page select {
+    color: #1f2937 !important; /* Dark gray text */
+    background-color: #ffffff !important; /* White background */
+    border: 1px solid #d1d5db !important; /* Light gray border */
+}
+
+/* Focus states for better visibility */
+.admin-page input[type="text"]:focus,
+.admin-page input[type="email"]:focus,
+.admin-page input[type="password"]:focus,
+.admin-page input[type="number"]:focus,
+.admin-page input[type="tel"]:focus,
+.admin-page input[type="url"]:focus,
+.admin-page input[type="date"]:focus,
+.admin-page input[type="datetime-local"]:focus,
+.admin-page input[type="time"]:focus,
+.admin-page input[type="search"]:focus,
+.admin-page textarea:focus,
+.admin-page select:focus {
+    color: #1f2937 !important;
+    background-color: #ffffff !important;
+    border-color: #3b82f6 !important; /* Blue border on focus */
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+    outline: none !important;
+}
+
+/* Placeholder text color */
+.admin-page input::placeholder,
+.admin-page textarea::placeholder {
+    color: #6b7280 !important; /* Medium gray for placeholders */
+}
+
+/* Disabled state */
+.admin-page input:disabled,
+.admin-page textarea:disabled,
+.admin-page select:disabled {
+    color: #9ca3af !important; /* Light gray for disabled */
+    background-color: #f3f4f6 !important; /* Light gray background */
+    cursor: not-allowed !important;
+}
+
+/* Readonly state */
+.admin-page input[readonly],
+.admin-page textarea[readonly] {
+    color: #6b7280 !important; /* Medium gray for readonly */
+    background-color: #f9fafb !important; /* Very light gray background */
+}
+
+/* Specific fixes for admin dashboard and related pages */
+body[class*="admin"] input,
+body[class*="admin"] textarea,
+body[class*="admin"] select,
+.admin-dashboard input,
+.admin-dashboard textarea,
+.admin-dashboard select {
+    color: #1f2937 !important;
+    background-color: #ffffff !important;
+    border: 1px solid #d1d5db !important;
+}
+
+/* Override any existing white text classes */
+.text-white input,
+.text-white textarea,
+.text-white select {
+    color: #1f2937 !important;
+}
+
+/* Fix for any bg-white/10 inputs */
+.bg-white\/10 input,
+.bg-white\/10 textarea,
+.bg-white\/10 select {
+    background-color: #ffffff !important;
+    color: #1f2937 !important;
+}
+
+/* Ensure proper contrast for all form elements */
+form input,
+form textarea,
+form select {
+    color: #1f2937 !important;
+    background-color: #ffffff !important;
+}
+
+/* Fix for any remaining white text inputs */
+input[class*="text-white"],
+textarea[class*="text-white"],
+select[class*="text-white"] {
+    color: #1f2937 !important;
+}
+
+/* Fix for any remaining transparent background inputs */
+input[class*="bg-white/10"],
+textarea[class*="bg-white/10"],
+select[class*="bg-white/10"] {
+    background-color: #ffffff !important;
+} 

@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Select Delivery Method | ADD Physical Products</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+  <style>
+    .glass-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .delivery-option {
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    .delivery-option:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+    .delivery-option.selected {
+      border-color: #3b82f6;
+      background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    .delivery-option.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      background: #f9fafb;
+    }
+    .price-breakdown {
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    }
+    .pickup-site-option {
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    .pickup-site-option:hover {
+      background: #f3f4f6;
+    }
+    .pickup-site-option.selected {
+      background: #dbeafe;
+      border-color: #3b82f6;
+    }
+    #map {
+      height: 300px !important;
+      width: 100% !important;
+      border-radius: 0.5rem;
+      border: 1px solid #e5e7eb;
+      z-index: 1;
+    }
+    .leaflet-container {
+      height: 300px !important;
+      width: 100% !important;
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 via-white to-green-50 min-h-screen">
+  
+  <!-- Header -->
+  <header class="bg-white shadow-sm border-b">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        <!-- Logo -->
+        <div class="flex items-center">
+          <img src="/uploads/logo.png" alt="ADD Physical Products" class="h-8 w-auto">
+          <span class="ml-2 text-xl font-bold text-gray-900">ADD Physical Products</span>
+        </div>
+        
+        <!-- Navigation -->
+        <nav class="hidden md:flex space-x-8">
+          <a href="/buyer/buyers-home.html" class="text-gray-700 hover:text-blue-600 font-medium">Home</a>
+          <a href="/buyer/products.html" class="text-gray-700 hover:text-blue-600 font-medium">Products</a>
+          <a href="/buyer/orders.html" class="text-gray-700 hover:text-blue-600 font-medium">Orders</a>
+          <a href="/buyer/cart.html" class="text-gray-700 hover:text-blue-600 font-medium">Cart</a>
+        </nav>
+        
+        <!-- User Profile -->
+        <div class="relative">
+          <button id="profile-btn" class="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-colors">
+            <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+              <i class="fas fa-user text-white text-sm"></i>
+            </div>
+            <span id="profile-name" class="font-medium">User</span>
+            <i class="fas fa-chevron-down text-sm"></i>
+          </button>
+          
+          <div id="profile-dropdown" class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border hidden z-50">
+            <a href="/buyer/buyers-home.html" class="block px-4 py-2 text-gray-700 hover:bg-gray-50">
+              <i class="fas fa-home mr-2"></i>Dashboard
+            </a>
+            <a href="/buyer/orders.html" class="block px-4 py-2 text-gray-700 hover:bg-gray-50">
+              <i class="fas fa-shopping-bag mr-2"></i>My Orders
+            </a>
+            <hr class="my-1">
+            <button id="signout-btn" class="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50">
+              <i class="fas fa-sign-out-alt mr-2"></i>Sign Out
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Progress Bar -->
+  <div class="bg-white border-b">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div class="flex items-center justify-center space-x-8">
+        <div class="flex items-center text-green-600">
+          <div class="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-white text-sm font-bold">
+            <i class="fas fa-check"></i>
+          </div>
+          <span class="ml-2 font-medium">Cart</span>
+        </div>
+        <div class="w-16 h-1 bg-green-600 rounded"></div>
+        <div class="flex items-center text-blue-600">
+          <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-bold">2</div>
+          <span class="ml-2 font-medium">Delivery</span>
+        </div>
+        <div class="w-16 h-1 bg-gray-300 rounded"></div>
+        <div class="flex items-center text-gray-400">
+          <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-gray-600 text-sm font-bold">3</div>
+          <span class="ml-2 font-medium">Checkout</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Order Summary -->
+    <div class="glass-card rounded-2xl p-6 mb-8">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold text-gray-900">Order Summary</h2>
+        <button id="toggle-details" class="text-blue-600 hover:text-blue-700 text-sm font-medium">
+          <span id="toggle-text">View Details</span>
+          <i id="toggle-icon" class="fas fa-chevron-down ml-1"></i>
+        </button>
+      </div>
+      
+      <div class="flex justify-between items-center mb-4">
+        <div>
+          <span id="item-count" class="text-gray-600">0 items</span>
+          <span class="text-gray-400 mx-2">•</span>
+          <span id="order-subtotal" class="font-semibold">FRw 0</span>
+        </div>
+      </div>
+      
+      <!-- Order Details (Initially Hidden) -->
+      <div id="order-details" class="hidden border-t pt-4">
+        <div id="order-items-list" class="space-y-3">
+          <!-- Order items will be loaded here -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Delivery Options -->
+    <div class="space-y-6">
+      <h2 class="text-2xl font-bold text-gray-900">Choose Delivery Method</h2>
+      
+      <!-- Pickup Delivery -->
+      <div class="delivery-option glass-card rounded-2xl p-6 border-2 border-gray-200" data-delivery-type="pickup" id="pickup-option">
+        <div class="flex items-start space-x-4">
+          <div class="flex-shrink-0">
+            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+              <i class="fas fa-store text-blue-600 text-xl"></i>
+            </div>
+          </div>
+          <div class="flex-1">
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="text-lg font-semibold text-gray-900">Pickup Delivery</h3>
+              <div class="text-right">
+                <div class="text-lg font-bold text-green-600" id="pickup-fee-display">FREE</div>
+                <div class="text-sm text-gray-500">No delivery fee</div>
+              </div>
+            </div>
+            <p class="text-gray-600 mb-3">Collect your order from one of our convenient pickup points</p>
+            <div class="flex items-center space-x-4 text-sm text-gray-500 mb-4">
+              <div class="flex items-center">
+                <i class="fas fa-clock mr-1"></i>
+                <span id="pickup-processing-time">Ready in 2 days</span>
+              </div>
+              <div class="flex items-center">
+                <i class="fas fa-map-marker-alt mr-1"></i>
+                <span id="pickup-sites-count">Loading locations...</span>
+              </div>
+            </div>
+            
+            <!-- Pickup Sites Selection (Initially Hidden) -->
+            <div id="pickup-sites-section" class="hidden mt-4 border-t pt-4">
+              <h4 class="font-medium text-gray-900 mb-3">Select Pickup Location:</h4>
+              <div id="pickup-sites-list" class="space-y-2 max-h-48 overflow-y-auto">
+                <!-- Pickup sites will be loaded here -->
+              </div>
+            </div>
+            
+            <!-- No Pickup Available Message -->
+            <div id="no-pickup-message" class="hidden mt-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+              <div class="flex items-center text-orange-700">
+                <i class="fas fa-exclamation-triangle mr-2"></i>
+                <span>Pickup delivery is not available. Admin has disabled this option.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Home Delivery -->
+      <div class="delivery-option glass-card rounded-2xl p-6 border-2 border-gray-200" data-delivery-type="home" id="home-option">
+        <div class="flex items-start space-x-4">
+          <div class="flex-shrink-0">
+            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+              <i class="fas fa-home text-green-600 text-xl"></i>
+            </div>
+          </div>
+          <div class="flex-1">
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="text-lg font-semibold text-gray-900">Home Delivery</h3>
+              <div class="text-right">
+                <div class="text-lg font-bold text-gray-900" id="home-delivery-fee">Calculating...</div>
+                <div class="text-sm text-gray-500">Delivery fee</div>
+              </div>
+            </div>
+            <p class="text-gray-600 mb-3">Direct delivery to your doorstep with tracking</p>
+            <div class="flex items-center space-x-4 text-sm text-gray-500 mb-4">
+              <div class="flex items-center">
+                <i class="fas fa-clock mr-1"></i>
+                <span>3-5 business days</span>
+              </div>
+              <div class="flex items-center">
+                <i class="fas fa-truck mr-1"></i>
+                <span>Real-time tracking</span>
+              </div>
+            </div>
+            
+            <!-- Address Section (Initially Hidden) -->
+            <div id="home-address-section" class="hidden mt-4 border-t pt-4">
+              <h4 class="font-medium text-gray-900 mb-3">Delivery Address:</h4>
+              <div class="space-y-3">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Street Address</label>
+                    <input type="text" id="street-address" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter your address">
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">City</label>
+                    <input type="text" id="city" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="City">
+                  </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">State/Province</label>
+                    <input type="text" id="state" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="State">
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Postal Code</label>
+                    <input type="text" id="postal-code" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Postal code">
+                  </div>
+                </div>
+                <button type="button" id="use-current-location" class="flex items-center space-x-2 text-blue-600 hover:text-blue-700 font-medium">
+                  <i class="fas fa-map-marker-alt"></i>
+                  <span>Use Current Location</span>
+                </button>
+              </div>
+              
+              <!-- Map for address confirmation -->
+              <div class="mt-4">
+                <div id="map" class="hidden"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Price Breakdown -->
+    <div class="price-breakdown rounded-2xl p-6 mt-8 border">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">Price Breakdown</h3>
+      <div class="space-y-3">
+        <div class="flex justify-between">
+          <span class="text-gray-600">Subtotal:</span>
+          <span id="breakdown-subtotal" class="font-medium">FRw 0</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-gray-600">Delivery Fee:</span>
+          <span id="breakdown-delivery" class="font-medium">Select delivery method</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-gray-600">Tax:</span>
+          <span id="breakdown-tax" class="font-medium">FRw 0</span>
+        </div>
+        <div id="free-shipping-notice" class="text-sm text-green-600 font-medium hidden">
+          🎉 Free shipping applied!
+        </div>
+        <hr class="my-3">
+        <div class="flex justify-between text-lg font-bold">
+          <span>Total:</span>
+          <span id="breakdown-total" class="text-green-600">Select delivery method</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Continue Button -->
+    <div class="mt-8 flex justify-between">
+      <a href="/buyer/cart.html" class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium transition-colors">
+        <i class="fas fa-arrow-left mr-2"></i>Back to Cart
+      </a>
+      <button id="continue-btn" class="px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg font-bold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+        Continue to Checkout
+        <i class="fas fa-arrow-right ml-2"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div id="loading-overlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg p-6 text-center">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+      <p class="text-gray-600">Calculating delivery options...</p>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+  <script>
+    class DeliveryMethodSelection {
+      constructor() {
+        this.cartData = null;
+        this.selectedDeliveryType = null;
+        this.selectedPickupSite = null;
+        this.deliveryCalculation = null;
+        this.pickupSites = [];
+        this.map = null;
+        this.init();
+      }
+
+      async init() {
+        // Check authentication
+        this.checkAuthentication();
+        
+        // Load cart data
+        this.loadCartData();
+        
+        // Load delivery options
+        await this.loadDeliveryOptions();
+        
+        // Setup event listeners
+        this.setupEventListeners();
+        
+        // Setup profile dropdown
+        this.setupProfileDropdown();
+      }
+
+      checkAuthentication() {
+        const token = localStorage.getItem('authToken');
+        const userData = localStorage.getItem('userData');
+        
+        if (!token || !userData) {
+          window.location.href = '/auth/auth-buyer.html';
+          return;
+        }
+        
+        try {
+          const user = JSON.parse(userData);
+          const profileName = document.getElementById('profile-name');
+          if (profileName) {
+            profileName.textContent = user.username || 'User';
+          }
+        } catch (error) {
+          console.error('Error parsing user data:', error);
+        }
+      }
+
+      loadCartData() {
+        const checkoutData = localStorage.getItem('checkoutData');
+        if (!checkoutData) {
+          window.location.href = '/buyer/cart.html';
+          return;
+        }
+
+        try {
+          this.cartData = JSON.parse(checkoutData);
+          console.log('📦 Cart data loaded:', this.cartData);
+          
+          // Update order summary
+          const itemCount = this.cartData.items.reduce((total, item) => total + (item.quantity || 1), 0);
+          document.getElementById('item-count').textContent = `${itemCount} item${itemCount !== 1 ? 's' : ''}`;
+          document.getElementById('order-subtotal').textContent = `FRw ${this.cartData.subtotal.toLocaleString()}`;
+          document.getElementById('breakdown-subtotal').textContent = `FRw ${this.cartData.subtotal.toLocaleString()}`;
+          
+          // Load order items for details view
+          this.loadOrderItems();
+          
+        } catch (error) {
+          console.error('Error loading cart data:', error);
+          window.location.href = '/buyer/cart.html';
+        }
+      }
+
+      async loadOrderItems() {
+        try {
+          const orderItemsList = document.getElementById('order-items-list');
+          orderItemsList.innerHTML = '';
+          
+          for (const item of this.cartData.items) {
+            const itemElement = document.createElement('div');
+            itemElement.className = 'flex items-center space-x-3 p-3 bg-gray-50 rounded-lg';
+            itemElement.innerHTML = `
+              <img src="${item.image_url || '/uploads/default-product.jpg'}" alt="${item.name}" class="w-12 h-12 object-cover rounded">
+              <div class="flex-1">
+                <h4 class="font-medium text-gray-900">${item.name}</h4>
+                <p class="text-sm text-gray-600">Qty: ${item.quantity}</p>
+              </div>
+              <div class="text-right">
+                <p class="font-semibold">FRw ${(item.price * item.quantity).toLocaleString()}</p>
+              </div>
+            `;
+            orderItemsList.appendChild(itemElement);
+          }
+        } catch (error) {
+          console.error('Error loading order items:', error);
+        }
+      }
+
+      async loadDeliveryOptions() {
+        try {
+          document.getElementById('loading-overlay').classList.remove('hidden');
+          
+          // Always enable pickup delivery by default
+          await this.loadPickupSites();
+          
+          // Try to load delivery settings from backend for processing time
+          try {
+            const response = await fetch('/api/delivery-tax-settings/options');
+            const data = await response.json();
+            
+            if (data.success && data.options) {
+              console.log('🚚 Delivery options loaded:', data.options);
+              
+              // Update pickup processing time if available
+              const pickupOption = data.options.find(opt => opt.type === 'pickup');
+              if (pickupOption && pickupOption.processingTime) {
+                document.getElementById('pickup-processing-time').textContent = 
+                  `Ready in ${pickupOption.processingTime} day${pickupOption.processingTime !== 1 ? 's' : ''}`;
+              }
+            }
+          } catch (settingsError) {
+            console.log('⚠️ Could not load delivery settings, using defaults');
+          }
+          
+          // Calculate home delivery fee
+          await this.calculateHomeDeliveryFee();
+          
+        } catch (error) {
+          console.error('❌ Error loading delivery options:', error);
+          // Still enable pickup delivery even if there's an error
+          await this.loadPickupSites();
+        } finally {
+          document.getElementById('loading-overlay').classList.add('hidden');
+        }
+      }
+
+      async loadPickupSites() {
+        try {
+          const response = await fetch('/api/pickup-sites/available');
+          const data = await response.json();
+          
+          if (data.success && data.sites && data.sites.length > 0) {
+            this.pickupSites = data.sites;
+            document.getElementById('pickup-sites-count').textContent = `${data.sites.length} location${data.sites.length !== 1 ? 's' : ''} available`;
+            this.renderPickupSites();
+          } else {
+            // Create default pickup sites if none available from backend
+            this.createDefaultPickupSites();
+          }
+        } catch (error) {
+          console.error('❌ Error loading pickup sites:', error);
+          // Create default pickup sites even if API fails
+          this.createDefaultPickupSites();
+        }
+      }
+
+      createDefaultPickupSites() {
+        // Create default pickup sites to ensure pickup delivery is always available
+        this.pickupSites = [
+          {
+            id: 1,
+            site_name: 'Main Distribution Center',
+            address: 'KG 123 St, Kigali',
+            city: 'Kigali',
+            phone: '+250 788 123 456',
+            manager_name: 'John Doe',
+            available_capacity: 50
+          },
+          {
+            id: 2,
+            site_name: 'Downtown Pickup Point',
+            address: 'KN 456 Ave, Kigali',
+            city: 'Kigali',
+            phone: '+250 788 654 321',
+            manager_name: 'Jane Smith',
+            available_capacity: 30
+          }
+        ];
+        
+        document.getElementById('pickup-sites-count').textContent = `${this.pickupSites.length} locations available`;
+        this.renderPickupSites();
+        console.log('📍 Using default pickup sites');
+      }
+
+      renderPickupSites() {
+        const sitesList = document.getElementById('pickup-sites-list');
+        sitesList.innerHTML = '';
+        
+        this.pickupSites.forEach(site => {
+          const siteElement = document.createElement('div');
+          siteElement.className = 'pickup-site-option p-3 border border-gray-200 rounded-lg';
+          siteElement.dataset.siteId = site.id;
+          siteElement.innerHTML = `
+            <div class="flex items-start space-x-3">
+              <div class="flex-shrink-0">
+                <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                  <i class="fas fa-map-marker-alt text-blue-600 text-sm"></i>
+                </div>
+              </div>
+              <div class="flex-1">
+                <h5 class="font-medium text-gray-900">${site.site_name}</h5>
+                <p class="text-sm text-gray-600">${site.address}, ${site.city}</p>
+                <div class="flex items-center space-x-4 text-xs text-gray-500 mt-1">
+                  <span><i class="fas fa-phone mr-1"></i>${site.phone || 'N/A'}</span>
+                  <span><i class="fas fa-user mr-1"></i>${site.manager_name || 'No manager'}</span>
+                </div>
+              </div>
+              <div class="text-right">
+                <div class="text-sm font-medium text-green-600">Available</div>
+                <div class="text-xs text-gray-500">${site.available_capacity} slots</div>
+              </div>
+            </div>
+          `;
+          
+          siteElement.addEventListener('click', () => this.selectPickupSite(site.id));
+          sitesList.appendChild(siteElement);
+        });
+      }
+
+      selectPickupSite(siteId) {
+        this.selectedPickupSite = siteId;
+        
+        // Update UI
+        document.querySelectorAll('.pickup-site-option').forEach(option => {
+          option.classList.remove('selected');
+        });
+        document.querySelector(`[data-site-id="${siteId}"]`).classList.add('selected');
+        
+        console.log('📍 Pickup site selected:', siteId);
+      }
+
+      disablePickupOption() {
+        const pickupOption = document.getElementById('pickup-option');
+        pickupOption.classList.add('disabled');
+        pickupOption.style.pointerEvents = 'none';
+        
+        document.getElementById('pickup-sites-count').textContent = 'Not available';
+        document.getElementById('no-pickup-message').classList.remove('hidden');
+        
+        console.log('❌ Pickup delivery disabled');
+      }
+
+      async calculateHomeDeliveryFee() {
+        try {
+          const response = await fetch(`/api/delivery-tax-settings/calculate?productPrice=${this.cartData.subtotal}&deliveryType=home`);
+          const data = await response.json();
+          
+          if (data.success && data.calculation) {
+            const calculation = data.calculation;
+            const deliveryFeeElement = document.getElementById('home-delivery-fee');
+            
+            if (calculation.deliveryFee === 0) {
+              deliveryFeeElement.textContent = 'FREE';
+              deliveryFeeElement.className = 'text-lg font-bold text-green-600';
+            } else {
+              deliveryFeeElement.textContent = `FRw ${calculation.deliveryFee.toLocaleString()}`;
+              deliveryFeeElement.className = 'text-lg font-bold text-gray-900';
+            }
+            
+            console.log('💰 Home delivery calculation:', calculation);
+          } else {
+            // Use default calculation if API doesn't return proper data
+            this.setDefaultHomeDeliveryFee();
+          }
+        } catch (error) {
+          console.error('❌ Error calculating home delivery fee:', error);
+          // Use default calculation if API fails
+          this.setDefaultHomeDeliveryFee();
+        }
+      }
+
+      setDefaultHomeDeliveryFee() {
+        // Calculate 6% of subtotal as default delivery fee
+        const defaultDeliveryFee = Math.round(this.cartData.subtotal * 0.06);
+        const deliveryFeeElement = document.getElementById('home-delivery-fee');
+        
+        if (defaultDeliveryFee === 0) {
+          deliveryFeeElement.textContent = 'FREE';
+          deliveryFeeElement.className = 'text-lg font-bold text-green-600';
+        } else {
+          deliveryFeeElement.textContent = `FRw ${defaultDeliveryFee.toLocaleString()}`;
+          deliveryFeeElement.className = 'text-lg font-bold text-gray-900';
+        }
+        
+        console.log('💰 Using default home delivery fee:', defaultDeliveryFee);
+      }
+
+      async selectDeliveryMethod(deliveryType) {
+        this.selectedDeliveryType = deliveryType;
+        
+        // Update UI
+        document.querySelectorAll('.delivery-option').forEach(option => {
+          option.classList.remove('selected');
+        });
+        document.querySelector(`[data-delivery-type="${deliveryType}"]`).classList.add('selected');
+        
+        // Show/hide relevant sections
+        if (deliveryType === 'pickup') {
+          document.getElementById('pickup-sites-section').classList.remove('hidden');
+          document.getElementById('home-address-section').classList.add('hidden');
+        } else if (deliveryType === 'home') {
+          document.getElementById('home-address-section').classList.remove('hidden');
+          document.getElementById('pickup-sites-section').classList.add('hidden');
+          this.initializeMap();
+        }
+        
+        // Calculate final pricing
+        await this.calculateFinalPricing();
+        
+        // Enable continue button
+        document.getElementById('continue-btn').disabled = false;
+      }
+
+      async calculateFinalPricing() {
+        try {
+          const response = await fetch(`/api/delivery-tax-settings/calculate?productPrice=${this.cartData.subtotal}&deliveryType=${this.selectedDeliveryType}`);
+          const data = await response.json();
+          
+          if (data.success && data.calculation) {
+            this.deliveryCalculation = data.calculation;
+            
+            // Update price breakdown
+            document.getElementById('breakdown-delivery').textContent = 
+              this.deliveryCalculation.deliveryFee === 0 ? 'FREE' : `FRw ${this.deliveryCalculation.deliveryFee.toLocaleString()}`;
+            document.getElementById('breakdown-tax').textContent = `FRw ${this.deliveryCalculation.taxAmount.toLocaleString()}`;
+            document.getElementById('breakdown-total').textContent = `FRw ${this.deliveryCalculation.total.toLocaleString()}`;
+            
+            // Show/hide free shipping notice
+            const freeShippingNotice = document.getElementById('free-shipping-notice');
+            if (this.deliveryCalculation.freeShippingApplied) {
+              freeShippingNotice.classList.remove('hidden');
+            } else {
+              freeShippingNotice.classList.add('hidden');
+            }
+            
+            console.log('💰 Final calculation:', this.deliveryCalculation);
+          } else {
+            // Use default calculation if API fails
+            this.setDefaultFinalPricing();
+          }
+        } catch (error) {
+          console.error('❌ Error calculating final pricing:', error);
+          // Use default calculation if API fails
+          this.setDefaultFinalPricing();
+        }
+      }
+
+      setDefaultFinalPricing() {
+        // Calculate default pricing
+        const deliveryFee = this.selectedDeliveryType === 'pickup' ? 0 : Math.round(this.cartData.subtotal * 0.06);
+        const taxAmount = 0; // Default tax is 0 FRw
+        const total = this.cartData.subtotal + deliveryFee + taxAmount;
+        
+        this.deliveryCalculation = {
+          deliveryFee: deliveryFee,
+          taxAmount: taxAmount,
+          total: total,
+          freeShippingApplied: deliveryFee === 0
+        };
+        
+        // Update price breakdown
+        document.getElementById('breakdown-delivery').textContent = 
+          deliveryFee === 0 ? 'FREE' : `FRw ${deliveryFee.toLocaleString()}`;
+        document.getElementById('breakdown-tax').textContent = `FRw ${taxAmount.toLocaleString()}`;
+        document.getElementById('breakdown-total').textContent = `FRw ${total.toLocaleString()}`;
+        
+        // Show/hide free shipping notice
+        const freeShippingNotice = document.getElementById('free-shipping-notice');
+        if (deliveryFee === 0) {
+          freeShippingNotice.classList.remove('hidden');
+        } else {
+          freeShippingNotice.classList.add('hidden');
+        }
+        
+        console.log('💰 Using default final calculation:', this.deliveryCalculation);
+      }
+
+      initializeMap() {
+        // Add timeout to ensure DOM is ready and container is visible
+        setTimeout(() => {
+          if (this.map) {
+            this.map.remove();
+            this.map = null;
+          }
+          
+          const mapContainer = document.getElementById('map');
+          if (!mapContainer) {
+            console.error('Map container not found');
+            return;
+          }
+          
+          mapContainer.classList.remove('hidden');
+          
+          // Ensure container has dimensions
+          mapContainer.style.height = '300px';
+          mapContainer.style.width = '100%';
+          mapContainer.style.display = 'block';
+          
+          try {
+            // Initialize map centered on Kigali, Rwanda
+            this.map = L.map('map', {
+              center: [-1.9441, 30.0619],
+              zoom: 13,
+              zoomControl: true,
+              scrollWheelZoom: true,
+              doubleClickZoom: true,
+              boxZoom: true,
+              keyboard: true,
+              dragging: true,
+              touchZoom: true
+            });
+            
+            // Add tile layer
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+              attribution: '© OpenStreetMap contributors',
+              maxZoom: 19
+            }).addTo(this.map);
+            
+            // Store current marker reference
+            this.currentMarker = null;
+            
+            // Add a default marker
+            this.currentMarker = L.marker([-1.9441, 30.0619], {
+              draggable: false
+            }).addTo(this.map)
+              .bindPopup('Click anywhere on the map to select delivery location')
+              .openPopup();
+            
+            // Add click handler for address selection
+            this.map.on('click', (e) => {
+              console.log('🗺️ Map clicked at:', e.latlng);
+              
+              // Prevent event bubbling
+              e.originalEvent.stopPropagation();
+              
+              // Visual feedback
+              const clickedElement = e.originalEvent.target;
+              if (clickedElement) {
+                clickedElement.style.cursor = 'wait';
+                setTimeout(() => {
+                  clickedElement.style.cursor = 'crosshair';
+                }, 500);
+              }
+              
+              this.selectLocationOnMap(e.latlng);
+            });
+            
+            // Set cursor style for map
+            this.map.getContainer().style.cursor = 'crosshair';
+            
+            // Force map to resize after initialization
+            setTimeout(() => {
+              if (this.map) {
+                this.map.invalidateSize();
+                console.log('🗺️ Map resized');
+              }
+            }, 200);
+            
+            console.log('🗺️ Map initialized successfully');
+          } catch (error) {
+            console.error('❌ Error initializing map:', error);
+          }
+        }, 500);
+      }
+
+      selectLocationOnMap(latlng) {
+        try {
+          console.log('📍 Selecting location:', latlng);
+          
+          // Remove current marker if exists
+          if (this.currentMarker) {
+            this.map.removeLayer(this.currentMarker);
+          }
+          
+          // Add new marker at selected location
+          this.currentMarker = L.marker([latlng.lat, latlng.lng], {
+            draggable: true
+          }).addTo(this.map)
+            .bindPopup(`
+              <div style="text-align: center;">
+                <strong>Delivery Location Selected</strong><br>
+                <small>Lat: ${latlng.lat.toFixed(6)}<br>Lng: ${latlng.lng.toFixed(6)}</small>
+              </div>
+            `)
+            .openPopup();
+          
+          // Add drag event to marker
+          this.currentMarker.on('dragend', (e) => {
+            const newPos = e.target.getLatLng();
+            console.log('📍 Marker dragged to:', newPos);
+            this.reverseGeocode(newPos.lat, newPos.lng);
+          });
+          
+          // Reverse geocode to get address
+          this.reverseGeocode(latlng.lat, latlng.lng);
+          
+          console.log('📍 Location selected successfully:', latlng);
+        } catch (error) {
+          console.error('❌ Error selecting location:', error);
+        }
+      }
+
+      async reverseGeocode(lat, lng) {
+        try {
+          console.log('🔍 Reverse geocoding:', lat, lng);
+          
+          const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`);
+          const data = await response.json();
+          
+          console.log('🔍 Geocoding result:', data);
+          
+          if (data && data.address) {
+            const address = data.address;
+            
+            // Fill in the address fields
+            const streetAddress = address.road || address.suburb || address.neighbourhood || address.hamlet || '';
+            const city = address.city || address.town || address.village || address.municipality || address.county || '';
+            const state = address.state || address.region || address.province || '';
+            const postalCode = address.postcode || '';
+            
+            document.getElementById('street-address').value = streetAddress;
+            document.getElementById('city').value = city;
+            document.getElementById('state').value = state;
+            document.getElementById('postal-code').value = postalCode;
+            
+            console.log('✅ Address fields updated:', {
+              street: streetAddress,
+              city: city,
+              state: state,
+              postal: postalCode
+            });
+          } else {
+            // Provide default values if geocoding fails
+            document.getElementById('street-address').value = `Location at ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+            document.getElementById('city').value = 'Kigali';
+            document.getElementById('state').value = 'Kigali City';
+            document.getElementById('postal-code').value = '';
+            
+            console.log('⚠️ Using default address values');
+          }
+        } catch (error) {
+          console.error('❌ Reverse geocoding error:', error);
+          
+          // Provide fallback values
+          document.getElementById('street-address').value = `Selected Location`;
+          document.getElementById('city').value = 'Kigali';
+          document.getElementById('state').value = 'Kigali City';
+          document.getElementById('postal-code').value = '';
+        }
+      }
+
+      setupEventListeners() {
+        // Delivery option selection
+        document.querySelectorAll('.delivery-option').forEach(option => {
+          option.addEventListener('click', () => {
+            if (!option.classList.contains('disabled')) {
+              const deliveryType = option.dataset.deliveryType;
+              this.selectDeliveryMethod(deliveryType);
+            }
+          });
+        });
+
+        // Order details toggle
+        const toggleDetails = document.getElementById('toggle-details');
+        const orderDetails = document.getElementById('order-details');
+        const toggleText = document.getElementById('toggle-text');
+        const toggleIcon = document.getElementById('toggle-icon');
+        
+        if (toggleDetails) {
+          toggleDetails.addEventListener('click', () => {
+            orderDetails.classList.toggle('hidden');
+            if (orderDetails.classList.contains('hidden')) {
+              toggleText.textContent = 'View Details';
+              toggleIcon.className = 'fas fa-chevron-down ml-1';
+            } else {
+              toggleText.textContent = 'Hide Details';
+              toggleIcon.className = 'fas fa-chevron-up ml-1';
+            }
+          });
+        }
+
+        // Use current location button
+        const useLocationBtn = document.getElementById('use-current-location');
+        if (useLocationBtn) {
+          useLocationBtn.addEventListener('click', () => {
+            this.getCurrentLocation();
+          });
+        }
+
+        // Continue button
+        document.getElementById('continue-btn').addEventListener('click', () => {
+          if (this.validateSelection()) {
+            this.proceedToCheckout();
+          }
+        });
+      }
+
+      getCurrentLocation() {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              const lat = position.coords.latitude;
+              const lng = position.coords.longitude;
+              
+              if (this.map) {
+                this.map.setView([lat, lng], 15);
+                this.selectLocationOnMap({ lat, lng });
+              }
+            },
+            (error) => {
+              console.error('Geolocation error:', error);
+              alert('Unable to get your location. Please enter your address manually.');
+            }
+          );
+        } else {
+          alert('Geolocation is not supported by this browser.');
+        }
+      }
+
+      validateSelection() {
+        if (!this.selectedDeliveryType) {
+          alert('Please select a delivery method.');
+          return false;
+        }
+
+        if (this.selectedDeliveryType === 'pickup' && !this.selectedPickupSite) {
+          alert('Please select a pickup location.');
+          return false;
+        }
+
+        if (this.selectedDeliveryType === 'home') {
+          const streetAddress = document.getElementById('street-address').value.trim();
+          const city = document.getElementById('city').value.trim();
+          
+          if (!streetAddress || !city) {
+            alert('Please provide your delivery address.');
+            return false;
+          }
+        }
+
+        return true;
+      }
+
+      proceedToCheckout() {
+        // Store delivery selection for checkout
+        const checkoutData = {
+          ...this.cartData,
+          deliveryType: this.selectedDeliveryType,
+          calculation: this.deliveryCalculation,
+          pickupSiteId: this.selectedPickupSite,
+          deliveryAddress: this.selectedDeliveryType === 'home' ? {
+            street: document.getElementById('street-address').value,
+            city: document.getElementById('city').value,
+            state: document.getElementById('state').value,
+            postalCode: document.getElementById('postal-code').value
+          } : null
+        };
+        
+        localStorage.setItem('checkoutData', JSON.stringify(checkoutData));
+        window.location.href = '/buyer/checkout.html';
+      }
+
+      setupProfileDropdown() {
+        // Close all dropdowns when clicking outside
+        document.addEventListener('click', function(e) {
+          if (!e.target.closest('.relative')) {
+            document.querySelectorAll('.dropdown-menu').forEach(menu => {
+              menu.classList.add('hidden');
+            });
+          }
+        });
+
+        // Profile dropdown
+        const profileBtn = document.getElementById('profile-btn');
+        const profileDropdown = document.getElementById('profile-dropdown');
+        if (profileBtn && profileDropdown) {
+          profileBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            profileDropdown.classList.toggle('hidden');
+          });
+        }
+
+        // Logout functionality
+        const signoutBtn = document.getElementById('signout-btn');
+        if (signoutBtn) {
+          signoutBtn.addEventListener('click', function() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userData');
+            localStorage.removeItem('cart');
+            localStorage.removeItem('checkoutData');
+            window.location.href = '/auth/auth-buyer.html';
+          });
+        }
+      }
+    }
+
+    // Initialize when page loads
+    document.addEventListener('DOMContentLoaded', () => {
+      new DeliveryMethodSelection();
+    });
+  </script>
+</body>
+</html>
+         

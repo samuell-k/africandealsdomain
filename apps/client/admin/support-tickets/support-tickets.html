@@ -1,0 +1,1363 @@
+<!DOCTYPE html>
+<html lang="en" class="admin-page">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Support Tickets - Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link href="admin-input-fix.css" rel="stylesheet">
+<script>
+    // Safe authentication checking function
+    function safeAuthCheck() {
+        try {
+            const token = localStorage.getItem('token');
+            const userStr = localStorage.getItem('user');
+            
+            if (!token || !userStr) {
+                console.log('[AUTH] No token or user data found');
+                return { isAuthenticated: false, user: null, token: null };
+            }
+            
+            let user;
+            try {
+                user = JSON.parse(userStr);
+            } catch (parseError) {
+                console.error('[AUTH] Failed to parse user data:', parseError);
+                
+                // Enhanced error reporting
+                if (parseError) {
+                    const errorDetails = {
+                        message: parseError.message || 'Unknown error',
+                        stack: parseError.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        parseError.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+                localStorage.removeItem('user');
+                localStorage.removeItem('token');
+                return { isAuthenticated: false, user: null, token: null };
+            }
+            
+            if (!user || typeof user !== 'object' || !user.role) {
+                console.log('[AUTH] Invalid user data structure');
+                localStorage.removeItem('user');
+                localStorage.removeItem('token');
+                return { isAuthenticated: false, user: null, token: null };
+            }
+            
+            return { isAuthenticated: true, user, token };
+        } catch (error) {
+            console.error('[AUTH] Auth check failed:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+            return { isAuthenticated: false, user: null, token: null };
+        }
+    }
+    
+    // Safe redirect to login
+    function safeRedirectToLogin() {
+        const currentPath = window.location.pathname;
+        let loginPage = '/auth/auth-admin.html';
+        
+        if (currentPath.includes('/seller/')) {
+            loginPage = '/auth/auth-seller.html';
+        } else if (currentPath.includes('/agent/')) {
+            loginPage = '/auth/auth-agent.html';
+        } else if (currentPath.includes('/buyer/')) {
+            loginPage = '/auth/auth-buyer.html';
+        }
+        
+        console.log('[AUTH] Redirecting to login:', loginPage);
+        window.location.href = loginPage;
+    }
+    
+    // Initialize auth checking
+    document.addEventListener('DOMContentLoaded', function() {
+        const authResult = safeAuthCheck();
+        
+        if (!authResult.isAuthenticated) {
+            console.log('[AUTH] Not authenticated, redirecting to login');
+            safeRedirectToLogin();
+            return;
+        }
+        
+        // Check role for admin pages
+        const currentPath = window.location.pathname;
+        if (currentPath.includes('/admin/') && authResult.(user && user.role) !== 'admin') {
+            console.log('[AUTH] Admin access required, current role:', authResult.user.role);
+            alert('Admin access required');
+            safeRedirectToLogin();
+            return;
+        }
+        
+        console.log('[AUTH] Authentication successful:', authResult.user.role);
+        
+        // Update UI with user info if elements exist
+        const userInfoElement = document.getElementById('userInfo');
+        if (userInfoElement && authResult.user) {
+            userInfoElement.textContent = `${authResult.(user && (user && user.name || '') || '') || 'User'} (${authResult.user.role || 'Unknown'})`;
+        }
+        
+        // Store auth result globally for other scripts
+        window.currentAuth = authResult;
+    });
+</script>
+<script>
+    // Enhanced API call with error handling
+    async function safeApiCall(url, options = {}) {
+        const authResult = safeAuthCheck();
+        
+        if (!authResult.isAuthenticated) {
+            console.log('[API] Not authenticated for API call');
+            safeRedirectToLogin();
+            return null;
+        }
+        
+        const defaultOptions = {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authResult.token}`
+            }
+        };
+        
+        const mergedOptions = {
+            ...defaultOptions,
+            ...options,
+            headers: {
+                ...defaultOptions.headers,
+                ...options.headers
+            }
+        };
+        
+        try {
+            const response = await fetch(url, mergedOptions);
+            
+            if (response.status === 401) {
+                console.log('[API] Unauthorized - token expired');
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                safeRedirectToLogin();
+                return null;
+            }
+            
+            if (!response.ok) {
+                console.error('[API] Request failed:', response.status, response.statusText);
+                
+                // Enhanced error reporting
+                if (response.status, response.statusText) {
+                    const errorDetails = {
+                        message: response.status, response.statusText.message || 'Unknown error',
+                        stack: response.status, response.statusText.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        response.status, response.statusText.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                return await response.json();
+            } else {
+                return await response.text();
+            }
+        } catch (error) {
+            console.error('[API] Request error:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+            throw error;
+        }
+    }
+</script>
+<script>
+    // Safe authentication checking function
+    function safeAuthCheck() {
+        try {
+            const token = localStorage.getItem('token');
+            const userStr = localStorage.getItem('user');
+            
+            if (!token || !userStr) {
+                console.log('[AUTH] No token or user data found');
+                return { isAuthenticated: false, user: null, token: null };
+            }
+            
+            let user;
+            try {
+                user = JSON.parse(userStr);
+            } catch (parseError) {
+                console.error('[AUTH] Failed to parse user data:', parseError);
+                
+                // Enhanced error reporting
+                if (parseError) {
+                    const errorDetails = {
+                        message: parseError.message || 'Unknown error',
+                        stack: parseError.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        parseError.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+                localStorage.removeItem('user');
+                localStorage.removeItem('token');
+                return { isAuthenticated: false, user: null, token: null };
+            }
+            
+            if (!user || typeof user !== 'object' || !user.role) {
+                console.log('[AUTH] Invalid user data structure');
+                localStorage.removeItem('user');
+                localStorage.removeItem('token');
+                return { isAuthenticated: false, user: null, token: null };
+            }
+            
+            return { isAuthenticated: true, user, token };
+        } catch (error) {
+            console.error('[AUTH] Auth check failed:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+            return { isAuthenticated: false, user: null, token: null };
+        }
+    }
+    
+    // Safe redirect to login
+    function safeRedirectToLogin() {
+        const currentPath = window.location.pathname;
+        let loginPage = '/auth/auth-admin.html';
+        
+        if (currentPath.includes('/seller/')) {
+            loginPage = '/auth/auth-seller.html';
+        } else if (currentPath.includes('/agent/')) {
+            loginPage = '/auth/auth-agent.html';
+        } else if (currentPath.includes('/buyer/')) {
+            loginPage = '/auth/auth-buyer.html';
+        }
+        
+        console.log('[AUTH] Redirecting to login:', loginPage);
+        window.location.href = loginPage;
+    }
+    
+    // Initialize auth checking
+    document.addEventListener('DOMContentLoaded', function() {
+        const authResult = safeAuthCheck();
+        
+        if (!authResult.isAuthenticated) {
+            console.log('[AUTH] Not authenticated, redirecting to login');
+            safeRedirectToLogin();
+            return;
+        }
+        
+        // Check role for admin pages
+        const currentPath = window.location.pathname;
+        if (currentPath.includes('/admin/') && authResult.(user && user.role) !== 'admin') {
+            console.log('[AUTH] Admin access required, current role:', authResult.user.role);
+            alert('Admin access required');
+            safeRedirectToLogin();
+            return;
+        }
+        
+        console.log('[AUTH] Authentication successful:', authResult.user.role);
+        
+        // Update UI with user info if elements exist
+        const userInfoElement = document.getElementById('userInfo');
+        if (userInfoElement && authResult.user) {
+            userInfoElement.textContent = `${authResult.(user && user.name || '') || 'User'} (${authResult.user.role || 'Unknown'})`;
+        }
+        
+        // Store auth result globally for other scripts
+        window.currentAuth = authResult;
+    });
+</script>
+<script>
+    // Safe authentication checking function
+    function safeAuthCheck() {
+        try {
+            const token = localStorage.getItem('token');
+            const userStr = localStorage.getItem('user');
+            
+            if (!token || !userStr) {
+                console.log('[AUTH] No token or user data found');
+                return { isAuthenticated: false, user: null, token: null };
+            }
+            
+            let user;
+            try {
+                user = JSON.parse(userStr);
+            } catch (parseError) {
+                console.error('[AUTH] Failed to parse user data:', parseError);
+                
+                // Enhanced error reporting
+                if (parseError) {
+                    const errorDetails = {
+                        message: parseError.message || 'Unknown error',
+                        stack: parseError.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        parseError.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+                localStorage.removeItem('user');
+                localStorage.removeItem('token');
+                return { isAuthenticated: false, user: null, token: null };
+            }
+            
+            if (!user || typeof user !== 'object' || !user.role) {
+                console.log('[AUTH] Invalid user data structure');
+                localStorage.removeItem('user');
+                localStorage.removeItem('token');
+                return { isAuthenticated: false, user: null, token: null };
+            }
+            
+            return { isAuthenticated: true, user, token };
+        } catch (error) {
+            console.error('[AUTH] Auth check failed:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+            return { isAuthenticated: false, user: null, token: null };
+        }
+    }
+    
+    // Safe redirect to login
+    function safeRedirectToLogin() {
+        const currentPath = window.location.pathname;
+        let loginPage = '/auth/auth-admin.html';
+        
+        if (currentPath.includes('/seller/')) {
+            loginPage = '/auth/auth-seller.html';
+        } else if (currentPath.includes('/agent/')) {
+            loginPage = '/auth/auth-agent.html';
+        } else if (currentPath.includes('/buyer/')) {
+            loginPage = '/auth/auth-buyer.html';
+        }
+        
+        console.log('[AUTH] Redirecting to login:', loginPage);
+        window.location.href = loginPage;
+    }
+    
+    // Initialize auth checking
+    document.addEventListener('DOMContentLoaded', function() {
+        const authResult = safeAuthCheck();
+        
+        if (!authResult.isAuthenticated) {
+            console.log('[AUTH] Not authenticated, redirecting to login');
+            safeRedirectToLogin();
+            return;
+        }
+        
+        // Check role for admin pages
+        const currentPath = window.location.pathname;
+        if (currentPath.includes('/admin/') && authResult.user.role !== 'admin') {
+            console.log('[AUTH] Admin access required, current role:', authResult.user.role);
+            alert('Admin access required');
+            safeRedirectToLogin();
+            return;
+        }
+        
+        console.log('[AUTH] Authentication successful:', authResult.user.role);
+        
+        // Update UI with user info if elements exist
+        const userInfoElement = document.getElementById('userInfo');
+        if (userInfoElement && authResult.user) {
+            userInfoElement.textContent = `${authResult.user.name || 'User'} (${authResult.user.role || 'Unknown'})`;
+        }
+        
+        // Store auth result globally for other scripts
+        window.currentAuth = authResult;
+    });
+</script>
+</head>
+<body class="bg-gray-50">
+    <!-- Sidebar -->
+    <div class="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg">
+        <div class="flex items-center justify-center h-16 bg-blue-600 text-white">
+            <h1 class="text-xl font-bold">Admin Panel</h1>
+        </div>
+        <nav class="mt-8">
+            <a href="dashboard.html" class="flex items-center px-6 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600">
+                <i class="fas fa-tachometer-alt mr-3"></i>
+                Dashboard
+            </a>
+            <a href="user-management.html" class="flex items-center px-6 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600">
+                <i class="fas fa-users mr-3"></i>
+                Users
+            </a>
+            <a href="products.html" class="flex items-center px-6 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600">
+                <i class="fas fa-box mr-3"></i>
+                Products
+            </a>
+            <a href="orders.html" class="flex items-center px-6 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600">
+                <i class="fas fa-shopping-cart mr-3"></i>
+                Orders
+            </a>
+            <a href="payments.html" class="flex items-center px-6 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600">
+                <i class="fas fa-credit-card mr-3"></i>
+                Payments
+            </a>
+            <a href="shipping.html" class="flex items-center px-6 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600">
+                <i class="fas fa-truck mr-3"></i>
+                Shipping
+            </a>
+            <a href="marketing.html" class="flex items-center px-6 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600">
+                <i class="fas fa-bullhorn mr-3"></i>
+                Marketing
+            </a>
+            <a href="promotions.html" class="flex items-center px-6 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600">
+                <i class="fas fa-tag mr-3"></i>
+                Promotions
+            </a>
+            <a href="support-tickets.html" class="flex items-center px-6 py-3 bg-blue-50 text-blue-600 border-r-2 border-blue-600">
+                <i class="fas fa-headset mr-3"></i>
+                Support Tickets
+            </a>
+            <a href="settings.html" class="flex items-center px-6 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600">
+                <i class="fas fa-cog mr-3"></i>
+                Settings
+            </a>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="ml-64 p-8">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Support Tickets</h1>
+                <p class="text-gray-600">Manage customer support inquiries and issues</p>
+            </div>
+            <div class="flex space-x-4">
+                <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700" onclick="showNotification('Feature in development', 'info')">
+                    i class="fas fa-plus mr-2"></i>New Ticket
+                </button>
+                <button class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700" onclick="showNotification('Feature in development', 'info')">
+                    i class="fas fa-download mr-2"></i>Export
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-lg shadow">
+                <div class="flex items-center">
+                    <div class="p-3 bg-blue-100 rounded-full">
+                        <i class="fas fa-ticket-alt text-blue-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-600">Total Tickets</p>
+                        <p class="text-2xl font-bold text-gray-900" id="total-tickets">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow">
+                <div class="flex items-center">
+                    <div class="p-3 bg-yellow-100 rounded-full">
+                        <i class="fas fa-clock text-yellow-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-600">Open Tickets</p>
+                        <p class="text-2xl font-bold text-gray-900" id="open-tickets">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow">
+                <div class="flex items-center">
+                    <div class="p-3 bg-green-100 rounded-full">
+                        <i class="fas fa-check-circle text-green-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-600">Resolved</p>
+                        <p class="text-2xl font-bold text-gray-900" id="resolved-tickets">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow">
+                <div class="flex items-center">
+                    <div class="p-3 bg-red-100 rounded-full">
+                        <i class="fas fa-exclamation-triangle text-red-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-600">High Priority</p>
+                        <p class="text-2xl font-bold text-gray-900">12</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="bg-white p-6 rounded-lg shadow mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                    <select id="statusFilter" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                        <option value="">All Status</option>
+                        <option value="open">Open</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="resolved">Resolved</option>
+                        <option value="closed">Closed</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+                    <select id="priorityFilter" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                        <option value="">All Priority</option>
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                        <option value="urgent">Urgent</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                    <select id="categoryFilter" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                        <option value="">All Categories</option>
+                        <option value="technical">Technical</option>
+                        <option value="billing">Billing</option>
+                        <option value="order">Order</option>
+                        <option value="product">Product</option>
+                        <option value="general">General</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Search</label>
+                    <input type="text" id="searchInput" placeholder="Search tickets..." class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                </div>
+            </div>
+        </div>
+
+        <!-- Tickets Table -->
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ticket</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assigned</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ticketsTableBody" class="bg-white divide-y divide-gray-200">
+                        <!-- Tickets will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="flex items-center justify-between mt-6">
+            <div class="text-sm text-gray-700">
+                Showing <span id="startIndex">1</span> to <span id="endIndex">10</span> of <span id="totalItems">0</span> results
+            </div>
+            <div class="flex space-x-2">
+                <button id="prevPage" class="px-3 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50" onclick="showNotification('Feature in development', 'info')">Previous/button>
+                <button id="nextPage" class="px-3 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50" onclick="showNotification('Feature in development', 'info')">Next/button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ticket Detail Modal -->
+    <div id="ticketModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-screen overflow-y-auto">
+                <div class="p-6 border-b border-gray-200">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-lg font-semibold text-gray-900">Ticket Details</h3>
+                        <button id="closeModal" class="text-gray-400 hover:text-gray-600" onclick="showNotification('Feature in development', 'info')">
+                            i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div id="ticketDetails">
+                        <!-- Ticket details will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Response Modal -->
+    <div id="responseModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full">
+                <div class="p-6 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900">Add Response</h3>
+                </div>
+                <div class="p-6">
+                    <form id="responseForm" method="POST" action="#">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Response</label>
+                            <textarea id="responseMessage" rows="4" class="w-full border border-gray-300 rounded-lg px-3 py-2" placeholder="Enter your response..."></textarea>
+                        </div>
+                        <div class="mb-4">
+                            <label class="flex items-center">
+                                <input type="checkbox" id="internalNote" class="mr-2">
+                                <span class="text-sm text-gray-700">Internal note (not visible to customer)</span>
+                            </label>
+                        </div>
+                        <div class="flex justify-end space-x-3">
+                            <button type="button" id="cancelResponse" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50" onclick="handleCancel()">Cancel/button>
+                            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Send Response</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPage = 1;
+        let currentTicketId = null;
+        let itemsPerPage = 10; // Default items per page
+
+        // Load tickets from API
+        async function loadTickets() {
+            try {
+                const token = localStorage.getItem('authToken');
+                const statusFilter = document.getElementById('statusFilter').value;
+                const priorityFilter = document.getElementById('priorityFilter').value;
+                const categoryFilter = document.getElementById('categoryFilter').value;
+                const searchQuery = document.getElementById('searchInput').value;
+                
+                let url = '/api/admin/support-tickets?';
+                const params = new URLSearchParams();
+                
+                if (statusFilter) params.append('status', statusFilter);
+                if (priorityFilter) params.append('priority', priorityFilter);
+                if (categoryFilter) params.append('category', categoryFilter);
+                if (searchQuery) params.append('search', searchQuery);
+                if (currentPage) params.append('page', currentPage);
+                if (itemsPerPage) params.append('limit', itemsPerPage);
+                
+                const response = await 
+                try {
+                    const response = await fetch(url + params.toString();
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    // Continue with successful response
+                    const data = await response.json();
+                    return data;
+                } catch (error) {
+                    console.error('API call failed:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+                    showNotification('Operation failed. Please try again.', 'error');
+                    throw error;
+                }, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        displayTickets(data.tickets);
+                        updatePagination(data.pagination);
+                        updateTicketStats(data.stats);
+                    } else {
+                        throw new Error(data.message || 'Failed to load tickets');
+                    }
+                } else {
+                    throw new Error('Failed to fetch tickets');
+                }
+            } catch (error) {
+                console.error('Error loading tickets:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+                showNotification('Error loading tickets: ' + error.message, 'error');
+                // Load sample data for demonstration
+                loadSampleData();
+            }
+        }
+
+        function updateTicketStats(stats) {
+            document.getElementById('total-tickets').textContent = stats.total_tickets || 0;
+            document.getElementById('open-tickets').textContent = stats.open_tickets || 0;
+            document.getElementById('resolved-tickets').textContent = stats.resolved_tickets || 0;
+            document.getElementById('avg-resolution-time').textContent = stats.avg_resolution_time || '0h';
+        }
+
+        function displayTickets(tickets) {
+            const tbody = document.getElementById('ticketsTableBody');
+            tbody.innerHTML = tickets.map(ticket => `
+                <tr class="border-b border-gray-200 hover:bg-gray-50">
+                    <td class="py-3 px-4">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-ticket-alt text-blue-600 text-sm"></i>
+                                </div>
+                            </div>
+                            <div class="ml-3">
+                                <div class="text-sm font-medium text-gray-900">${ticket.subject}</div>
+                                <div class="text-sm text-gray-500">#${ticket.ticket_number}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="py-3 px-4">
+                        <div class="text-sm text-gray-900">${ticket.user_name}</div>
+                        <div class="text-sm text-gray-500">${ticket.user_email}</div>
+                    </td>
+                    <td class="py-3 px-4">
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(ticket.status)}">
+                            ${ticket.status}
+                        </span>
+                    </td>
+                    <td class="py-3 px-4">
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full ${getPriorityColor(ticket.priority)}">
+                            ${ticket.priority}
+                        </span>
+                    </td>
+                    <td class="py-3 px-4">
+                        <span class="text-sm text-gray-900">${ticket.category}</span>
+                    </td>
+                    <td class="py-3 px-4">
+                        <div class="text-sm text-gray-900">${ticket.assigned_to_name || 'Unassigned'}</div>
+                    </td>
+                    <td class="py-3 px-4">
+                        <div class="text-sm text-gray-900">${new Date(ticket.created_at).toLocaleDateString()}</div>
+                        <div class="text-sm text-gray-500">${new Date(ticket.created_at).toLocaleTimeString()}</div>
+                    </td>
+                    <td class="py-3 px-4">
+                        <div class="flex space-x-2">
+                            <button onclick="viewTicket(${ticket.id})" class="text-blue-600 hover:text-blue-900">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button onclick="respondToTicket(${ticket.id})" class="text-green-600 hover:text-green-900">
+                                <i class="fas fa-reply"></i>
+                            </button>
+                            <button onclick="assignTicket(${ticket.id})" class="text-purple-600 hover:text-purple-900">
+                                <i class="fas fa-user-plus"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function displayMockTickets() {
+            const mockTickets = [
+                {
+                    id: 1,
+                    ticket_number: 'TKT-001',
+                    user_name: 'John Doe',
+                    user_email: 'john@example.com',
+                    subject: 'Payment Issue',
+                    category: 'billing',
+                    status: 'open',
+                    priority: 'high',
+                    assigned_to_name: 'Admin User',
+                    created_at: new Date().toISOString()
+                },
+                {
+                    id: 2,
+                    ticket_number: 'TKT-002',
+                    user_name: 'Jane Smith',
+                    user_email: 'jane@example.com',
+                    subject: 'Order Tracking',
+                    category: 'order',
+                    status: 'in_progress',
+                    priority: 'medium',
+                    assigned_to_name: 'Support Team',
+                    created_at: new Date(Date.now() - 86400000).toISOString()
+                },
+                {
+                    id: 3,
+                    ticket_number: 'TKT-003',
+                    user_name: 'Mike Johnson',
+                    user_email: 'mike@example.com',
+                    subject: 'Product Defect',
+                    category: 'product',
+                    status: 'resolved',
+                    priority: 'low',
+                    assigned_to_name: 'Admin User',
+                    created_at: new Date(Date.now() - 172800000).toISOString()
+                }
+            ];
+
+            displayTickets(mockTickets);
+            updatePagination({ page: 1, limit: 10, total: 3, pages: 1 });
+        }
+
+        function getStatusColor(status) {
+            const colors = {
+                'open': 'bg-yellow-100 text-yellow-800',
+                'in_progress': 'bg-blue-100 text-blue-800',
+                'resolved': 'bg-green-100 text-green-800',
+                'closed': 'bg-gray-100 text-gray-800'
+            };
+            return colors[status] || 'bg-gray-100 text-gray-800';
+        }
+
+        function getPriorityColor(priority) {
+            const colors = {
+                'low': 'bg-green-100 text-green-800',
+                'medium': 'bg-yellow-100 text-yellow-800',
+                'high': 'bg-orange-100 text-orange-800',
+                'urgent': 'bg-red-100 text-red-800'
+            };
+            return colors[priority] || 'bg-gray-100 text-gray-800';
+        }
+
+        function updatePagination(pagination) {
+            document.getElementById('startIndex').textContent = ((pagination.page - 1) * pagination.limit) + 1;
+            document.getElementById('endIndex').textContent = Math.min(pagination.page * pagination.limit, pagination.total);
+            document.getElementById('totalItems').textContent = pagination.total;
+
+            document.getElementById('prevPage').disabled = pagination.page <= 1;
+            document.getElementById('nextPage').disabled = pagination.page >= pagination.pages;
+        }
+
+        async function viewTicket(ticketId) {
+            currentTicketId = ticketId;
+            
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await 
+                try {
+                    const response = await fetch(`/api/admin/support-tickets/${ticketId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    // Continue with successful response
+                    const data = await response.json();
+                    return data;
+                } catch (error) {
+                    console.error('API call failed:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+                    showNotification('Operation failed. Please try again.', 'error');
+                    throw error;
+                };
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        displayTicketDetails(data.ticket, data.responses);
+                        document.getElementById('ticketModal').classList.remove('hidden');
+                    } else {
+                        throw new Error(data.message || 'Failed to load ticket details');
+                    }
+                } else {
+                    throw new Error('Failed to fetch ticket details');
+                }
+            } catch (error) {
+                console.error('Error loading ticket details:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+                showNotification('Error loading ticket details: ' + error.message, 'error');
+                // Show mock data as fallback
+                displayMockTicketDetails(ticketId);
+                document.getElementById('ticketModal').classList.remove('hidden');
+            }
+        }
+
+        function displayTicketDetails(ticket, responses) {
+            const detailsDiv = document.getElementById('ticketDetails');
+            detailsDiv.innerHTML = `
+                <div class="mb-6">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h4 class="text-lg font-semibold text-gray-900">${ticket.subject}</h4>
+                            <p class="text-sm text-gray-600">Ticket #${ticket.ticket_number}</p>
+                        </div>
+                        <div class="flex space-x-2">
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(ticket.status)}">
+                                ${ticket.status}
+                            </span>
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full ${getPriorityColor(ticket.priority)}">
+                                ${ticket.priority}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="font-medium">User:</span> ${ticket.user_name} (${ticket.user_email})
+                        </div>
+                        <div>
+                            <span class="font-medium">Category:</span> ${ticket.category}
+                        </div>
+                        <div>
+                            <span class="font-medium">Created:</span> ${new Date(ticket.created_at).toLocaleString()}
+                        </div>
+                        <div>
+                            <span class="font-medium">Assigned to:</span> ${ticket.assigned_to_name || 'Unassigned'}
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-6">
+                    <h5 class="font-medium text-gray-900 mb-2">Description</h5>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <p class="text-gray-700">${ticket.description}</p>
+                    </div>
+                </div>
+                <div>
+                    <h5 class="font-medium text-gray-900 mb-2">Responses</h5>
+                    <div class="space-y-4">
+                        ${responses.map(response => `
+                            <div class="border-l-4 border-blue-500 pl-4">
+                                <div class="flex justify-between items-start mb-2">
+                                    <span class="font-medium text-sm">${response.responder_name} (${response.responder_role})</span>
+                                    <span class="text-xs text-gray-500">${new Date(response.created_at).toLocaleString()}</span>
+                                </div>
+                                <p class="text-gray-700 text-sm">${response.message}</p>
+                                ${response.is_internal ? '<span class="text-xs text-red-600">Internal Note</span>' : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function displayMockTicketDetails(ticketId) {
+            const detailsDiv = document.getElementById('ticketDetails');
+            detailsDiv.innerHTML = `
+                <div class="mb-6">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h4 class="text-lg font-semibold text-gray-900">Payment Issue</h4>
+                            <p class="text-sm text-gray-600">Ticket #TKT-001</p>
+                        </div>
+                        <div class="flex space-x-2">
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">open</span>
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-800">high</span>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="font-medium">User:</span> John Doe (john@example.com)
+                        </div>
+                        <div>
+                            <span class="font-medium">Category:</span> billing
+                        </div>
+                        <div>
+                            <span class="font-medium">Created:</span> ${new Date().toLocaleString()}
+                        </div>
+                        <div>
+                            <span class="font-medium">Assigned to:</span> Admin User
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-6">
+                    <h5 class="font-medium text-gray-900 mb-2">Description</h5>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <p class="text-gray-700">I'm having trouble with my payment. The transaction failed but my card was charged. Please help me resolve this issue.</p>
+                    </div>
+                </div>
+                <div>
+                    <h5 class="font-medium text-gray-900 mb-2">Responses</h5>
+                    <div class="space-y-4">
+                        <div class="border-l-4 border-blue-500 pl-4">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="font-medium text-sm">Admin User (admin)</span>
+                                <span class="text-xs text-gray-500">${new Date().toLocaleString()}</span>
+                            </div>
+                            <p class="text-gray-700 text-sm">Thank you for contacting us. I can see the issue with your payment. Let me investigate this for you.</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function respondToTicket(ticketId) {
+            currentTicketId = ticketId;
+            document.getElementById('responseModal').classList.remove('hidden');
+        }
+
+        async function handleResponseSubmit(e) {
+            e.preventDefault();
+            
+            const message = document.getElementById('responseMessage').value;
+            const isInternal = document.getElementById('internalNote').checked;
+
+            if (!message.trim()) {
+                showNotification('Please enter a response message', 'error');
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch(`/api/admin/support-tickets/${currentTicketId}/respond`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        is_internal: isInternal
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        closeResponseModal();
+                        loadTickets(); // Refresh the list
+                        showNotification('Response sent successfully', 'success');
+                    } else {
+                        throw new Error(data.message || 'Failed to send response');
+                    }
+                } else {
+                    throw new Error('Failed to send response');
+                }
+            } catch (error) {
+                console.error('Error sending response:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+                showNotification('Error sending response: ' + error.message, 'error');
+            }
+        }
+
+        function closeTicketModal() {
+            document.getElementById('ticketModal').classList.add('hidden');
+        }
+
+        function closeResponseModal() {
+            document.getElementById('responseModal').classList.add('hidden');
+            document.getElementById('responseMessage').value = '';
+            document.getElementById('internalNote').checked = false;
+        }
+
+        async function assignTicket(ticketId) {
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await 
+                try {
+                    const response = await fetch(`/api/admin/support-tickets/${ticketId}/assign`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        assigned_to: 'current_admin' // This would be the current admin's ID
+                    });
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    // Continue with successful response
+                    const data = await response.json();
+                    return data;
+                } catch (error) {
+                    console.error('API call failed:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+                    showNotification('Operation failed. Please try again.', 'error');
+                    throw error;
+                }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        showNotification('Ticket assigned successfully', 'success');
+                        loadTickets(); // Refresh the list
+                    } else {
+                        throw new Error(data.message || 'Failed to assign ticket');
+                    }
+                } else {
+                    throw new Error('Failed to assign ticket');
+                }
+            } catch (error) {
+                console.error('Error assigning ticket:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+                showNotification('Error assigning ticket: ' + error.message, 'error');
+            }
+        }
+
+        // Filter functions
+        function applyFilters() {
+            currentPage = 1; // Reset to first page when applying filters
+            loadTickets();
+        }
+
+        function clearFilters() {
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('priorityFilter').value = '';
+            document.getElementById('categoryFilter').value = '';
+            document.getElementById('searchInput').value = '';
+            currentPage = 1;
+            loadTickets();
+        }
+
+        function searchTickets() {
+            currentPage = 1;
+            loadTickets();
+        }
+
+        function changePage(direction) {
+            if (direction === 'prev' && currentPage > 1) {
+                currentPage--;
+            } else if (direction === 'next') {
+                currentPage++;
+            }
+            loadTickets();
+        }
+
+        function changeItemsPerPage() {
+            itemsPerPage = parseInt(document.getElementById('itemsPerPage').value);
+            currentPage = 1;
+            loadTickets();
+        }
+
+        // Notification function
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 px-4 py-2 rounded-lg text-white ${
+                type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+            }`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTickets();
+            
+            // Add event listeners for filters
+            document.getElementById('statusFilter').addEventListener('change', applyFilters);
+            document.getElementById('priorityFilter').addEventListener('change', applyFilters);
+            document.getElementById('categoryFilter').addEventListener('change', applyFilters);
+            document.getElementById('searchInput').addEventListener('input', debounce(searchTickets, 500));
+            document.getElementById('itemsPerPage').addEventListener('change', changeItemsPerPage);
+            
+            // Add event listener for response form
+            document.getElementById('responseForm').addEventListener('submit', handleResponseSubmit);
+        });
+
+        // Utility function for debouncing search
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+    </script>
+</body>
+</html>

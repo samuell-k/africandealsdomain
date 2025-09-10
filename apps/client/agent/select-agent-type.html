@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Agent Type | African Deals Domain</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        .fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="min-h-screen gradient-bg">
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-4xl mx-auto">
+            <!-- Header -->
+            <div class="text-center mb-12 fade-in">
+                <div class="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-user-cog text-white text-3xl"></i>
+                </div>
+                <h1 class="text-4xl font-bold text-white mb-4">Choose Your Agent Type</h1>
+                <p class="text-white/80 text-lg max-w-2xl mx-auto">
+                    Select the type of agent you want to be. This will determine your dashboard and available features.
+                </p>
+            </div>
+
+            <!-- Agent Type Cards -->
+            <div class="grid md:grid-cols-3 gap-8 mb-8">
+                <!-- Fast Delivery Agent -->
+                <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-8 text-center card-hover cursor-pointer agent-type-card fade-in" 
+                     data-agent-type="fast_delivery" style="animation-delay: 0.1s">
+                    <div class="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="fas fa-motorcycle text-green-400 text-2xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-4">Fast Delivery Agent</h3>
+                    <p class="text-white/80 mb-6 text-sm leading-relaxed">
+                        Handle grocery and local market deliveries with quick turnaround times. Perfect for motorcycle or bicycle delivery.
+                    </p>
+                    <div class="space-y-2 text-left mb-6">
+                        <div class="flex items-center text-white/70 text-sm">
+                            <i class="fas fa-check text-green-400 mr-2"></i>
+                            <span>Grocery & Local Market Orders</span>
+                        </div>
+                        <div class="flex items-center text-white/70 text-sm">
+                            <i class="fas fa-check text-green-400 mr-2"></i>
+                            <span>Fast Delivery (30min - 2hrs)</span>
+                        </div>
+                        <div class="flex items-center text-white/70 text-sm">
+                            <i class="fas fa-check text-green-400 mr-2"></i>
+                            <span>Higher Commission Rate</span>
+                        </div>
+                        <div class="flex items-center text-white/70 text-sm">
+                            <i class="fas fa-check text-green-400 mr-2"></i>
+                            <span>Real-time GPS Tracking</span>
+                        </div>
+                    </div>
+                    <button class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-300 select-btn" onclick="showNotification('Feature in development', 'info')">
+                        Select Fast Delivery
+                    </button>
+                </div>
+
+                <!-- Pickup Delivery Agent -->
+                <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-8 text-center card-hover cursor-pointer agent-type-card fade-in" 
+                     data-agent-type="pickup_delivery" style="animation-delay: 0.2s">
+                    <div class="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="fas fa-truck text-blue-400 text-2xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-4">Pickup Delivery Agent</h3>
+                    <p class="text-white/80 mb-6 text-sm leading-relaxed">
+                        Collect and deliver physical products from sellers to buyers. Handle larger packages and longer distances.
+                    </p>
+                    <div class="space-y-2 text-left mb-6">
+                        <div class="flex items-center text-white/70 text-sm">
+                            <i class="fas fa-check text-blue-400 mr-2"></i>
+                            <span>Physical Product Delivery</span>
+                        </div>
+                        <div class="flex items-center text-white/70 text-sm">
+                            <i class="fas fa-check text-blue-400 mr-2"></i>
+                            <span>Seller Pickup & Buyer Delivery</span>
+                        </div>
+                        <div class="flex items-center text-white/70 text-sm">
+                            <i class="fas fa-check text-blue-400 mr-2"></i>
+                            <span>Flexible Delivery Times</span>
+                        </div>
+                        <div class="flex items-center text-white/70 text-sm">
+                            <i class="fas fa-check text-blue-400 mr-2"></i>
+                            <span>Order Protection System</span>
+                        </div>
+                    </div>
+                    <button class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-300 select-btn" onclick="showNotification('Feature in development', 'info')">
+                        Select Pickup Delivery
+                    </button>
+                </div>
+
+                <!-- Pickup Site Manager -->
+                <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-8 text-center card-hover cursor-pointer agent-type-card fade-in" 
+                     data-agent-type="pickup_site_manager" style="animation-delay: 0.3s">
+                    <div class="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="fas fa-store text-purple-400 text-2xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-4">Pickup Site Manager</h3>
+                    <p class="text-white/80 mb-6 text-sm leading-relaxed">
+                        Manage pickup locations and assist customers. Act as a smart assistant and community agent.
+                    </p>
+                    <div class="space-y-2 text-left mb-6">
+                        <div class="flex items-center text-white/70 text-sm">
+                            <i class="fas fa-check text-purple-400 mr-2"></i>
+                            <span>Pickup Site Management</span>
+                        </div>
+                        <div class="flex items-center text-white/70 text-sm">
+                            <i class="fas fa-check text-purple-400 mr-2"></i>
+                            <span>Customer Assistance</span>
+                        </div>
+                        <div class="flex items-center text-white/70 text-sm">
+                            <i class="fas fa-check text-purple-400 mr-2"></i>
+                            <span>Community Support</span>
+                        </div>
+                        <div class="flex items-center text-white/70 text-sm">
+                            <i class="fas fa-check text-purple-400 mr-2"></i>
+                            <span>Fixed Location Work</span>
+                        </div>
+                    </div>
+                    <button class="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-300 select-btn" onclick="showNotification('Feature in development', 'info')">
+                        Select Site Manager
+                    </button>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="text-center space-y-4 fade-in" style="animation-delay: 0.4s">
+                <p class="text-white/60 text-sm">
+                    You can change your agent type later in your profile settings
+                </p>
+                <div class="space-x-4">
+                    <button id="back-btn" class="bg-white/20 hover:bg-white/30 text-white font-semibold py-3 px-6 rounded-lg transition duration-300" onclick="showNotification('Feature in development', 'info')">
+                      <i class="fas fa-arrow-left mr-2"></i>Back to Login
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg p-8 max-w-sm mx-4 text-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Setting Up Your Profile</h3>
+            <p class="text-gray-600">Please wait while we configure your agent dashboard...</p>
+        </div>
+    </div>
+
+    <script>
+        class AgentTypeSelector {
+            constructor() {
+                this.selectedType = null;
+                this.init();
+            }
+
+            init() {
+                console.log('[AGENT-TYPE-SELECTOR] Initializing...');
+                
+                // Check authentication
+                if (!this.checkAuthentication()) {
+                    this.redirectToLogin();
+                    return;
+                }
+
+                this.setupEventListeners();
+            }
+
+            checkAuthentication() {
+                const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+                const userData = localStorage.getItem('userData') || localStorage.getItem('user');
+                
+                if (!token || !userData) {
+                    return false;
+                }
+
+                try {
+                    const user = JSON.parse(userData);
+                    return user.role === 'agent';
+                } catch (error) {
+                    console.error('[AGENT-TYPE-SELECTOR] Error parsing user data:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+                    return false;
+                }
+            }
+
+            setupEventListeners() {
+                // Card selection
+                document.querySelectorAll('.agent-type-card').forEach(card => {
+                    card.addEventListener('click', () => {
+                        this.selectAgentType(card.dataset.agentType);
+                    });
+                });
+
+                // Select buttons
+                document.querySelectorAll('.select-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const card = e.target.closest('.agent-type-card');
+                        this.selectAgentType(card.dataset.agentType);
+                    });
+                });
+
+                // Back button
+                document.getElementById('back-btn').addEventListener('click', () => {
+                    this.redirectToLogin();
+                });
+            }
+
+            selectAgentType(agentType) {
+                console.log(`[AGENT-TYPE-SELECTOR] Agent type selected: ${agentType}`);
+                this.selectedType = agentType;
+                this.setAgentType(agentType);
+            }
+
+            async setAgentType(agentType) {
+                this.showLoading(true);
+
+                try {
+                    const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+                    
+                    const response = await fetch('/api/agents/agent-type', {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ agent_type: agentType })
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        console.log('[AGENT-TYPE-SELECTOR] Agent type set successfully:', data);
+                        
+                        // Update user data with agent type
+                        const userData = JSON.parse(localStorage.getItem('userData') || localStorage.getItem('user'));
+                        userData.agent_type = agentType;
+                        
+                        // Store with both keys for compatibility
+                        localStorage.setItem('userData', JSON.stringify(userData));
+                        localStorage.setItem('user', JSON.stringify(userData));
+
+                        // Show success message
+                        this.showSuccessMessage(agentType);
+                        
+                        // Redirect to appropriate dashboard after delay
+                        setTimeout(() => {
+                            this.redirectToDashboard(agentType);
+                        }, 2000);
+
+                    } else {
+                        console.error('[AGENT-TYPE-SELECTOR] Failed to set agent type:', data);
+                
+                // Enhanced error reporting
+                if (data) {
+                    const errorDetails = {
+                        message: data.message || 'Unknown error',
+                        stack: data.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        data.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+                        this.showError(data.error || 'Failed to set agent type');
+                    }
+
+                } catch (error) {
+                    console.error('[AGENT-TYPE-SELECTOR] Error setting agent type:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+                    this.showError('Network error. Please try again.');
+                } finally {
+                    this.showLoading(false);
+                }
+            }
+
+            showSuccessMessage(agentType) {
+                const typeNames = {
+                    'fast_delivery': 'Fast Delivery Agent',
+                    'pickup_delivery': 'Pickup Delivery Agent',
+                    'pickup_site_manager': 'Pickup Site Manager'
+                };
+
+                const overlay = document.getElementById('loading-overlay');
+                overlay.innerHTML = `
+                    <div class="bg-white rounded-lg p-8 max-w-sm mx-4 text-center">
+                        <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-check text-green-600 text-2xl"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Success!</h3>
+                        <p class="text-gray-600">You are now a <strong>${typeNames[agentType]}</strong>. Redirecting to your dashboard...</p>
+                    </div>
+                `;
+            }
+
+            showError(message) {
+                alert(`Error: ${message}`);
+            }
+
+            showLoading(show) {
+                const overlay = document.getElementById('loading-overlay');
+                if (show) {
+                    overlay.classList.remove('hidden');
+                } else {
+                    overlay.classList.add('hidden');
+                }
+            }
+
+            redirectToDashboard(agentType) {
+                const dashboardUrls = {
+                    'fast_delivery': '/agent/fast-delivery-dashboard-complete.html',
+                    'pickup_delivery': '/agent/pickup-delivery-dashboard.html',
+                    'pickup_site_manager': '/agent/psm-dashboard.html'
+                };
+
+                const url = dashboardUrls[agentType] || '/agent/dashboard.html';
+                console.log(`[AGENT-TYPE-SELECTOR] Redirecting to: ${url}`);
+                window.location.href = url;
+            }
+
+            redirectToLogin() {
+                window.location.href = '/auth/auth-agent.html';
+            }
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            new AgentTypeSelector();
+        });
+    </script>
+
+<script>
+// Utility Functions for Enhanced Functionality
+function showNotification(message, type = 'info') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 ${
+        type === 'success' ? 'bg-green-500 text-white' :
+        type === 'error' ? 'bg-red-500 text-white' :
+        type === 'warning' ? 'bg-yellow-500 text-black' :
+        'bg-blue-500 text-white'
+    }`;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+// Generic search handlers
+function handleProductSearch(query) {
+    console.log('Searching products:', query);
+    if (query.length > 2) {
+        // Implement product search logic
+        showNotification('Searching for: ' + query, 'info');
+    }
+}
+
+function handleSellerSearch(query) {
+    console.log('Searching sellers:', query);
+    if (query.length > 2) {
+        showNotification('Searching sellers: ' + query, 'info');
+    }
+}
+
+function handleAgentSearch(query) {
+    console.log('Searching agents:', query);
+    if (query.length > 2) {
+        showNotification('Searching agents: ' + query, 'info');
+    }
+}
+
+function handleOrderSearch(query) {
+    console.log('Searching orders:', query);
+    if (query.length > 2) {
+        showNotification('Searching orders: ' + query, 'info');
+    }
+}
+
+function handleUserSearch(query) {
+    console.log('Searching users:', query);
+    if (query.length > 2) {
+        showNotification('Searching users: ' + query, 'info');
+    }
+}
+
+// Generic form handlers
+function handleSave() {
+    showNotification('Save functionality will be implemented soon', 'info');
+}
+
+function handleEdit() {
+    showNotification('Edit functionality will be implemented soon', 'info');
+}
+
+function handleDelete() {
+    if (confirm('Are you sure you want to delete this item?')) {
+        showNotification('Delete functionality will be implemented soon', 'info');
+    }
+}
+
+function handleCancel() {
+    if (confirm('Are you sure you want to cancel? Unsaved changes will be lost.')) {
+        history.back();
+    }
+}
+</script>
+</body>
+</html>

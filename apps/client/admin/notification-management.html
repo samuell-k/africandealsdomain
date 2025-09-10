@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html lang="en" class="admin-page">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notification Management | Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="admin-auth-check.js"></script>
+    <script src="admin-utils.js"></script>
+    <style>
+        :root {
+            --primary-color: #080b3b;
+            --secondary-color: #1e40af;
+            --accent-color: #3b82f6;
+        }
+        
+        .glass-morphism {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        }
+        .sidebar {
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .nav-item {
+            transition: all 0.3s ease;
+        }
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+        .nav-item.active {
+            background: rgba(255, 255, 255, 0.2);
+            border-left: 3px solid #3b82f6;
+        }
+        .loading-spinner {
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 2px solid #3b82f6;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .form-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+        }
+        .notification-tab {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .notification-tab:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .notification-tab.active {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: var(--accent-color);
+        }
+        .status-badge {
+            @apply px-2 py-1 rounded-full text-xs font-medium;
+        }
+        .status-draft { @apply bg-gray-500/20 text-gray-400; }
+        .status-scheduled { @apply bg-yellow-500/20 text-yellow-400; }
+        .status-sent { @apply bg-green-500/20 text-green-400; }
+        .priority-badge {
+            @apply px-2 py-1 rounded-full text-xs font-medium;
+        }
+        .priority-high { @apply bg-red-500/20 text-red-400; }
+        .priority-medium { @apply bg-yellow-500/20 text-yellow-400; }
+        .priority-low { @apply bg-green-500/20 text-green-400; }
+        .notification-card {
+            transition: all 0.3s ease;
+        }
+        .notification-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .channel-toggle {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .channel-toggle.active {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: var(--accent-color);
+        }
+        .template-preview {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-top: 0.5rem;
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+    </style>
+</head>
+
+<body class="gradient-bg min-h-screen">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <div class="sidebar w-64 lg:w-80 flex-shrink-0 hidden md:flex flex-col">
+            <div class="p-6 border-b border-white/10">
+                <h2 class="text-xl font-bold text-white">Admin Panel</h2>
+            </div>
+            
+            <nav class="flex-1 p-4 space-y-2">
+                <a href="dashboard.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="user-management.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-users"></i>
+                    <span>User Management</span>
+                </a>
+                <a href="manual-payment-approval.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-credit-card"></i>
+                    <span>Payment Approval</span>
+                </a>
+                <a href="payment-credentials.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-wallet"></i>
+                    <span>Payment Credentials</span>
+                </a>
+                <a href="products.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-box"></i>
+                    <span>Products</span>
+                </a>
+                <a href="order-management.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Orders</span>
+                </a>
+                <a href="agents.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-user-tie"></i>
+                    <span>Agents</span>
+                </a>
+                <a href="categories.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-tags"></i>
+                    <span>Categories</span>
+                </a>
+                <a href="brands.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-trademark"></i>
+                    <span>Brands</span>
+                </a>
+                <a href="reviews.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-star"></i>
+                    <span>Reviews</span>
+                </a>
+                <a href="sellers.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-store"></i>
+                    <span>Sellers</span>
+                </a>
+                <a href="support-tickets.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-ticket-alt"></i>
+                    <span>Support Tickets</span>
+                </a>
+                <a href="logs.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-file-alt"></i>
+                    <span>System Logs</span>
+                </a>
+                <a href="promotions.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-tags"></i>
+                    <span>Promotions</span>
+                </a>
+                <a href="cms-management.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-edit"></i>
+                    <span>CMS Management</span>
+                </a>
+                <a href="notification-management.html" class="nav-item active flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-bell"></i>
+                    <span>Notifications</span>
+                </a>
+                <a href="reports.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Reports</span>
+                </a>
+                <a href="settings.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
+            
+            <!-- Header -->
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 space-y-4 sm:space-y-0">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-white mb-2">Notification Management</h1>
+                    <p class="text-white/70">Send push notifications, emails, and SMS campaigns to users</p>
+                </div>
+                <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                    <button onclick="openCreateModal()" class="bg-green-500 hover:bg-green-600 text-white px-3 sm:px-4 py-2 rounded-lg transition text-sm flex items-center justify-center">
+                        <i class="fas fa-plus mr-2"></i>Create Notification
+                    </button>
+                    <button onclick="openTemplateModal()" class="bg-purple-500 hover:bg-purple-600 text-white px-3 sm:px-4 py-2 rounded-lg transition text-sm flex items-center justify-center">
+                        <i class="fas fa-file-alt mr-2"></i>Templates
+                    </button>
+                    <button onclick="refreshCurrentTab()" class="bg-blue-500 hover:bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-lg transition text-sm flex items-center justify-center">
+                        <i class="fas fa-refresh mr-2"></i>Refresh
+                    </button>
+                </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6 mb-6">
+                <div class="glass-morphism rounded-xl p-4 sm:p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-white/70 text-xs sm:text-sm">Total Sent</p>
+                            <p class="text-white text-lg sm:text-2xl font-bold" id="total-sent">0</p>
+                        </div>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-paper-plane text-blue-400 text-lg sm:text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-morphism rounded-xl p-4 sm:p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-white/70 text-xs sm:text-sm">Scheduled</p>
+                            <p class="text-white text-lg sm:text-2xl font-bold" id="total-scheduled">0</p>
+                        </div>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-clock text-yellow-400 text-lg sm:text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-morphism rounded-xl p-4 sm:p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-white/70 text-xs sm:text-sm">Delivered</p>
+                            <p class="text-white text-lg sm:text-2xl font-bold" id="total-delivered">0</p>
+                        </div>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-check-circle text-green-400 text-lg sm:text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-morphism rounded-xl p-4 sm:p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-white/70 text-xs sm:text-sm">Opened</p>
+                            <p class="text-white text-lg sm:text-2xl font-bold" id="total-opened">0</p>
+                        </div>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-eye text-purple-400 text-lg sm:text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-morphism rounded-xl p-4 sm:p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-white/70 text-xs sm:text-sm">Click Rate</p>
+                            <p class="text-white text-lg sm:text-2xl font-bold" id="click-rate">0%</p>
+                        </div>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-mouse-pointer text-orange-400 text-lg sm:text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notification Tabs -->
+            <div class="flex flex-wrap gap-2 mb-6">
+                <div class="notification-tab active" data-tab="notifications" onclick="switchTab('notifications')">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-bell"></i>
+                        <span class="text-white font-medium">Notifications</span>
+                        <span id="notifications-count" class="text-white/50 text-sm">(0)</span>
+                    </div>
+                </div>
+                <div class="notification-tab" data-tab="analytics" onclick="switchTab('analytics')">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-chart-line"></i>
+                        <span class="text-white font-medium">Analytics</span>
+                    </div>
+                </div>
+                <div class="notification-tab" data-tab="templates" onclick="switchTab('templates')">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-file-alt"></i>
+                        <span class="text-white font-medium">Templates</span>
+                        <span id="templates-count" class="text-white/50 text-sm">(0)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Contents -->
+            
+            <!-- Notifications Tab -->
+            <div id="notifications-tab" class="tab-content active">
+                <div class="glass-morphism rounded-xl overflow-hidden">
+                    <div class="p-4 sm:p-6 border-b border-white/10">
+                        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-3 sm:space-y-0">
+                            <h3 class="text-lg sm:text-xl font-bold text-white">All Notifications</h3>
+                            <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                                <input type="text" id="notifications-search" placeholder="Search notifications..." 
+                                       class="form-input px-3 py-2 rounded-lg text-sm">
+                                <select id="notifications-status" class="form-input px-3 py-2 rounded-lg text-sm">
+                                    <option value="">All Status</option>
+                                    <option value="draft">Draft</option>
+                                    <option value="scheduled">Scheduled</option>
+                                    <option value="sent">Sent</option>
+                                </select>
+                                <button onclick="openCreateModal()" class="bg-green-500 hover:bg-green-600 text-white px-3 sm:px-4 py-2 rounded-lg text-sm flex items-center justify-center">
+                                    <i class="fas fa-plus mr-2"></i>New
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="notifications-container" class="overflow-x-auto">
+                        <div class="text-center py-8">
+                            <div class="loading-spinner mx-auto mb-4"></div>
+                            <p class="text-white/70">Loading notifications...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics Tab -->
+            <div id="analytics-tab" class="tab-content">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    <!-- Delivery Analytics -->
+                    <div class="glass-morphism p-6 rounded-xl">
+                        <h3 class="text-xl font-bold text-white mb-4">Delivery Analytics</h3>
+                        <div class="chart-container">
+                            <canvas id="deliveryChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Type Breakdown -->
+                    <div class="glass-morphism p-6 rounded-xl">
+                        <h3 class="text-xl font-bold text-white mb-4">Notification Types</h3>
+                        <div class="chart-container">
+                            <canvas id="typeChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Performance Metrics -->
+                <div class="glass-morphism rounded-xl overflow-hidden">
+                    <div class="p-4 sm:p-6 border-b border-white/10">
+                        <h3 class="text-lg sm:text-xl font-bold text-white">Performance Metrics</h3>
+                    </div>
+                    <div id="performance-metrics" class="p-6">
+                        <div class="text-center py-8">
+                            <div class="loading-spinner mx-auto mb-4"></div>
+                            <p class="text-white/70">Loading analytics...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Templates Tab -->
+            <div id="templates-tab" class="tab-content">
+                <div class="glass-morphism rounded-xl overflow-hidden">
+                    <div class="p-4 sm:p-6 border-b border-white/10">
+                        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-3 sm:space-y-0">
+                            <h3 class="text-lg sm:text-xl font-bold text-white">Notification Templates</h3>
+                            <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                                <select id="templates-type" class="form-input px-3 py-2 rounded-lg text-sm">
+                                    <option value="">All Types</option>
+                                    <option value="general">General</option>
+                                    <option value="order">Order Updates</option>
+                                    <option value="promotion">Promotions</option>
+                                    <option value="reminder">Reminders</option>
+                                </select>
+                                <button onclick="openTemplateModal()" class="bg-green-500 hover:bg-green-600 text-white px-3 sm:px-4 py-2 rounded-lg text-sm flex items-center justify-center">
+                                    <i class="fas fa-plus mr-2"></i>New Template
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="templates-container" class="overflow-x-auto">
+                        <div class="text-center py-8">
+                            <div class="loading-spinner mx-auto mb-4"></div>
+                            <p class="text-white/70">Loading templates...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create/Edit Notification Modal -->
+    <div id="notification-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+        <div class="glass-morphism p-6 sm:p-8 rounded-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 id="notification-modal-title" class="text-xl sm:text-2xl font-bold text-white">Create Notification</h2>
+                <button onclick="closeNotificationModal()" class="text-white/70 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <form id="notification-form" class="space-y-4">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div class="lg:col-span-2">
+                        <label class="block text-white/70 text-sm mb-2">Title *</label>
+                        <input type="text" id="notification-title" required 
+                               class="w-full p-3 rounded-lg form-input" 
+                               placeholder="Notification title">
+                    </div>
+
+                    <div>
+                        <label class="block text-white/70 text-sm mb-2">Type</label>
+                        <select id="notification-type" class="w-full p-3 rounded-lg form-input">
+                            <option value="general">General</option>
+                            <option value="order">Order Update</option>
+                            <option value="promotion">Promotion</option>
+                            <option value="reminder">Reminder</option>
+                            <option value="announcement">Announcement</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-white/70 text-sm mb-2">Priority</label>
+                        <select id="notification-priority" class="w-full p-3 rounded-lg form-input">
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-white/70 text-sm mb-2">Target Audience</label>
+                        <select id="notification-audience" class="w-full p-3 rounded-lg form-input">
+                            <option value="all">All Users</option>
+                            <option value="buyers">Buyers Only</option>
+                            <option value="sellers">Sellers Only</option>
+                            <option value="agents">Agents Only</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-white/70 text-sm mb-2">Schedule</label>
+                        <input type="datetime-local" id="notification-schedule" 
+                               class="w-full p-3 rounded-lg form-input">
+                        <p class="text-white/50 text-xs mt-1">Leave empty to send immediately</p>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-white/70 text-sm mb-2">Content *</label>
+                    <textarea id="notification-content" rows="4" required 
+                              class="w-full p-3 rounded-lg form-input" 
+                              placeholder="Notification content"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-white/70 text-sm mb-2">Action URL (Optional)</label>
+                    <input type="url" id="notification-action-url" 
+                           class="w-full p-3 rounded-lg form-input" 
+                           placeholder="https://...">
+                </div>
+
+                <!-- Delivery Channels -->
+                <div class="border-t border-white/10 pt-4">
+                    <h4 class="text-white font-semibold mb-3">Delivery Channels</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div class="channel-toggle p-3 rounded-lg border border-white/20" onclick="toggleChannel('push')">
+                            <div class="flex items-center space-x-2">
+                                <input type="checkbox" id="channel-push" class="rounded">
+                                <i class="fas fa-mobile-alt text-blue-400"></i>
+                                <span class="text-white">Push Notification</span>
+                            </div>
+                        </div>
+                        <div class="channel-toggle p-3 rounded-lg border border-white/20" onclick="toggleChannel('email')">
+                            <div class="flex items-center space-x-2">
+                                <input type="checkbox" id="channel-email" class="rounded">
+                                <i class="fas fa-envelope text-green-400"></i>
+                                <span class="text-white">Email</span>
+                            </div>
+                        </div>
+                        <div class="channel-toggle p-3 rounded-lg border border-white/20" onclick="toggleChannel('sms')">
+                            <div class="flex items-center space-x-2">
+                                <input type="checkbox" id="channel-sms" class="rounded">
+                                <i class="fas fa-sms text-yellow-400"></i>
+                                <span class="text-white">SMS</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preview Section -->
+                <div id="notification-preview" class="template-preview hidden">
+                    <h4 class="text-white font-semibold mb-2">Preview</h4>
+                    <div class="bg-white/5 rounded p-3">
+                        <div id="preview-content" class="text-white/80 text-sm"></div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
+                    <button type="submit" class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg">
+                        <i class="fas fa-save mr-2"></i>Save Notification
+                    </button>
+                    <button type="button" onclick="sendNotification()" id="send-btn" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg hidden">
+                        <i class="fas fa-paper-plane mr-2"></i>Send Now
+                    </button>
+                    <button type="button" onclick="previewNotification()" class="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg">
+                        <i class="fas fa-eye mr-2"></i>Preview
+                    </button>
+                    <button type="button" onclick="closeNotificationModal()" 
+                            class="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Template Modal -->
+    <div id="template-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+        <div class="glass-morphism p-6 sm:p-8 rounded-xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 id="template-modal-title" class="text-xl sm:text-2xl font-bold text-white">Create Template</h2>
+                <button onclick="closeTemplateModal()" class="text-white/70 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <form id="template-form" class="space-y-4">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-white/70 text-sm mb-2">Template Name *</label>
+                        <input type="text" id="template-name" required 
+                               class="w-full p-3 rounded-lg form-input" 
+                               placeholder="Template name">
+                    </div>
+
+                    <div>
+                        <label class="block text-white/70 text-sm mb-2">Type</label>
+                        <select id="template-type" class="w-full p-3 rounded-lg form-input">
+                            <option value="general">General</option>
+                            <option value="order">Order Update</option>
+                            <option value="promotion">Promotion</option>
+                            <option value="reminder">Reminder</option>
+                            <option value="announcement">Announcement</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-white/70 text-sm mb-2">Title Template *</label>
+                    <input type="text" id="template-title" required 
+                           class="w-full p-3 rounded-lg form-input" 
+                           placeholder="Hello {{name}}, your order is ready!">
+                </div>
+
+                <div>
+                    <label class="block text-white/70 text-sm mb-2">Content Template *</label>
+                    <textarea id="template-content" rows="4" required 
+                              class="w-full p-3 rounded-lg form-input" 
+                              placeholder="Your order {{order_id}} has been {{status}}. Thank you for shopping with us!"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-white/70 text-sm mb-2">Description</label>
+                    <textarea id="template-description" rows="2" 
+                              class="w-full p-3 rounded-lg form-input" 
+                              placeholder="Template description"></textarea>
+                </div>
+
+                <div class="border-t border-white/10 pt-4">
+                    <h4 class="text-white font-semibold mb-3">Available Variables</h4>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
+                        <span class="bg-blue-500/20 text-blue-400 px-2 py-1 rounded">{{name}}</span>
+                        <span class="bg-blue-500/20 text-blue-400 px-2 py-1 rounded">{{email}}</span>
+                        <span class="bg-blue-500/20 text-blue-400 px-2 py-1 rounded">{{order_id}}</span>
+                        <span class="bg-blue-500/20 text-blue-400 px-2 py-1 rounded">{{status}}</span>
+                        <span class="bg-blue-500/20 text-blue-400 px-2 py-1 rounded">{{amount}}</span>
+                        <span class="bg-blue-500/20 text-blue-400 px-2 py-1 rounded">{{date}}</span>
+                        <span class="bg-blue-500/20 text-blue-400 px-2 py-1 rounded">{{product}}</span>
+                        <span class="bg-blue-500/20 text-blue-400 px-2 py-1 rounded">{{link}}</span>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
+                    <button type="submit" class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg">
+                        <i class="fas fa-save mr-2"></i>Save Template
+                    </button>
+                    <button type="button" onclick="closeTemplateModal()" 
+                            class="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+<script>
+    // Global variables
+    let currentTab = 'notifications';
+    let allNotifications = [];
+    let allTemplates = [];
+    let editingNotification = null;
+    let editingTemplate = null;
+    let analyticsData = null;
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('🚀 Notification Management page initializing...');
+        
+        // Check authentication first
+        if (!checkAuthentication()) return;
+        
+        // Load data
+        loadAllData();
+        setupEventListeners();
+    });
+
+    // Check authentication
+    function checkAuthentication() {
+        const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
+        const userRole = localStorage.getItem('userRole');
+        
+        if (!token) {
+            console.log('❌ No authentication token found');
+            window.location.href = '/auth/auth-admin.html';
+            return false;
+        }
+        
+        if (userRole !== 'admin') {
+            console.log('❌ Insufficient permissions');
+            window.location.href = '/auth/auth-admin.html';
+            return false;
+        }
+        
+        console.log('✅ Authentication verified');
+        return true;
+    }
+
+    // Setup event listeners
+    function setupEventListeners() {
+        // Search functionality
+        document.getElementById('notifications-search').addEventListener('input', debounce(filterNotifications, 500));
+        document.getElementById('notifications-status').addEventListener('change', filterNotifications);
+        document.getElementById('templates-type').addEventListener('change', filterTemplates);
+        
+        // Form submissions
+        document.getElementById('notification-form').addEventListener('submit', handleNotificationSubmit);
+        document.getElementById('template-form').addEventListener('submit', handleTemplateSubmit);
+        
+        // Preview functionality
+        document.getElementById('notification-title').addEventListener('input', updatePreview);
+        document.getElementById('notification-content').addEventListener('input', updatePreview);
+    }
+
+    // Load all data
+    async function loadAllData() {
+        await Promise.all([
+            loadNotifications(),
+            loadTemplates(),
+            loadAnalytics()
+        ]);
+        updateStatistics();
+    }
+
+    // Load notifications
+    async function loadNotifications() {
+        try {
+            console.log('📧 Loading notifications...');
+            
+            const response = await makeAuthenticatedRequest('/api/admin/notifications?limit=100');
+
+            if (response.success) {
+                allNotifications = response.notifications || [];
+                renderNotifications(allNotifications);
+                
+                console.log('✅ Notifications loaded successfully');
+            } else {
+                throw new Error(response.message || 'Failed to load notifications');
+            }
+
+        } catch (error) {
+            console.error('❌ Error loading notifications:', error);
+            document.getElementById('notifications-container').innerHTML = 
+                createErrorState(error.message, 'loadNotifications()');
+        }
+    }
+
+    // Load templates
+    async function loadTemplates() {
+        try {
+            console.log('📄 Loading templates...');
+            
+            const response = await makeAuthenticatedRequest('/api/admin/notification-templates?limit=100');
+
+            if (response.success) {
+                allTemplates = response.templates || [];
+                renderTemplates(allTemplates);
+                
+                console.log('✅ Templates loaded successfully');
+            } else {
+                throw new Error(response.message || 'Failed to load templates');
+            }
+
+        } catch (error) {
+            console.error('❌ Error loading templates:', error);
+            document.getElementById('templates-container').innerHTML = 
+                createErrorState(error.message, 'loadTemplates()');
+        }
+    }
+
+    // Load analytics
+    async function loadAnalytics() {
+        try {
+            console.log('📊 Loading analytics...');
+            
+            const response = await makeAuthenticatedRequest('/api/admin/notification-analytics?period=30');
+
+            if (response.success) {
+                analyticsData = response.analytics;
+                renderAnalytics(analyticsData);
+                
+                console.log('✅ Analytics loaded successfully');
+            } else {
+                throw new Error(response.message || 'Failed to load analytics');
+            }
+
+        } catch (error) {
+            console.error('❌ Error loading analytics:', error);
+            document.getElementById('performance-metrics').innerHTML = 
+                createErrorState(error.message, 'loadAnalytics()');
+        }
+    }
+
+    // Render notifications
+    function renderNotifications(notifications) {
+        const container = document.getElementById('notifications-container');
+        
+        if (!notifications || notifications.length === 0) {
+            container.innerHTML = createEmptyState(
+                'notifications', 
+                'No Notifications Found', 
+                'Create your first notification to get started.',
+                '<button onclick="openCreateModal()" class="mt-4 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg"><i class="fas fa-plus mr-2"></i>Create Notification</button>'
+            );
+            return;
+        }
+
+        const notificationsHTML = `
+            <div class="p-4 space-y-4">
+                ${notifications.map(notification => `
+                    <div class="notification-card bg-white/5 rounded-lg p-4 hover:bg-white/10 transition-colors">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-2 mb-2">
+                                    <h4 class="text-white font-semibold">${notification.title}</h4>
+                                    <span class="status-badge status-${notification.status}">${formatStatus(notification.status)}</span>
+                                    <span class="priority-badge priority-${notification.priority}">${formatPriority(notification.priority)}</span>
+                                </div>
+                                <div class="text-white/70 text-sm mb-2">
+                                    Target: ${notification.target_audience} • Type: ${notification.type || 'general'}
+                                </div>
+                                <div class="text-white/60 text-sm line-clamp-2 mb-2">
+                                    ${notification.content}
+                                </div>
+                                <div class="flex items-center justify-between text-xs text-white/50">
+                                    <div class="flex items-center space-x-4">
+                                        <span>By: ${notification.author_name || 'Unknown'}</span>
+                                        <span>Sent: ${notification.sent_count || 0}</span>
+                                        <span>Opened: ${notification.opened_count || 0}</span>
+                                    </div>
+                                    <span>${formatDate(notification.created_at)}</span>
+                                </div>
+                                ${notification.scheduled_at ? `
+                                    <div class="text-xs text-yellow-400 mt-1">
+                                        <i class="fas fa-clock mr-1"></i>Scheduled for: ${formatDate(notification.scheduled_at)}
+                                    </div>
+                                ` : ''}
+                            </div>
+                            <div class="flex flex-col space-y-2 ml-4">
+                                ${notification.status !== 'sent' ? `
+                                    <button onclick="editNotification(${notification.id})" 
+                                            class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-xs">
+                                        <i class="fas fa-edit mr-1"></i>Edit
+                                    </button>
+                                    <button onclick="sendNotificationNow(${notification.id})" 
+                                            class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-xs">
+                                        <i class="fas fa-paper-plane mr-1"></i>Send
+                                    </button>
+                                    <button onclick="deleteNotification(${notification.id})" 
+                                            class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs">
+                                        <i class="fas fa-trash mr-1"></i>Delete
+                                    </button>
+                                ` : `
+                                    <button onclick="viewNotificationStats(${notification.id})" 
+                                            class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-1 rounded text-xs">
+                                        <i class="fas fa-chart-bar mr-1"></i>Stats
+                                    </button>
+                                `}
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        
+        container.innerHTML = notificationsHTML;
+        updateTabCounts();
+    }
+
+    // Render templates
+    function renderTemplates(templates) {
+        const container = document.getElementById('templates-container');
+        
+        if (!templates || templates.length === 0) {
+            container.innerHTML = createEmptyState(
+                'templates', 
+                'No Templates Found', 
+                'Create your first template to get started.',
+                '<button onclick="openTemplateModal()" class="mt-4 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg"><i class="fas fa-plus mr-2"></i>Create Template</button>'
+            );
+            return;
+        }
+
+        const templatesHTML = `
+            <div class="p-4 space-y-4">
+                ${templates.map(template => `
+                    <div class="notification-card bg-white/5 rounded-lg p-4 hover:bg-white/10 transition-colors">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-2 mb-2">
+                                    <h4 class="text-white font-semibold">${template.name}</h4>
+                                    <span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded">${template.type}</span>
+                                </div>
+                                <div class="text-white/70 text-sm mb-2">
+                                    Title: ${template.title_template}
+                                </div>
+                                <div class="text-white/60 text-sm line-clamp-2 mb-2">
+                                    ${template.content_template}
+                                </div>
+                                ${template.description ? `
+                                    <div class="text-white/50 text-xs mb-2">
+                                        ${template.description}
+                                    </div>
+                                ` : ''}
+                                <div class="text-xs text-white/50">
+                                    Created: ${formatDate(template.created_at)}
+                                </div>
+                            </div>
+                            <div class="flex flex-col space-y-2 ml-4">
+                                <button onclick="useTemplate(${template.id})" 
+                                        class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-xs">
+                                    <i class="fas fa-magic mr-1"></i>Use
+                                </button>
+                                <button onclick="editTemplate(${template.id})" 
+                                        class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-xs">
+                                    <i class="fas fa-edit mr-1"></i>Edit
+                                </button>
+                                <button onclick="deleteTemplate(${template.id})" 
+                                        class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs">
+                                    <i class="fas fa-trash mr-1"></i>Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        
+        container.innerHTML = templatesHTML;
+        updateTabCounts();
+    }
+
+    // Render analytics
+    function renderAnalytics(analytics) {
+        if (!analytics) return;
+
+        // Create delivery chart
+        const deliveryCtx = document.getElementById('deliveryChart').getContext('2d');
+        new Chart(deliveryCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Delivered', 'Failed', 'Pending'],
+                datasets: [{
+                    data: [
+                        analytics.delivery?.successful_deliveries || 0,
+                        analytics.delivery?.failed_deliveries || 0,
+                        (analytics.delivery?.total_deliveries || 0) - 
+                        (analytics.delivery?.successful_deliveries || 0) - 
+                        (analytics.delivery?.failed_deliveries || 0)
+                    ],
+                    backgroundColor: ['#10b981', '#ef4444', '#f59e0b']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: 'white'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Create type breakdown chart
+        const typeCtx = document.getElementById('typeChart').getContext('2d');
+        new Chart(typeCtx, {
+            type: 'bar',
+            data: {
+                labels: (analytics.type_breakdown || []).map(item => item.type),
+                datasets: [{
+                    label: 'Notifications',
+                    data: (analytics.type_breakdown || []).map(item => item.count),
+                    backgroundColor: '#3b82f6'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: 'white'
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        ticks: {
+                            color: 'white'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: 'white'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Render performance metrics
+        const performanceHTML = `
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white/5 rounded-lg p-4">
+                    <div class="text-white/70 text-sm">Open Rate</div>
+                    <div class="text-white text-2xl font-bold">
+                        ${calculatePercentage(analytics.delivery?.opened_count, analytics.delivery?.total_deliveries)}%
+                    </div>
+                </div>
+                <div class="bg-white/5 rounded-lg p-4">
+                    <div class="text-white/70 text-sm">Click Rate</div>
+                    <div class="text-white text-2xl font-bold">
+                        ${calculatePercentage(analytics.delivery?.clicked_count, analytics.delivery?.total_deliveries)}%
+                    </div>
+                </div>
+                <div class="bg-white/5 rounded-lg p-4">
+                    <div class="text-white/70 text-sm">Delivery Rate</div>
+                    <div class="text-white text-2xl font-bold">
+                        ${calculatePercentage(analytics.delivery?.successful_deliveries, analytics.delivery?.total_deliveries)}%
+                    </div>
+                </div>
+                <div class="bg-white/5 rounded-lg p-4">
+                    <div class="text-white/70 text-sm">Average Daily</div>
+                    <div class="text-white text-2xl font-bold">
+                        ${Math.round((analytics.overview?.total_notifications || 0) / (analytics.period || 30))}
+                    </div>
+                </div>
+            </div>
+            <div class="mt-6">
+                <h4 class="text-white font-semibold mb-3">Recent Activity</h4>
+                <div class="space-y-2">
+                    ${(analytics.daily_stats || []).slice(-5).map(stat => `
+                        <div class="flex items-center justify-between bg-white/5 rounded p-2">
+                            <span class="text-white/70">${formatDate(stat.date)}</span>
+                            <div class="flex items-center space-x-4 text-sm">
+                                <span class="text-blue-400">Created: ${stat.notifications_created}</span>
+                                <span class="text-green-400">Sent: ${stat.notifications_sent}</span>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('performance-metrics').innerHTML = performanceHTML;
+    }
+
+    // Update statistics
+    function updateStatistics() {
+        if (!analyticsData) return;
+
+        document.getElementById('total-sent').textContent = analyticsData.overview?.sent_notifications || 0;
+        document.getElementById('total-scheduled').textContent = analyticsData.overview?.scheduled_notifications || 0;
+        document.getElementById('total-delivered').textContent = analyticsData.delivery?.successful_deliveries || 0;
+        document.getElementById('total-opened').textContent = analyticsData.delivery?.opened_count || 0;
+        
+        const clickRate = calculatePercentage(analyticsData.delivery?.clicked_count, analyticsData.delivery?.total_deliveries);
+        document.getElementById('click-rate').textContent = `${clickRate}%`;
+    }
+
+    // Update tab counts
+    function updateTabCounts() {
+        document.getElementById('notifications-count').textContent = `(${allNotifications.length})`;
+        document.getElementById('templates-count').textContent = `(${allTemplates.length})`;
+    }
+
+    // Switch tabs
+    function switchTab(tab) {
+        currentTab = tab;
+        
+        // Update active tab
+        document.querySelectorAll('.notification-tab').forEach(t => t.classList.remove('active'));
+        document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+        
+        // Show/hide tab content
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.remove('active');
+        });
+        document.getElementById(`${tab}-tab`).classList.add('active');
+
+        // Load analytics data when switching to analytics tab
+        if (tab === 'analytics' && !analyticsData) {
+            loadAnalytics();
+        }
+    }
+
+    // Modal functions
+    function openCreateModal() {
+        editingNotification = null;
+        document.getElementById('notification-modal-title').textContent = 'Create Notification';
+        document.getElementById('notification-form').reset();
+        document.getElementById('send-btn').classList.add('hidden');
+        document.getElementById('notification-modal').classList.remove('hidden');
+        document.getElementById('notification-modal').classList.add('flex');
+    }
+
+    function closeNotificationModal() {
+        document.getElementById('notification-modal').classList.add('hidden');
+        document.getElementById('notification-modal').classList.remove('flex');
+        editingNotification = null;
+    }
+
+    function openTemplateModal() {
+        editingTemplate = null;
+        document.getElementById('template-modal-title').textContent = 'Create Template';
+        document.getElementById('template-form').reset();
+        document.getElementById('template-modal').classList.remove('hidden');
+        document.getElementById('template-modal').classList.add('flex');
+    }
+
+    function closeTemplateModal() {
+        document.getElementById('template-modal').classList.add('hidden');
+        document.getElementById('template-modal').classList.remove('flex');
+        editingTemplate = null;
+    }
+
+    // Handle form submissions
+    async function handleNotificationSubmit(e) {
+        e.preventDefault();
+        
+        const formData = {
+            title: document.getElementById('notification-title').value,
+            content: document.getElementById('notification-content').value,
+            type: document.getElementById('notification-type').value,
+            priority: document.getElementById('notification-priority').value,
+            target_audience: document.getElementById('notification-audience').value,
+            scheduled_at: document.getElementById('notification-schedule').value || null,
+            action_url: document.getElementById('notification-action-url').value || null,
+            push_enabled: document.getElementById('channel-push').checked,
+            email_enabled: document.getElementById('channel-email').checked,
+            sms_enabled: document.getElementById('channel-sms').checked
+        };
+        
+        try {
+            let response;
+            if (editingNotification) {
+                response = await makeAuthenticatedRequest(`/api/admin/notifications/${editingNotification.id}`, {
+                    method: 'PUT',
+                    body: JSON.stringify(formData)
+                });
+            } else {
+                response = await makeAuthenticatedRequest('/api/admin/notifications', {
+                    method: 'POST',
+                    body: JSON.stringify(formData)
+                });
+            }
+
+            if (response.success) {
+                showToast(`Notification ${editingNotification ? 'updated' : 'created'} successfully`, 'success');
+                closeNotificationModal();
+                loadAllData();
+            } else {
+                throw new Error(response.message || `Failed to ${editingNotification ? 'update' : 'create'} notification`);
+            }
+
+        } catch (error) {
+            console.error('❌ Error saving notification:', error);
+            showToast('Error saving notification: ' + error.message, 'error');
+        }
+    }
+
+    async function handleTemplateSubmit(e) {
+        e.preventDefault();
+        
+        const formData = {
+            name: document.getElementById('template-name').value,
+            type: document.getElementById('template-type').value,
+            title_template: document.getElementById('template-title').value,
+            content_template: document.getElementById('template-content').value,
+            description: document.getElementById('template-description').value || null
+        };
+        
+        try {
+            let response;
+            if (editingTemplate) {
+                response = await makeAuthenticatedRequest(`/api/admin/notification-templates/${editingTemplate.id}`, {
+                    method: 'PUT',
+                    body: JSON.stringify(formData)
+                });
+            } else {
+                response = await makeAuthenticatedRequest('/api/admin/notification-templates', {
+                    method: 'POST',
+                    body: JSON.stringify(formData)
+                });
+            }
+
+            if (response.success) {
+                showToast(`Template ${editingTemplate ? 'updated' : 'created'} successfully`, 'success');
+                closeTemplateModal();
+                loadAllData();
+            } else {
+                throw new Error(response.message || `Failed to ${editingTemplate ? 'update' : 'create'} template`);
+            }
+
+        } catch (error) {
+            console.error('❌ Error saving template:', error);
+            showToast('Error saving template: ' + error.message, 'error');
+        }
+    }
+
+    // Notification actions
+    async function sendNotificationNow(notificationId) {
+        if (!confirm('Send this notification immediately?')) return;
+        
+        try {
+            const response = await makeAuthenticatedRequest(`/api/admin/notifications/${notificationId}/send`, {
+                method: 'POST',
+                body: JSON.stringify({ immediate: true })
+            });
+
+            if (response.success) {
+                showToast(`Notification sent to ${response.sent_count} users`, 'success');
+                loadAllData();
+            } else {
+                throw new Error(response.message || 'Failed to send notification');
+            }
+
+        } catch (error) {
+            console.error('❌ Error sending notification:', error);
+            showToast('Error sending notification: ' + error.message, 'error');
+        }
+    }
+
+    async function deleteNotification(notificationId) {
+        if (!confirm('Are you sure you want to delete this notification?')) return;
+        
+        try {
+            const response = await makeAuthenticatedRequest(`/api/admin/notifications/${notificationId}`, {
+                method: 'DELETE'
+            });
+
+            if (response.success) {
+                showToast('Notification deleted successfully', 'success');
+                loadAllData();
+            } else {
+                throw new Error(response.message || 'Failed to delete notification');
+            }
+
+        } catch (error) {
+            console.error('❌ Error deleting notification:', error);
+            showToast('Error deleting notification: ' + error.message, 'error');
+        }
+    }
+
+    // Template actions
+    function useTemplate(templateId) {
+        const template = allTemplates.find(t => t.id === templateId);
+        if (!template) return;
+        
+        // Open create modal with template data
+        openCreateModal();
+        document.getElementById('notification-title').value = template.title_template;
+        document.getElementById('notification-content').value = template.content_template;
+        document.getElementById('notification-type').value = template.type;
+    }
+
+    // Utility functions
+    function toggleChannel(channel) {
+        const checkbox = document.getElementById(`channel-${channel}`);
+        const toggle = checkbox.parentElement.parentElement;
+        
+        checkbox.checked = !checkbox.checked;
+        
+        if (checkbox.checked) {
+            toggle.classList.add('active');
+        } else {
+            toggle.classList.remove('active');
+        }
+    }
+
+    function updatePreview() {
+        const title = document.getElementById('notification-title').value;
+        const content = document.getElementById('notification-content').value;
+        
+        if (title || content) {
+            document.getElementById('notification-preview').classList.remove('hidden');
+            document.getElementById('preview-content').innerHTML = `
+                <div class="font-semibold mb-1">${title}</div>
+                <div>${content}</div>
+            `;
+        } else {
+            document.getElementById('notification-preview').classList.add('hidden');
+        }
+    }
+
+    function previewNotification() {
+        updatePreview();
+        document.getElementById('notification-preview').classList.remove('hidden');
+    }
+
+    // Filter functions
+    function filterNotifications() {
+        const searchTerm = document.getElementById('notifications-search').value.toLowerCase();
+        const statusFilter = document.getElementById('notifications-status').value;
+        
+        const filtered = allNotifications.filter(notification => {
+            // Search filter
+            if (searchTerm) {
+                const searchableText = [
+                    notification.title || '',
+                    notification.content || '',
+                    notification.type || ''
+                ].join(' ').toLowerCase();
+                
+                if (!searchableText.includes(searchTerm)) {
+                    return false;
+                }
+            }
+            
+            // Status filter
+            if (statusFilter && notification.status !== statusFilter) {
+                return false;
+            }
+            
+            return true;
+        });
+        
+        renderNotifications(filtered);
+    }
+
+    function filterTemplates() {
+        const typeFilter = document.getElementById('templates-type').value;
+        
+        const filtered = allTemplates.filter(template => {
+            if (typeFilter && template.type !== typeFilter) {
+                return false;
+            }
+            return true;
+        });
+        
+        renderTemplates(filtered);
+    }
+
+    // Format functions
+    function formatStatus(status) {
+        const statusMap = {
+            'draft': 'Draft',
+            'scheduled': 'Scheduled',
+            'sent': 'Sent'
+        };
+        return statusMap[status] || status;
+    }
+
+    function formatPriority(priority) {
+        const priorityMap = {
+            'high': 'High',
+            'medium': 'Medium',
+            'low': 'Low'
+        };
+        return priorityMap[priority] || priority;
+    }
+
+    function calculatePercentage(numerator, denominator) {
+        if (!denominator || denominator === 0) return 0;
+        return Math.round((numerator / denominator) * 100);
+    }
+
+    // Utility functions
+    function makeAuthenticatedRequest(url, options = {}) {
+        const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+        
+        if (!token) {
+            throw new Error('No authentication token available');
+        }
+
+        const defaultOptions = {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        };
+
+        return fetch(`http://localhost:3001${url}`, { ...defaultOptions, ...options })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            });
+    }
+
+    function createEmptyState(type, title, description, actions = '') {
+        return `
+            <div class="text-center py-12">
+                <div class="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-${type === 'templates' ? 'file-alt' : 'bell'} text-white/30 text-3xl"></i>
+                </div>
+                <h3 class="text-white text-xl font-semibold mb-2">${title}</h3>
+                <p class="text-white/60 mb-6 max-w-md mx-auto">${description}</p>
+                ${actions}
+            </div>
+        `;
+    }
+
+    function createErrorState(message, retry = null) {
+        return `
+            <div class="text-center py-12">
+                <div class="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-exclamation-triangle text-red-400 text-3xl"></i>
+                </div>
+                <h3 class="text-white text-xl font-semibold mb-2">Error Loading Data</h3>
+                <p class="text-white/60 mb-6 max-w-md mx-auto">${message}</p>
+                ${retry ? `<button onclick="${retry}" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg"><i class="fas fa-refresh mr-2"></i>Try Again</button>` : ''}
+            </div>
+        `;
+    }
+
+    function showToast(message, type = 'info') {
+        console.log(`[${type.toUpperCase()}] ${message}`);
+        
+        const toast = document.createElement('div');
+        toast.className = `fixed top-4 right-4 z-50 px-6 py-4 rounded-lg text-white ${
+            type === 'success' ? 'bg-green-500' : 
+            type === 'error' ? 'bg-red-500' : 
+            type === 'warning' ? 'bg-yellow-500' : 'bg-blue-500'
+        }`;
+        toast.textContent = message;
+        
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    function formatDate(dateString) {
+        if (!dateString) return 'N/A';
+        return new Date(dateString).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    // Make functions globally available
+    window.switchTab = switchTab;
+    window.openCreateModal = openCreateModal;
+    window.closeNotificationModal = closeNotificationModal;
+    window.openTemplateModal = openTemplateModal;
+    window.closeTemplateModal = closeTemplateModal;
+    window.refreshCurrentTab = loadAllData;
+    window.sendNotificationNow = sendNotificationNow;
+    window.deleteNotification = deleteNotification;
+    window.useTemplate = useTemplate;
+    window.toggleChannel = toggleChannel;
+    window.previewNotification = previewNotification;
+
+</script>
+
+</body>
+</html>

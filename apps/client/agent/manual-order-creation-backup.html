@@ -1,0 +1,3056 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual Order Creation - PSM Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Leaflet Map for location selection -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        .delivery-map {
+            height: 300px;
+            width: 100%;
+            border-radius: 8px;
+            border: 2px solid #e5e7eb;
+        }
+        .delivery-option {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .delivery-option:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .delivery-option.selected {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+        .pickup-site-option {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .pickup-site-option:hover {
+            background-color: #f3f4f6;
+        }
+        .pickup-site-option.selected {
+            background-color: #dbeafe;
+            border-color: #3b82f6;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-blue-600 text-white p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <button onclick="goBack()" class="text-white hover:text-gray-200">
+                    <i class="fas fa-arrow-left text-xl"></i>
+                </button>
+                <i class="fas fa-shopping-cart text-2xl"></i>
+                <h1 class="text-xl font-bold">Manual Order Creation</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <span id="siteName" class="text-sm opacity-75">Loading...</span>
+                <button onclick="logout()" class="bg-red-500 hover:bg-red-600 px-3 py-1 rounded text-sm">
+                    <i class="fas fa-sign-out-alt mr-1"></i> Logout
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mx-auto p-6">
+        <!-- Progress Steps -->
+        <div class="mb-8">
+            <div class="flex items-center justify-center space-x-4">
+                <div id="step1" class="flex items-center space-x-2 step active">
+                    <div class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">1</div>
+                    <span class="text-sm font-medium">Select Products</span>
+                </div>
+                <div class="w-16 h-1 bg-gray-300"></div>
+                <div id="step2" class="flex items-center space-x-2 step">
+                    <div class="w-8 h-8 bg-gray-300 text-gray-600 rounded-full flex items-center justify-center text-sm font-bold">2</div>
+                    <span class="text-sm font-medium text-gray-600">Customer Info</span>
+                </div>
+                <div class="w-16 h-1 bg-gray-300"></div>
+                <div id="step3" class="flex items-center space-x-2 step">
+                    <div class="w-8 h-8 bg-gray-300 text-gray-600 rounded-full flex items-center justify-center text-sm font-bold">3</div>
+                    <span class="text-sm font-medium text-gray-600">Payment & Receipt</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 1: Product Selection -->
+        <div id="productSelectionStep" class="step-content bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold mb-6">Select Products for Customer</h3>
+            
+            <!-- Search and Filter -->
+            <div class="mb-6">
+                <div class="flex flex-wrap gap-2 items-center mb-4">
+                    <button id="switchToPhysicalBtn" onclick="switchToPhysical()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg">
+                        <i class="fas fa-box mr-1"></i> Physical Products
+                    </button>
+                    <button id="switchToLocalBtn" onclick="switchToLocal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg">
+                        <i class="fas fa-store mr-1"></i> Local Market
+                    </button>
+                    <div class="flex-1 min-w-[200px]">
+                        <input type="text" id="productSearch" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Type to search products (min 2 chars)" onkeyup="handleProductSearch(this.value)">
+                    </div>
+                    <select id="categoryFilter" class="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">All Categories</option>
+                    </select>
+                    <select id="distanceFilter" class="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent hidden">
+                        <option value="">All Distances</option>
+                        <option value="3">Within 3 KM</option>
+                        <option value="5">Within 5 KM</option>
+                        <option value="10">Within 10 KM</option>
+                        <option value="15">Within 15 KM</option>
+                        <option value="25">Within 25 KM</option>
+                    </select>
+                    <button onclick="searchProducts()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    <button onclick="getUserLocation()" id="locationBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg hidden">
+                        <i class="fas fa-location-arrow mr-1"></i> Get Location
+                    </button>
+                </div>
+            </div>
+
+            <!-- Selected Products Cart/Menu -->
+            <div class="mb-6">
+                <h4 class="font-semibold mb-4"><span id="cartTitle">Shopping Cart</span> (<span id="cartCount">0</span>)</h4>
+                <div id="selectedProducts" class="space-y-2 max-h-40 overflow-y-auto">
+                    <p class="text-gray-500 text-sm">No products selected yet</p>
+                </div>
+                <div class="mt-4 p-4 bg-gray-50 rounded-lg">
+                    <div class="flex justify-between items-center">
+                        <span class="font-semibold">Total Amount:</span>
+                        <span id="totalAmount" class="font-bold text-lg text-blue-600">FRW 0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Available Products -->
+            <div id="productsContainer">
+                <div class="flex justify-between items-center mb-4">
+                    <h4 class="font-semibold">Available Products</h4>
+                    <div id="paginationInfo" class="text-sm text-gray-600"></div>
+                </div>
+                
+                <div id="productsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4 min-h-96">
+                    <!-- Products will be loaded here -->
+                </div>
+                
+                <!-- Pagination Controls -->
+                <div id="paginationControls" class="flex justify-center items-center space-x-1 mt-6" style="display: none;">
+                    <!-- Pagination buttons will be inserted here -->
+                </div>
+            </div>
+
+            <div class="mt-6 flex justify-end">
+                <button onclick="nextStep()" id="proceedToCustomerInfo" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg" disabled>
+                    Next: Customer Information <i class="fas fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 2: Customer Information -->
+        <div id="customerInfoStep" class="step-content bg-white rounded-lg shadow p-6 hidden">
+            <h3 class="text-lg font-semibold mb-6">Customer Information & Delivery Details</h3>
+            
+            <!-- Customer Basic Info -->
+            <div class="mb-8">
+                <h4 class="font-medium mb-4 text-gray-800">Customer Details</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Customer Name *</label>
+                        <input type="text" id="customerName" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter customer's full name">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number *</label>
+                        <input type="tel" id="customerPhone" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="+250 XXX XXX XXX">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Email (Optional)</label>
+                        <input type="email" id="customerEmail" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="customer@example.com">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">National ID (Optional)</label>
+                        <input type="text" id="customerNationalId" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter national ID">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Delivery Method Selection -->
+            <div class="mb-8">
+                <h4 class="font-medium mb-4 text-gray-800">Delivery Method</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Pickup Delivery Option -->
+                    <div class="delivery-option border-2 border-gray-200 rounded-lg p-4" onclick="selectDeliveryMethod('pickup')" id="pickupOption">
+                        <div class="flex items-center mb-3">
+                            <div class="w-6 h-6 border-2 border-gray-300 rounded-full mr-3 flex items-center justify-center" id="pickupRadio">
+                                <div class="w-3 h-3 bg-blue-600 rounded-full hidden" id="pickupRadioFill"></div>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-store text-green-600 text-xl mr-2"></i>
+                                <h5 class="font-semibold text-gray-800">Pickup Delivery</h5>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-2">Customer picks up from a pickup site</p>
+                        <div class="flex items-center text-green-600 font-semibold">
+                            <i class="fas fa-check-circle mr-1"></i>
+                            <span>FREE</span>
+                        </div>
+                    </div>
+
+                    <!-- Home Delivery Option -->
+                    <div class="delivery-option border-2 border-gray-200 rounded-lg p-4" onclick="selectDeliveryMethod('home')" id="homeOption">
+                        <div class="flex items-center mb-3">
+                            <div class="w-6 h-6 border-2 border-gray-300 rounded-full mr-3 flex items-center justify-center" id="homeRadio">
+                                <div class="w-3 h-3 bg-blue-600 rounded-full hidden" id="homeRadioFill"></div>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-home text-blue-600 text-xl mr-2"></i>
+                                <h5 class="font-semibold text-gray-800">Home Delivery</h5>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-2">Direct delivery to customer's location</p>
+                        <div class="flex items-center text-blue-600 font-semibold">
+                            <i class="fas fa-calculator mr-1"></i>
+                            <span id="deliveryFeeText">6% of order value</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pickup Site Selection (shown when pickup delivery is selected) -->
+            <div id="pickupSiteSection" class="mb-8 hidden">
+                <h4 class="font-medium mb-4 text-gray-800">Select Pickup Site</h4>
+                <div class="space-y-3" id="pickupSitesList">
+                    <!-- Pickup sites will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Home Delivery Details (shown when home delivery is selected) -->
+            <div id="homeDeliverySection" class="mb-8 hidden">
+                <h4 class="font-medium mb-4 text-gray-800">Delivery Location</h4>
+                
+                <!-- Address Input -->
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Delivery Address *</label>
+                    <textarea id="customerAddress" rows="3" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter detailed delivery address"></textarea>
+                </div>
+
+                <!-- Map for Location Selection -->
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Select Location on Map</label>
+                    <div id="deliveryMap" class="delivery-map"></div>
+                    <p class="text-xs text-gray-500 mt-2">Click on the map to set the exact delivery location</p>
+                </div>
+
+                <!-- Selected Coordinates Display -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Latitude</label>
+                        <input type="text" id="deliveryLat" class="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-50" readonly placeholder="Click on map to set">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Longitude</label>
+                        <input type="text" id="deliveryLng" class="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-50" readonly placeholder="Click on map to set">
+                    </div>
+                </div>
+
+                <!-- Delivery Fee Display -->
+                <div class="mt-4 p-4 bg-blue-50 rounded-lg">
+                    <div class="flex items-center justify-between">
+                        <span class="font-medium text-gray-800">Delivery Fee:</span>
+                        <span id="calculatedDeliveryFee" class="font-bold text-blue-600">FRW 0</span>
+                    </div>
+                    <p class="text-xs text-gray-600 mt-1">Fee is 6% of order value (configurable by admin)</p>
+                </div>
+            </div>
+
+            <div class="flex justify-between">
+                <button onclick="previousStep()" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg">
+                    <i class="fas fa-arrow-left mr-2"></i> Previous
+                </button>
+                <button onclick="nextStep()" id="proceedToPayment" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg">
+                    Next: Payment & Receipt <i class="fas fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 3: Payment & Receipt -->
+        <div id="paymentStep" class="step-content bg-white rounded-lg shadow p-6 hidden">
+            <h3 class="text-lg font-semibold mb-6">Payment & Receipt Generation</h3>
+            
+            <!-- Order Summary -->
+            <div class="mb-6">
+                <h4 class="font-semibold mb-4">Order Summary</h4>
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <div class="space-y-2">
+                        <div class="flex justify-between">
+                            <span>Customer:</span>
+                            <span id="summaryCustomerName" class="font-medium"></span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Phone:</span>
+                            <span id="summaryCustomerPhone" class="font-medium"></span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Items:</span>
+                            <span id="summaryItemCount" class="font-medium"></span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Delivery Method:</span>
+                            <span id="summaryDeliveryMethod" class="font-medium"></span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Subtotal:</span>
+                            <span id="summarySubtotal" class="font-medium"></span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>PSM Commission (25%):</span>
+                            <span id="summaryCommission" class="font-medium"></span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Delivery Fee:</span>
+                            <span id="summaryDeliveryFee" class="font-medium">$0.00</span>
+                        </div>
+                        <hr class="my-2">
+                        <div class="flex justify-between text-lg font-bold">
+                            <span>Total:</span>
+                            <span id="summaryTotal" class="text-blue-600"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Proof Upload -->
+            <div class="mb-6">
+                <h4 class="font-semibold mb-4">Payment Proof</h4>
+                <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                    <input type="file" id="paymentProof" accept="image/*" class="hidden" onchange="handlePaymentProofUpload(event)">
+                    <div id="uploadArea" onclick="document.getElementById('paymentProof').click()" class="cursor-pointer">
+                        <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
+                        <p class="text-gray-600">Click to upload payment proof screenshot</p>
+                        <p class="text-sm text-gray-500">PNG, JPG up to 10MB</p>
+                    </div>
+                    <div id="uploadedFile" class="hidden">
+                        <i class="fas fa-check-circle text-green-500 text-2xl mb-2"></i>
+                        <p class="text-green-600 font-medium">Payment proof uploaded successfully</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notes -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Order Notes (Optional)</label>
+                <textarea id="orderNotes" rows="3" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Any special instructions or notes..."></textarea>
+            </div>
+
+            <div class="flex justify-between">
+                <button onclick="previousStep()" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg">
+                    <i class="fas fa-arrow-left mr-2"></i> Previous
+                </button>
+                <button onclick="createOrder()" id="createOrderBtn" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg" disabled>
+                    <i class="fas fa-receipt mr-2"></i> Create Order & Generate Receipt
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-8 max-w-md w-full mx-4">
+            <div class="text-center">
+                <i class="fas fa-check-circle text-green-500 text-6xl mb-4"></i>
+                <h3 class="text-xl font-bold mb-2">Order Created Successfully!</h3>
+                <p class="text-sm text-blue-600 mb-4">✨ Enhanced PDF Receipt Generated</p>
+                <p class="text-gray-600 mb-6">Order number: <span id="orderNumber" class="font-mono font-bold"></span></p>
+                <div class="space-y-3">
+                    <button onclick="downloadReceipt()" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg">
+                        <i class="fas fa-download mr-2"></i> Download Enhanced PDF Receipt
+                    </button>
+                    <button onclick="regenerateAndDownload()" class="w-full bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg">
+                        <i class="fas fa-sync-alt mr-2"></i> Regenerate Receipt
+                    </button>
+                    <button onclick="printReceipt()" class="w-full bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg">
+                        <i class="fas fa-print mr-2"></i> Print Receipt
+                    </button>
+                    <button onclick="createAnotherOrder()" class="w-full bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg">
+                        <i class="fas fa-plus mr-2"></i> Create Another Order
+                    </button>
+                    <button onclick="goToDashboard()" class="w-full bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg">
+                        <i class="fas fa-home mr-2"></i> Back to Dashboard
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-8 text-center">
+            <i class="fas fa-spinner fa-spin text-4xl text-blue-600 mb-4"></i>
+            <p class="text-lg font-medium mb-2">Creating order and generating enhanced PDF receipt...</p>
+            <p class="text-sm text-gray-600">✨ Professional PDF with QR code verification</p>
+        </div>
+    </div>
+
+    <!-- Product Detail Modal -->
+    <div id="productDetailModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg max-w-4xl w-full mx-4 max-h-screen overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold">Product Details</h3>
+                    <button onclick="closeProductDetail()" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times text-2xl"></i>
+                    </button>
+                </div>
+                
+                <div id="productDetailContent" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Product details will be loaded here -->
+                </div>
+                
+                <div class="mt-6 flex justify-end space-x-4">
+                    <button onclick="closeProductDetail()" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg">
+                        Close
+                    </button>
+                    <button onclick="addProductFromDetail()" id="addFromDetailBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg">
+                        <i class="fas fa-plus mr-2"></i> Add to Cart
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Message Container -->
+    <div id="messageContainer" class="fixed top-4 right-4 z-50"></div>
+
+    <script>
+        let currentStep = 1;
+        let selectedProducts = [];
+        let categories = [];
+        let products = [];
+        let currentOrder = null;
+        let currentProductDetail = null;
+        let currentProductType = 'physical'; // 'physical' or 'local'
+        let userLocation = null; // {latitude, longitude}
+        let pickupSiteLocation = null; // PSM location for local market
+        
+        // Pagination variables
+        let currentPage = 1;
+        let itemsPerPage = 24; // 24 products per page (4x6 grid)
+        let totalProducts = 0;
+        let allProducts = []; // Store all loaded products for client-side pagination
+        
+        // Add retry counters to prevent infinite loops
+        let downloadRetryCount = 0;
+        let printRetryCount = 0;
+        let regenerateRetryCount = 0;
+        const MAX_RETRIES = 3;
+        
+        // Function to reset all retry counters
+        function resetRetryCounters() {
+            downloadRetryCount = 0;
+            printRetryCount = 0;
+            regenerateRetryCount = 0;
+            console.log('Retry counters reset');
+        }
+
+        // Image handling functions
+        function createPlaceholderImage(productName) {
+            // Create a gradient-based placeholder with product initial
+            const initial = productName ? productName.charAt(0).toUpperCase() : 'P';
+            const colors = [
+                'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+                'linear-gradient(135deg, #fa709a 0%, #fee140 100%)'
+            ];
+            const colorIndex = productName ? productName.length % colors.length : 0;
+            
+            return `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="150" viewBox="0 0 200 150"><defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:%23667eea;stop-opacity:1" /><stop offset="100%" style="stop-color:%23764ba2;stop-opacity:1" /></linearGradient></defs><rect width="200" height="150" fill="url(%23grad)"/><text x="100" y="85" font-family="Arial,sans-serif" font-size="48" font-weight="bold" text-anchor="middle" fill="white">${initial}</text></svg>`;
+        }
+
+        function handleImageError(imgElement, productName) {
+            if (imgElement.src.includes('placeholder')) return; // Prevent infinite loop
+            
+            console.log('[IMAGE] Failed to load:', imgElement.src, 'for product:', productName);
+            
+            // Try alternative image sources
+            const originalSrc = imgElement.src;
+            const alternatives = [
+                originalSrc.replace('/images/', '/uploads/'),
+                originalSrc.replace('/uploads/', '/images/'),
+                originalSrc.replace('/images/products/', '/uploads/products/'),
+                originalSrc.replace('/uploads/products/', '/images/products/'),
+                createPlaceholderImage(productName)
+            ];
+            
+            let attemptIndex = (imgElement.dataset.attemptIndex || 0);
+            attemptIndex++;
+            
+            if (attemptIndex < alternatives.length) {
+                imgElement.dataset.attemptIndex = attemptIndex;
+                imgElement.onerror = () => handleImageError(imgElement, productName);
+                imgElement.src = alternatives[attemptIndex];
+                console.log('[IMAGE] Trying alternative:', alternatives[attemptIndex]);
+            } else {
+                // All alternatives failed, use final placeholder
+                imgElement.onerror = null;
+                imgElement.src = createPlaceholderImage(productName);
+                console.log('[IMAGE] Using final placeholder for:', productName);
+            }
+        }
+
+        // Delivery method variables
+        let selectedDeliveryMethod = 'pickup'; // 'pickup' or 'home'
+        let selectedPickupSite = null;
+        let deliveryLocation = null; // {lat, lng}
+        let deliveryMap = null;
+        let deliveryMarker = null;
+        let pickupSites = [];
+        let deliveryFeeRate = 0.06; // 6% default rate (will be loaded from admin settings)
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('[INIT] Manual Order Creation page loaded');
+            console.log('[INIT] Current URL:', window.location.href);
+            console.log('[INIT] Local storage token exists:', !!localStorage.getItem('token'));
+            
+            // Check authentication first
+            const token = localStorage.getItem('token');
+            if (!token) {
+                console.log('[AUTH] No token found, redirecting to login...');
+                window.location.href = '/auth/auth-agent.html';
+                return;
+            }
+            
+            // If authenticated, load everything
+            loadCategories();
+            loadProducts();
+            loadPickupSites();
+            showStep(1); // Show first step by default
+            updateProductTypeUI();
+            
+            // Initialize delivery method (default to pickup)
+            selectDeliveryMethod('pickup');
+            
+            // Add debugging info
+            showMessage('Manual Order Creation system loaded with enhanced receipts', 'info');
+        });
+
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/auth/auth-agent.html';
+                return;
+            }
+        }
+
+        async function loadCategories() {
+            try {
+                const response = await 
+                try {
+                    const response = await fetch('/api/categories');
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    // Continue with successful response
+                    const data = await response.json();
+                    return data;
+                } catch (error) {
+                    console.error('API call failed:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+                pickupSites = [];
+                renderPickupSites(); // Render empty state
+            }
+        }
+
+        function renderPickupSites() {
+            const container = document.getElementById('pickupSitesList');
+            if (!container) return;
+            
+            if (pickupSites.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center">No pickup sites available</p>';
+                return;
+            }
+            
+            container.innerHTML = pickupSites.map(site => `
+                <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer" onclick="selectPickupSite(${site.id})">
+                    <h4 class="font-semibold text-gray-900">${site.site_name}</h4>
+                    <p class="text-sm text-gray-600">${site.address}</p>
+                    <p class="text-sm text-gray-500">${site.phone}</p>
+                </div>
+            `).join('');
+        }
+
+        function selectPickupSite(siteId) {
+            selectedPickupSite = pickupSites.find(site => site.id === siteId);
+            if (selectedPickupSite) {
+                showNotification(`Selected pickup site: ${selectedPickupSite.site_name}`, 'success');
+            }
+        }
+
+    </script>
+</body>
+</html>          );
+                }
+                    showNotification('Operation failed. Please try again.', 'error');
+                    throw error;
+                };
+                if (response.ok) {
+                    const data = await response.json();
+                    categories = data.categories || [];
+                    populateCategoryFilter();
+                }
+            } catch (error) {
+                console.error('Failed to load categories:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+                pickupSites = [];
+                renderPickupSites(); // Render empty state
+            }
+        }
+
+        function renderPickupSites() {
+            const container = document.getElementById('pickupSitesList');
+            if (!container) return;
+            
+            if (pickupSites.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center">No pickup sites available</p>';
+                return;
+            }
+            
+            container.innerHTML = pickupSites.map(site => `
+                <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer" onclick="selectPickupSite(${site.id})">
+                    <h4 class="font-semibold text-gray-900">${site.site_name}</h4>
+                    <p class="text-sm text-gray-600">${site.address}</p>
+                    <p class="text-sm text-gray-500">${site.phone}</p>
+                </div>
+            `).join('');
+        }
+
+        function selectPickupSite(siteId) {
+            selectedPickupSite = pickupSites.find(site => site.id === siteId);
+            if (selectedPickupSite) {
+                showNotification(`Selected pickup site: ${selectedPickupSite.site_name}`, 'success');
+            }
+        }
+
+    </script>
+</body>
+</html>          );
+                }
+            }
+        }
+
+        function populateCategoryFilter() {
+            const select = document.getElementById('categoryFilter');
+            categories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category.id;
+                option.textContent = category.name;
+                select.appendChild(option);
+            });
+        }
+
+        async function loadProducts(resetPagination = true) {
+            try {
+                console.log(`[PRODUCTS] Loading ${currentProductType} products...`);
+                showMessage(`Loading ${currentProductType} products...`, 'info');
+                
+                if (resetPagination) {
+                    currentPage = 1;
+                    allProducts = [];
+                }
+                
+                let apiUrl;
+                let headers = {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                };
+                
+                if (currentProductType === 'local') {
+                    apiUrl = '/api/grocery/products?limit=200';
+                    
+                    // Add location parameters for local market if available
+                    if (userLocation) {
+                        apiUrl += `&lat=${userLocation.latitude}&lng=${userLocation.longitude}`;
+                        console.log('[PRODUCTS] 📍 Using location:', userLocation);
+                        
+                        // Add distance filter if selected
+                        const distanceFilter = document.getElementById('distanceFilter').value;
+                        if (distanceFilter) {
+                            apiUrl += `&radius=${distanceFilter}`;
+                            console.log('[PRODUCTS] 📏 Distance filter:', distanceFilter, 'km');
+                        }
+                    } else {
+                        // Use default location for local products if location not available
+                        const defaultLat = -1.9441;
+                        const defaultLng = 30.0619;
+                        apiUrl += `&lat=${defaultLat}&lng=${defaultLng}`;
+                        console.log('[PRODUCTS] 📍 Using default location (Kigali)');
+                    }
+                } else {
+                    // Load more products for physical products - increase limit
+                    apiUrl = '/api/products?limit=250&offset=0';
+                }
+                
+                console.log('[PRODUCTS] 🔄 API URL:', apiUrl);
+                
+                const response = await fetch(apiUrl, { headers });
+                console.log('[PRODUCTS] 📊 Response status:', response.status);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('[PRODUCTS] 📦 Response data structure:', {
+                        hasProducts: !!data.products,
+                        hasData: !!data.data,
+                        productsCount: data.products?.length || 0,
+                        dataCount: data.data?.length || 0
+                    });
+                    
+                    // Handle different response structures
+                    if (currentProductType === 'local') {
+                        allProducts = data.products || [];
+                        totalProducts = allProducts.length;
+                        console.log('[PRODUCTS] 🥬 Local products loaded:', allProducts.length);
+                        
+                        if (allProducts.length === 0) {
+                            console.log('[PRODUCTS] ⚠️ No local products found. Full response:', data);
+                        }
+                    } else {
+                        allProducts = data.products || data.data || [];
+                        totalProducts = allProducts.length;
+                        console.log('[PRODUCTS] 📦 Physical products loaded:', allProducts.length);
+                    }
+                    
+                    // Store original products list for searching
+                    products = [...allProducts];
+                    
+                    // Display with pagination
+                    displayProductsWithPagination();
+                    updatePaginationInfo();
+                    
+                    const message = `✅ Loaded ${totalProducts} ${currentProductType} products`;
+                    showMessage(message, 'success');
+                    console.log('[PRODUCTS]', message);
+                    
+                } else {
+                    const errorText = await response.text();
+                    console.error('[PRODUCTS] ❌ API Error:', response.status, errorText);
+                
+                // Enhanced error reporting
+                if (response.status, errorText) {
+                    const errorDetails = {
+                        message: response.status, errorText.message || 'Unknown error',
+                        stack: response.status, errorText.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        response.status, errorText.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
+            } catch (error) {
+                console.error('[PRODUCTS] ❌ Load failed:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+                pickupSites = [];
+                renderPickupSites(); // Render empty state
+            }
+        }
+
+        function renderPickupSites() {
+            const container = document.getElementById('pickupSitesList');
+            if (!container) return;
+            
+            if (pickupSites.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center">No pickup sites available</p>';
+                return;
+            }
+            
+            container.innerHTML = pickupSites.map(site => `
+                <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer" onclick="selectPickupSite(${site.id})">
+                    <h4 class="font-semibold text-gray-900">${site.site_name}</h4>
+                    <p class="text-sm text-gray-600">${site.address}</p>
+                    <p class="text-sm text-gray-500">${site.phone}</p>
+                </div>
+            `).join('');
+        }
+
+        function selectPickupSite(siteId) {
+            selectedPickupSite = pickupSites.find(site => site.id === siteId);
+            if (selectedPickupSite) {
+                showNotification(`Selected pickup site: ${selectedPickupSite.site_name}`, 'success');
+            }
+        }
+
+    </script>
+</body>
+</html>          );
+                }
+                const errorMsg = `Failed to load ${currentProductType} products: ${error.message}`;
+                document.getElementById('productsList').innerHTML = `
+                    <div class="col-span-full text-center py-8">
+                        <div class="text-red-500 mb-4">
+                            <i class="fas fa-exclamation-triangle text-4xl mb-2"></i>
+                            <p class="font-semibold">Failed to Load Products</p>
+                        </div>
+                        <p class="text-gray-600 mb-4">${error.message}</p>
+                        <button onclick="loadProducts()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+                            <i class="fas fa-redo mr-2"></i>Try Again
+                        </button>
+                    </div>
+                `;
+                showMessage(errorMsg, 'error');
+            }
+        }
+
+        function switchToPhysical() {
+            currentProductType = 'physical';
+            updateProductTypeUI();
+            loadProducts();
+        }
+
+        function switchToLocal() {
+            currentProductType = 'local';
+            updateProductTypeUI();
+            if (!userLocation) {
+                showMessage('Getting your location for local market products...', 'info');
+                getUserLocation();
+            } else {
+                loadProducts();
+            }
+        }
+
+        function updateProductTypeUI() {
+            const physicalBtn = document.getElementById('switchToPhysicalBtn');
+            const localBtn = document.getElementById('switchToLocalBtn');
+            const distanceFilter = document.getElementById('distanceFilter');
+            const locationBtn = document.getElementById('locationBtn');
+            const cartTitle = document.getElementById('cartTitle');
+            
+            if (currentProductType === 'physical') {
+                physicalBtn.className = 'bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg';
+                localBtn.className = 'bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg';
+                distanceFilter.classList.add('hidden');
+                locationBtn.classList.add('hidden');
+                cartTitle.textContent = 'Shopping Cart';
+            } else {
+                physicalBtn.className = 'bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg';
+                localBtn.className = 'bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg';
+                distanceFilter.classList.remove('hidden');
+                locationBtn.classList.remove('hidden');
+                cartTitle.textContent = 'Order Menu';
+            }
+        }
+
+        async function getUserLocation() {
+            try {
+                if (!navigator.geolocation) {
+                    throw new Error('Geolocation is not supported by this browser');
+                }
+                
+                showMessage('Getting your location...', 'info');
+                
+                const position = await new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject, {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 300000 // 5 minutes
+                    });
+                });
+                
+                userLocation = {
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude
+                };
+                
+                console.log('User location obtained:', userLocation);
+                showMessage('Location obtained successfully', 'success');
+                
+                // Update location button text
+                const locationBtn = document.getElementById('locationBtn');
+                locationBtn.innerHTML = '<i class="fas fa-check mr-1"></i> Location Set';
+                locationBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
+                locationBtn.classList.add('bg-green-500', 'cursor-default');
+                
+                // Reload products with location
+                if (currentProductType === 'local') {
+                    loadProducts();
+                }
+                
+            } catch (error) {
+                console.error('Error getting location:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+                pickupSites = [];
+                renderPickupSites(); // Render empty state
+            }
+        }
+
+        function renderPickupSites() {
+            const container = document.getElementById('pickupSitesList');
+            if (!container) return;
+            
+            if (pickupSites.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center">No pickup sites available</p>';
+                return;
+            }
+            
+            container.innerHTML = pickupSites.map(site => `
+                <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer" onclick="selectPickupSite(${site.id})">
+                    <h4 class="font-semibold text-gray-900">${site.site_name}</h4>
+                    <p class="text-sm text-gray-600">${site.address}</p>
+                    <p class="text-sm text-gray-500">${site.phone}</p>
+                </div>
+            `).join('');
+        }
+
+        function selectPickupSite(siteId) {
+            selectedPickupSite = pickupSites.find(site => site.id === siteId);
+            if (selectedPickupSite) {
+                showNotification(`Selected pickup site: ${selectedPickupSite.site_name}`, 'success');
+            }
+        }
+
+    </script>
+</body>
+</html>          );
+                }
+                showMessage('Failed to get location: ' + error.message, 'error');
+                
+                // For testing purposes, set a default location (Kigali city center)
+                userLocation = {
+                    latitude: -1.9441,
+                    longitude: 30.0619
+                };
+                showMessage('Using default location (Kigali)', 'warning');
+                
+                if (currentProductType === 'local') {
+                    loadProducts();
+                }
+            }
+        }
+
+        function displayProducts(productsToShow) {
+            const container = document.getElementById('productsList');
+            
+            if (productsToShow.length === 0) {
+                const locationHint = currentProductType === 'local' && !userLocation ? 
+                    '<br><small class="text-blue-600">Try clicking "Get Location" to find nearby products</small>' : '';
+                container.innerHTML = `<p class="text-gray-500 col-span-full text-center">No ${currentProductType} products found${locationHint}</p>`;
+                return;
+            }
+
+            container.innerHTML = productsToShow.map(product => {
+                // Handle different field names between physical and local market products
+                let productName, productPrice, productDescription, productId, stockQuantity, category, seller;
+                
+                if (currentProductType === 'local') {
+                    // Grocery/Local market product fields
+                    productName = product.product_name || 'Unnamed Product';
+                    productPrice = product.unit_price || 0;
+                    productDescription = product.product_description || 'No description available';
+                    productId = product.id;
+                    stockQuantity = product.available_stock || 0;
+                    category = product.category_name || 'Uncategorized';
+                    seller = product.seller_name || 'Unknown Seller';
+                } else {
+                    // Physical product fields
+                    productName = product.name || product.product_name || 'Unnamed Product';
+                    productPrice = product.price || 0;
+                    productDescription = product.description || product.product_description || 'No description available';
+                    productId = product.id;
+                    stockQuantity = parseFloat(product.stock_quantity || product.quantity_available || 0);
+                    category = product.category_name || product.category || 'Uncategorized';
+                    seller = product.seller_name || product.store_name || 'Unknown Seller';
+                    unitType = product.unit || 'pieces';
+                }
+                
+                // Skip products that are completely out of stock
+                if (stockQuantity <= 0) {
+                    console.log(`[PRODUCTS] Skipping out-of-stock product: ${productName}`);
+                    return '';
+                }
+                
+                // Handle image URLs with comprehensive fallback and error handling
+                let imageUrl = createPlaceholderImage(productName);
+                const imageFields = currentProductType === 'local' 
+                    ? ['main_image', 'image_url', 'image'] 
+                    : ['main_image', 'image_url', 'product_image_url', 'image', 'photo_url'];
+                
+                for (const field of imageFields) {
+                    if (product[field] && product[field].trim() !== '' && product[field] !== 'null') {
+                        const img = product[field].trim();
+                        if (img.startsWith('http')) {
+                            imageUrl = img;
+                        } else if (img.startsWith('/')) {
+                            // Handle both /images/products/ and /uploads/ paths
+                            imageUrl = img;
+                        } else {
+                            // Try both possible upload paths
+                            imageUrl = img.includes('uploads') ? `/${img}` : `/uploads/${img}`;
+                        }
+                        break;
+                    }
+                }
+                
+                // Distance info for local market
+                let distanceInfo = '';
+                if (currentProductType === 'local' && product.distance_km) {
+                    distanceInfo = `<span class="text-xs text-green-600">${parseFloat(product.distance_km).toFixed(1)} km away</span>`;
+                }
+                
+                // Button text based on product type
+                const addButtonText = currentProductType === 'local' ? 'Add to Menu' : 'Add to Cart';
+                
+                return `
+                    <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div class="aspect-w-16 aspect-h-9 mb-3">
+                            <img src="${imageUrl}" alt="${productName}" class="w-full h-32 object-cover rounded" 
+                                 onerror="handleImageError(this, '${productName}')"
+                                 loading="lazy">
+                        </div>
+                        <h5 class="font-semibold text-sm mb-2" title="${productName}">
+                            ${productName.length > 30 ? productName.substring(0, 30) + '...' : productName}
+                        </h5>
+                        <p class="text-xs text-gray-600 mb-2 line-clamp-2" title="${productDescription}">
+                            ${productDescription.length > 60 ? productDescription.substring(0, 60) + '...' : productDescription}
+                        </p>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="font-bold text-blue-600">FRW ${parseFloat(productPrice).toFixed(0)}${currentProductType === 'local' ? '/' + unitType : ''}</span>
+                            <span class="text-xs text-gray-500">Stock: ${stockQuantity % 1 === 0 ? Math.floor(stockQuantity) : stockQuantity.toFixed(2)} ${unitType}</span>
+                        </div>
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-xs text-gray-600">${category}</span>
+                            ${distanceInfo}
+                        </div>
+                        <div class="text-xs text-gray-500 mb-3">Seller: ${seller}</div>
+                        ${currentProductType === 'local' && product.minimum_order > 1 ? 
+                            `<div class="text-xs text-blue-600 mb-2">Min order: ${product.minimum_order} ${unitType}</div>` : ''
+                        }
+                        <div class="flex space-x-2">
+                            <button onclick="viewProductDetail(${productId})" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded text-xs">
+                                <i class="fas fa-eye"></i> Details
+                            </button>
+                            <button onclick="addToCart(${productId})" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs ${stockQuantity <= 0 ? 'opacity-50 cursor-not-allowed' : ''}" ${stockQuantity <= 0 ? 'disabled' : ''}>
+                                <i class="fas fa-plus"></i> ${addButtonText}
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Pagination functions
+        function displayProductsWithPagination() {
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const productsToShow = allProducts.slice(startIndex, endIndex);
+            
+            console.log(`[PAGINATION] Page ${currentPage}: Showing ${startIndex + 1}-${Math.min(endIndex, allProducts.length)} of ${allProducts.length}`);
+            
+            displayProducts(productsToShow);
+            updatePaginationControls();
+        }
+
+        function updatePaginationInfo() {
+            const paginationInfo = document.getElementById('paginationInfo');
+            if (paginationInfo) {
+                const startItem = ((currentPage - 1) * itemsPerPage) + 1;
+                const endItem = Math.min(currentPage * itemsPerPage, allProducts.length);
+                paginationInfo.textContent = `Showing ${startItem}-${endItem} of ${allProducts.length} products`;
+            }
+        }
+
+        function updatePaginationControls() {
+            const totalPages = Math.ceil(allProducts.length / itemsPerPage);
+            const paginationContainer = document.getElementById('paginationControls');
+            
+            if (!paginationContainer || totalPages <= 1) {
+                if (paginationContainer) paginationContainer.style.display = 'none';
+                return;
+            }
+            
+            paginationContainer.style.display = 'flex';
+            
+            let paginationHTML = '';
+            
+            // Previous button
+            paginationHTML += `
+                <button onclick="changePage(${currentPage - 1})" 
+                        class="px-3 py-2 text-sm border border-gray-300 rounded-l-md hover:bg-gray-50 ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}"
+                        ${currentPage === 1 ? 'disabled' : ''}>
+                    <i class="fas fa-chevron-left"></i> Previous
+                </button>
+            `;
+            
+            // Page numbers (show max 5 pages)
+            let startPage = Math.max(1, currentPage - 2);
+            let endPage = Math.min(totalPages, startPage + 4);
+            
+            if (endPage - startPage < 4) {
+                startPage = Math.max(1, endPage - 4);
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                paginationHTML += `
+                    <button onclick="changePage(${i})" 
+                            class="px-3 py-2 text-sm border-t border-b border-r border-gray-300 hover:bg-gray-50 ${i === currentPage ? 'bg-blue-600 text-white hover:bg-blue-700' : ''}">
+                        ${i}
+                    </button>
+                `;
+            }
+            
+            // Next button
+            paginationHTML += `
+                <button onclick="changePage(${currentPage + 1})" 
+                        class="px-3 py-2 text-sm border border-gray-300 rounded-r-md hover:bg-gray-50 ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''}"
+                        ${currentPage === totalPages ? 'disabled' : ''}>
+                    Next <i class="fas fa-chevron-right"></i>
+                </button>
+            `;
+            
+            paginationContainer.innerHTML = paginationHTML;
+        }
+
+        function changePage(newPage) {
+            const totalPages = Math.ceil(allProducts.length / itemsPerPage);
+            
+            if (newPage < 1 || newPage > totalPages) return;
+            
+            currentPage = newPage;
+            displayProductsWithPagination();
+            updatePaginationInfo();
+            
+            // Scroll to top of products list
+            document.getElementById('productsContainer').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function searchProducts() {
+            const searchTerm = document.getElementById('productSearch').value.toLowerCase();
+            const categoryId = document.getElementById('categoryFilter').value;
+            const distanceFilter = document.getElementById('distanceFilter').value;
+            
+            let filteredProducts = products.filter(product => {
+                const name = (product.name || product.product_name || product.title || '').toLowerCase();
+                const description = (product.description || product.product_description || product.details || '').toLowerCase();
+                const seller = (product.seller_name || product.store_name || product.vendor_name || '').toLowerCase();
+                const category = product.category_name || product.grocery_category || product.category || '';
+                
+                // Search term matching
+                const matchesSearch = !searchTerm || 
+                    name.includes(searchTerm) || 
+                    description.includes(searchTerm) ||
+                    seller.includes(searchTerm);
+                
+                // Category filtering
+                const matchesCategory = !categoryId || 
+                    product.category_id == categoryId ||
+                    category === categoryId;
+                
+                // Distance filtering for local market products
+                let matchesDistance = true;
+                if (currentProductType === 'local' && distanceFilter && product.distance_km) {
+                    matchesDistance = parseFloat(product.distance_km) <= parseFloat(distanceFilter);
+                }
+                
+                return matchesSearch && matchesCategory && matchesDistance;
+            });
+            
+            // Sort by distance if local market and has location
+            if (currentProductType === 'local' && userLocation) {
+                filteredProducts.sort((a, b) => {
+                    const distA = parseFloat(a.distance_km) || 999;
+                    const distB = parseFloat(b.distance_km) || 999;
+                    return distA - distB;
+                });
+            }
+            
+            // Update the products list for pagination
+            allProducts = filteredProducts;
+            currentPage = 1; // Reset to first page
+            totalProducts = filteredProducts.length;
+            
+            displayProductsWithPagination();
+            updatePaginationInfo();
+            showMessage(`Found ${filteredProducts.length} products`, 'info');
+        }
+
+        async function viewProductDetail(productId) {
+            try {
+                showMessage('Loading product details...', 'info');
+                
+                // Determine API endpoint based on product type
+                let apiUrl = `/api/products/${productId}`;
+                if (currentProductType === 'local') {
+                    apiUrl = `/api/grocery/product/${productId}`;
+                    
+                    // Add location parameters if available
+                    if (userLocation) {
+                        apiUrl += `?lat=${userLocation.latitude}&lng=${userLocation.longitude}`;
+                    }
+                }
+                
+                const headers = {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                };
+                
+                console.log('Fetching product details from:', apiUrl);
+                
+                const response = await fetch(apiUrl, { headers });
+                if (response.ok) {
+                    const data = await response.json();
+                    currentProductDetail = data.product || data.data;
+                    
+                    console.log('Product detail response:', data);
+                    console.log('Current product detail:', currentProductDetail);
+                    
+                    if (currentProductDetail) {
+                        showProductDetailModal(currentProductDetail);
+                    } else {
+                        throw new Error('No product data received');
+                    }
+                } else {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Failed to load product details');
+                }
+            } catch (error) {
+                console.error('Failed to load product details:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+                pickupSites = [];
+                renderPickupSites(); // Render empty state
+            }
+        }
+
+        function renderPickupSites() {
+            const container = document.getElementById('pickupSitesList');
+            if (!container) return;
+            
+            if (pickupSites.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center">No pickup sites available</p>';
+                return;
+            }
+            
+            container.innerHTML = pickupSites.map(site => `
+                <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer" onclick="selectPickupSite(${site.id})">
+                    <h4 class="font-semibold text-gray-900">${site.site_name}</h4>
+                    <p class="text-sm text-gray-600">${site.address}</p>
+                    <p class="text-sm text-gray-500">${site.phone}</p>
+                </div>
+            `).join('');
+        }
+
+        function selectPickupSite(siteId) {
+            selectedPickupSite = pickupSites.find(site => site.id === siteId);
+            if (selectedPickupSite) {
+                showNotification(`Selected pickup site: ${selectedPickupSite.site_name}`, 'success');
+            }
+        }
+
+    </script>
+</body>
+</html>          );
+                }
+                showMessage('Failed to load product details: ' + error.message, 'error');
+            }
+        }
+
+        function showProductDetailModal(product) {
+            if (!product) return;
+            
+            const modal = document.getElementById('productDetailModal');
+            const content = document.getElementById('productDetailContent');
+            
+            // Handle different field names comprehensively
+            let productName, productPrice, productDescription, stockQuantity, category, brand, sku;
+            
+            if (currentProductType === 'local') {
+                // Grocery/Local market product fields
+                productName = product.product_name || 'Unnamed Product';
+                productPrice = product.unit_price || 0;
+                productDescription = product.product_description || 'No description available';
+                stockQuantity = product.available_stock || 0;
+                category = product.category_name || 'Uncategorized';
+                brand = product.brand || 'N/A';
+                sku = product.sku || 'N/A';
+            } else {
+                // Physical product fields
+                productName = product.name || product.product_name || 'Unnamed Product';
+                productPrice = product.price || 0;
+                productDescription = product.description || product.product_description || 'No description available';
+                stockQuantity = product.stock_quantity || product.quantity_available || 0;
+                category = product.category_name || product.category || 'Uncategorized';
+                brand = product.brand || product.brand_name || 'N/A';
+                sku = product.sku || product.product_sku || 'N/A';
+            }
+            
+            // Handle image URLs with comprehensive fallback
+            let imageUrl = createPlaceholderImage(productName);
+            const imageFields = [
+                'image_url', 'main_image', 'grocery_image_url', 'product_image_url', 'image', 'photo_url', 'picture_url'
+            ];
+            
+            for (const field of imageFields) {
+                if (product[field] && product[field].trim() !== '' && product[field] !== 'null') {
+                    const img = product[field].trim();
+                    if (img.startsWith('http')) {
+                        imageUrl = img;
+                        break;
+                    } else if (img.startsWith('/')) {
+                        imageUrl = img;
+                        break;
+                    } else {
+                        imageUrl = `/uploads/${img}`;
+                        break;
+                    }
+                }
+            }
+            
+            // Also check if product has images array from API response
+            if (product.images && Array.isArray(product.images) && product.images.length > 0) {
+                const firstImage = product.images[0];
+                if (firstImage.image_url) {
+                    imageUrl = firstImage.image_url.startsWith('/') ? firstImage.image_url : `/uploads/${firstImage.image_url}`;
+                } else if (firstImage.image_path) {
+                    imageUrl = firstImage.image_path.startsWith('/') ? firstImage.image_path : `/uploads/${firstImage.image_path}`;
+                }
+            }
+
+            // Build comprehensive product details
+            const basicDetails = [
+                { label: 'Category', value: category },
+                { label: 'Brand', value: brand },
+                { label: 'SKU/Item Code', value: sku },
+                { label: 'Weight', value: product.weight || product.weight_kg || product.weight_grams || 'N/A' },
+                { label: 'Dimensions', value: product.dimensions || product.size || 'N/A' },
+                { label: 'Color', value: product.color || product.colour || 'N/A' },
+                { label: 'Material', value: product.material || 'N/A' },
+                { label: 'Unit', value: product.unit || product.measurement_unit || product.selling_unit || 'N/A' },
+                { label: 'Type', value: currentProductType === 'local' ? 'Local Market Product' : 'Physical Product' }
+            ];
+
+            // Technical specifications for electronics
+            const techSpecs = [];
+            if (product.cpu || product.processor || product.ram || product.storage || product.screen_size || product.operating_system) {
+                if (product.cpu || product.processor) techSpecs.push({ label: 'Processor/CPU', value: product.cpu || product.processor });
+                if (product.ram || product.memory) techSpecs.push({ label: 'RAM/Memory', value: product.ram || product.memory });
+                if (product.storage || product.hard_disk || product.ssd) techSpecs.push({ label: 'Storage', value: product.storage || product.hard_disk || product.ssd });
+                if (product.screen_size || product.display_size) techSpecs.push({ label: 'Screen Size', value: product.screen_size || product.display_size });
+                if (product.operating_system || product.os) techSpecs.push({ label: 'Operating System', value: product.operating_system || product.os });
+                if (product.graphics_card || product.gpu) techSpecs.push({ label: 'Graphics Card', value: product.graphics_card || product.gpu });
+                if (product.battery_life || product.battery) techSpecs.push({ label: 'Battery', value: product.battery_life || product.battery });
+                if (product.connectivity || product.ports) techSpecs.push({ label: 'Connectivity', value: product.connectivity || product.ports });
+            }
+
+            // Seller information
+            const sellerName = product.seller_name || product.store_name || product.vendor_name || product.supplier_name || 'N/A';
+            const sellerLocation = product.seller_location || product.store_location || product.vendor_location || 'N/A';
+            const sellerContact = product.seller_phone || product.store_contact || product.vendor_phone || 'N/A';
+            const sellerEmail = product.seller_email || product.store_email || product.vendor_email || 'N/A';
+            const sellerRating = product.seller_rating || product.store_rating || 'N/A';
+
+            // Distance info for local market
+            let distanceInfo = '';
+            if (currentProductType === 'local' && product.distance_km) {
+                distanceInfo = `
+                    <div class="bg-green-50 p-3 rounded-lg mb-4">
+                        <div class="flex items-center">
+                            <i class="fas fa-map-marker-alt text-green-600 mr-2"></i>
+                            <span class="text-green-800 font-medium">${parseFloat(product.distance_km).toFixed(1)} km from your location</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            content.innerHTML = `
+                <div>
+                    <div class="space-y-4">
+                        <img src="${imageUrl}" alt="${productName}" class="w-full h-64 object-cover rounded-lg" 
+                             onerror="this.onerror=null; this.src='/placeholder-product.svg';">
+                        ${distanceInfo}
+                    </div>
+                </div>
+                <div>
+                    <h4 class="text-xl font-bold mb-4">${productName}</h4>
+                    <div class="space-y-4">
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <span class="text-2xl font-bold text-blue-600">FRW ${parseFloat(productPrice).toFixed(2)}${currentProductType === 'local' && unitType ? '/' + unitType : ''}</span>
+                            <div class="text-sm text-gray-600 mt-2">
+                                <span>Stock: ${stockQuantity % 1 === 0 ? Math.floor(stockQuantity) : stockQuantity.toFixed(2)} ${unitType || 'pieces'} available</span>
+                                ${stockQuantity <= 5 && stockQuantity > 0 ? '<span class="text-xs text-red-500 ml-2">(Low Stock!)</span>' : ''}
+                            </div>
+                            ${currentProductType === 'local' && product.minimum_order > 1 ? 
+                                `<div class="text-sm text-blue-600 mt-1">Minimum order: ${product.minimum_order} ${unitType || 'pieces'}</div>` : ''
+                            }
+                        </div>
+                        
+                        <div>
+                            <h5 class="font-semibold text-gray-800 mb-2">Description</h5>
+                            <p class="text-gray-600">${productDescription}</p>
+                        </div>
+                        
+                        <div>
+                            <h5 class="font-semibold text-gray-800 mb-2">Product Details</h5>
+                            <div class="grid grid-cols-2 gap-3 text-sm">
+                                ${basicDetails.filter(detail => detail.value !== 'N/A' && detail.value).map(detail => 
+                                    `<div><strong>${detail.label}:</strong> ${detail.value}</div>`
+                                ).join('')}
+                            </div>
+                        </div>
+                        
+                        ${techSpecs.length > 0 ? `
+                        <div>
+                            <h5 class="font-semibold text-gray-800 mb-2">Technical Specifications</h5>
+                            <div class="grid grid-cols-1 gap-2 text-sm bg-gray-50 p-3 rounded-lg">
+                                ${techSpecs.map(spec => 
+                                    `<div class="flex justify-between border-b border-gray-200 pb-1"><strong>${spec.label}:</strong> <span>${spec.value}</span></div>`
+                                ).join('')}
+                            </div>
+                        </div>
+                        ` : ''}
+                        
+                        ${product.specifications ? `
+                        <div>
+                            <h5 class="font-semibold text-gray-800 mb-2">Additional Specifications</h5>
+                            <div class="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
+                                ${product.specifications}
+                            </div>
+                        </div>
+                        ` : ''}
+                        
+                        ${product.features ? `
+                        <div>
+                            <h5 class="font-semibold text-gray-800 mb-2">Key Features</h5>
+                            <div class="text-sm text-gray-600">
+                                ${typeof product.features === 'string' ? product.features : JSON.stringify(product.features)}
+                            </div>
+                        </div>
+                        ` : ''}
+                        
+                        <div>
+                            <h5 class="font-semibold text-gray-800 mb-2">Seller Information</h5>
+                            <div class="text-sm bg-gray-50 p-3 rounded-lg">
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div><strong>Seller:</strong> ${sellerName}</div>
+                                    <div><strong>Rating:</strong> ${sellerRating !== 'N/A' ? sellerRating + ' ⭐' : 'N/A'}</div>
+                                    <div><strong>Location:</strong> ${sellerLocation}</div>
+                                    <div><strong>Contact:</strong> ${sellerContact}</div>
+                                    ${sellerEmail !== 'N/A' ? `<div><strong>Email:</strong> ${sellerEmail}</div>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        ${product.warranty || product.return_policy ? `
+                        <div>
+                            <h5 class="font-semibold text-gray-800 mb-2">Warranty & Returns</h5>
+                            <div class="text-sm text-gray-600">
+                                ${product.warranty ? `<div><strong>Warranty:</strong> ${product.warranty}</div>` : ''}
+                                ${product.return_policy ? `<div><strong>Return Policy:</strong> ${product.return_policy}</div>` : ''}
+                            </div>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+            
+            modal.classList.remove('hidden');
+        }
+
+        function closeProductDetail() {
+            document.getElementById('productDetailModal').classList.add('hidden');
+            currentProductDetail = null;
+        }
+
+        function addProductFromDetail() {
+            if (currentProductDetail) {
+                const productId = currentProductDetail.id || currentProductDetail.grocery_id;
+                addToCart(productId);
+                closeProductDetail();
+            }
+        }
+
+        function addToCart(productId) {
+            const product = products.find(p => (p.id || p.grocery_id) === productId);
+            if (!product) {
+                showMessage('Product not found', 'error');
+                return;
+            }
+
+            // Handle different field names and stock calculation
+            let stockQuantity, productName, productPrice, unitType, minOrder, maxOrder;
+            
+            if (currentProductType === 'local') {
+                // Local market products with measurement-based stock
+                stockQuantity = parseFloat(product.available_stock || 0);
+                productName = product.product_name || 'Unnamed Product';
+                productPrice = parseFloat(product.unit_price || 0);
+                unitType = product.unit_type || 'pieces';
+                minOrder = parseFloat(product.minimum_order || 1);
+                maxOrder = parseFloat(product.maximum_order || stockQuantity);
+            } else {
+                // Physical products
+                stockQuantity = parseFloat(product.stock_quantity || product.quantity_available || 0);
+                productName = product.name || product.product_name || 'Unnamed Product';
+                productPrice = parseFloat(product.price || 0);
+                unitType = product.unit || 'pieces';
+                minOrder = 1;
+                maxOrder = stockQuantity;
+            }
+
+            console.log(`[CART] Adding product: ${productName}, Stock: ${stockQuantity}, Unit: ${unitType}`);
+
+            // Check if product is actually available
+            if (stockQuantity <= 0) {
+                showMessage(`${productName} is out of stock`, 'error');
+                return;
+            }
+
+            const existingItem = selectedProducts.find(item => item.id === productId);
+            if (existingItem) {
+                const newQuantity = existingItem.quantity + minOrder;
+                if (newQuantity > Math.min(stockQuantity, maxOrder)) {
+                    showMessage(`Cannot add more. Available: ${stockQuantity} ${unitType}`, 'error');
+                    return;
+                }
+                existingItem.quantity = newQuantity;
+                showMessage(`Updated quantity to ${newQuantity} ${unitType}`, 'success');
+            } else {
+                selectedProducts.push({
+                    id: productId,
+                    name: productName,
+                    price: productPrice,
+                    quantity: minOrder,
+                    stock_quantity: stockQuantity,
+                    unit_type: unitType,
+                    minimum_order: minOrder,
+                    maximum_order: maxOrder,
+                    product_type: currentProductType
+                });
+                showMessage(`Added ${minOrder} ${unitType} to cart`, 'success');
+            }
+
+            updateCartDisplay();
+        }
+
+        function removeFromCart(productId) {
+            selectedProducts = selectedProducts.filter(item => item.id !== productId);
+            updateCartDisplay();
+            showMessage('Product removed from cart', 'info');
+        }
+
+        function updateQuantity(productId, change) {
+            const item = selectedProducts.find(item => item.id === productId);
+            if (item) {
+                const newQuantity = item.quantity + change;
+                const unitType = item.unit_type || 'pieces';
+                
+                if (newQuantity <= 0) {
+                    removeFromCart(productId);
+                    return;
+                }
+                
+                // Check against both stock and maximum order limits
+                const maxAllowed = Math.min(item.stock_quantity, item.maximum_order || item.stock_quantity);
+                
+                if (newQuantity > maxAllowed) {
+                    showMessage(`Cannot exceed available stock: ${maxAllowed} ${unitType}`, 'error');
+                    return;
+                }
+                
+                // Check minimum order for local market products
+                if (item.minimum_order && newQuantity < item.minimum_order) {
+                    showMessage(`Minimum order is ${item.minimum_order} ${unitType}`, 'error');
+                    return;
+                }
+                
+                item.quantity = newQuantity;
+                updateCartDisplay();
+                showMessage(`Updated to ${newQuantity} ${unitType}`, 'success');
+            }
+        }
+
+        function updateCartDisplay() {
+            const container = document.getElementById('selectedProducts');
+            const cartCount = document.getElementById('cartCount');
+            const totalAmount = document.getElementById('totalAmount');
+            const proceedBtn = document.getElementById('proceedToCustomerInfo');
+
+            cartCount.textContent = selectedProducts.length;
+
+            if (selectedProducts.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-sm">No products selected yet</p>';
+                totalAmount.textContent = 'FRW 0';
+                proceedBtn.disabled = true;
+                proceedBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                return;
+            }
+
+            const total = selectedProducts.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            totalAmount.textContent = `FRW ${Math.round(total)}`;
+            proceedBtn.disabled = false;
+            proceedBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+
+            container.innerHTML = selectedProducts.map(item => `
+                <div class="flex items-center justify-between bg-gray-50 rounded p-3">
+                    <div class="flex-1">
+                        <span class="font-medium text-sm">${item.name}</span>
+                        <div class="text-xs text-gray-600">
+                            FRW ${Math.round(item.price)}${item.unit_type ? '/' + item.unit_type : ''} × ${item.quantity} ${item.unit_type || 'pieces'}
+                        </div>
+                        <span class="text-xs text-blue-600">(${item.product_type})</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="updateQuantity(${item.id}, -1)" class="w-6 h-6 bg-gray-300 hover:bg-gray-400 rounded text-xs">-</button>
+                        <span class="w-8 text-center text-sm">${item.quantity}</span>
+                        <button onclick="updateQuantity(${item.id}, 1)" class="w-6 h-6 bg-gray-300 hover:bg-gray-400 rounded text-xs">+</button>
+                        <button onclick="removeFromCart(${item.id})" class="w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded text-xs">×</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function validateCustomerInfo() {
+            const name = document.getElementById('customerName').value.trim();
+            const phone = document.getElementById('customerPhone').value.trim();
+
+            if (!name) {
+                showMessage('Customer name is required', 'error');
+                document.getElementById('customerName').focus();
+                return false;
+            }
+            if (!phone) {
+                showMessage('Phone number is required', 'error');
+                document.getElementById('customerPhone').focus();
+                return false;
+            }
+
+            // Validate delivery method selection
+            if (selectedDeliveryMethod === 'pickup') {
+                if (!selectedPickupSite) {
+                    showMessage('Please select a pickup site', 'error');
+                    return false;
+                }
+            } else if (selectedDeliveryMethod === 'home') {
+                const address = document.getElementById('customerAddress').value.trim();
+                if (!address) {
+                    showMessage('Delivery address is required for home delivery', 'error');
+                    document.getElementById('customerAddress').focus();
+                    return false;
+                }
+                if (!deliveryLocation) {
+                    showMessage('Please select delivery location on the map', 'error');
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        function nextStep() {
+            if (currentStep === 1) {
+                if (selectedProducts.length === 0) {
+                    showMessage('Please select at least one product', 'error');
+                    return;
+                }
+                currentStep = 2;
+                showStep(2);
+            } else if (currentStep === 2) {
+                if (!validateCustomerInfo()) return;
+                currentStep = 3;
+                showStep(3);
+                updateOrderSummary();
+            }
+        }
+
+        function previousStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                showStep(currentStep);
+            }
+        }
+
+        function showStep(step) {
+            // Hide all steps
+            document.querySelectorAll('.step-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+
+            // Show current step
+            const stepContents = ['productSelectionStep', 'customerInfoStep', 'paymentStep'];
+            document.getElementById(stepContents[step - 1]).classList.remove('hidden');
+
+            // Update step indicators
+            for (let i = 1; i <= 3; i++) {
+                const stepEl = document.getElementById(`step${i}`);
+                const circle = stepEl.querySelector('div');
+                const text = stepEl.querySelector('span');
+                
+                if (i <= step) {
+                    circle.className = 'w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold';
+                    text.className = 'text-sm font-medium';
+                } else {
+                    circle.className = 'w-8 h-8 bg-gray-300 text-gray-600 rounded-full flex items-center justify-center text-sm font-bold';
+                    text.className = 'text-sm font-medium text-gray-600';
+                }
+            }
+        }
+
+
+
+        function updateOrderSummary() {
+            const name = document.getElementById('customerName').value;
+            const phone = document.getElementById('customerPhone').value;
+            
+            // Commission is already included in product prices - no additional fee needed
+            const subtotal = selectedProducts.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            
+            // Calculate delivery fee ONLY for home delivery and based on location/weight
+            let deliveryFee = 0;
+            let deliveryNotes = 'FREE pickup delivery';
+            
+            const hasLocalProducts = selectedProducts.some(item => item.product_type === 'local');
+            
+            if (selectedDeliveryMethod === 'home' && !hasLocalProducts) {
+                // 6% of order value for home delivery (admin configurable)
+                deliveryFee = Math.round(subtotal * (deliveryFeeRate || 0.06));
+                deliveryNotes = `Home delivery (${(deliveryFeeRate * 100 || 6)}% of order value)`;
+            } else if (hasLocalProducts) {
+                // Local products always have free delivery
+                deliveryFee = 0;
+                deliveryNotes = 'FREE delivery for local products';
+            }
+            
+            const total = subtotal + deliveryFee;
+
+            document.getElementById('summaryCustomerName').textContent = name;
+            document.getElementById('summaryCustomerPhone').textContent = phone;
+            document.getElementById('summaryItemCount').textContent = selectedProducts.length;
+            document.getElementById('summarySubtotal').textContent = `FRW ${Math.round(subtotal)}`;
+            
+            // Hide commission line since it's already included
+            const commissionElement = document.getElementById('summaryCommission');
+            if (commissionElement) {
+                commissionElement.parentElement.style.display = 'none';
+            }
+            
+            // Update delivery method info
+            document.getElementById('summaryDeliveryMethod').textContent = deliveryNotes;
+            
+            // Update delivery fee display
+            const deliveryFeeElement = document.getElementById('summaryDeliveryFee');
+            if (deliveryFeeElement) {
+                deliveryFeeElement.textContent = `FRW ${Math.round(deliveryFee)}`;
+                if (deliveryFee === 0) {
+                    deliveryFeeElement.parentElement.style.display = 'none';
+                } else {
+                    deliveryFeeElement.parentElement.style.display = 'block';
+                }
+            }
+            
+            document.getElementById('summaryTotal').textContent = `FRW ${Math.round(total)}`;
+            
+            console.log(`[ORDER SUMMARY] Products: FRW ${Math.round(subtotal)}, Delivery: FRW ${Math.round(deliveryFee)}, Total: FRW ${Math.round(total)}`);
+        }
+
+        function handlePaymentProofUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                // Validate file type
+                if (!file.type.startsWith('image/')) {
+                    showMessage('Please select an image file', 'error');
+                    event.target.value = ''; // Clear the input
+                    return;
+                }
+                
+                // Validate file size (max 10MB)
+                if (file.size > 10 * 1024 * 1024) {
+                    showMessage('File size must be less than 10MB', 'error');
+                    event.target.value = ''; // Clear the input
+                    return;
+                }
+                
+                document.getElementById('uploadArea').classList.add('hidden');
+                document.getElementById('uploadedFile').classList.remove('hidden');
+                document.getElementById('createOrderBtn').disabled = false;
+                showMessage(`Payment proof uploaded: ${file.name}`, 'success');
+            }
+        }
+
+        async function createOrder() {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            loadingOverlay.classList.remove('hidden');
+
+            try {
+                // Validate delivery method selection
+                if (selectedDeliveryMethod === 'pickup' && !selectedPickupSite) {
+                    showMessage('Please select a pickup site', 'error');
+                    return;
+                }
+                
+                if (selectedDeliveryMethod === 'home' && !deliveryLocation) {
+                    showMessage('Please select delivery location on the map', 'error');
+                    return;
+                }
+
+                // Calculate delivery fee properly without extra commission
+                const subtotal = selectedProducts.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                let deliveryFee = 0;
+                
+                const hasLocalProducts = selectedProducts.some(item => item.product_type === 'local');
+                
+                if (selectedDeliveryMethod === 'home' && !hasLocalProducts) {
+                    // 6% of order value for home delivery (admin configurable)
+                    deliveryFee = Math.round(subtotal * (deliveryFeeRate || 0.06));
+                } else if (hasLocalProducts) {
+                    // Local products always have free delivery
+                    deliveryFee = 0;
+                }
+
+                const orderData = {
+                    buyer_name: document.getElementById('customerName').value,
+                    buyer_phone: document.getElementById('customerPhone').value,
+                    buyer_email: document.getElementById('customerEmail').value,
+                    buyer_national_id: document.getElementById('customerNationalId').value,
+                    buyer_address: selectedDeliveryMethod === 'home' ? document.getElementById('customerAddress').value : '',
+                    delivery_method: selectedDeliveryMethod,
+                    pickup_site_id: selectedDeliveryMethod === 'pickup' ? selectedPickupSite : null,
+                    delivery_location: selectedDeliveryMethod === 'home' ? deliveryLocation : null,
+                    delivery_fee: deliveryFee, // Send calculated fee, not rate
+                    subtotal: subtotal,
+                    total_amount: subtotal + deliveryFee,
+                    commission_included: true, // Flag to indicate commission is already in prices
+                    items: selectedProducts.map(item => ({
+                        product_id: item.id,
+                        name: item.name,
+                        price: item.price, // This already includes platform commission
+                        quantity: item.quantity,
+                        unit_type: item.unit_type || 'pieces',
+                        product_type: item.product_type
+                    })),
+                    notes: document.getElementById('orderNotes').value,
+                    payment_proof: document.getElementById('paymentProof').files[0]
+                };
+
+                const formData = new FormData();
+                Object.keys(orderData).forEach(key => {
+                    if (key === 'items') {
+                        formData.append(key, JSON.stringify(orderData[key]));
+                    } else if (key === 'payment_proof' && orderData[key]) {
+                        formData.append(key, orderData[key]);
+                    } else {
+                        formData.append(key, orderData[key]);
+                    }
+                });
+
+                const token = localStorage.getItem('token');
+                const response = await fetch('/api/pickup-site-manager/create-order', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('Order creation response:', result);
+                    
+                    // Store the complete order data
+                    currentOrder = {
+                        orderId: result.orderId,
+                        orderNumber: result.orderNumber,
+                        receiptUrl: result.receiptUrl,
+                        receiptPdfPath: result.receiptPdfPath,
+                        subtotal: result.subtotal,
+                        commission_amount: result.commission_amount,
+                        delivery_fee: result.delivery_fee,
+                        total_amount: result.total_amount,
+                        qrCode: result.qrCode
+                    };
+                    
+                    // Reset retry counters for new order
+                    resetRetryCounters();
+                    
+                    showSuccessModal(result.orderNumber);
+                    showMessage('✅ Order created successfully with enhanced PDF receipt!', 'success');
+                    
+                    // Auto-download the receipt after 2 seconds
+                    setTimeout(() => {
+                        showMessage('📄 Automatically downloading your receipt...', 'info');
+                        downloadReceipt();
+                    }, 2000);
+                } else {
+                    const error = await response.json();
+                    console.error('Order creation error:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+                pickupSites = [];
+                renderPickupSites(); // Render empty state
+            }
+        }
+
+        function renderPickupSites() {
+            const container = document.getElementById('pickupSitesList');
+            if (!container) return;
+            
+            if (pickupSites.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center">No pickup sites available</p>';
+                return;
+            }
+            
+            container.innerHTML = pickupSites.map(site => `
+                <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer" onclick="selectPickupSite(${site.id})">
+                    <h4 class="font-semibold text-gray-900">${site.site_name}</h4>
+                    <p class="text-sm text-gray-600">${site.address}</p>
+                    <p class="text-sm text-gray-500">${site.phone}</p>
+                </div>
+            `).join('');
+        }
+
+        function selectPickupSite(siteId) {
+            selectedPickupSite = pickupSites.find(site => site.id === siteId);
+            if (selectedPickupSite) {
+                showNotification(`Selected pickup site: ${selectedPickupSite.site_name}`, 'success');
+            }
+        }
+
+    </script>
+</body>
+</html>          );
+                }
+                    showMessage(error.error || 'Failed to create order', 'error');
+                }
+
+            } catch (error) {
+                console.error('Create order error:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+                pickupSites = [];
+                renderPickupSites(); // Render empty state
+            }
+        }
+
+        function renderPickupSites() {
+            const container = document.getElementById('pickupSitesList');
+            if (!container) return;
+            
+            if (pickupSites.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center">No pickup sites available</p>';
+                return;
+            }
+            
+            container.innerHTML = pickupSites.map(site => `
+                <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer" onclick="selectPickupSite(${site.id})">
+                    <h4 class="font-semibold text-gray-900">${site.site_name}</h4>
+                    <p class="text-sm text-gray-600">${site.address}</p>
+                    <p class="text-sm text-gray-500">${site.phone}</p>
+                </div>
+            `).join('');
+        }
+
+        function selectPickupSite(siteId) {
+            selectedPickupSite = pickupSites.find(site => site.id === siteId);
+            if (selectedPickupSite) {
+                showNotification(`Selected pickup site: ${selectedPickupSite.site_name}`, 'success');
+            }
+        }
+
+    </script>
+</body>
+</html>          );
+                }
+                showMessage('Failed to create order', 'error');
+            } finally {
+                loadingOverlay.classList.add('hidden');
+            }
+        }
+
+        function showSuccessModal(orderNumber) {
+            document.getElementById('orderNumber').textContent = orderNumber;
+            document.getElementById('successModal').classList.remove('hidden');
+        }
+
+        async function downloadReceipt() {
+            if (!currentOrder) {
+                showMessage('No order available for receipt download', 'error');
+                return;
+            }
+
+            try {
+                showMessage('Downloading enhanced receipt...', 'info');
+                
+                // Use fetch with authentication headers
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    showMessage('Authentication token missing. Please log in again.', 'error');
+                    return;
+                }
+
+                // Construct the receipt URL if not available
+                const receiptUrl = currentOrder.receiptUrl || `/api/pickup-site-manager/order/${currentOrder.orderId}/receipt`;
+                console.log('Downloading receipt from:', receiptUrl);
+                console.log(`[AUTH-DEBUG] Token exists: ${!!token}`);
+
+                const response = await fetch(receiptUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/pdf, */*'
+                    }
+                });
+                
+                console.log(`[AUTH-DEBUG] Response status: ${response.status}`);
+                
+                if (response.status === 401) {
+                    throw new Error('Authentication expired. Please log in again.');
+                }
+
+                if (!response.ok) {
+                    console.log('Download response not OK:', response.status, response.statusText);
+                    
+                    // If receipt not available (404), try to regenerate it
+                    if (response.status === 404) {
+                        if (downloadRetryCount < MAX_RETRIES) {
+                            downloadRetryCount++;
+                            showMessage(`Receipt not found, regenerating enhanced receipt... (Attempt ${downloadRetryCount}/${MAX_RETRIES})`, 'info');
+                            await generateReceipt(false);
+                            return; // generateReceipt will call downloadReceipt again
+                        } else {
+                            throw new Error('Maximum retry attempts reached. Please try again later.');
+                        }
+                    }
+                    
+                    // For other errors, don't try to read response body again
+                    let errorMessage = `Download failed with status: ${response.status}`;
+                    throw new Error(errorMessage);
+                }
+
+                // Check if response is actually a PDF
+                const contentType = response.headers.get('content-type');
+                console.log('Response content type:', contentType);
+                
+                // Get the file as blob (single read)
+                const blob = await response.blob();
+                
+                // Verify content type after getting blob
+                if (!contentType || (!contentType.includes('application/pdf') && !contentType.includes('application/octet-stream'))) {
+                    console.warn('Unexpected content type:', contentType);
+                    // If not PDF and blob is small, it might be an error response
+                    if (blob.size < 1000) {
+                        try {
+                            const text = await blob.text();
+                            const errorData = JSON.parse(text);
+                            throw new Error(errorData.error || 'Invalid response format');
+                        } catch (e) {
+                            throw new Error('Invalid response format - not a PDF');
+                        }
+                    }
+                }
+                
+                // Log download details but don't do strict validation that causes failures
+                console.log(`[DOWNLOAD] Blob size: ${blob.size} bytes, content-type: ${contentType}`);
+                
+                // Only reject completely empty responses
+                if (blob.size === 0) {
+                    throw new Error('Received empty response from server');
+                }
+                
+                // Only reject obvious error responses (tiny JSON/HTML responses)
+                if (blob.size < 50 && contentType && (contentType.includes('application/json') || contentType.includes('text/html'))) {
+                    try {
+                        const text = await blob.text();
+                        console.error('Error response body:', text);
+                
+                // Enhanced error reporting
+                if (text) {
+                    const errorDetails = {
+                        message: text.message || 'Unknown error',
+                        stack: text.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        text.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+                        throw new Error(`Server error: ${text}`);
+                    } catch (e) {
+                        throw new Error('Received error response from server');
+                    }
+                }
+                
+                // Log but proceed with download regardless of content-type or size
+                console.log('[DOWNLOAD] Proceeding with download...');
+                
+                // Create download link
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `enhanced-receipt-${currentOrder.orderNumber || 'order'}.pdf`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                // Clean up the blob URL
+                setTimeout(() => {
+                    window.URL.revokeObjectURL(url);
+                }, 1000);
+                
+                // Reset retry counter on success
+                downloadRetryCount = 0;
+                showMessage(`✅ Enhanced PDF receipt downloaded successfully for order ${currentOrder.orderNumber}!`, 'success');
+                
+            } catch (error) {
+                console.error('Download error:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+                pickupSites = [];
+                renderPickupSites(); // Render empty state
+            }
+        }
+
+        function renderPickupSites() {
+            const container = document.getElementById('pickupSitesList');
+            if (!container) return;
+            
+            if (pickupSites.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center">No pickup sites available</p>';
+                return;
+            }
+            
+            container.innerHTML = pickupSites.map(site => `
+                <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer" onclick="selectPickupSite(${site.id})">
+                    <h4 class="font-semibold text-gray-900">${site.site_name}</h4>
+                    <p class="text-sm text-gray-600">${site.address}</p>
+                    <p class="text-sm text-gray-500">${site.phone}</p>
+                </div>
+            `).join('');
+        }
+
+        function selectPickupSite(siteId) {
+            selectedPickupSite = pickupSites.find(site => site.id === siteId);
+            if (selectedPickupSite) {
+                showNotification(`Selected pickup site: ${selectedPickupSite.site_name}`, 'success');
+            }
+        }
+
+    </script>
+</body>
+</html>          );
+                }
+                showMessage('Failed to download receipt: ' + error.message, 'error');
+                
+                // If download fails and we haven't exceeded retries, suggest manual retry
+                if (currentOrder && currentOrder.orderId && downloadRetryCount < MAX_RETRIES) {
+                    showMessage('Download failed. Click "Download Receipt PDF" to try again.', 'info');
+                } else if (downloadRetryCount >= MAX_RETRIES) {
+                    showMessage('Maximum download attempts reached. Please refresh the page and try again.', 'error');
+                }
+            }
+        }
+
+        async function regenerateAndDownload() {
+            if (!currentOrder) {
+                showMessage('No order available for receipt regeneration', 'error');
+                return;
+            }
+
+            try {
+                showMessage('🔄 Regenerating enhanced PDF receipt...', 'info');
+                
+                const token = localStorage.getItem('token');
+                const response = await fetch(`/api/pickup-site-manager/order/${currentOrder.orderId}/regenerate-receipt`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    showMessage(`✅ Receipt regenerated successfully for order ${currentOrder.orderNumber}`, 'success');
+                    
+                    // Update current order data with new receipt path
+                    if (data.receiptPdfPath) {
+                        currentOrder.receiptPdfPath = data.receiptPdfPath;
+                        currentOrder.receiptUrl = `/api/pickup-site-manager/order/${currentOrder.orderId}/receipt`;
+                    }
+                    
+                    // Auto-download the regenerated receipt
+                    setTimeout(() => {
+                        showMessage('📄 Downloading regenerated receipt...', 'info');
+                        downloadReceipt();
+                    }, 1500);
+                } else {
+                    throw new Error(data.error || 'Failed to regenerate receipt');
+                }
+            } catch (error) {
+                console.error('Regeneration failed:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+                pickupSites = [];
+                renderPickupSites(); // Render empty state
+            }
+        }
+
+        function renderPickupSites() {
+            const container = document.getElementById('pickupSitesList');
+            if (!container) return;
+            
+            if (pickupSites.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center">No pickup sites available</p>';
+                return;
+            }
+            
+            container.innerHTML = pickupSites.map(site => `
+                <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer" onclick="selectPickupSite(${site.id})">
+                    <h4 class="font-semibold text-gray-900">${site.site_name}</h4>
+                    <p class="text-sm text-gray-600">${site.address}</p>
+                    <p class="text-sm text-gray-500">${site.phone}</p>
+                </div>
+            `).join('');
+        }
+
+        function selectPickupSite(siteId) {
+            selectedPickupSite = pickupSites.find(site => site.id === siteId);
+            if (selectedPickupSite) {
+                showNotification(`Selected pickup site: ${selectedPickupSite.site_name}`, 'success');
+            }
+        }
+
+    </script>
+</body>
+</html>          );
+                }
+                showMessage(`❌ Failed to regenerate receipt: ${error.message}`, 'error');
+            }
+        }
+
+        async function printReceipt() {
+            if (!currentOrder) {
+                showMessage('No order available for receipt printing', 'error');
+                return;
+            }
+
+            try {
+                showMessage('Preparing enhanced receipt for printing...', 'info');
+                
+                // Use fetch with authentication headers to get the PDF
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    showMessage('Authentication token missing. Please log in again.', 'error');
+                    return;
+                }
+
+                // Construct the receipt URL if not available
+                const receiptUrl = currentOrder.receiptUrl || `/api/pickup-site-manager/order/${currentOrder.orderId}/receipt`;
+                console.log('Printing receipt from:', receiptUrl);
+
+                const response = await fetch(receiptUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    console.log('Print response not OK:', response.status, response.statusText);
+                    
+                    // If receipt not available (404), try to regenerate it
+                    if (response.status === 404) {
+                        if (printRetryCount < MAX_RETRIES) {
+                            printRetryCount++;
+                            showMessage(`Receipt not found, regenerating enhanced receipt... (Attempt ${printRetryCount}/${MAX_RETRIES})`, 'info');
+                            await generateReceipt(true);
+                            return; // generateReceipt will call printReceipt again
+                        } else {
+                            throw new Error('Maximum retry attempts reached. Please try again later.');
+                        }
+                    }
+                    
+                    // For other errors, don't try to read response body again
+                    let errorMessage = `Print failed with status: ${response.status}`;
+                    throw new Error(errorMessage);
+                }
+
+                // Check if response is actually a PDF
+                const contentType = response.headers.get('content-type');
+                console.log('Print response content type:', contentType);
+                
+                // Get the file as blob (single read)
+                const blob = await response.blob();
+                
+                // Verify content type after getting blob
+                if (!contentType || (!contentType.includes('application/pdf') && !contentType.includes('application/octet-stream'))) {
+                    console.warn('Unexpected content type for printing:', contentType);
+                    // If not PDF and blob is small, it might be an error response
+                    if (blob.size < 1000) {
+                        try {
+                            const text = await blob.text();
+                            const errorData = JSON.parse(text);
+                            throw new Error(errorData.error || 'Invalid response format');
+                        } catch (e) {
+                            throw new Error('Invalid response format - not a PDF');
+                        }
+                    }
+                }
+                
+                // Log download details but don't do strict validation that causes failures
+                console.log(`[DOWNLOAD] Blob size: ${blob.size} bytes, content-type: ${contentType}`);
+                
+                // Only reject completely empty responses
+                if (blob.size === 0) {
+                    throw new Error('Received empty response from server');
+                }
+                
+                // Only reject obvious error responses (tiny JSON/HTML responses)
+                if (blob.size < 50 && contentType && (contentType.includes('application/json') || contentType.includes('text/html'))) {
+                    try {
+                        const text = await blob.text();
+                        console.error('Error response body:', text);
+                
+                // Enhanced error reporting
+                if (text) {
+                    const errorDetails = {
+                        message: text.message || 'Unknown error',
+                        stack: text.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        text.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+                        throw new Error(`Server error: ${text}`);
+                    } catch (e) {
+                        throw new Error('Received error response from server');
+                    }
+                }
+                
+                // Log but proceed with download regardless of content-type or size
+                console.log('[DOWNLOAD] Proceeding with download...');
+                
+                // Create a temporary URL for the blob
+                const url = window.URL.createObjectURL(blob);
+                
+                // Open in new window for printing
+                const printWindow = window.open(url, '_blank', 'width=800,height=600');
+                
+                if (!printWindow) {
+                    throw new Error('Pop-up blocked. Please allow pop-ups for this site to print receipts.');
+                }
+                
+                // Wait for the PDF to load, then trigger print
+                printWindow.onload = function() {
+                    setTimeout(() => {
+                        try {
+                            printWindow.print();
+                            printWindow.focus();
+                        } catch (printError) {
+                            console.warn('Print dialog error:', printError);
+                        }
+                        
+                        // Clean up the blob URL after a delay
+                        setTimeout(() => {
+                            window.URL.revokeObjectURL(url);
+                        }, 2000);
+                    }, 1000);
+                };
+                
+                // Handle print window errors
+                printWindow.onerror = function(error) {
+                    console.error('Print window error:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+                pickupSites = [];
+                renderPickupSites(); // Render empty state
+            }
+        }
+
+        function renderPickupSites() {
+            const container = document.getElementById('pickupSitesList');
+            if (!container) return;
+            
+            if (pickupSites.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center">No pickup sites available</p>';
+                return;
+            }
+            
+            container.innerHTML = pickupSites.map(site => `
+                <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer" onclick="selectPickupSite(${site.id})">
+                    <h4 class="font-semibold text-gray-900">${site.site_name}</h4>
+                    <p class="text-sm text-gray-600">${site.address}</p>
+                    <p class="text-sm text-gray-500">${site.phone}</p>
+                </div>
+            `).join('');
+        }
+
+        function selectPickupSite(siteId) {
+            selectedPickupSite = pickupSites.find(site => site.id === siteId);
+            if (selectedPickupSite) {
+                showNotification(`Selected pickup site: ${selectedPickupSite.site_name}`, 'success');
+            }
+        }
+
+    </script>
+</body>
+</html>          );
+                }
+                    window.URL.revokeObjectURL(url);
+                    showMessage('Error opening print window', 'error');
+                };
+                
+                // Reset retry counter on success
+                printRetryCount = 0;
+                showMessage('Opening enhanced receipt for printing...', 'success');
+                
+            } catch (error) {
+                console.error('Print error:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+                pickupSites = [];
+                renderPickupSites(); // Render empty state
+            }
+        }
+
+        function renderPickupSites() {
+            const container = document.getElementById('pickupSitesList');
+            if (!container) return;
+            
+            if (pickupSites.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center">No pickup sites available</p>';
+                return;
+            }
+            
+            container.innerHTML = pickupSites.map(site => `
+                <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer" onclick="selectPickupSite(${site.id})">
+                    <h4 class="font-semibold text-gray-900">${site.site_name}</h4>
+                    <p class="text-sm text-gray-600">${site.address}</p>
+                    <p class="text-sm text-gray-500">${site.phone}</p>
+                </div>
+            `).join('');
+        }
+
+        function selectPickupSite(siteId) {
+            selectedPickupSite = pickupSites.find(site => site.id === siteId);
+            if (selectedPickupSite) {
+                showNotification(`Selected pickup site: ${selectedPickupSite.site_name}`, 'success');
+            }
+        }
+
+    </script>
+</body>
+</html>          );
+                }
+                showMessage('Failed to prepare receipt for printing: ' + error.message, 'error');
+                
+                // If print fails and we haven't exceeded retries, suggest manual retry
+                if (currentOrder && currentOrder.orderId && printRetryCount < MAX_RETRIES) {
+                    showMessage('Print failed. Click "Print Receipt" to try again.', 'info');
+                } else if (printRetryCount >= MAX_RETRIES) {
+                    showMessage('Maximum print attempts reached. Please refresh the page and try again.', 'error');
+                }
+            }
+        }
+
+        async function generateReceipt(print = false) {
+            if (!currentOrder || !currentOrder.orderId) {
+                showMessage('No order available for receipt generation', 'error');
+                return;
+            }
+
+            // Check retry limits
+            if (regenerateRetryCount >= MAX_RETRIES) {
+                showMessage('Maximum regeneration attempts reached. Please refresh the page and try again.', 'error');
+                return;
+            }
+
+            try {
+                regenerateRetryCount++;
+                showMessage(`Regenerating enhanced receipt... (Attempt ${regenerateRetryCount}/${MAX_RETRIES})`, 'info');
+                
+                // Use the regenerate receipt endpoint to create/update the PDF
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    showMessage('Authentication token missing. Please log in again.', 'error');
+                    return;
+                }
+
+                console.log('Regenerating receipt for order ID:', currentOrder.orderId);
+
+                const response = await fetch(`/api/pickup-site-manager/order/${currentOrder.orderId}/regenerate-receipt`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    console.error('Receipt regeneration error:', errorData);
+                
+                // Enhanced error reporting
+                if (errorData) {
+                    const errorDetails = {
+                        message: errorData.message || 'Unknown error',
+                        stack: errorData.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        errorData.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+                    throw new Error(errorData.error || `Receipt regeneration failed with status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                console.log('Receipt regeneration result:', result);
+                
+                // Update the receipt URL in current order
+                if (result.receiptUrl) {
+                    currentOrder.receiptUrl = result.receiptUrl;
+                }
+                
+                // Reset retry counter on success
+                regenerateRetryCount = 0;
+                showMessage('Enhanced receipt regenerated successfully!', 'success');
+                
+                // Wait a moment for the file to be fully written
+                setTimeout(() => {
+                    // Now proceed with download or print
+                    if (print) {
+                        printReceipt();
+                    } else {
+                        downloadReceipt();
+                    }
+                }, 500);
+                
+            } catch (error) {
+                console.error('Receipt regeneration error:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+                pickupSites = [];
+                renderPickupSites(); // Render empty state
+            }
+        }
+
+        function renderPickupSites() {
+            const container = document.getElementById('pickupSitesList');
+            if (!container) return;
+            
+            if (pickupSites.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center">No pickup sites available</p>';
+                return;
+            }
+            
+            container.innerHTML = pickupSites.map(site => `
+                <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer" onclick="selectPickupSite(${site.id})">
+                    <h4 class="font-semibold text-gray-900">${site.site_name}</h4>
+                    <p class="text-sm text-gray-600">${site.address}</p>
+                    <p class="text-sm text-gray-500">${site.phone}</p>
+                </div>
+            `).join('');
+        }
+
+        function selectPickupSite(siteId) {
+            selectedPickupSite = pickupSites.find(site => site.id === siteId);
+            if (selectedPickupSite) {
+                showNotification(`Selected pickup site: ${selectedPickupSite.site_name}`, 'success');
+            }
+        }
+
+    </script>
+</body>
+</html>          );
+                }
+                showMessage('Failed to regenerate receipt: ' + error.message, 'error');
+                
+                // If regeneration fails, show helpful message
+                if (error.message.includes('404') || error.message.includes('not found')) {
+                    showMessage('Order not found. Please refresh the page and try again.', 'warning');
+                } else if (error.message.includes('403') || error.message.includes('unauthorized')) {
+                    showMessage('Access denied. Please log in again.', 'warning');
+                    setTimeout(() => {
+                        window.location.href = '/auth/auth-agent.html';
+                    }, 2000);
+                }
+            }
+        }
+
+        function createAnotherOrder() {
+            // Reset form
+            currentStep = 1;
+            selectedProducts = [];
+            currentOrder = null;
+            
+            // Clear form fields
+            document.getElementById('customerName').value = '';
+            document.getElementById('customerPhone').value = '';
+            document.getElementById('customerEmail').value = '';
+            document.getElementById('customerAddress').value = '';
+            document.getElementById('orderNotes').value = '';
+            document.getElementById('paymentProof').value = '';
+            
+            // Reset upload area
+            document.getElementById('uploadArea').classList.remove('hidden');
+            document.getElementById('uploadedFile').classList.add('hidden');
+            document.getElementById('createOrderBtn').disabled = true;
+            
+            // Update displays
+            updateCartDisplay();
+            showStep(1);
+            
+            // Hide modal
+            document.getElementById('successModal').classList.add('hidden');
+        }
+
+        function goToDashboard() {
+            window.location.href = '/agent/psm-dashboard.html';
+        }
+
+        function showMessage(message, type = 'info') {
+            console.log(`[MESSAGE] ${type.toUpperCase()}: ${message}`);
+            
+            const container = document.getElementById('messageContainer');
+            const messageDiv = document.createElement('div');
+            
+            let bgColor = 'bg-blue-500';
+            let icon = 'fas fa-info-circle';
+            
+            if (type === 'success') {
+                bgColor = 'bg-green-500';
+                icon = 'fas fa-check-circle';
+            } else if (type === 'error') {
+                bgColor = 'bg-red-500';
+                icon = 'fas fa-exclamation-circle';
+            } else if (type === 'warning') {
+                bgColor = 'bg-yellow-500';
+                icon = 'fas fa-exclamation-triangle';
+            }
+            
+            messageDiv.className = `${bgColor} text-white px-6 py-3 rounded-lg shadow-lg mb-2 flex items-center`;
+            messageDiv.innerHTML = `
+                <i class="${icon} mr-2"></i>
+                <span>${message}</span>
+                <button onclick="this.parentElement.remove()" class="ml-4 text-white hover:text-gray-200">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            container.appendChild(messageDiv);
+            
+            // Auto remove after 5 seconds to prevent infinite notifications
+            setTimeout(() => {
+                if (messageDiv.parentElement) {
+                    messageDiv.remove();
+                }
+            }, 5000);
+        }
+
+        function goBack() {
+            window.location.href = '/agent/psm-dashboard.html';
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            window.location.href = '/auth/auth-agent.html';
+        }
+
+        // ===== DELIVERY METHOD FUNCTIONS =====
+
+        async function loadPickupSites() {
+            try {
+                console.log('Loading pickup sites...');
+                const response = await fetch('/api/pickup-site-manager/active-sites');
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                // Continue with successful response
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('API call failed:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+                pickupSites = [];
+                renderPickupSites(); // Render empty state
+            }
+        }
+
+        function renderPickupSites() {
+            const container = document.getElementById('pickupSitesList');
+            if (!container) return;
+            
+            if (pickupSites.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center">No pickup sites available</p>';
+                return;
+            }
+            
+            container.innerHTML = pickupSites.map(site => `
+                <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer" onclick="selectPickupSite(${site.id})">
+                    <h4 class="font-semibold text-gray-900">${site.site_name}</h4>
+                    <p class="text-sm text-gray-600">${site.address}</p>
+                    <p class="text-sm text-gray-500">${site.phone}</p>
+                </div>
+            `).join('');
+        }
+
+        function selectPickupSite(siteId) {
+            selectedPickupSite = pickupSites.find(site => site.id === siteId);
+            if (selectedPickupSite) {
+                showNotification(`Selected pickup site: ${selectedPickupSite.site_name}`, 'success');
+            }
+        }
+
+    </script>
+</body>
+</html>          );
+                }
+                    showNotification('Operation failed. Please try again.', 'error');
+                    throw error;
+                };
+
+                if (response.ok) {
+                    pickupSites = await response.json();
+                    console.log('Pickup sites loaded successfully:', pickupSites.length);
+                    renderPickupSites();
+                } else {
+                    console.error('Failed to load pickup sites. Status:', response.status);
+                
+                // Enhanced error reporting
+                if (response.status) {
+                    const errorDetails = {
+                        message: response.status.message || 'Unknown error',
+                        stack: response.status.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        response.status.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+                    const errorText = await response.text();
+                    console.error('Error response:', errorText);
+                
+                // Enhanced error reporting
+                if (errorText) {
+                    const errorDetails = {
+                        message: errorText.message || 'Unknown error',
+                        stack: errorText.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        errorText.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+                    pickupSites = [];
+                    renderPickupSites(); // Render empty state
+                }
+            } catch (error) {
+                console.error('Error loading pickup sites:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+                pickupSites = [];
+                renderPickupSites(); // Render empty state
+            }
+        }
+
+        function renderPickupSites() {
+            const container = document.getElementById('pickupSitesList');
+            if (!container) return;
+            
+            if (pickupSites.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center">No pickup sites available</p>';
+                return;
+            }
+            
+            container.innerHTML = pickupSites.map(site => `
+                <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer" onclick="selectPickupSite(${site.id})">
+                    <h4 class="font-semibold text-gray-900">${site.site_name}</h4>
+                    <p class="text-sm text-gray-600">${site.address}</p>
+                    <p class="text-sm text-gray-500">${site.phone}</p>
+                </div>
+            `).join('');
+        }
+
+        function selectPickupSite(siteId) {
+            selectedPickupSite = pickupSites.find(site => site.id === siteId);
+            if (selectedPickupSite) {
+                showNotification(`Selected pickup site: ${selectedPickupSite.site_name}`, 'success');
+            }
+        }
+
+    </script>
+</body>
+</html>

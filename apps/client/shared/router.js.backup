@@ -1,0 +1,459 @@
+/**
+ * Centralized Router System for ADD Physical Products Platform
+ * Handles routing between Physical Products and Local Market modes
+ */
+
+class AppRouter {
+  constructor() {
+    this.currentMode = this.detectMode();
+    this.routes = this.initializeRoutes();
+    this.init();
+  }
+
+  init() {
+    this.setupEventListeners();
+    this.handleInitialRoute();
+  }
+
+  detectMode() {
+    const path = window.location.pathname;
+    if (path.includes('/grocery/') || path.includes('local-market')) {
+      return 'local-market';
+    }
+    return 'marketplace';
+  }
+
+  initializeRoutes() {
+    return {
+      // Home routes
+      home: {
+        marketplace: '/public/index.html',
+        'local-market': '/grocery/local-market-home.html'
+      },
+      
+      // Authentication routes (shared)
+      auth: {
+        login: '/auth/auth-buyer.html',
+        'login-seller': '/auth/auth-seller.html',
+        'login-agent': '/auth/auth-agent.html',
+        'login-admin': '/auth/auth-admin.html',
+        'forgot-password': '/auth/forgot-password.html',
+        'reset-password': '/auth/reset-password.html',
+        'verify-email': '/auth/verify-email.html',
+        'verify-phone': '/auth/verify-phone.html'
+      },
+
+      // Buyer routes
+      buyer: {
+        marketplace: {
+          dashboard: '/buyer/buyers-home.html',
+          products: '/buyer/product-list.html',
+          'product-detail': '/public/product-detail.html',
+          cart: '/buyer/cart.html',
+          checkout: '/buyer/checkout.html',
+          orders: '/buyer/orders.html',
+          'order-detail': '/buyer/order-detail.html',
+          'track-order': '/buyer/track-order.html',
+          wishlist: '/buyer/wishlist.html',
+          profile: '/buyer/profile.html',
+          settings: '/buyer/settings.html',
+          wallet: '/buyer/wallet.html',
+          messages: '/buyer/messages.html',
+          notifications: '/buyer/notifications.html',
+          reviews: '/buyer/reviews.html',
+          support: '/buyer/support.html'
+        },
+        'local-market': {
+          dashboard: '/grocery/local-market-home.html',
+          products: '/grocery/products.html',
+          'product-detail': '/grocery/product-detail.html',
+          cart: '/grocery/cart.html',
+          checkout: '/grocery/checkout.html',
+          orders: '/grocery/orders.html',
+          'order-detail': '/grocery/order-detail.html',
+          'order-success': '/grocery/order-success.html',
+          'track-order': '/grocery/track-order.html',
+          profile: '/buyer/profile.html', // Shared
+          settings: '/buyer/settings.html', // Shared
+          wallet: '/buyer/wallet.html', // Shared
+          messages: '/buyer/messages.html', // Shared
+          notifications: '/buyer/notifications.html', // Shared
+          support: '/buyer/support.html' // Shared
+        }
+      },
+
+      // Seller routes
+      seller: {
+        marketplace: {
+          dashboard: '/seller/dashboard.html',
+          'add-product': '/seller/add-product.html',
+          'edit-product': '/seller/edit-product.html',
+          products: '/seller/product-list.html',
+          orders: '/seller/orders.html',
+          'order-detail': '/seller/order-detail.html',
+          analytics: '/seller/analytics.html',
+          profile: '/seller/profile.html',
+          settings: '/seller/settings.html',
+          wallet: '/seller/wallet.html',
+          messages: '/seller/messages.html',
+          notifications: '/seller/notifications.html',
+          reviews: '/seller/reviews.html',
+          support: '/seller/support.html',
+          inventory: '/seller/inventory.html',
+          promotions: '/seller/promotions.html',
+          payouts: '/seller/payouts.html'
+        },
+        'local-market': {
+          dashboard: '/seller/dashboard.html?tab=grocery',
+          'add-product': '/seller/add-grocery-product.html',
+          'edit-product': '/seller/edit-grocery-product.html',
+          products: '/seller/product-list.html?mode=local',
+          orders: '/seller/orders.html?mode=local',
+          'order-detail': '/seller/order-detail.html',
+          analytics: '/seller/analytics.html?mode=local',
+          profile: '/seller/profile.html', // Shared
+          settings: '/seller/settings.html', // Shared
+          wallet: '/seller/wallet.html', // Shared
+          messages: '/seller/messages.html', // Shared
+          notifications: '/seller/notifications.html', // Shared
+          reviews: '/seller/reviews.html', // Shared
+          support: '/seller/support.html', // Shared
+          inventory: '/seller/inventory.html?mode=local'
+        }
+      },
+
+      // Agent routes
+      agent: {
+        marketplace: {
+          dashboard: '/agent/dashboard.html'
+        },
+        'local-market': {
+          dashboard: '/agent/local-market-dashboard.html',
+          orders: '/agent/orders.html',
+          'order-detail': '/agent/order-detail.html',
+          earnings: '/agent/earnings.html',
+          profile: '/agent/profile.html',
+          settings: '/agent/settings.html'
+        }
+      },
+
+      // Admin routes
+      admin: {
+        marketplace: {
+          dashboard: '/admin/dashboard.html'
+        },
+        'local-market': {
+          dashboard: '/admin/local-market-admin.html'
+        }
+      },
+
+      // Public routes (shared)
+      public: {
+        about: '/public/about.html',
+        contact: '/public/contact.html',
+        faq: '/public/faq.html',
+        'how-it-works': '/public/how-it-works.html',
+        'privacy-policy': '/public/privacy-policy.html',
+        'terms-and-conditions': '/public/terms-and-conditions.html',
+        'shipping-policy': '/public/shipping-policy.html',
+        'returns-policy': '/public/returns-policy.html',
+        categories: '/public/categories.html',
+        'search-results': '/public/search-results.html'
+      },
+
+      // Error routes
+      error: {
+        '404': '/auth/404.html',
+        'access-denied': '/auth/access-denied.html',
+        maintenance: '/auth/maintenance.html'
+      }
+    };
+  }
+
+  // Navigate to a specific route
+  navigate(routeKey, params = {}) {
+    const url = this.getRouteUrl(routeKey, params);
+    if (url) {
+      // Add loading indicator
+      this.showLoadingIndicator();
+      
+      // Navigate after short delay for UX
+      setTimeout(() => {
+        window.location.href = url;
+      }, 200);
+    } else {
+      console.error(`Route not found: ${routeKey}`);
+      this.navigate('error.404');
+    }
+  }
+
+  // Get URL for a route
+  getRouteUrl(routeKey, params = {}) {
+    const routeParts = routeKey.split('.');
+    let route = this.routes;
+
+    // Navigate through route object
+    for (const part of routeParts) {
+      if (route[part]) {
+        route = route[part];
+      } else {
+        return null;
+      }
+    }
+
+    // Handle mode-specific routes
+    if (typeof route === 'object' && route[this.currentMode]) {
+      route = route[this.currentMode];
+    } else if (typeof route === 'object' && !route[this.currentMode]) {
+      // If mode-specific route doesn't exist, try marketplace as fallback
+      route = route.marketplace || route;
+    }
+
+    if (typeof route === 'string') {
+      // Add query parameters if provided
+      if (Object.keys(params).length > 0) {
+        const urlParams = new URLSearchParams(params);
+        route += (route.includes('?') ? '&' : '?') + urlParams.toString();
+      }
+      return route;
+    }
+
+    return null;
+  }
+
+  // Switch between modes
+  switchMode(targetMode) {
+    if (targetMode === this.currentMode) return;
+
+    const currentPath = window.location.pathname;
+    let targetRoute = 'home';
+
+    // Determine equivalent route in target mode
+    if (currentPath.includes('/buyer/')) {
+      if (currentPath.includes('product-list') || currentPath.includes('products')) {
+        targetRoute = 'buyer.products';
+      } else if (currentPath.includes('cart')) {
+        targetRoute = 'buyer.cart';
+      } else if (currentPath.includes('orders')) {
+        targetRoute = 'buyer.orders';
+      } else {
+        targetRoute = 'buyer.dashboard';
+      }
+    } else if (currentPath.includes('/seller/')) {
+      if (currentPath.includes('add-product') || currentPath.includes('add-grocery-product')) {
+        targetRoute = 'seller.add-product';
+      } else if (currentPath.includes('product-list')) {
+        targetRoute = 'seller.products';
+      } else if (currentPath.includes('orders')) {
+        targetRoute = 'seller.orders';
+      } else {
+        targetRoute = 'seller.dashboard';
+      }
+    } else if (currentPath.includes('/agent/')) {
+      targetRoute = 'agent.dashboard';
+    } else if (currentPath.includes('/admin/')) {
+      targetRoute = 'admin.dashboard';
+    }
+
+    // Update current mode
+    this.currentMode = targetMode;
+    
+    // Navigate to equivalent route in target mode
+    this.navigate(targetRoute);
+  }
+
+  // Handle initial route on page load
+  handleInitialRoute() {
+    const path = window.location.pathname;
+    
+    // Check if current path exists, if not redirect to appropriate home
+    if (this.isValidRoute(path)) {
+      return; // Current route is valid
+    }
+
+    // Redirect to appropriate home page
+    if (this.currentMode === 'local-market') {
+      this.navigate('home');
+    } else {
+      this.navigate('home');
+    }
+  }
+
+  // Check if a route is valid
+  isValidRoute(path) {
+    // List of known valid paths
+    const validPaths = [
+      // Public paths
+      '/', '/public/index.html', '/public/about.html', '/public/contact.html',
+      '/public/faq.html', '/public/how-it-works.html', '/public/privacy-policy.html',
+      '/public/terms-and-conditions.html', '/public/product-detail.html',
+      '/public/product-list.html', '/public/categories.html', '/public/search-results.html',
+      
+      // Auth paths
+      '/auth/auth-buyer.html', '/auth/auth-seller.html', '/auth/auth-agent.html',
+      '/auth/auth-admin.html', '/auth/forgot-password.html', '/auth/reset-password.html',
+      '/auth/verify-email.html', '/auth/verify-phone.html', '/auth/404.html',
+      '/auth/access-denied.html', '/auth/maintenance.html',
+      
+      // Buyer paths
+      '/buyer/buyers-home.html', '/buyer/product-list.html', '/buyer/cart.html',
+      '/buyer/checkout.html', '/buyer/orders.html', '/buyer/order-detail.html',
+      '/buyer/track-order.html', '/buyer/wishlist.html', '/buyer/profile.html',
+      '/buyer/settings.html', '/buyer/wallet.html', '/buyer/messages.html',
+      '/buyer/notifications.html', '/buyer/reviews.html', '/buyer/support.html',
+      
+      // Seller paths
+      '/seller/dashboard.html', '/seller/add-product.html', '/seller/add-grocery-product.html',
+      '/seller/edit-product.html', '/seller/product-list.html', '/seller/orders.html',
+      '/seller/order-detail.html', '/seller/analytics.html', '/seller/profile.html',
+      '/seller/settings.html', '/seller/wallet.html', '/seller/messages.html',
+      '/seller/notifications.html', '/seller/reviews.html', '/seller/support.html',
+      '/seller/inventory.html', '/seller/promotions.html', '/seller/payouts.html',
+      
+      // Agent paths
+      '/agent/dashboard.html', '/agent/local-market-dashboard.html', '/agent/orders.html',
+      '/agent/order-detail.html', '/agent/earnings.html', '/agent/profile.html',
+      '/agent/settings.html',
+      
+      // Admin paths
+      '/admin/dashboard.html', '/admin/local-market-admin.html',
+      
+      // Grocery paths
+      '/grocery/local-market-home.html', '/grocery/products.html', '/grocery/product-detail.html',
+      '/grocery/cart.html', '/grocery/checkout.html', '/grocery/orders.html',
+      '/grocery/order-detail.html', '/grocery/order-success.html', '/grocery/track-order.html'
+    ];
+
+    return validPaths.includes(path);
+  }
+
+  // Setup event listeners for navigation
+  setupEventListeners() {
+    // Handle clicks on elements with data-route attribute
+    document.addEventListener('click', (e) => {
+      const routeElement = e.target.closest('[data-route]');
+      if (routeElement) {
+        e.preventDefault();
+        const route = routeElement.dataset.route;
+        const params = routeElement.dataset.params ? JSON.parse(routeElement.dataset.params) : {};
+        this.navigate(route, params);
+      }
+
+      // Handle mode switching
+      const modeSwitcher = e.target.closest('[data-mode-switch]');
+      if (modeSwitcher) {
+        e.preventDefault();
+        const targetMode = modeSwitcher.dataset.modeSwitch;
+        this.switchMode(targetMode);
+      }
+    });
+
+    // Handle browser back/forward buttons
+    window.addEventListener('popstate', () => {
+      this.currentMode = this.detectMode();
+    });
+  }
+
+  // Show loading indicator during navigation
+  showLoadingIndicator() {
+    // Remove existing indicator
+    const existing = document.getElementById('router-loading');
+    if (existing) existing.remove();
+
+    // Create loading indicator
+    const indicator = document.createElement('div');
+    indicator.id = 'router-loading';
+    indicator.className = 'fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50';
+    indicator.innerHTML = `
+      <div class="bg-white rounded-2xl p-6 shadow-xl">
+        <div class="flex items-center space-x-3">
+          <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+          <span class="text-gray-700 font-medium">Loading...</span>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(indicator);
+    
+    // Remove after 3 seconds (fallback)
+    setTimeout(() => {
+      if (indicator.parentNode) {
+        indicator.parentNode.removeChild(indicator);
+      }
+    }, 3000);
+  }
+
+  // Get current user role
+  getCurrentUserRole() {
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      return user.role || 'guest';
+    } catch {
+      return 'guest';
+    }
+  }
+
+  // Check if user is authenticated
+  isAuthenticated() {
+    return !!localStorage.getItem('token');
+  }
+
+  // Redirect to login if not authenticated
+  requireAuth(redirectRoute = 'auth.login') {
+    if (!this.isAuthenticated()) {
+      this.navigate(redirectRoute);
+      return false;
+    }
+    return true;
+  }
+
+  // Get appropriate dashboard for user role
+  getDashboardRoute() {
+    const role = this.getCurrentUserRole();
+    const mode = this.currentMode;
+    
+    switch (role) {
+      case 'buyer':
+        return `buyer.dashboard`;
+      case 'seller':
+        return `seller.dashboard`;
+      case 'agent':
+        return `agent.dashboard`;
+      case 'admin':
+        return `admin.dashboard`;
+      default:
+        return 'home';
+    }
+  }
+
+  // Utility method to update page links
+  updatePageLinks() {
+    // Update all links with data-route attributes
+    document.querySelectorAll('[data-route]').forEach(link => {
+      const route = link.dataset.route;
+      const params = link.dataset.params ? JSON.parse(link.dataset.params) : {};
+      const url = this.getRouteUrl(route, params);
+      
+      if (url && link.tagName === 'A') {
+        link.href = url;
+      }
+    });
+  }
+}
+
+// Create global router instance
+window.appRouter = new AppRouter();
+
+// Initialize router when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    window.appRouter.updatePageLinks();
+  });
+} else {
+  window.appRouter.updatePageLinks();
+}
+
+// Export for module systems
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = AppRouter;
+}

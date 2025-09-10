@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="en" class="admin-page">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sellers Management | Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="admin-auth-check.js"></script>
+    <script src="admin-utils.js"></script>
+    <style>
+        :root {
+            --primary-color: #080b3b;
+            --secondary-color: #1e40af;
+            --accent-color: #3b82f6;
+        }
+        
+        .glass-morphism {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        }
+        .sidebar {
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .nav-item {
+            transition: all 0.3s ease;
+        }
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+        .nav-item.active {
+            background: rgba(255, 255, 255, 0.2);
+            border-left: 3px solid #3b82f6;
+        }
+        .loading-spinner {
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 2px solid #3b82f6;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .form-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+        }
+        .seller-status-badge {
+            @apply px-2 py-1 rounded-full text-xs font-medium;
+        }
+        .status-active { @apply bg-green-500/20 text-green-400; }
+        .status-inactive { @apply bg-red-500/20 text-red-400; }
+        .status-pending { @apply bg-yellow-500/20 text-yellow-400; }
+        .verification-badge {
+            @apply px-2 py-1 rounded-full text-xs font-medium;
+        }
+        .verified { @apply bg-blue-500/20 text-blue-400; }
+        .not-verified { @apply bg-gray-500/20 text-gray-400; }
+        .seller-card {
+            transition: all 0.3s ease;
+        }
+        .seller-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+        .filter-tab {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .filter-tab:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .filter-tab.active {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: var(--accent-color);
+        }
+        .seller-avatar {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-color), var(--secondary-color));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.25rem;
+        }
+    </style>
+</head>
+
+<body class="gradient-bg min-h-screen">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <div class="sidebar w-64 lg:w-80 flex-shrink-0 hidden md:flex flex-col">
+            <div class="p-6 border-b border-white/10">
+                <h2 class="text-xl font-bold text-white">Admin Panel</h2>
+            </div>
+            
+            <nav class="flex-1 p-4 space-y-2">
+                <a href="dashboard.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="user-management.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-users"></i>
+                    <span>User Management</span>
+                </a>
+                <a href="manual-payment-approval.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-credit-card"></i>
+                    <span>Payment Approval</span>
+                </a>
+                <a href="products.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-box"></i>
+                    <span>Products</span>
+                </a>
+                <a href="order-management.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Orders</span>
+                </a>
+                <a href="agents.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-user-tie"></i>
+                    <span>Agents</span>
+                </a>
+                <a href="categories.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-tags"></i>
+                    <span>Categories</span>
+                </a>
+                <a href="brands.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-trademark"></i>
+                    <span>Brands</span>
+                </a>
+                <a href="reviews.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-star"></i>
+                    <span>Reviews</span>
+                </a>
+                <a href="sellers.html" class="nav-item active flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-store"></i>
+                    <span>Sellers</span>
+                </a>
+                <a href="reports.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Reports</span>
+                </a>
+                <a href="settings.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
+            
+            <!-- Header -->
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 space-y-4 sm:space-y-0">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-white mb-2">Sellers Management</h1>
+                    <p class="text-white/70">Manage seller accounts and approve new registrations</p>
+                </div>
+                <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                    <button onclick="exportSellers()" class="bg-gray-500 hover:bg-gray-600 text-white px-3 sm:px-4 py-2 rounded-lg transition text-sm flex items-center justify-center">
+                        <i class="fas fa-download mr-2"></i>Export
+                    </button>
+                    <button onclick="loadSellers()" class="bg-blue-500 hover:bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-lg transition text-sm flex items-center justify-center">
+                        <i class="fas fa-refresh mr-2"></i>Refresh
+                    </button>
+                </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
+                <div class="glass-morphism rounded-xl p-4 sm:p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-white/70 text-xs sm:text-sm">Total Sellers</p>
+                            <p class="text-white text-lg sm:text-2xl font-bold" id="total-sellers">0</p>
+                        </div>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-store text-blue-400 text-lg sm:text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-morphism rounded-xl p-4 sm:p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-white/70 text-xs sm:text-sm">Active</p>
+                            <p class="text-white text-lg sm:text-2xl font-bold" id="active-sellers">0</p>
+                        </div>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-check-circle text-green-400 text-lg sm:text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-morphism rounded-xl p-4 sm:p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-white/70 text-xs sm:text-sm">Pending Approval</p>
+                            <p class="text-white text-lg sm:text-2xl font-bold" id="pending-sellers">0</p>
+                        </div>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-clock text-yellow-400 text-lg sm:text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-morphism rounded-xl p-4 sm:p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-white/70 text-xs sm:text-sm">Total Sales</p>
+                            <p class="text-white text-lg sm:text-2xl font-bold" id="total-sales">$0</p>
+                        </div>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-dollar-sign text-purple-400 text-lg sm:text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Tabs -->
+            <div class="flex flex-wrap gap-2 mb-6">
+                <div class="filter-tab active" data-filter="all" onclick="switchFilter('all')">
+                    <span class="text-white font-medium">All Sellers</span>
+                    <span id="all-count" class="ml-2 text-white/50 text-sm">(0)</span>
+                </div>
+                <div class="filter-tab" data-filter="active" onclick="switchFilter('active')">
+                    <span class="text-white font-medium">Active</span>
+                    <span id="active-count" class="ml-2 text-white/50 text-sm">(0)</span>
+                </div>
+                <div class="filter-tab" data-filter="inactive" onclick="switchFilter('inactive')">
+                    <span class="text-white font-medium">Inactive</span>
+                    <span id="inactive-count" class="ml-2 text-white/50 text-sm">(0)</span>
+                </div>
+                <div class="filter-tab" data-filter="pending" onclick="switchFilter('pending')">
+                    <span class="text-white font-medium">Pending Approval</span>
+                    <span id="pending-count" class="ml-2 text-white/50 text-sm">(0)</span>
+                </div>
+            </div>
+
+            <!-- Search and Filters -->
+            <div class="glass-morphism rounded-xl p-4 sm:p-6 mb-6">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="sm:col-span-2">
+                        <label class="block text-white/70 text-sm mb-2">Search Sellers</label>
+                        <input type="text" id="search-sellers" placeholder="Name, email, username..." 
+                               class="w-full p-3 rounded-lg form-input text-sm">
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="applyFilters()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg text-sm font-medium">
+                            <i class="fas fa-search mr-2"></i>Search
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sellers List -->
+            <div class="glass-morphism rounded-xl overflow-hidden">
+                <div class="p-4 sm:p-6 border-b border-white/10">
+                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-3 sm:space-y-0">
+                        <h3 class="text-lg sm:text-xl font-bold text-white">Sellers List</h3>
+                        <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                            <button onclick="bulkApprove()" class="bg-green-500 hover:bg-green-600 text-white px-3 sm:px-4 py-2 rounded-lg text-sm flex items-center justify-center">
+                                <i class="fas fa-check mr-2"></i>Bulk Approve
+                            </button>
+                            <button onclick="exportSellers()" class="bg-gray-500 hover:bg-gray-600 text-white px-3 sm:px-4 py-2 rounded-lg text-sm flex items-center justify-center">
+                                <i class="fas fa-download mr-2"></i>Export
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="sellers-container" class="overflow-x-auto">
+                    <div class="text-center py-8">
+                        <div class="loading-spinner mx-auto mb-4"></div>
+                        <p class="text-white/70">Loading sellers...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Seller Detail Modal -->
+    <div id="seller-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+        <div class="glass-morphism p-6 sm:p-8 rounded-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 id="modal-title" class="text-xl sm:text-2xl font-bold text-white">Seller Details</h2>
+                <button onclick="closeSellerModal()" class="text-white/70 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <div id="seller-details" class="space-y-6">
+                <!-- Seller details will be loaded here -->
+            </div>
+
+            <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 mt-6">
+                <button type="button" onclick="closeSellerModal()" 
+                        class="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg">
+                    Close
+                </button>
+                <button id="approve-btn" onclick="approveSeller()" 
+                        class="px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg hidden">
+                    <i class="fas fa-check mr-2"></i>Approve Seller
+                </button>
+                <button id="suspend-btn" onclick="suspendSeller()" 
+                        class="px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg">
+                    <i class="fas fa-ban mr-2"></i>Suspend
+                </button>
+                <button id="delete-btn" onclick="deleteCurrentSeller()" 
+                        class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg">
+                    <i class="fas fa-trash mr-2"></i>Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // Global variables
+    let allSellers = [];
+    let filteredSellers = [];
+    let currentFilter = 'all';
+    let currentSeller = null;
+    let selectedSellers = [];
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('🚀 Sellers Management page initializing...');
+        
+        // Check authentication first
+        if (!checkAuthentication()) return;
+        
+        // Load data
+        loadSellers();
+        setupEventListeners();
+    });
+
+    // Check authentication
+    function checkAuthentication() {
+        const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
+        const userRole = localStorage.getItem('userRole');
+        
+        if (!token) {
+            console.log('❌ No authentication token found');
+            window.location.href = '/auth/auth-admin.html';
+            return false;
+        }
+        
+        if (userRole !== 'admin') {
+            console.log('❌ Insufficient permissions');
+            window.location.href = '/auth/auth-admin.html';
+            return false;
+        }
+        
+        console.log('✅ Authentication verified');
+        return true;
+    }
+
+    // Setup event listeners
+    function setupEventListeners() {
+        // Search functionality
+        document.getElementById('search-sellers').addEventListener('input', debounce(applyFilters, 500));
+    }
+
+    // Load sellers from API
+    async function loadSellers() {
+        try {
+            console.log('📊 Loading sellers...');
+            
+            const response = await makeAuthenticatedRequest('/api/admin/sellers?limit=100');
+
+            if (response.success) {
+                allSellers = response.sellers || [];
+                filteredSellers = [...allSellers];
+                
+                renderSellers(filteredSellers);
+                updateStatistics(allSellers);
+                updateFilterCounts(allSellers);
+                
+                console.log('✅ Sellers loaded successfully');
+            } else {
+                throw new Error(response.message || 'Failed to load sellers');
+            }
+
+        } catch (error) {
+            console.error('❌ Error loading sellers:', error);
+            document.getElementById('sellers-container').innerHTML = 
+                createErrorState(error.message, 'loadSellers()');
+            showToast('Failed to load sellers: ' + error.message, 'error');
+        }
+    }
+
+    // Switch filter
+    function switchFilter(filter) {
+        currentFilter = filter;
+        
+        // Update active tab
+        document.querySelectorAll('.filter-tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        document.querySelector(`[data-filter="${filter}"]`).classList.add('active');
+        
+        // Apply filter
+        applyFilters();
+    }
+
+    // Apply filters
+    function applyFilters() {
+        const searchTerm = document.getElementById('search-sellers').value.toLowerCase();
+        
+        filteredSellers = allSellers.filter(seller => {
+            // Status filter
+            if (currentFilter !== 'all') {
+                if (currentFilter === 'active' && !seller.is_active) return false;
+                if (currentFilter === 'inactive' && seller.is_active) return false;
+                if (currentFilter === 'pending' && (seller.is_verified || !seller.is_active)) return false;
+            }
+            
+            // Search filter
+            if (searchTerm) {
+                const searchableText = [
+                    seller.username || '',
+                    seller.email || '',
+                    seller.first_name || '',
+                    seller.last_name || ''
+                ].join(' ').toLowerCase();
+                
+                if (!searchableText.includes(searchTerm)) {
+                    return false;
+                }
+            }
+            
+            return true;
+        });
+        
+        renderSellers(filteredSellers);
+    }
+
+    // Render sellers (mobile-first responsive)
+    function renderSellers(sellers) {
+        const container = document.getElementById('sellers-container');
+        
+        if (!sellers || sellers.length === 0) {
+            container.innerHTML = createEmptyState(
+                'sellers', 
+                'No Sellers Found', 
+                'No sellers match your current filters.',
+                '<button onclick="loadSellers()" class="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"><i class="fas fa-refresh mr-2"></i>Refresh</button>'
+            );
+            return;
+        }
+
+        // Mobile-first: Cards on mobile, table on desktop
+        const mobileCardsHTML = `
+            <div class="block lg:hidden space-y-4 p-4">
+                ${sellers.map(seller => `
+                    <div class="seller-card bg-white/5 rounded-lg p-4 hover:bg-white/10 transition-colors">
+                        <div class="flex items-start space-x-4 mb-4">
+                            <div class="seller-avatar">
+                                ${getSellerInitials(seller)}
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex items-center justify-between mb-2">
+                                    <h4 class="text-white font-semibold">${getSellerName(seller)}</h4>
+                                    <div class="flex space-x-1">
+                                        <span class="seller-status-badge status-${seller.is_active ? 'active' : 'inactive'}">
+                                            ${seller.is_active ? 'Active' : 'Inactive'}
+                                        </span>
+                                        <span class="verification-badge ${seller.is_verified ? 'verified' : 'not-verified'}">
+                                            ${seller.is_verified ? 'Verified' : 'Not Verified'}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="text-white/70 text-sm mb-2">
+                                    <i class="fas fa-envelope mr-1"></i>${seller.email}
+                                </div>
+                                <div class="grid grid-cols-3 gap-2 text-xs">
+                                    <div class="text-center">
+                                        <div class="text-white font-bold">${seller.total_products || 0}</div>
+                                        <div class="text-white/50">Products</div>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="text-white font-bold">${seller.total_orders || 0}</div>
+                                        <div class="text-white/50">Orders</div>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="text-white font-bold">$${(seller.total_sales || 0).toFixed(0)}</div>
+                                        <div class="text-white/50">Sales</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                            <button onclick="viewSeller(${seller.id})" 
+                                    class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-sm flex items-center justify-center">
+                                <i class="fas fa-eye mr-1"></i>View Details
+                            </button>
+                            ${!seller.is_verified ? `
+                                <button onclick="approveSellerById(${seller.id})" 
+                                        class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm flex items-center justify-center">
+                                    <i class="fas fa-check mr-1"></i>Approve
+                                </button>
+                            ` : ''}
+                            ${seller.is_active ? `
+                                <button onclick="suspendSellerById(${seller.id})" 
+                                        class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded text-sm flex items-center justify-center">
+                                    <i class="fas fa-ban mr-1"></i>Suspend
+                                </button>
+                            ` : `
+                                <button onclick="activateSellerById(${seller.id})" 
+                                        class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm flex items-center justify-center">
+                                    <i class="fas fa-play mr-1"></i>Activate
+                                </button>
+                            `}
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+
+        // Desktop table
+        const desktopTableHTML = `
+            <div class="hidden lg:block">
+                <table class="w-full">
+                    <thead class="bg-white/5">
+                        <tr>
+                            <th class="text-left p-4 text-white/70 font-semibold">
+                                <input type="checkbox" onchange="toggleSelectAll(this)" class="mr-2">
+                                Seller
+                            </th>
+                            <th class="text-left p-4 text-white/70 font-semibold">Contact</th>
+                            <th class="text-left p-4 text-white/70 font-semibold">Products</th>
+                            <th class="text-left p-4 text-white/70 font-semibold">Sales</th>
+                            <th class="text-left p-4 text-white/70 font-semibold">Status</th>
+                            <th class="text-left p-4 text-white/70 font-semibold">Joined</th>
+                            <th class="text-left p-4 text-white/70 font-semibold">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${sellers.map(seller => `
+                            <tr class="border-t border-white/10 hover:bg-white/5">
+                                <td class="p-4">
+                                    <input type="checkbox" value="${seller.id}" onchange="toggleSellerSelect(this)" class="mr-3">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="seller-avatar w-10 h-10 text-sm">
+                                            ${getSellerInitials(seller)}
+                                        </div>
+                                        <div>
+                                            <div class="text-white font-semibold">${getSellerName(seller)}</div>
+                                            <div class="text-white/50 text-xs">@${seller.username}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="p-4">
+                                    <div class="text-white/70 text-sm">${seller.email}</div>
+                                    ${seller.phone ? `<div class="text-white/50 text-xs">${seller.phone}</div>` : ''}
+                                </td>
+                                <td class="p-4 text-white font-semibold">
+                                    ${seller.total_products || 0}
+                                </td>
+                                <td class="p-4">
+                                    <div class="text-white font-semibold">$${(seller.total_sales || 0).toFixed(0)}</div>
+                                    <div class="text-white/50 text-xs">${seller.total_orders || 0} orders</div>
+                                </td>
+                                <td class="p-4">
+                                    <div class="flex flex-col space-y-1">
+                                        <span class="seller-status-badge status-${seller.is_active ? 'active' : 'inactive'}">
+                                            ${seller.is_active ? 'Active' : 'Inactive'}
+                                        </span>
+                                        <span class="verification-badge ${seller.is_verified ? 'verified' : 'not-verified'}">
+                                            ${seller.is_verified ? 'Verified' : 'Pending'}
+                                        </span>
+                                    </div>
+                                </td>
+                                <td class="p-4 text-white/70 text-sm">
+                                    ${formatDate(seller.created_at)}
+                                </td>
+                                <td class="p-4">
+                                    <div class="flex space-x-1">
+                                        <button onclick="viewSeller(${seller.id})" 
+                                                class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs"
+                                                title="View Details">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        ${!seller.is_verified ? `
+                                            <button onclick="approveSellerById(${seller.id})" 
+                                                    class="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-xs"
+                                                    title="Approve">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                        ` : ''}
+                                        ${seller.is_active ? `
+                                            <button onclick="suspendSellerById(${seller.id})" 
+                                                    class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs"
+                                                    title="Suspend">
+                                                <i class="fas fa-ban"></i>
+                                            </button>
+                                        ` : `
+                                            <button onclick="activateSellerById(${seller.id})" 
+                                                    class="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-xs"
+                                                    title="Activate">
+                                                <i class="fas fa-play"></i>
+                                            </button>
+                                        `}
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+        
+        container.innerHTML = mobileCardsHTML + desktopTableHTML;
+    }
+
+    // Get seller initials
+    function getSellerInitials(seller) {
+        const firstName = seller.first_name || '';
+        const lastName = seller.last_name || '';
+        const username = seller.username || '';
+        
+        if (firstName && lastName) {
+            return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
+        } else if (username) {
+            return username.substring(0, 2).toUpperCase();
+        }
+        return '??';
+    }
+
+    // Get seller display name
+    function getSellerName(seller) {
+        if (seller.first_name && seller.last_name) {
+            return `${seller.first_name} ${seller.last_name}`;
+        }
+        return seller.username || 'Unknown Seller';
+    }
+
+    // Update statistics
+    function updateStatistics(sellers) {
+        const totalSellers = sellers.length;
+        const activeSellers = sellers.filter(s => s.is_active).length;
+        const pendingSellers = sellers.filter(s => !s.is_verified).length;
+        const totalSales = sellers.reduce((sum, seller) => sum + (seller.total_sales || 0), 0);
+
+        document.getElementById('total-sellers').textContent = totalSellers;
+        document.getElementById('active-sellers').textContent = activeSellers;
+        document.getElementById('pending-sellers').textContent = pendingSellers;
+        document.getElementById('total-sales').textContent = `$${totalSales.toFixed(0)}`;
+    }
+
+    // Update filter counts
+    function updateFilterCounts(sellers) {
+        const counts = {
+            all: sellers.length,
+            active: sellers.filter(s => s.is_active).length,
+            inactive: sellers.filter(s => !s.is_active).length,
+            pending: sellers.filter(s => !s.is_verified).length
+        };
+
+        Object.keys(counts).forEach(filter => {
+            const element = document.getElementById(`${filter}-count`);
+            if (element) {
+                element.textContent = `(${counts[filter]})`;
+            }
+        });
+    }
+
+    // View seller details
+    function viewSeller(sellerId) {
+        currentSeller = allSellers.find(s => s.id === sellerId);
+        if (!currentSeller) {
+            showToast('Seller not found', 'error');
+            return;
+        }
+
+        // Populate modal
+        document.getElementById('seller-details').innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Basic Information -->
+                <div class="md:col-span-2">
+                    <h3 class="text-lg font-bold text-white mb-4">Basic Information</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white/5 p-4 rounded-lg">
+                        <div>
+                            <label class="block text-white/70 text-sm mb-1">Full Name</label>
+                            <div class="text-white font-semibold">${getSellerName(currentSeller)}</div>
+                        </div>
+                        <div>
+                            <label class="block text-white/70 text-sm mb-1">Username</label>
+                            <div class="text-white">@${currentSeller.username}</div>
+                        </div>
+                        <div>
+                            <label class="block text-white/70 text-sm mb-1">Email</label>
+                            <div class="text-white">${currentSeller.email}</div>
+                        </div>
+                        <div>
+                            <label class="block text-white/70 text-sm mb-1">Phone</label>
+                            <div class="text-white">${currentSeller.phone || 'Not provided'}</div>
+                        </div>
+                        <div>
+                            <label class="block text-white/70 text-sm mb-1">Status</label>
+                            <div class="flex space-x-2">
+                                <span class="seller-status-badge status-${currentSeller.is_active ? 'active' : 'inactive'}">
+                                    ${currentSeller.is_active ? 'Active' : 'Inactive'}
+                                </span>
+                                <span class="verification-badge ${currentSeller.is_verified ? 'verified' : 'not-verified'}">
+                                    ${currentSeller.is_verified ? 'Verified' : 'Not Verified'}
+                                </span>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-white/70 text-sm mb-1">Joined Date</label>
+                            <div class="text-white">${formatDate(currentSeller.created_at)}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Business Statistics -->
+                <div class="md:col-span-2">
+                    <h3 class="text-lg font-bold text-white mb-4">Business Statistics</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-blue-500/20 p-4 rounded-lg text-center">
+                            <div class="text-2xl font-bold text-blue-400">${currentSeller.total_products || 0}</div>
+                            <div class="text-white/70 text-sm">Total Products</div>
+                        </div>
+                        <div class="bg-green-500/20 p-4 rounded-lg text-center">
+                            <div class="text-2xl font-bold text-green-400">${currentSeller.total_orders || 0}</div>
+                            <div class="text-white/70 text-sm">Total Orders</div>
+                        </div>
+                        <div class="bg-purple-500/20 p-4 rounded-lg text-center">
+                            <div class="text-2xl font-bold text-purple-400">$${(currentSeller.total_sales || 0).toFixed(0)}</div>
+                            <div class="text-white/70 text-sm">Total Sales</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Show/hide action buttons based on status
+        const approveBtn = document.getElementById('approve-btn');
+        
+        if (!currentSeller.is_verified) {
+            approveBtn.classList.remove('hidden');
+        } else {
+            approveBtn.classList.add('hidden');
+        }
+
+        // Show modal
+        document.getElementById('seller-modal').classList.remove('hidden');
+        document.getElementById('seller-modal').classList.add('flex');
+    }
+
+    // Close seller modal
+    function closeSellerModal() {
+        document.getElementById('seller-modal').classList.add('hidden');
+        document.getElementById('seller-modal').classList.remove('flex');
+        currentSeller = null;
+    }
+
+    // Approve current seller
+    async function approveSeller() {
+        if (!currentSeller) return;
+        
+        const notes = prompt('Add approval notes (optional):');
+        await approveSellerById(currentSeller.id, notes);
+        closeSellerModal();
+    }
+
+    // Suspend current seller
+    async function suspendSeller() {
+        if (!currentSeller) return;
+        
+        const reason = prompt('Enter suspension reason (required):', 'Violating platform policies');
+        if (!reason) return;
+        
+        await suspendSellerById(currentSeller.id, reason);
+        closeSellerModal();
+    }
+
+    // Delete current seller
+    async function deleteCurrentSeller() {
+        if (!currentSeller) return;
+        
+        if (!confirm('Are you sure you want to delete this seller account? This action cannot be undone.')) {
+            return;
+        }
+        
+        await deleteSellerById(currentSeller.id);
+        closeSellerModal();
+    }
+
+    // Approve seller by ID
+    async function approveSellerById(sellerId, notes = null) {
+        try {
+            console.log('✅ Approving seller:', sellerId);
+
+            const response = await makeAuthenticatedRequest(`/api/admin/sellers/${sellerId}/approve`, {
+                method: 'POST',
+                body: JSON.stringify({ notes })
+            });
+
+            if (response.success) {
+                showToast('Seller approved successfully', 'success');
+                loadSellers();
+            } else {
+                throw new Error(response.message || 'Failed to approve seller');
+            }
+
+        } catch (error) {
+            console.error('❌ Error approving seller:', error);
+            showToast('Error approving seller: ' + error.message, 'error');
+        }
+    }
+
+    // Suspend seller by ID
+    async function suspendSellerById(sellerId, reason = null) {
+        try {
+            console.log('❌ Suspending seller:', sellerId);
+
+            const response = await makeAuthenticatedRequest(`/api/admin/sellers/${sellerId}/suspend`, {
+                method: 'POST',
+                body: JSON.stringify({ reason })
+            });
+
+            if (response.success) {
+                showToast('Seller suspended successfully', 'success');
+                loadSellers();
+            } else {
+                throw new Error(response.message || 'Failed to suspend seller');
+            }
+
+        } catch (error) {
+            console.error('❌ Error suspending seller:', error);
+            showToast('Error suspending seller: ' + error.message, 'error');
+        }
+    }
+
+    // Activate seller by ID
+    async function activateSellerById(sellerId) {
+        try {
+            console.log('✅ Activating seller:', sellerId);
+
+            const response = await makeAuthenticatedRequest(`/api/admin/sellers/${sellerId}`, {
+                method: 'PUT',
+                body: JSON.stringify({ is_active: true })
+            });
+
+            if (response.success) {
+                showToast('Seller activated successfully', 'success');
+                loadSellers();
+            } else {
+                throw new Error(response.message || 'Failed to activate seller');
+            }
+
+        } catch (error) {
+            console.error('❌ Error activating seller:', error);
+            showToast('Error activating seller: ' + error.message, 'error');
+        }
+    }
+
+    // Delete seller by ID
+    async function deleteSellerById(sellerId) {
+        try {
+            console.log('🗑️ Deleting seller:', sellerId);
+
+            const response = await makeAuthenticatedRequest(`/api/admin/sellers/${sellerId}`, {
+                method: 'DELETE'
+            });
+
+            if (response.success) {
+                showToast('Seller deleted successfully', 'success');
+                loadSellers();
+            } else {
+                throw new Error(response.message || 'Failed to delete seller');
+            }
+
+        } catch (error) {
+            console.error('❌ Error deleting seller:', error);
+            showToast('Error deleting seller: ' + error.message, 'error');
+        }
+    }
+
+    // Toggle select all sellers
+    function toggleSelectAll(checkbox) {
+        const sellerCheckboxes = document.querySelectorAll('tbody input[type="checkbox"]');
+        selectedSellers = [];
+        
+        sellerCheckboxes.forEach(cb => {
+            cb.checked = checkbox.checked;
+            if (checkbox.checked) {
+                selectedSellers.push(parseInt(cb.value));
+            }
+        });
+        
+        console.log('Selected sellers:', selectedSellers);
+    }
+
+    // Toggle individual seller selection
+    function toggleSellerSelect(checkbox) {
+        const sellerId = parseInt(checkbox.value);
+        
+        if (checkbox.checked) {
+            if (!selectedSellers.includes(sellerId)) {
+                selectedSellers.push(sellerId);
+            }
+        } else {
+            selectedSellers = selectedSellers.filter(id => id !== sellerId);
+        }
+        
+        console.log('Selected sellers:', selectedSellers);
+    }
+
+    // Bulk approve selected sellers
+    async function bulkApprove() {
+        if (selectedSellers.length === 0) {
+            showToast('No sellers selected', 'warning');
+            return;
+        }
+        
+        if (!confirm(`Approve ${selectedSellers.length} selected sellers?`)) {
+            return;
+        }
+        
+        try {
+            const promises = selectedSellers.map(id => 
+                makeAuthenticatedRequest(`/api/admin/sellers/${id}/approve`, {
+                    method: 'POST',
+                    body: JSON.stringify({ notes: 'Bulk approved' })
+                })
+            );
+            
+            await Promise.all(promises);
+            showToast(`${selectedSellers.length} sellers approved successfully`, 'success');
+            selectedSellers = [];
+            loadSellers();
+            
+        } catch (error) {
+            console.error('❌ Error bulk approving sellers:', error);
+            showToast('Error bulk approving sellers: ' + error.message, 'error');
+        }
+    }
+
+    // Export sellers
+    function exportSellers() {
+        if (!filteredSellers || filteredSellers.length === 0) {
+            showToast('No sellers to export', 'warning');
+            return;
+        }
+        
+        const exportData = filteredSellers.map(seller => ({
+            'Name': getSellerName(seller),
+            'Username': seller.username,
+            'Email': seller.email,
+            'Phone': seller.phone || '',
+            'Status': seller.is_active ? 'Active' : 'Inactive',
+            'Verified': seller.is_verified ? 'Yes' : 'No',
+            'Products': seller.total_products || 0,
+            'Orders': seller.total_orders || 0,
+            'Sales': (seller.total_sales || 0).toFixed(2),
+            'Joined Date': new Date(seller.created_at).toLocaleDateString()
+        }));
+        
+        exportToCSV(exportData, `sellers_export_${new Date().toISOString().split('T')[0]}.csv`);
+    }
+
+    // Utility functions
+    function makeAuthenticatedRequest(url, options = {}) {
+        const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+        
+        if (!token) {
+            throw new Error('No authentication token available');
+        }
+
+        const defaultOptions = {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        };
+
+        return fetch(`http://localhost:3001${url}`, { ...defaultOptions, ...options })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            });
+    }
+
+    function createEmptyState(type, title, description, actions = '') {
+        return `
+            <div class="text-center py-12">
+                <div class="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-store text-white/30 text-3xl"></i>
+                </div>
+                <h3 class="text-white text-xl font-semibold mb-2">${title}</h3>
+                <p class="text-white/60 mb-6 max-w-md mx-auto">${description}</p>
+                ${actions}
+            </div>
+        `;
+    }
+
+    function createErrorState(message, retry = null) {
+        return `
+            <div class="text-center py-12">
+                <div class="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-exclamation-triangle text-red-400 text-3xl"></i>
+                </div>
+                <h3 class="text-white text-xl font-semibold mb-2">Error Loading Data</h3>
+                <p class="text-white/60 mb-6 max-w-md mx-auto">${message}</p>
+                ${retry ? `<button onclick="${retry}" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg"><i class="fas fa-refresh mr-2"></i>Try Again</button>` : ''}
+            </div>
+        `;
+    }
+
+    function showToast(message, type = 'info') {
+        console.log(`[${type.toUpperCase()}] ${message}`);
+        
+        const toast = document.createElement('div');
+        toast.className = `fixed top-4 right-4 z-50 px-6 py-4 rounded-lg text-white ${
+            type === 'success' ? 'bg-green-500' : 
+            type === 'error' ? 'bg-red-500' : 
+            type === 'warning' ? 'bg-yellow-500' : 'bg-blue-500'
+        }`;
+        toast.textContent = message;
+        
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    function formatDate(dateString) {
+        if (!dateString) return 'N/A';
+        return new Date(dateString).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
+    }
+
+    function exportToCSV(data, filename) {
+        const csv = convertToCSV(data);
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        window.URL.revokeObjectURL(url);
+    }
+
+    function convertToCSV(data) {
+        if (!data.length) return '';
+        
+        const headers = Object.keys(data[0]);
+        const csvContent = [
+            headers.join(','),
+            ...data.map(row => 
+                headers.map(header => `"${row[header] || ''}"`).join(',')
+            )
+        ].join('\n');
+        
+        return csvContent;
+    }
+
+    // Make functions globally available
+    window.loadSellers = loadSellers;
+    window.switchFilter = switchFilter;
+    window.applyFilters = applyFilters;
+    window.viewSeller = viewSeller;
+    window.closeSellerModal = closeSellerModal;
+    window.approveSeller = approveSeller;
+    window.suspendSeller = suspendSeller;
+    window.deleteCurrentSeller = deleteCurrentSeller;
+    window.approveSellerById = approveSellerById;
+    window.suspendSellerById = suspendSellerById;
+    window.activateSellerById = activateSellerById;
+    window.deleteSellerById = deleteSellerById;
+    window.toggleSelectAll = toggleSelectAll;
+    window.toggleSellerSelect = toggleSellerSelect;
+    window.bulkApprove = bulkApprove;
+    window.exportSellers = exportSellers;
+
+</script>
+
+</body>
+</html>

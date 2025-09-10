@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="en" class="admin-page">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Category Management | Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="admin-auth-check.js"></script>
+    <script src="admin-utils.js"></script>
+    <style>
+        
+        .glass-morphism {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .sidebar {
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .nav-item {
+            transition: all 0.3s ease;
+        }
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+        .nav-item.active {
+            background: rgba(255, 255, 255, 0.2);
+            border-left: 3px solid #3b82f6;
+        }
+        .loading-spinner {
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 2px solid #3b82f6;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .modal {
+            backdrop-filter: blur(10px);
+        }
+        .form-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        .form-input:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #3b82f6;
+            outline: none;
+        }
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        .stat-card {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen">
+    <div class="flex h-screen">
+    
+        
+        <!-- Sidebar -->
+        <div class="sidebar w-64 p-6">
+            <div class="text-white text-2xl font-bold mb-8">
+                <i class="fas fa-shield-alt mr-2"></i>Admin Panel
+            </div>
+            
+            <nav class="space-y-2">
+                <a href="dashboard.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="user-management.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-users"></i>
+                    <span>User Management</span>
+                </a>
+                <a href="manual-payment-approval.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-credit-card"></i>
+                    <span>Payment Approval</span>
+                </a>
+                <a href="products.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-box"></i>
+                    <span>Products</span>
+                </a>
+                <a href="orders.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Orders</span>
+                </a>
+                <a href="agents.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-user-tie"></i>
+                    <span>Agents</span>
+                </a>
+                <a href="reports.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Reports</span>
+                </a>
+                <a href="settings.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+            </nav>
+        </div>
+            
+            <nav class="space-y-2">
+                <a href="dashboard.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="user-management.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-users"></i>
+                    <span>User Management</span>
+                </a>
+                <a href="manual-payment-approval.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-credit-card"></i>
+                    <span>Payment Approval</span>
+                </a>
+                <a href="products.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-box"></i>
+                    <span>Products</span>
+                </a>
+                <a href="orders.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Orders</span>
+                </a>
+                <a href="agents.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-user-tie"></i>
+                    <span>Agents</span>
+                </a>
+                <a href="reports.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Reports</span>
+                </a>
+                <a href="settings.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+            </nav>
+        </div>
+    
+    <!-- Main Content -->
+    <div class="flex-1 p-8 overflow-auto">
+        
+  <!-- Header -->
+  <header class="glass-morphism border-b border-white/20">
+    <div class="container mx-auto px-6 py-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+          <a href="dashboard.html" class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+            <i class="fas fa-arrow-left text-white text-xl"></i>
+          </a>
+          <div>
+            <h1 class="text-2xl font-bold text-white">Category Management</h1>
+            <p class="text-white/70 text-sm">Organize and manage product categories</p>
+          </div>
+        </div>
+        <div class="flex items-center space-x-4">
+          <button id="add-category-btn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition" onclick="showNotification('Feature in development', 'info')">
+            i class="fas fa-plus mr-2"></i>Add Category
+          </button>
+          <button id="brands-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition" onclick="showNotification('Feature in development', 'info')">
+            i class="fas fa-tags mr-2"></i>Brand Management
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container mx-auto px-6 py-8">
+    <!-- Category Statistics -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div class="category-card rounded-2xl p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-white/70 text-sm font-medium">Total Categories</p>
+            <p id="total-categories" class="text-3xl font-bold text-white">0</p>
+          </div>
+          <div class="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center">
+            <i class="fas fa-tags text-blue-400 text-xl"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="category-card rounded-2xl p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-white/70 text-sm font-medium">Active Categories</p>
+            <p id="active-categories" class="text-3xl font-bold text-green-400">0</p>
+          </div>
+          <div class="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center">
+            <i class="fas fa-check-circle text-green-400 text-xl"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="category-card rounded-2xl p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-white/70 text-sm font-medium">Total Products</p>
+            <p id="total-products" class="text-3xl font-bold text-purple-400">0</p>
+          </div>
+          <div class="w-12 h-12 bg-purple-500/20 rounded-full flex items-center justify-center">
+            <i class="fas fa-box text-purple-400 text-xl"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="category-card rounded-2xl p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-white/70 text-sm font-medium">Top Category</p>
+            <p id="top-category" class="text-3xl font-bold text-yellow-400">-</p>
+          </div>
+          <div class="w-12 h-12 bg-yellow-500/20 rounded-full flex items-center justify-center">
+            <i class="fas fa-crown text-yellow-400 text-xl"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Categories Table -->
+    <div class="glass-morphism rounded-2xl p-6">
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="text-xl font-bold text-white">Categories</h3>
+        <div class="flex items-center space-x-2">
+          <button id="expand-all" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg text-sm transition" onclick="showNotification('Feature in development', 'info')">
+            i class="fas fa-expand mr-1"></i>Expand All
+          </button>
+          <button id="collapse-all" class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded-lg text-sm transition" onclick="showNotification('Feature in development', 'info')">
+            i class="fas fa-compress mr-1"></i>Collapse All
+          </button>
+        </div>
+      </div>
+      
+      <div class="overflow-x-auto">
+        <table class="w-full text-white">
+          <thead>
+            <tr class="border-b border-white/20">
+              <th class="text-left py-3 px-4">Category</th>
+              <th class="text-left py-3 px-4">Slug</th>
+              <th class="text-left py-3 px-4">Parent</th>
+              <th class="text-left py-3 px-4">Products</th>
+              <th class="text-left py-3 px-4">Status</th>
+              <th class="text-left py-3 px-4">Sort Order</th>
+              <th class="text-left py-3 px-4">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="categories-table-body">
+            <!-- Categories will be loaded here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- Add/Edit Category Modal -->
+  <div id="category-modal" class="fixed inset-0 bg-black/50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+      <div class="glass-morphism rounded-2xl p-6 w-full max-w-md">
+        <div class="flex items-center justify-between mb-6">
+          <h3 id="modal-title" class="text-xl font-bold text-white">Add Category</h3>
+          <button id="close-category-modal" class="text-white/70 hover:text-white" onclick="showNotification('Feature in development', 'info')">
+            i class="fas fa-times"></i>
+          </button>
+        </div>
+        <form id="category-form" class="space-y-4" method="POST" action="#">
+          <input type="hidden" id="category-id" value="">
+          <div>
+            <label class="block text-white/70 text-sm mb-2">Name *</label>
+            <input type="text" id="category-name" required pattern="[A-Za-z\s]{2,50}" title="Name must be 2-50 characters, letters and spaces only"
+                   class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50">
+          </div>
+          <div>
+            <label class="block text-white/70 text-sm mb-2">Slug *</label>
+            <input type="text" id="category-slug" required pattern=".{1,}" title="This field is required"
+                   class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50">
+          </div>
+          <div>
+            <label class="block text-white/70 text-sm mb-2">Description</label>
+            <textarea id="category-description" rows="3"
+                      class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50"
+                      placeholder="Enter category description..."></textarea>
+          </div>
+          <div>
+            <label class="block text-white/70 text-sm mb-2">Parent Category</label>
+            <select id="parent-category" class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white">
+              <option value="">No Parent</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-white/70 text-sm mb-2">Sort Order</label>
+            <input type="number" id="sort-order" value="0" min="0"
+                   class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white">
+          </div>
+          <div>
+            <label class="flex items-center text-white">
+              <input type="checkbox" id="is-active" checked class="mr-2">
+              Active
+            </label>
+          </div>
+          <div class="flex items-center justify-between pt-4">
+            <button type="button" id="cancel-category" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg transition" onclick="handleCancel()">
+              Cancel
+            /button>
+            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition">
+              Save Category
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Brand Management Modal -->
+  <div id="brands-modal" class="fixed inset-0 bg-black/50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+      <div class="glass-morphism rounded-2xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-xl font-bold text-white">Brand Management</h3>
+          <button id="close-brands-modal" class="text-white/70 hover:text-white" onclick="showNotification('Feature in development', 'info')">
+            i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="category-card rounded-lg p-4">
+              <h4 class="text-white font-semibold mb-2">Brand Statistics</h4>
+              <div class="space-y-2 text-sm">
+                <div class="flex justify-between">
+                  <span class="text-white/70">Total Brands:</span>
+                  <span id="total-brands" class="text-white font-semibold">0</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-white/70">Verified Brands:</span>
+                  <span id="verified-brands" class="text-green-400 font-semibold">0</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-white/70">Unverified Brands:</span>
+                  <span id="unverified-brands" class="text-yellow-400 font-semibold">0</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="glass-morphism rounded-lg p-4">
+            <h4 class="text-white font-semibold mb-4">Brand List</h4>
+            <div class="overflow-x-auto">
+              <table class="w-full text-white">
+                <thead>
+                  <tr class="border-b border-white/20">
+                    <th class="text-left py-2 px-4">Brand Name</th>
+                    <th class="text-left py-2 px-4">Products</th>
+                    <th class="text-left py-2 px-4">Active Products</th>
+                    <th class="text-left py-2 px-4">Status</th>
+                    <th class="text-left py-2 px-4">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="brands-table-body">
+                  <!-- Brands will be loaded here -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Brand Verification Modal -->
+  <div id="brand-verification-modal" class="fixed inset-0 bg-black/50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+      <div class="glass-morphism rounded-2xl p-6 w-full max-w-md">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-xl font-bold text-white">Verify Brand</h3>
+          <button id="close-verification-modal" class="text-white/70 hover:text-white" onclick="showNotification('Feature in development', 'info')">
+            i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="space-y-4">
+          <div>
+            <label class="block text-white/70 text-sm mb-2">Brand Name</label>
+            <p id="brand-name-display" class="text-white font-semibold"></p>
+          </div>
+          <div>
+            <label class="block text-white/70 text-sm mb-2">Verification Status</label>
+            <select id="brand-verification-status" class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white">
+              <option value="true">Verified</option>
+              <option value="false">Unverified</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-white/70 text-sm mb-2">Verification Notes</label>
+            <textarea id="brand-verification-notes" rows="3"
+                      class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50"
+                      placeholder="Enter verification notes..."></textarea>
+          </div>
+          <div class="flex items-center justify-between pt-4">
+            <button id="cancel-verification" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg transition" onclick="handleCancel()">
+              Cancel
+            /button>
+            <button id="save-verification" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition" onclick="handleSave()">
+              Save Verification
+            /button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Check authentication
+    const authToken = localStorage.getItem('authToken');
+    const userData = localStorage.getItem('userData');
+
+    if (!authToken || !userData) {
+      window.location.href = '/auth/auth-admin.html';
+    }
+
+    const user = JSON.parse(userData);
+    if ((user && user.role) !== 'admin') {
+      window.location.href = '/auth/auth-admin.html';
+    }
+
+    // Global variables
+    let categories = [];
+    let brands = [];
+    let currentBrand = null;
+
+    // Load categories
+    async function loadCategories() {
+      try {
+        const response = await 
+                try {
+                    const response = await fetch('${API_BASE_URL}/admin/categories', {
+          headers: {
+            'Authorization': `Bearer ${authToken}`
+          }
+        });
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    // Continue with successful response
+                    const data = await response.json();
+                    return data;
+                } catch (error) {
+                    console.error('API call failed:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+                    showNotification('Operation failed. Please try again.', 'error');
+                    throw error;
+                };
+
+        if (response.ok) {
+          const data = await response.json();
+          categories = data.categories;
+          updateCategoriesTable();
+          updateStats();
+          loadParentCategories();
+        } else {
+          console.error('Error loading categories');
+        }
+      } catch (error) {
+        console.error('Error loading categories:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+      }
+    }
+
+    // Update categories table
+    function updateCategoriesTable() {
+      const tbody = document.getElementById('categories-table-body');
+      tbody.innerHTML = '';
+
+      categories.forEach(category => {
+        const row = document.createElement('tr');
+        row.className = 'border-b border-white/10 hover:bg-white/5';
+        
+        const statusClass = category.is_active ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400';
+        const statusText = category.is_active ? 'Active' : 'Inactive';
+        
+        row.innerHTML = `
+          <td class="py-3 px-4">
+            <div class="flex items-center space-x-3">
+              <div class="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center">
+                <i class="fas fa-tag text-blue-400"></i>
+              </div>
+              <div>
+                <div class="font-semibold text-white">${category.name}</div>
+                <div class="text-white/70 text-sm">${category.description || 'No description'}</div>
+              </div>
+            </div>
+          </td>
+          <td class="py-3 px-4 text-white/70">${category.slug}</td>
+          <td class="py-3 px-4 text-white/70">${category.parent_name || '-'}</td>
+          <td class="py-3 px-4 text-white font-semibold">${category.product_count || 0}</td>
+          <td class="py-3 px-4">
+            <span class="status-badge ${statusClass}">${statusText}</span>
+          </td>
+          <td class="py-3 px-4 text-white/70">${category.sort_order || 0}</td>
+          <td class="py-3 px-4">
+            <div class="flex items-center space-x-2">
+              <button onclick="editCategory(${category.id})" class="text-blue-400 hover:text-blue-300">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button onclick="deleteCategory(${category.id})" class="text-red-400 hover:text-red-300">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </td>
+        `;
+        
+        tbody.appendChild(row);
+      });
+    }
+
+    // Update stats
+    function updateStats() {
+      const stats = {
+        total: categories.length,
+        active: categories.filter(c => c.is_active).length,
+        totalProducts: categories.reduce((sum, c) => sum + (c.product_count || 0), 0),
+        topCategory: categories.length > 0 ? categories.reduce((max, c) => 
+          (c.product_count || 0) > (max.product_count || 0) ? c : max
+        ).name : '-'
+      };
+
+      document.getElementById('total-categories').textContent = stats.total;
+      document.getElementById('active-categories').textContent = stats.active;
+      document.getElementById('total-products').textContent = stats.totalProducts;
+      document.getElementById('top-category').textContent = stats.topCategory;
+    }
+
+    // Load parent categories
+    function loadParentCategories() {
+      const select = document.getElementById('parent-category');
+      select.innerHTML = '<option value="">No Parent</option>';
+      
+      categories.forEach(category => {
+        if (category.is_active) {
+          const option = document.createElement('option');
+          option.value = category.id;
+          option.textContent = category.name;
+          select.appendChild(option);
+        }
+      });
+    }
+
+    // Show add category modal
+    function showAddCategoryModal() {
+      document.getElementById('modal-title').textContent = 'Add Category';
+      document.getElementById('category-id').value = '';
+      document.getElementById('category-form').reset();
+      document.getElementById('category-modal').classList.remove('hidden');
+    }
+
+    // Edit category
+    function editCategory(categoryId) {
+      const category = categories.find(c => c.id === categoryId);
+      if (!category) return;
+
+      document.getElementById('modal-title').textContent = 'Edit Category';
+      document.getElementById('category-id').value = category.id;
+      document.getElementById('category-name').value = category.name;
+      document.getElementById('category-slug').value = category.slug;
+      document.getElementById('category-description').value = category.description || '';
+      document.getElementById('parent-category').value = category.parent_id || '';
+      document.getElementById('sort-order').value = category.sort_order || 0;
+      document.getElementById('is-active').checked = category.is_active;
+
+      document.getElementById('category-modal').classList.remove('hidden');
+    }
+
+    // Save category
+    async function saveCategory(formData) {
+      const categoryId = document.getElementById('category-id').value;
+      const isEdit = categoryId !== '';
+
+      try {
+        const url = isEdit ? '${API_BASE_URL}/admin/categories/${categoryId}` : '${API_BASE_URL}/admin/categories';
+        const method = isEdit ? 'PUT' : 'POST';
+
+        const response = await fetch(url, {
+          method,
+          headers: {
+            'Authorization': `Bearer ${authToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(formData)
+        });
+
+        if (response.ok) {
+          alert(`Category ${isEdit ? 'updated' : 'created'} successfully`);
+          document.getElementById('category-modal').classList.add('hidden');
+          loadCategories();
+        } else {
+          const error = await response.json();
+          alert(`Error: ${error.message}`);
+        }
+      } catch (error) {
+        console.error('Error saving category:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+        alert('Error saving category');
+      }
+    }
+
+    // Delete category
+    async function deleteCategory(categoryId) {
+      if (!confirm('Are you sure you want to delete this category?')) return;
+
+      try {
+        const response = await 
+                try {
+                    const response = await fetch('${API_BASE_URL}/admin/categories/${categoryId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${authToken}`
+          }
+        });
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    // Continue with successful response
+                    const data = await response.json();
+                    return data;
+                } catch (error) {
+                    console.error('API call failed:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+                    showNotification('Operation failed. Please try again.', 'error');
+                    throw error;
+                };
+
+        if (response.ok) {
+          alert('Category deleted successfully');
+          loadCategories();
+        } else {
+          const error = await response.json();
+          alert(`Error: ${error.message}`);
+        }
+      } catch (error) {
+        console.error('Error deleting category:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+        alert('Error deleting category');
+      }
+    }
+
+    // Load brands
+    async function loadBrands() {
+      try {
+        const response = await 
+                try {
+                    const response = await fetch('${API_BASE_URL}/admin/brands', {
+          headers: {
+            'Authorization': `Bearer ${authToken}`
+          }
+        });
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    // Continue with successful response
+                    const data = await response.json();
+                    return data;
+                } catch (error) {
+                    console.error('API call failed:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+                    showNotification('Operation failed. Please try again.', 'error');
+                    throw error;
+                };
+
+        if (response.ok) {
+          const data = await response.json();
+          brands = data.brands;
+          updateBrandsTable();
+          updateBrandStats();
+        } else {
+          console.error('Error loading brands');
+        }
+      } catch (error) {
+        console.error('Error loading brands:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+      }
+    }
+
+    // Update brands table
+    function updateBrandsTable() {
+      const tbody = document.getElementById('brands-table-body');
+      tbody.innerHTML = '';
+
+      brands.forEach(brand => {
+        const row = document.createElement('tr');
+        row.className = 'border-b border-white/10 hover:bg-white/5';
+        
+        row.innerHTML = `
+          <td class="py-2 px-4 text-white font-semibold">${brand.brand}</td>
+          <td class="py-2 px-4 text-white/70">${brand.product_count}</td>
+          <td class="py-2 px-4 text-green-400">${brand.active_products}</td>
+          <td class="py-2 px-4">
+            <span class="status-badge bg-blue-500/20 text-blue-400">Unverified</span>
+          </td>
+          <td class="py-2 px-4">
+            <button onclick="verifyBrand('${encodeURIComponent(brand.brand)}')" class="text-blue-400 hover:text-blue-300">
+              <i class="fas fa-check-circle"></i> Verify
+            </button>
+          </td>
+        `;
+        
+        tbody.appendChild(row);
+      });
+    }
+
+    // Update brand stats
+    function updateBrandStats() {
+      const stats = {
+        total: brands.length,
+        verified: brands.filter(b => b.verified).length,
+        unverified: brands.filter(b => !b.verified).length
+      };
+
+      document.getElementById('total-brands').textContent = stats.total;
+      document.getElementById('verified-brands').textContent = stats.verified;
+      document.getElementById('unverified-brands').textContent = stats.unverified;
+    }
+
+    // Verify brand
+    function verifyBrand(brandName) {
+      currentBrand = decodeURIComponent(brandName);
+      document.getElementById('brand-name-display').textContent = currentBrand;
+      document.getElementById('brand-verification-modal').classList.remove('hidden');
+    }
+
+    // Save brand verification
+    async function saveBrandVerification() {
+      const isVerified = document.getElementById('brand-verification-status').value === 'true';
+      const notes = document.getElementById('brand-verification-notes').value;
+
+      try {
+        const response = await 
+                try {
+                    const response = await fetch('${API_BASE_URL}/admin/brands/${encodeURIComponent(currentBrand);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    // Continue with successful response
+                    const data = await response.json();
+                    return data;
+                } catch (error) {
+                    console.error('API call failed:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+                    showNotification('Operation failed. Please try again.', 'error');
+                    throw error;
+                }}/verify`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${authToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            is_verified: isVerified,
+            verification_notes: notes
+          })
+        });
+
+        if (response.ok) {
+          alert(`Brand ${isVerified ? 'verified' : 'unverified'} successfully`);
+          document.getElementById('brand-verification-modal').classList.add('hidden');
+          loadBrands();
+        } else {
+          alert('Error updating brand verification');
+        }
+      } catch (error) {
+        console.error('Error updating brand verification:', error);
+                
+                // Enhanced error reporting
+                if (error) {
+                    const errorDetails = {
+                        message: error.message || 'Unknown error',
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+        alert('Error updating brand verification');
+      }
+    }
+
+    // Event listeners
+    document.getElementById('add-category-btn').addEventListener('click', showAddCategoryModal);
+    document.getElementById('brands-btn').addEventListener('click', function() {
+      document.getElementById('brands-modal').classList.remove('hidden');
+      loadBrands();
+    });
+
+    document.getElementById('close-category-modal').addEventListener('click', function() {
+      document.getElementById('category-modal').classList.add('hidden');
+    });
+
+    document.getElementById('close-brands-modal').addEventListener('click', function() {
+      document.getElementById('brands-modal').classList.add('hidden');
+    });
+
+    document.getElementById('close-verification-modal').addEventListener('click', function() {
+      document.getElementById('brand-verification-modal').classList.add('hidden');
+    });
+
+    document.getElementById('cancel-category').addEventListener('click', function() {
+      document.getElementById('category-modal').classList.add('hidden');
+    });
+
+    document.getElementById('cancel-verification').addEventListener('click', function() {
+      document.getElementById('brand-verification-modal').classList.add('hidden');
+    });
+
+    document.getElementById('category-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const formData = {
+        name: document.getElementById('category-name').value,
+        slug: document.getElementById('category-slug').value,
+        description: document.getElementById('category-description').value,
+        parent_id: document.getElementById('parent-category').value || null,
+        sort_order: parseInt(document.getElementById('sort-order').value),
+        is_active: document.getElementById('is-active').checked
+      };
+
+      saveCategory(formData);
+    });
+
+    document.getElementById('save-verification').addEventListener('click', saveBrandVerification);
+
+    // Auto-generate slug from name
+    document.getElementById('category-name').addEventListener('input', function() {
+      const name = this.value;
+      const slug = name.toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+      document.getElementById('category-slug').value = slug;
+    });
+
+    // Initialize
+    loadCategories();
+  </script>
+
+<script>
+// Utility Functions for Enhanced Functionality
+function showNotification(message, type = 'info') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 ${
+        type === 'success' ? 'bg-green-500 text-white' :
+        type === 'error' ? 'bg-red-500 text-white' :
+        type === 'warning' ? 'bg-yellow-500 text-black' :
+        'bg-blue-500 text-white'
+    }`;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+// Generic search handlers
+function handleProductSearch(query) {
+    console.log('Searching products:', query);
+    if (query.length > 2) {
+        // Implement product search logic
+        showNotification('Searching for: ' + query, 'info');
+    }
+}
+
+function handleSellerSearch(query) {
+    console.log('Searching sellers:', query);
+    if (query.length > 2) {
+        showNotification('Searching sellers: ' + query, 'info');
+    }
+}
+
+function handleAgentSearch(query) {
+    console.log('Searching agents:', query);
+    if (query.length > 2) {
+        showNotification('Searching agents: ' + query, 'info');
+    }
+}
+
+function handleOrderSearch(query) {
+    console.log('Searching orders:', query);
+    if (query.length > 2) {
+        showNotification('Searching orders: ' + query, 'info');
+    }
+}
+
+function handleUserSearch(query) {
+    console.log('Searching users:', query);
+    if (query.length > 2) {
+        showNotification('Searching users: ' + query, 'info');
+    }
+}
+
+// Generic form handlers
+function handleSave() {
+    showNotification('Save functionality will be implemented soon', 'info');
+}
+
+function handleEdit() {
+    showNotification('Edit functionality will be implemented soon', 'info');
+}
+
+function handleDelete() {
+    if (confirm('Are you sure you want to delete this item?')) {
+        showNotification('Delete functionality will be implemented soon', 'info');
+    }
+}
+
+function handleCancel() {
+    if (confirm('Are you sure you want to cancel? Unsaved changes will be lost.')) {
+        history.back();
+    }
+}
+
+    // Error handling utilities
+    function showError(message) {
+        console.error('Error:', message);
+        if (window.adminAuth && window.adminAuth.showNotification) {
+            window.adminAuth.showNotification(message, 'error');
+        } else {
+            alert('Error: ' + message);
+        }
+    }
+
+    function showSuccess(message) {
+        console.log('Success:', message);
+        if (window.adminAuth && window.adminAuth.showNotification) {
+            window.adminAuth.showNotification(message, 'success');
+        }
+    }
+
+    function showLoading(elementId, message = 'Loading...') {
+        const element = document.getElementById(elementId);
+        if (element) {
+            element.innerHTML = `
+                <div class="text-center py-8">
+                    <div class="loading-spinner mx-auto mb-4"></div>
+                    <p class="text-white/70">${message}</p>
+                </div>
+            `;
+        }
+    }
+</script>
+
+    </div>
+</div>
+
+<script>
+// Unified Admin API Integration for category-management.html
+class AdminAPI {
+    constructor() {
+        this.baseUrl = '/api/admin';
+        this.token = localStorage.getItem('adminToken');
+    }
+    
+    async request(endpoint, options = {}) {
+        const url = this.baseUrl + endpoint;
+        const config = {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + this.token,
+                ...options.headers
+            },
+            ...options
+        };
+        
+        try {
+            showLoading(true);
+            const response = await fetch(url, config);
+            
+            if (!response.ok) {
+                throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            showLoading(false);
+            return data;
+        } catch (error) {
+            showLoading(false);
+            showError('API Error: ' + error.message);
+            throw error;
+        }
+    }
+    
+    // Page-specific methods
+    
+    async getData() {
+        return await this.request('/data');
+    }
+}
+
+// Initialize API
+const adminAPI = new AdminAPI();
+
+// Load data when page loads
+document.addEventListener('DOMContentLoaded', async function() {
+    try {
+        await loadPageData();
+    } catch (error) {
+        console.error('Failed to load page data:', error);
+        showError('Failed to load data. Please refresh the page.');
+    }
+});
+
+async function loadPageData() {
+    // Implement page-specific data loading
+    console.log('Loading data for category-management.html...');
+    
+    
+    // Generic data loading
+    console.log('Loading data for category-management.html...');
+}
+
+function refreshData() {
+    loadPageData();
+}
+</script>
+</body>
+</html>

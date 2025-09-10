@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Local Market | African Deals Domain</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+  <link rel="preload" href="https://cdn.tailwindcss.com" as="script" onload="this.onload=null;this.rel='script'">
+  <noscript><script src="https://cdn.tailwindcss.com"></script></noscript>
+  <link rel="icon" href="/public/images/logo.png">
+  <script>
+    // Load non-critical CSS after page load for better performance
+    window.addEventListener('load', function() {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = '/shared/styles.css';
+      document.head.appendChild(link);
+    });
+  </script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="/shared/auth-utils.js"></script>
+  <script src="/grocery/missing-functions.js"></script>
+  <script src="/grocery/local-market-referrals.js"></script>
+  <script src="/grocery/local-market-product-modal.js"></script>
+  <script src="/grocery/local-market-core.js"></script>
+  
+  <style>
+    .fade-in { animation: fadeIn 0.5s ease-in-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .menu-item-enter { animation: slideIn 0.3s ease-out; }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+    .sticky-cart { position: sticky; top: 6rem; }
+    #map-preview { height: 200px; }
+    .product-card { transition: all 0.3s ease; }
+    .product-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
+    .loading-spinner { animation: spin 1s linear infinite; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+    .gradient-bg { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+    
+    /* Enhanced slider styling */
+    .slider {
+      -webkit-appearance: none;
+      appearance: none;
+      background: linear-gradient(to right, #10B981 0%, #10B981 10%, #E5E7EB 10%, #E5E7EB 100%);
+      outline: none;
+      border-radius: 15px;
+    }
+    
+    .slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #10B981;
+      cursor: pointer;
+      border: 2px solid white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .slider::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #10B981;
+      cursor: pointer;
+      border: 2px solid white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+  </style>
+</head>
+<body class="bg-green-50">
+
+  <!-- Header -->
+  <header class="glass shadow-lg sticky top-0 z-40">
+    <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-20">
+        <!-- Logo & Mode Indicator -->
+        <div class="flex items-center gap-4">
+          <a href="/buyer/buyers-home.html" class="flex items-center gap-2">
+            <img src="/public/images/logo.png" alt="ADD Logo" class="h-12 w-12 rounded-xl shadow-lg" />
+          </a>
+          <div>
+            <h1 class="font-bold text-lg text-green-700">🛒 Local Market</h1>
+            <p class="text-xs text-gray-500">Fresh • Fast • Local</p>
+          </div>
+        </div>
+
+        <!-- Search Bar (Mobile Hidden) -->
+        <div class="hidden lg:flex flex-1 max-w-lg mx-8">
+          <div class="relative w-full">
+            <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+            <input type="text" id="header-search" placeholder="Search products, categories..." 
+                   class="w-full pl-12 pr-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent">
+          </div>
+        </div>
+
+        <!-- Navigation & User Actions -->
+        <div class="flex items-center gap-2 md:gap-4">
+          <!-- Location Indicator -->
+          <div id="location-indicator" class="flex items-center gap-2 bg-green-100 text-green-700 px-3 py-2 rounded-xl text-sm font-medium cursor-pointer hover:bg-green-200 transition-colors" onclick="openLocationSettings()">
+            <i class="fas fa-map-marker-alt text-green-600"></i>
+            <span id="current-location" class="hidden sm:inline">Set Location</span>
+            <span id="current-location-mobile" class="sm:hidden">📍</span>
+            <i class="fas fa-cog text-xs"></i>
+          </div>
+          
+          <button onclick="switchToPhysicalProducts()" class="hidden md:flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-xl font-medium transition-all duration-300 shadow-lg text-sm">
+            <i class="fas fa-box-open"></i>
+            <span>Physical Products</span>
+          </button>
+          
+          <!-- Order Tracking Button -->
+          <button onclick="showMyOrders()" class="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded-xl font-medium transition-all duration-300 shadow-lg text-sm">
+            <i class="fas fa-truck"></i>
+            <span class="hidden sm:inline">Track Orders</span>
+            <span class="sm:hidden">🚚</span>
+          </button>
+          
+          <!-- User Menu -->
+          <div class="relative">
+            <button id="user-menu-btn" class="flex items-center gap-2 text-gray-600 hover:text-green-700 p-2 rounded-lg hover:bg-green-50 transition-colors" onclick="toggleUserMenu()">
+              <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                <i class="fas fa-user text-green-600 text-sm"></i>
+              </div>
+              <span id="user-name" class="hidden md:block font-medium">Loading...</span>
+              <i class="fas fa-chevron-down text-xs"></i>
+            </button>
+            
+            <!-- Dropdown Menu -->
+            <div id="user-dropdown" class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 hidden z-50">
+              <div class="py-2">
+                <button onclick="showMyOrders()" class="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-green-50 transition-colors w-full text-left">
+                  <i class="fas fa-receipt text-green-600"></i>
+                  <span>My Orders</span>
+                </button>
+                <button onclick="showProfile()" class="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-green-50 transition-colors w-full text-left">
+                  <i class="fas fa-user text-green-600"></i>
+                  <span>Profile</span>
+                </button>
+                <button onclick="openLocationSettings()" class="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-green-50 transition-colors w-full text-left">
+                  <i class="fas fa-map-marker-alt text-green-600"></i>
+                  <span>Location Settings</span>
+                </button>
+                <button onclick="showHelpSupport()" class="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-green-50 transition-colors w-full text-left">
+                  <i class="fas fa-headset text-green-600"></i>
+                  <span>Help & Support</span>
+                </button>
+                <hr class="my-2">
+                <button id="logout-btn" class="flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 transition-colors w-full text-left" onclick="logout()">
+                  <i class="fas fa-sign-out-alt"></i>
+                  <span>Logout</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- FREE Delivery Promotion Banner -->
+  <div class="bg-gradient-to-r from-green-500 via-blue-500 to-purple-600 text-white py-4 px-4 shadow-lg">
+    <div class="max-w-8xl mx-auto">
+      <div class="flex items-center justify-center gap-4 text-center">
+        <div class="flex items-center gap-2">
+          <i class="fas fa-truck text-2xl animate-bounce"></i>
+          <span class="text-lg font-bold">🎉 FREE DELIVERY</span>
+        </div>
+        <div class="hidden md:block w-px h-8 bg-white/30"></div>
+        <div class="flex items-center gap-2">
+          <i class="fas fa-gift text-xl"></i>
+          <span class="font-semibold">📦 FREE PACKAGING</span>
+        </div>
+        <div class="hidden md:block w-px h-8 bg-white/30"></div>
+        <div class="flex items-center gap-2">
+          <i class="fas fa-star text-xl"></i>
+          <span class="font-semibold">✨ NO HIDDEN FEES</span>
+        </div>
+        <div class="hidden lg:block w-px h-8 bg-white/30"></div>
+        <div class="hidden lg:flex items-center gap-2">
+          <i class="fas fa-heart text-xl text-red-300"></i>
+          <span class="font-semibold">What you see is what you pay!</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <main class="max-w-8xl mx-auto p-4 sm:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-4 gap-8">
+
+    <!-- Left Column: Filters and Products -->
+    <div class="lg:col-span-3 space-y-8">
+      
+      <!-- Location & Search/Filter Panel -->
+      <section class="bg-white rounded-2xl shadow-lg p-6 fade-in">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+          <!-- Location Info -->
+          <div>
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                <i class="fas fa-map-marker-alt text-xl text-green-600"></i>
+              </div>
+              <div>
+                <h2 class="text-xl font-bold text-gray-800">Delivery Zone</h2>
+                <p id="location-indicator" class="text-sm text-gray-600">
+                  <i class="fas fa-spinner loading-spinner mr-1"></i>
+                  Detecting your location...
+                </p>
+              </div>
+            </div>
+            <div id="map-preview" class="rounded-xl border border-gray-200 bg-gray-100 relative overflow-hidden hidden">
+              <div id="map-loading" class="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
+                <div class="text-center">
+                  <i class="fas fa-spinner loading-spinner text-2xl text-gray-400 mb-2"></i>
+                  <p class="text-sm text-gray-500">Loading map...</p>
+                </div>
+              </div>
+            </div>
+            <div class="mt-4 flex gap-2">
+              <button id="update-location-btn" class="flex-1 bg-green-100 text-green-800 font-semibold py-2 px-4 rounded-lg hover:bg-green-200 transition-colors" onclick="updateLocation()">
+                <i class="fas fa-location-crosshairs mr-2"></i>Update Location
+              </button>
+              <button id="use-current-location-btn" class="bg-blue-100 text-blue-800 font-semibold py-2 px-4 rounded-lg hover:bg-blue-200 transition-colors" onclick="getCurrentLocation()">
+                <i class="fas fa-crosshairs"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Search & Filters -->
+          <div>
+            <!-- Mobile Search (shown on mobile) -->
+            <div class="lg:hidden relative mb-4">
+              <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+              <input type="text" id="mobile-search-bar" placeholder="Type to search products (min 2 chars)" onkeyup="handleProductSearch(this.value)" class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500">
+            </div>
+
+            <!-- Filters -->
+            <div class="space-y-4">
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                  <select id="category-filter" class="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500">
+                    <option value="">All Categories</option>
+                    <!-- Categories will be loaded dynamically -->
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
+                  <select id="sort-filter" class="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500">
+                    <option value="name">Name (A-Z)</option>
+                    <option value="price_low">Price (Low to High)</option>
+                    <option value="price_high">Price (High to Low)</option>
+                    <option value="rating">Highest Rated</option>
+                    <option value="newest">Newest First</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Price Range</label>
+                <div class="px-2">
+                  <input type="range" id="price-range" min="0" max="10000" value="10000" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                  <div class="flex justify-between text-xs text-gray-500 mt-1">
+                    <span>0 RWF</span>
+                    <span id="price-range-value">10,000 RWF</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Distance</label>
+                  <select id="distance-filter" class="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500">
+                    <option value="">Any Distance</option>
+                    <option value="1">Within 1 km</option>
+                    <option value="5">Within 5 km</option>
+                    <option value="10">Within 10 km</option>
+                    <option value="20">Within 20 km</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Availability</label>
+                  <select id="availability-filter" class="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500">
+                    <option value="">All Products</option>
+                    <option value="in-stock">In Stock Only</option>
+                    <option value="low-stock">Low Stock</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="flex gap-2">
+                <button onclick="applyFilters()" class="flex-1 bg-green-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-700 transition-colors">
+                  <i class="fas fa-filter mr-2"></i>Apply Filters
+                </button>
+                <button onclick="clearFilters()" class="bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors">
+                  <i class="fas fa-times mr-2"></i>Clear
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Products Section -->
+      <section class="bg-white rounded-2xl shadow-lg p-6 fade-in">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h2 class="text-2xl font-bold text-gray-800">Fresh Products Near You</h2>
+            <p id="products-count" class="text-sm text-gray-600">Loading products...</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="refreshProducts()" class="bg-green-100 text-green-800 p-2 rounded-lg hover:bg-green-200 transition-colors" title="Refresh Products">
+              <i class="fas fa-sync-alt"></i>
+            </button>
+            <div class="flex bg-gray-100 rounded-lg p-1">
+              <button id="grid-view-btn" onclick="setViewMode('grid')" class="px-3 py-1 rounded-md bg-white shadow-sm text-sm font-medium text-gray-700">
+                <i class="fas fa-th-large"></i>
+              </button>
+              <button id="list-view-btn" onclick="setViewMode('list')" class="px-3 py-1 rounded-md text-sm font-medium text-gray-500">
+                <i class="fas fa-list"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Products Loading State -->
+        <div id="products-loading" class="hidden text-center py-12">
+          <i class="fas fa-spinner loading-spinner text-4xl text-green-600 mb-4"></i>
+          <p class="text-gray-600">Loading fresh products...</p>
+        </div>
+
+        <!-- Products Grid -->
+        <div id="product-listings" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <!-- Products will be loaded here -->
+        </div>
+
+        <!-- No Products Message -->
+        <div id="no-products" class="hidden text-center py-12">
+          <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i class="fas fa-shopping-basket text-3xl text-gray-400"></i>
+          </div>
+          <h3 class="text-xl font-semibold text-gray-700 mb-2">No Products Found</h3>
+          <p class="text-gray-500 mb-4">Try adjusting your filters or location settings</p>
+          <button onclick="clearFilters()" class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors">
+            Clear Filters
+          </button>
+        </div>
+
+        <!-- Pagination -->
+        <div id="pagination" class="flex justify-center mt-8 hidden">
+          <div class="flex items-center gap-2">
+            <button id="prev-page" onclick="changePage(-1)" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            <span id="page-info" class="px-4 py-2 text-sm text-gray-600">Page 1 of 1</span>
+            <button id="next-page" onclick="changePage(1)" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Right Column: Shopping Menu -->
+    <div class="lg:col-span-1">
+      <div class="sticky-cart bg-white rounded-2xl shadow-lg p-6 fade-in">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-xl font-bold text-gray-800">Shopping Menu</h3>
+          <div class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-bold">
+            <span id="menu-item-count">0</span> items
+          </div>
+        </div>
+
+        <!-- Menu Items -->
+        <div id="menu-items-list" class="space-y-3 mb-6 max-h-64 overflow-y-auto">
+          <p class="text-center text-gray-500 py-8">Your menu is empty.</p>
+        </div>
+
+        <!-- Cost Breakdown -->
+        <div id="cost-breakdown" class="border-t pt-4 space-y-2 hidden">
+          <div class="flex justify-between text-sm">
+            <span>Products Total:</span>
+            <span id="products-total">0 RWF</span>
+          </div>
+          <div class="flex justify-between text-sm">
+            <span>Platform Fee:</span>
+            <span id="platform-fee">0 RWF</span>
+          </div>
+          <div class="flex justify-between text-sm">
+            <span>Delivery Fee:</span>
+            <span class="text-green-600 font-semibold">FREE</span>
+          </div>
+          <div class="flex justify-between font-bold text-lg border-t pt-2">
+            <span>Total:</span>
+            <span id="grand-total" class="text-green-600">0 RWF</span>
+          </div>
+        </div>
+
+        <!-- Delivery Info Setup -->
+        <div id="delivery-info-setup" class="mt-6 p-4 bg-blue-50 rounded-lg hidden">
+          <h4 class="font-semibold text-blue-800 mb-3">📍 Delivery Information</h4>
+          <div class="space-y-3">
+            <div>
+              <label class="block text-sm font-medium text-blue-700 mb-1">Delivery Address</label>
+              <textarea id="delivery-address" placeholder="Enter your full delivery address..." class="w-full p-2 border border-blue-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 resize-none" rows="2"></textarea>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-blue-700 mb-1">Phone Number</label>
+              <input type="tel" id="delivery-phone" placeholder="Your phone number" class="w-full p-2 border border-blue-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-blue-700 mb-1">Special Instructions (Optional)</label>
+              <textarea id="delivery-instructions" placeholder="Any special delivery instructions..." class="w-full p-2 border border-blue-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 resize-none" rows="2"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Checkout Button -->
+        <button id="checkout-btn" onclick="proceedToCheckout()" disabled class="w-full bg-green-600 text-white font-bold py-3 px-4 rounded-xl hover:bg-green-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed mt-6">
+          <i class="fas fa-shopping-cart mr-2"></i>
+          Proceed to Checkout
+        </button>
+
+        <!-- Quick Actions -->
+        <div class="mt-4 grid grid-cols-2 gap-2">
+          <button onclick="clearMenu()" class="bg-red-100 text-red-700 py-2 px-3 rounded-lg hover:bg-red-200 transition-colors text-sm font-medium">
+            <i class="fas fa-trash mr-1"></i>Clear Menu
+          </button>
+          <button onclick="saveMenuForLater()" class="bg-blue-100 text-blue-700 py-2 px-3 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium">
+            <i class="fas fa-bookmark mr-1"></i>Save for Later
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Location Settings Modal -->
+  <div id="location-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+      <div class="p-6">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-xl font-bold text-gray-800">📍 Set Your Location</h3>
+          <button onclick="closeLocationModal()" class="text-gray-400 hover:text-gray-600 text-xl">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Search Address</label>
+            <div class="relative">
+              <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+              <input type="text" id="address-search" placeholder="Enter your address or landmark..." class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Latitude</label>
+              <input type="number" id="latitude-input" step="any" placeholder="-1.9441" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Longitude</label>
+              <input type="number" id="longitude-input" step="any" placeholder="30.0619" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Maximum Distance (km)</label>
+            <select id="max-distance-select" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+              <option value="5">Within 5 km</option>
+              <option value="10" selected>Within 10 km</option>
+              <option value="20">Within 20 km</option>
+              <option value="50">Within 50 km</option>
+            </select>
+          </div>
+
+          <div class="flex gap-3">
+            <button onclick="getCurrentLocation()" class="flex-1 bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors">
+              <i class="fas fa-crosshairs mr-2"></i>Use Current Location
+            </button>
+            <button onclick="saveLocationSettings()" class="flex-1 bg-green-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-green-700 transition-colors">
+              <i class="fas fa-save mr-2"></i>Save Location
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Order Confirmation Modal -->
+  <div id="order-confirmation-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full">
+      <div class="p-8 text-center">
+        <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+          <i class="fas fa-check-circle text-4xl text-green-600"></i>
+        </div>
+        <h3 class="text-2xl font-bold text-gray-800 mb-4">Order Placed Successfully! 🎉</h3>
+        <p class="text-gray-600 mb-6">Your grocery order has been submitted and is being processed. You'll receive updates via SMS and email.</p>
+        
+        <div class="bg-gray-50 rounded-lg p-4 mb-6 text-left">
+          <h4 class="font-semibold text-gray-800 mb-2">Order Summary:</h4>
+          <div id="order-summary-details" class="text-sm text-gray-600">
+            <!-- Order details will be populated here -->
+          </div>
+        </div>
+        
+        <div class="flex gap-3">
+          <button onclick="closeOrderModal()" class="flex-1 bg-gray-200 text-gray-700 font-semibold py-3 px-4 rounded-lg hover:bg-gray-300 transition-colors">
+            Continue Shopping
+          </button>
+          <button onclick="viewOrderDetails()" class="flex-1 bg-green-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-green-700 transition-colors">
+            View Order Details
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Order Details Modal -->
+  <div id="order-details-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div class="p-6">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-xl font-bold text-gray-800">📋 Order Details</h3>
+          <button onclick="closeOrderDetailsModal()" class="text-gray-400 hover:text-gray-600 text-xl">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        
+        <div id="order-details-content" class="space-y-4">
+          <!-- Order details will be populated here -->
+        </div>
+        
+        <a href="/buyer/orders.html" class="block w-full bg-green-600 text-white text-center font-semibold py-3 px-4 rounded-lg hover:bg-green-700 transition-colors mt-6">
+          View Full Order Details
+        </a>
+      </div>
+      <button id="close-modal-btn" class="mt-6 text-sm text-gray-500 hover:underline" onclick="showNotification('Feature in development', 'info')">Close</button>
+    </div>
+  </div>
+
+  <script>
+    // Simple initialization script - main functionality is in external files
+    // Debug mode - set to true for detailed logging
+    const DEBUG_MODE = window.location.search.includes('debug=true');
+    
+    function debugLog(message, data = null) {
+      if (DEBUG_MODE) {
+        console.log(`[LOCAL-MARKET-DEBUG] ${message}`, data || '');
+      }
+    }
+
+    // Global error handler
+    window.addEventListener('error', function(event) {
+      console.error('Global error caught:', event.error);
+      debugLog('Global error', {
+        message: event.message,
+        filename: event.filename,
+        lineno: event.lineno,
+        colno: event.colno,
+        error: event.error
+      });
+      
+      // Show user-friendly error message
+      if (event.error && event.error.message) {
+        if (event.error.message.includes('is not defined')) {
+          const functionName = event.error.message.match(/(\w+) is not defined/)?.[1];
+          if (functionName) {
+            showNotification(`Function "${functionName}" is missing. Please refresh the page.`, 'error');
+          }
+        } else {
+          showNotification('An unexpected error occurred. Please refresh the page.', 'error');
+        }
+      }
+    });
+
+    // Global unhandled promise rejection handler
+    window.addEventListener('unhandledrejection', function(event) {
+      console.error('Unhandled promise rejection:', event.reason);
+      debugLog('Unhandled promise rejection', { reason: event.reason });
+      showNotification('A network or processing error occurred. Please try again.', 'error');
+    });
+    
+    // Simple page initialization - main functionality is in external JS files
+    debugLog('Local Market page loaded - external scripts will handle initialization');
+  </script>
+</body>
+</html>

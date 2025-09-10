@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Route Planning - Pickup Delivery Agent</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=geometry,places"></script>
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen">
+        <!-- Header -->
+        <header class="bg-indigo-600 text-white p-4">
+            <div class="flex items-center justify-between">
+                <h1 class="text-xl font-bold">Route Planning</h1>
+                <div class="flex items-center space-x-4">
+                    <button onclick="optimizeRoute()" class="px-4 py-2 bg-green-500 hover:bg-green-600 rounded">
+                        Optimize Route
+                    </button>
+                    <button onclick="startNavigation()" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded">
+                        Start Navigation
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <div class="flex h-screen">
+            <!-- Map Container -->
+            <div class="flex-1">
+                <div id="map" class="w-full h-full"></div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="w-96 bg-white shadow-lg overflow-y-auto">
+                <!-- Route Summary -->
+                <div class="p-4 border-b bg-indigo-50">
+                    <h2 class="font-bold text-lg mb-3">Route Summary</h2>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="text-gray-600">Total Distance:</span>
+                            <div id="total-distance" class="font-semibold">--</div>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">Total Time:</span>
+                            <div id="total-time" class="font-semibold">--</div>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">Stops:</span>
+                            <div id="total-stops" class="font-semibold">--</div>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">Fuel Cost:</span>
+                            <div id="fuel-cost" class="font-semibold">--</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Route Options -->
+                <div class="p-4 border-b">
+                    <h3 class="font-semibold mb-3">Route Options</h3>
+                    <div class="space-y-2">
+                        <label class="flex items-center">
+                            <input type="radio" name="route-type" value="fastest" checked class="mr-2">
+                            <span class="text-sm">Fastest Route</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="radio" name="route-type" value="shortest" class="mr-2">
+                            <span class="text-sm">Shortest Distance</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="radio" name="route-type" value="fuel-efficient" class="mr-2">
+                            <span class="text-sm">Fuel Efficient</span>
+                        </label>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <label class="flex items-center">
+                            <input type="checkbox" id="avoid-tolls" class="mr-2">
+                            <span class="text-sm">Avoid Tolls</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" id="avoid-highways" class="mr-2">
+                            <span class="text-sm">Avoid Highways</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Delivery Stops -->
+                <div class="p-4 border-b">
+                    <h3 class="font-semibold mb-3">Delivery Stops</h3>
+                    <div id="delivery-stops" class="space-y-2">
+                        <!-- Stops will be populated here -->
+                    </div>
+                </div>
+
+                <!-- Vehicle Settings -->
+                <div class="p-4 border-b">
+                    <h3 class="font-semibold mb-3">Vehicle Settings</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-sm text-gray-600 mb-1">Vehicle Type</label>
+                            <select id="vehicle-type" class="w-full p-2 border rounded">
+                                <option value="motorcycle">Motorcycle</option>
+                                <option value="car">Car</option>
+                                <option value="van">Van</option>
+                                <option value="truck">Truck</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-600 mb-1">Fuel Efficiency (km/l)</label>
+                            <input type="number" id="fuel-efficiency" value="15" class="w-full p-2 border rounded">
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-600 mb-1">Fuel Price (per liter)</label>
+                            <input type="number" id="fuel-price" value="150" class="w-full p-2 border rounded">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Route Actions -->
+                <div class="p-4">
+                    <div class="space-y-2">
+                        <button onclick="saveRoute()" class="w-full px-4 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600">
+                            Save Route
+                        </button>
+                        <button onclick="shareRoute()" class="w-full px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">
+                            Share Route
+                        </button>
+                        <button onclick="printRoute()" class="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                            Print Directions
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let map;
+        let directionsService;
+        let directionsRenderer;
+        let deliveryStops = [];
+        let optimizedRoute = null;
+
+        // Initialize map and services
+        function initMap() {
+            map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 12,
+                center: { lat: -1.2921, lng: 36.8219 }, // Nairobi default
+                mapTypeId: 'roadmap'
+            });
+
+            directionsService = new google.maps.DirectionsService();
+            directionsRenderer = new google.maps.DirectionsRenderer({
+                draggable: true,
+                panel: null
+            });
+            directionsRenderer.setMap(map);
+
+            loadDeliveryStops();
+        }
+
+        // Load delivery stops from server
+        async function loadDeliveryStops() {
+            try {
+                const response = await fetch('/api/pickup-delivery-agent/assigned-deliveries', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    deliveryStops = data.deliveries;
+                    displayDeliveryStops();
+                    if (deliveryStops.length > 0) {
+                        calculateRoute();
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading delivery stops:', error);
+            }
+        }
+
+        // Display delivery stops in sidebar
+        function displayDeliveryStops() {
+            const container = document.getElementById('delivery-stops');
+            container.innerHTML = '';
+
+            deliveryStops.forEach((stop, index) => {
+                const stopElement = document.createElement('div');
+                stopElement.className = 'p-3 border rounded bg-gray-50';
+                stopElement.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="w-6 h-6 bg-indigo-500 text-white rounded-full flex items-center justify-center text-xs font-bold mr-2">
+                                ${index + 1}
+                            </div>
+                            <div>
+                                <div class="font-semibold text-sm">#${stop.order_number}</div>
+                                <div class="text-xs text-gray-600">${stop.customer_name}</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xs text-gray-600">ETA</div>
+                            <div class="text-sm font-semibold" id="eta-${index}">--</div>
+                        </div>
+                    </div>
+                    <div class="mt-2 text-xs text-gray-600">${stop.address}</div>
+                    <div class="mt-1 flex space-x-2">
+                        <button onclick="moveStopUp(${index})" class="text-xs px-2 py-1 bg-blue-100 text-blue-600 rounded">↑</button>
+                        <button onclick="moveStopDown(${index})" class="text-xs px-2 py-1 bg-blue-100 text-blue-600 rounded">↓</button>
+                        <button onclick="skipStop(${index})" class="text-xs px-2 py-1 bg-red-100 text-red-600 rounded">Skip</button>
+                    </div>
+                `;
+                container.appendChild(stopElement);
+            });
+
+            document.getElementById('total-stops').textContent = deliveryStops.length;
+        }
+
+        // Calculate and display route
+        function calculateRoute() {
+            if (deliveryStops.length === 0) return;
+
+            const waypoints = deliveryStops.slice(1, -1).map(stop => ({
+                location: new google.maps.LatLng(stop.latitude, stop.longitude),
+                stopover: true
+            }));
+
+            const request = {
+                origin: new google.maps.LatLng(deliveryStops[0].latitude, deliveryStops[0].longitude),
+                destination: new google.maps.LatLng(
+                    deliveryStops[deliveryStops.length - 1].latitude,
+                    deliveryStops[deliveryStops.length - 1].longitude
+                ),
+                waypoints: waypoints,
+                optimizeWaypoints: false,
+                travelMode: google.maps.TravelMode.DRIVING,
+                avoidHighways: document.getElementById('avoid-highways').checked,
+                avoidTolls: document.getElementById('avoid-tolls').checked
+            };
+
+            directionsService.route(request, (result, status) => {
+                if (status === 'OK') {
+                    directionsRenderer.setDirections(result);
+                    updateRouteSummary(result);
+                    updateETAs(result);
+                } else {
+                    console.error('Directions request failed:', status);
+                }
+            });
+        }
+
+        // Update route summary
+        function updateRouteSummary(result) {
+            let totalDistance = 0;
+            let totalTime = 0;
+
+            result.routes[0].legs.forEach(leg => {
+                totalDistance += leg.distance.value;
+                totalTime += leg.duration.value;
+            });
+
+            document.getElementById('total-distance').textContent = (totalDistance / 1000).toFixed(1) + ' km';
+            document.getElementById('total-time').textContent = Math.round(totalTime / 60) + ' min';
+
+            // Calculate fuel cost
+            const fuelEfficiency = parseFloat(document.getElementById('fuel-efficiency').value);
+            const fuelPrice = parseFloat(document.getElementById('fuel-price').value);
+            const fuelCost = (totalDistance / 1000 / fuelEfficiency) * fuelPrice;
+            document.getElementById('fuel-cost').textContent = 'KSh ' + fuelCost.toFixed(0);
+        }
+
+        // Update ETAs for each stop
+        function updateETAs(result) {
+            let cumulativeTime = 0;
+            result.routes[0].legs.forEach((leg, index) => {
+                cumulativeTime += leg.duration.value;
+                const eta = new Date(Date.now() + cumulativeTime * 1000);
+                const etaElement = document.getElementById(`eta-${index}`);
+                if (etaElement) {
+                    etaElement.textContent = eta.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                }
+            });
+        }
+
+        // Optimize route using traveling salesman algorithm
+        async function optimizeRoute() {
+            try {
+                const response = await fetch('/api/pickup-delivery-agent/optimize-route', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({
+                        stops: deliveryStops,
+                        vehicle_type: document.getElementById('vehicle-type').value,
+                        preferences: {
+                            avoid_tolls: document.getElementById('avoid-tolls').checked,
+                            avoid_highways: document.getElementById('avoid-highways').checked
+                        }
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    deliveryStops = data.optimized_stops;
+                    displayDeliveryStops();
+                    calculateRoute();
+                }
+            } catch (error) {
+                console.error('Route optimization error:', error);
+            }
+        }
+
+        // Move stop up in order
+        function moveStopUp(index) {
+            if (index > 0) {
+                [deliveryStops[index], deliveryStops[index - 1]] = [deliveryStops[index - 1], deliveryStops[index]];
+                displayDeliveryStops();
+                calculateRoute();
+            }
+        }
+
+        // Move stop down in order
+        function moveStopDown(index) {
+            if (index < deliveryStops.length - 1) {
+                [deliveryStops[index], deliveryStops[index + 1]] = [deliveryStops[index + 1], deliveryStops[index]];
+                displayDeliveryStops();
+                calculateRoute();
+            }
+        }
+
+        // Skip a stop
+        function skipStop(index) {
+            if (confirm('Are you sure you want to skip this delivery?')) {
+                deliveryStops.splice(index, 1);
+                displayDeliveryStops();
+                calculateRoute();
+            }
+        }
+
+        // Start navigation
+        function startNavigation() {
+            if (deliveryStops.length > 0) {
+                const firstStop = deliveryStops[0];
+                const url = `https://www.google.com/maps/dir/?api=1&destination=${firstStop.latitude},${firstStop.longitude}&travelmode=driving`;
+                window.open(url, '_blank');
+            }
+        }
+
+        // Save route
+        async function saveRoute() {
+            try {
+                const response = await fetch('/api/pickup-delivery-agent/save-route', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({
+                        stops: deliveryStops,
+                        route_data: optimizedRoute
+                    })
+                });
+
+                if (response.ok) {
+                    alert('Route saved successfully!');
+                }
+            } catch (error) {
+                console.error('Save route error:', error);
+            }
+        }
+
+        // Share route
+        function shareRoute() {
+            const routeData = {
+                stops: deliveryStops,
+                summary: {
+                    distance: document.getElementById('total-distance').textContent,
+                    time: document.getElementById('total-time').textContent,
+                    cost: document.getElementById('fuel-cost').textContent
+                }
+            };
+            
+            navigator.clipboard.writeText(JSON.stringify(routeData)).then(() => {
+                alert('Route data copied to clipboard!');
+            });
+        }
+
+        // Print route
+        function printRoute() {
+            window.print();
+        }
+
+        // Event listeners
+        document.getElementById('avoid-tolls').addEventListener('change', calculateRoute);
+        document.getElementById('avoid-highways').addEventListener('change', calculateRoute);
+        document.getElementById('fuel-efficiency').addEventListener('change', () => {
+            if (optimizedRoute) updateRouteSummary(optimizedRoute);
+        });
+        document.getElementById('fuel-price').addEventListener('change', () => {
+            if (optimizedRoute) updateRouteSummary(optimizedRoute);
+        });
+
+        // Initialize map when page loads
+        window.onload = initMap;
+    </script>
+</body>
+</html>

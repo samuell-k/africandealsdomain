@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delivery Management - Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .delivery-card {
+            transition: all 0.3s ease;
+        }
+        .delivery-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        .status-pending { background-color: #fef3c7; color: #92400e; }
+        .status-approved { background-color: #d1fae5; color: #065f46; }
+        .status-delivered { background-color: #dbeafe; color: #1e40af; }
+        .delivery-photo {
+            max-width: 150px;
+            max-height: 150px;
+            object-fit: cover;
+            cursor: pointer;
+        }
+        .modal-photo {
+            max-width: 90vw;
+            max-height: 90vh;
+            object-fit: contain;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation Header -->
+    <nav class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <button onclick="goBack()" class="mr-4 p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <h1 class="text-xl font-semibold text-gray-900">
+                        <i class="fas fa-truck-loading text-blue-600 mr-2"></i>
+                        Delivery Management
+                    </h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm text-gray-500" id="admin-name">Loading...</span>
+                    <button onclick="logout()" class="text-red-600 hover:text-red-700">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <!-- Page Header -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-bold text-gray-900 mb-2">Delivery Management Dashboard</h2>
+            <p class="text-gray-600">Monitor delivery confirmations and code verification system</p>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-2 bg-blue-100 rounded-lg">
+                        <i class="fas fa-truck text-blue-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Total Deliveries</p>
+                        <p class="text-2xl font-semibold text-gray-900" id="total-deliveries">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-2 bg-green-100 rounded-lg">
+                        <i class="fas fa-check-circle text-green-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Completed</p>
+                        <p class="text-2xl font-semibold text-gray-900" id="completed-deliveries">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-2 bg-yellow-100 rounded-lg">
+                        <i class="fas fa-clock text-yellow-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Pending</p>
+                        <p class="text-2xl font-semibold text-gray-900" id="pending-deliveries">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-2 bg-purple-100 rounded-lg">
+                        <i class="fas fa-key text-purple-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">With Codes</p>
+                        <p class="text-2xl font-semibold text-gray-900" id="orders-with-codes">0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="bg-white rounded-lg shadow mb-6">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">
+                    <i class="fas fa-filter mr-2"></i>
+                    Filters
+                </h3>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                        <select id="status-filter" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">All Statuses</option>
+                            <option value="pending_verification">Pending Verification</option>
+                            <option value="approved">Approved</option>
+                            <option value="rejected">Rejected</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Date Range</label>
+                        <select id="date-filter" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">All Time</option>
+                            <option value="today">Today</option>
+                            <option value="week">This Week</option>
+                            <option value="month">This Month</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Agent</label>
+                        <input type="text" id="agent-filter" placeholder="Agent name..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="applyFilters()" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-500">
+                            <i class="fas fa-search mr-2"></i>
+                            Apply Filters
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delivery Confirmations List -->
+        <div class="bg-white shadow rounded-lg">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">
+                    <i class="fas fa-list-alt mr-2"></i>
+                    Delivery Confirmations
+                </h3>
+            </div>
+            <div class="p-6">
+                <div id="confirmations-loading" class="text-center py-8">
+                    <i class="fas fa-spinner fa-spin text-2xl text-gray-400 mb-4"></i>
+                    <p class="text-gray-500">Loading delivery confirmations...</p>
+                </div>
+                <div id="confirmations-container" class="space-y-6" style="display: none;"></div>
+                <div id="no-confirmations" class="text-center py-8" style="display: none;">
+                    <i class="fas fa-clipboard-list text-4xl text-gray-300 mb-4"></i>
+                    <p class="text-gray-500">No delivery confirmations found</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div id="pagination" class="mt-6 flex justify-center" style="display: none;">
+            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                <button id="prev-page" onclick="changePage(-1)" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <span id="page-info" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                    Page 1 of 1
+                </span>
+                <button id="next-page" onclick="changePage(1)" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Photo Modal -->
+    <div id="photo-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center hidden z-50">
+        <div class="relative">
+            <button onclick="closePhotoModal()" class="absolute top-4 right-4 text-white text-2xl hover:text-gray-300">
+                <i class="fas fa-times"></i>
+            </button>
+            <img id="modal-photo" class="modal-photo rounded-lg">
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../shared/auth-utils.js"></script>
+    <script src="../shared/api-client.js"></script>
+    <script>
+        let currentPage = 1;
+        let totalPages = 1;
+        let currentFilters = {};
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuthentication();
+            loadAdminInfo();
+            loadStatistics();
+            loadDeliveryConfirmations();
+            setupEventListeners();
+        });
+
+        function checkAuthentication() {
+            const token = localStorage.getItem('token');
+            const userRole = localStorage.getItem('userRole');
+            
+            if (!token || userRole !== 'admin') {
+                window.location.href = '../auth/auth-admin.html';
+                return;
+            }
+        }
+
+        function loadAdminInfo() {
+            const userName = localStorage.getItem('userName') || 'Admin';
+            document.getElementById('admin-name').textContent = userName;
+        }
+
+        async function loadStatistics() {
+            try {
+                const response = await makeAuthenticatedRequest('/api/delivery-confirmation-otp/admin/stats');
+                
+                if (response.success) {
+                    const stats = response.stats;
+                    document.getElementById('total-deliveries').textContent = stats.total_deliveries || 0;
+                    document.getElementById('completed-deliveries').textContent = stats.completed_deliveries || 0;
+                    document.getElementById('pending-deliveries').textContent = stats.pending_deliveries || 0;
+                    document.getElementById('orders-with-codes').textContent = stats.orders_with_codes || 0;
+                }
+            } catch (error) {
+                console.error('Error loading statistics:', error);
+            }
+        }
+
+        async function loadDeliveryConfirmations(page = 1) {
+            try {
+                document.getElementById('confirmations-loading').style.display = 'block';
+                document.getElementById('confirmations-container').style.display = 'none';
+                document.getElementById('no-confirmations').style.display = 'none';
+
+                const params = new URLSearchParams({
+                    page: page,
+                    limit: 10,
+                    ...currentFilters
+                });
+
+                const response = await makeAuthenticatedRequest(`/api/delivery-confirmation-otp/admin/confirmations?${params}`);
+                
+                if (response.success) {
+                    displayDeliveryConfirmations(response.confirmations);
+                    updatePagination(response.pagination);
+                } else {
+                    showError('Failed to load delivery confirmations: ' + response.message);
+                }
+            } catch (error) {
+                console.error('Error loading delivery confirmations:', error);
+                showError('Failed to load delivery confirmations');
+            } finally {
+                document.getElementById('confirmations-loading').style.display = 'none';
+            }
+        }
+
+        function displayDeliveryConfirmations(confirmations) {
+            const container = document.getElementById('confirmations-container');
+            
+            if (confirmations.length === 0) {
+                document.getElementById('no-confirmations').style.display = 'block';
+                return;
+            }
+
+            container.style.display = 'block';
+            container.innerHTML = confirmations.map(confirmation => `
+                <div class="delivery-card bg-white border border-gray-200 rounded-lg p-6">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h4 class="text-lg font-semibold text-gray-900">${confirmation.order_number}</h4>
+                            <p class="text-sm text-gray-600">
+                                <i class="fas fa-user mr-1"></i>
+                                ${confirmation.buyer_name} • ${confirmation.buyer_phone || 'No phone'}
+                            </p>
+                        </div>
+                        <span class="status-badge ${getStatusClass(confirmation.status)}">
+                            <i class="fas ${getStatusIcon(confirmation.status)}"></i>
+                            ${formatStatus(confirmation.status)}
+                        </span>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div>
+                            <p class="text-sm font-medium text-gray-700">Agent:</p>
+                            <p class="text-sm text-gray-600">${confirmation.agent_name}</p>
+                            <p class="text-xs text-gray-500">${confirmation.agent_phone || ''}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-700">Delivery Code:</p>
+                            <p class="text-sm text-gray-600 font-mono">${confirmation.delivery_code || 'N/A'}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-700">Confirmed At:</p>
+                            <p class="text-sm text-gray-600">${formatDate(confirmation.delivery_confirmed_at)}</p>
+                        </div>
+                    </div>
+                    
+                    ${confirmation.delivery_proof_url ? `
+                        <div class="mb-4">
+                            <p class="text-sm font-medium text-gray-700 mb-2">Delivery Photo:</p>
+                            <img 
+                                src="/uploads/delivery-proofs/${confirmation.delivery_proof_url}" 
+                                alt="Delivery proof"
+                                class="delivery-photo rounded-md border"
+                                onclick="showPhotoModal('/uploads/delivery-proofs/${confirmation.delivery_proof_url}')"
+                            >
+                        </div>
+                    ` : ''}
+                    
+                    ${confirmation.delivery_notes ? `
+                        <div class="mb-4">
+                            <p class="text-sm font-medium text-gray-700">Delivery Notes:</p>
+                            <p class="text-sm text-gray-600">${confirmation.delivery_notes}</p>
+                        </div>
+                    ` : ''}
+                    
+                    ${confirmation.delivery_location ? `
+                        <div class="mb-4">
+                            <p class="text-sm font-medium text-gray-700">Location:</p>
+                            <p class="text-sm text-gray-600">
+                                <i class="fas fa-map-marker-alt mr-1"></i>
+                                ${confirmation.delivery_location}
+                            </p>
+                        </div>
+                    ` : ''}
+                    
+                    <div class="flex justify-between items-center">
+                        <div class="text-sm text-gray-500">
+                            Order Total: <span class="font-semibold">$${parseFloat(confirmation.total_amount).toFixed(2)}</span>
+                        </div>
+                        <div class="space-x-2">
+                            <button 
+                                onclick="viewOrderDetails('${confirmation.order_number}')"
+                                class="bg-gray-100 text-gray-700 px-3 py-1 rounded-md hover:bg-gray-200 focus:ring-2 focus:ring-gray-500 text-sm"
+                            >
+                                <i class="fas fa-eye mr-1"></i>
+                                View Order
+                            </button>
+                            ${confirmation.status === 'pending_verification' ? `
+                                <button 
+                                    onclick="approveDelivery(${confirmation.id})"
+                                    class="bg-green-600 text-white px-3 py-1 rounded-md hover:bg-green-700 focus:ring-2 focus:ring-green-500 text-sm"
+                                >
+                                    <i class="fas fa-check mr-1"></i>
+                                    Approve
+                                </button>
+                                <button 
+                                    onclick="rejectDelivery(${confirmation.id})"
+                                    class="bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700 focus:ring-2 focus:ring-red-500 text-sm"
+                                >
+                                    <i class="fas fa-times mr-1"></i>
+                                    Reject
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updatePagination(pagination) {
+            currentPage = pagination.page;
+            totalPages = pagination.pages;
+            
+            if (totalPages > 1) {
+                document.getElementById('pagination').style.display = 'flex';
+                document.getElementById('page-info').textContent = `Page ${currentPage} of ${totalPages}`;
+                document.getElementById('prev-page').disabled = currentPage === 1;
+                document.getElementById('next-page').disabled = currentPage === totalPages;
+            } else {
+                document.getElementById('pagination').style.display = 'none';
+            }
+        }
+
+        function changePage(direction) {
+            const newPage = currentPage + direction;
+            if (newPage >= 1 && newPage <= totalPages) {
+                loadDeliveryConfirmations(newPage);
+            }
+        }
+
+        function applyFilters() {
+            currentFilters = {};
+            
+            const status = document.getElementById('status-filter').value;
+            const dateRange = document.getElementById('date-filter').value;
+            const agent = document.getElementById('agent-filter').value;
+            
+            if (status) currentFilters.status = status;
+            if (dateRange) currentFilters.date_range = dateRange;
+            if (agent) currentFilters.agent = agent;
+            
+            currentPage = 1;
+            loadDeliveryConfirmations(1);
+        }
+
+        function setupEventListeners() {
+            // Filter inputs
+            document.getElementById('status-filter').addEventListener('change', applyFilters);
+            document.getElementById('date-filter').addEventListener('change', applyFilters);
+            
+            // Agent filter with debounce
+            let agentFilterTimeout;
+            document.getElementById('agent-filter').addEventListener('input', function() {
+                clearTimeout(agentFilterTimeout);
+                agentFilterTimeout = setTimeout(applyFilters, 500);
+            });
+        }
+
+        function showPhotoModal(photoUrl) {
+            document.getElementById('modal-photo').src = photoUrl;
+            document.getElementById('photo-modal').classList.remove('hidden');
+        }
+
+        function closePhotoModal() {
+            document.getElementById('photo-modal').classList.add('hidden');
+        }
+
+        async function approveDelivery(confirmationId) {
+            if (!confirm('Are you sure you want to approve this delivery confirmation?')) {
+                return;
+            }
+
+            try {
+                const response = await makeAuthenticatedRequest(`/api/delivery-confirmation/${confirmationId}/approve`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        admin_notes: 'Approved by admin'
+                    })
+                });
+
+                if (response.success) {
+                    showSuccess('Delivery confirmation approved successfully');
+                    loadDeliveryConfirmations(currentPage);
+                    loadStatistics();
+                } else {
+                    showError(response.message || 'Failed to approve delivery confirmation');
+                }
+            } catch (error) {
+                console.error('Error approving delivery:', error);
+                showError('Failed to approve delivery confirmation');
+            }
+        }
+
+        async function rejectDelivery(confirmationId) {
+            const reason = prompt('Please provide a reason for rejection:');
+            if (!reason) return;
+
+            try {
+                const response = await makeAuthenticatedRequest(`/api/delivery-confirmation/${confirmationId}/reject`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        rejection_reason: reason,
+                        admin_notes: `Rejected by admin: ${reason}`
+                    })
+                });
+
+                if (response.success) {
+                    showSuccess('Delivery confirmation rejected');
+                    loadDeliveryConfirmations(currentPage);
+                    loadStatistics();
+                } else {
+                    showError(response.message || 'Failed to reject delivery confirmation');
+                }
+            } catch (error) {
+                console.error('Error rejecting delivery:', error);
+                showError('Failed to reject delivery confirmation');
+            }
+        }
+
+        function viewOrderDetails(orderNumber) {
+            // Redirect to order details page
+            window.open(`orders.html?order=${orderNumber}`, '_blank');
+        }
+
+        // Utility functions
+        function getStatusClass(status) {
+            if (status === 'approved') return 'status-approved';
+            if (status === 'rejected') return 'status-rejected';
+            return 'status-pending';
+        }
+
+        function getStatusIcon(status) {
+            if (status === 'approved') return 'fa-check-circle';
+            if (status === 'rejected') return 'fa-times-circle';
+            return 'fa-clock';
+        }
+
+        function formatStatus(status) {
+            return status.replace(/_/g, ' ').toLowerCase()
+                .replace(/\b\w/g, l => l.toUpperCase());
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'Not set';
+            const date = new Date(dateString);
+            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        }
+
+        function showError(message) {
+            alert('Error: ' + message);
+        }
+
+        function showSuccess(message) {
+            // Create a simple toast notification
+            const toast = document.createElement('div');
+            toast.className = 'fixed top-4 right-4 bg-green-600 text-white px-4 py-2 rounded-md shadow-lg z-50';
+            toast.innerHTML = `<i class="fas fa-check mr-2"></i>${message}`;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                document.body.removeChild(toast);
+            }, 3000);
+        }
+
+        function goBack() {
+            window.location.href = 'dashboard.html';
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = '../auth/auth-admin.html';
+        }
+    </script>
+</body>
+</html>

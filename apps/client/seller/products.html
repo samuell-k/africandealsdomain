@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Products - Seller Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        #location-map { height: 300px; }
+        .leaflet-container { border-radius: 0.5rem; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm border-b sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="/seller/dashboard.html" class="flex items-center space-x-2">
+                        <img src="/public/images/logo.png" alt="ADD Logo" class="h-8 w-8 rounded-lg shadow">
+                        <span class="font-bold text-xl text-blue-600">ADD Seller</span>
+                    </a>
+                    <div class="hidden md:ml-6 md:flex md:space-x-8">
+                        <a href="/seller/dashboard.html" class="text-gray-500 hover:text-blue-700 px-3 py-2 text-sm font-medium transition-colors">Dashboard</a>
+                        <a href="/seller/products.html" class="text-blue-600 border-b-2 border-blue-600 px-3 py-2 text-sm font-medium">Products</a>
+                        <a href="/seller/orders.html" class="text-gray-500 hover:text-blue-700 px-3 py-2 text-sm font-medium transition-colors">Orders</a>
+                        <a href="/seller/inventory.html" class="text-gray-500 hover:text-blue-700 px-3 py-2 text-sm font-medium transition-colors">Inventory</a>
+                        <a href="/seller/analytics.html" class="text-gray-500 hover:text-blue-700 px-3 py-2 text-sm font-medium transition-colors">Analytics</a>
+                        <a href="/seller/messages.html" class="text-gray-500 hover:text-blue-700 px-3 py-2 text-sm font-medium transition-colors">Messages</a>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <!-- Mobile Menu Button -->
+                    <button id="mobile-menu-btn" class="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M4 6h16M4 12h16M4 18h16"/>
+                        </svg>
+                    </button>
+                    
+                    <!-- Profile Dropdown -->
+                    <div class="relative">
+                        <button id="profile-dropdown-btn" class="flex items-center gap-1 px-3 py-1 rounded hover:bg-gray-50 font-semibold transition-colors">
+                            <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" class="text-blue-600" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 8-4 8-4s8 0 8 4"/></svg>
+                            <span id="profile-name">My Store</span>
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" class="ml-1 text-gray-400 transition-transform" id="dropdown-arrow" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+                        </button>
+                        <div id="profile-dropdown-menu" class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 hidden z-50">
+                            <div class="py-2">
+                                <a href="/seller/profile.html" class="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-blue-50 transition-colors">
+                                    <i class="fas fa-user text-blue-600"></i>
+                                    <span>Profile</span>
+                                </a>
+                                <a href="/seller/settings.html" class="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-blue-50 transition-colors">
+                                    <i class="fas fa-cog text-blue-600"></i>
+                                    <span>Settings</span>
+                                </a>
+                                <hr class="my-2">
+                                <button id="logout-btn" class="flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 transition-colors w-full text-left">
+                                    <i class="fas fa-sign-out-alt"></i>
+                                    <span>Logout</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mobile Navigation Menu -->
+        <div id="mobile-menu" class="md:hidden bg-white border-t border-gray-200 hidden">
+            <div class="px-4 py-2 space-y-1">
+                <a href="/seller/dashboard.html" class="block px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">Dashboard</a>
+                <a href="/seller/products.html" class="block px-3 py-2 text-blue-700 bg-blue-50 rounded-lg font-semibold">Products</a>
+                <a href="/seller/orders.html" class="block px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">Orders</a>
+                <a href="/seller/inventory.html" class="block px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">Inventory</a>
+                <a href="/seller/analytics.html" class="block px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">Analytics</a>
+                <a href="/seller/messages.html" class="block px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">Messages</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="px-4 py-6 sm:px-0">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">My Products</h1>
+                    <p class="mt-2 text-gray-600">Manage your products and their pickup locations</p>
+                </div>
+                <div class="flex space-x-3">
+                    <button id="set-location-btn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                        <i class="fas fa-map-marker-alt mr-2"></i>Set Location
+                    </button>
+                    <a href="/seller/add-product.html" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                        <i class="fas fa-plus mr-2"></i>Add Product
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Location Settings -->
+        <div id="location-section" class="bg-white rounded-lg shadow-lg p-6 mb-8 hidden">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">Set Pickup Location</h2>
+            <p class="text-gray-600 mb-4">Set your location so agents can find you for product pickup</p>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Address</label>
+                        <input type="text" id="location-address" class="w-full border border-gray-300 rounded-md px-3 py-2" placeholder="Enter your address">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Latitude</label>
+                            <input type="number" id="location-lat" class="w-full border border-gray-300 rounded-md px-3 py-2" step="any" readonly>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Longitude</label>
+                            <input type="number" id="location-lng" class="w-full border border-gray-300 rounded-md px-3 py-2" step="any" readonly>
+                        </div>
+                    </div>
+                    <div class="flex space-x-3">
+                        <button id="get-current-location" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                            <i class="fas fa-crosshairs mr-2"></i>Use Current Location
+                        </button>
+                        <button id="save-location" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                            <i class="fas fa-save mr-2"></i>Save Location
+                        </button>
+                    </div>
+                </div>
+                <div>
+                    <div id="location-map"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Products List -->
+        <div class="bg-white shadow overflow-hidden sm:rounded-md">
+            <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">Your Products</h3>
+                <p class="mt-1 max-w-2xl text-sm text-gray-500">Manage your product listings and pickup locations</p>
+            </div>
+            <ul id="products-list" class="divide-y divide-gray-200">
+                <!-- Products will be loaded here -->
+            </ul>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        let map;
+        let locationMarker;
+        let currentLocation = null;
+
+        function normalizeAuthStorage() {
+            const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+            const userStr = localStorage.getItem('userData') || localStorage.getItem('user');
+            if (token) {
+                localStorage.setItem('authToken', token);
+                localStorage.setItem('token', token);
+            }
+            if (userStr) {
+                localStorage.setItem('userData', userStr);
+                localStorage.setItem('user', userStr);
+            }
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            normalizeAuthStorage();
+            checkAuth();
+            loadProducts();
+            setupEventListeners();
+            setupMobileMenu();
+            setupProfileDropdown();
+        });
+
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/auth/auth-seller.html';
+                return;
+            }
+        }
+
+        function setupEventListeners() {
+            document.getElementById('set-location-btn').addEventListener('click', toggleLocationSection);
+            document.getElementById('get-current-location').addEventListener('click', getCurrentLocation);
+            document.getElementById('save-location').addEventListener('click', saveLocation);
+            document.getElementById('logout-btn').addEventListener('click', logout);
+        }
+
+        function toggleLocationSection() {
+            const section = document.getElementById('location-section');
+            if (section.classList.contains('hidden')) {
+                section.classList.remove('hidden');
+                initializeMap();
+            } else {
+                section.classList.add('hidden');
+            }
+        }
+
+        function initializeMap() {
+            if (!map) {
+                map = L.map('location-map').setView([-1.2921, 36.8219], 13);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(map);
+
+                // Map click event
+                map.on('click', function(e) {
+                    setLocationMarker(e.latlng.lat, e.latlng.lng);
+                });
+            }
+        }
+
+        function getCurrentLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    position => {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        setLocationMarker(lat, lng);
+                        map.setView([lat, lng], 15);
+                    },
+                    error => {
+                        alert('Could not get your location. Please click on the map to set your location.');
+                    }
+                );
+            } else {
+                alert('Geolocation is not supported by this browser.');
+            }
+        }
+
+        function setLocationMarker(lat, lng) {
+            if (locationMarker) {
+                map.removeLayer(locationMarker);
+            }
+
+            locationMarker = L.marker([lat, lng]).addTo(map);
+            document.getElementById('location-lat').value = lat;
+            document.getElementById('location-lng').value = lng;
+            currentLocation = { lat, lng };
+
+            // Reverse geocoding (simplified)
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.display_name) {
+                        document.getElementById('location-address').value = data.display_name;
+                    }
+                })
+                .catch(error => console.log('Geocoding error:', error));
+        }
+
+        async function saveLocation() {
+            if (!currentLocation) {
+                showNotification('Location Required', 'Please select a location first by clicking on the map or using current location.', 'warning');
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem('token');
+                const user = JSON.parse(localStorage.getItem('user') || '{}');
+                const address = document.getElementById('location-address').value;
+
+                // Show loading state
+                const saveBtn = document.getElementById('save-location');
+                const originalText = saveBtn.innerHTML;
+                saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
+                saveBtn.disabled = true;
+
+                const response = await fetch(`/api/location/users/${user.id}/location`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        type: 'work',
+                        lat: currentLocation.lat,
+                        lng: currentLocation.lng,
+                        address: address
+                    })
+                });
+
+                if (response.ok) {
+                    showNotification('Location Saved', 'Your pickup location has been saved successfully!', 'success');
+                    document.getElementById('location-section').classList.add('hidden');
+                } else {
+                    showNotification('Save Failed', 'Failed to save location. Please try again.', 'error');
+                }
+                
+                // Restore button
+                saveBtn.innerHTML = originalText;
+                saveBtn.disabled = false;
+                
+            } catch (error) {
+                console.error('Error saving location:', error);
+                showNotification('Connection Error', 'Unable to save location. Please check your connection.', 'error');
+                
+                // Restore button
+                const saveBtn = document.getElementById('save-location');
+                saveBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Save Location';
+                saveBtn.disabled = false;
+            }
+        }
+
+        async function loadProducts() {
+            try {
+                showLoadingState('products-list', 'Loading your products...');
+                
+                const token = localStorage.getItem('token');
+                const response = await fetch('/api/seller/products', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    displayProducts(data.products || []);
+                    showNotification('Products Loaded', `Found ${data.products?.length || 0} products`, 'success');
+                } else {
+                    console.error('Failed to load products');
+                    showNotification('Error Loading Products', 'Failed to load your products. Please try again.', 'error');
+                    displayProducts([]);
+                }
+            } catch (error) {
+                console.error('Error loading products:', error);
+                showNotification('Connection Error', 'Unable to connect to server. Please check your internet connection.', 'error');
+                displayProducts([]);
+            }
+        }
+
+        function displayProducts(products) {
+            const productsList = document.getElementById('products-list');
+            
+            if (products.length === 0) {
+                productsList.innerHTML = `
+                    <li class="px-4 py-8 text-center text-gray-500">
+                        <i class="fas fa-box-open text-4xl mb-4"></i>
+                        <p>No products found. <a href="/seller/add-product.html" class="text-blue-600 hover:underline">Add your first product</a></p>
+                    </li>
+                `;
+                return;
+            }
+
+            productsList.innerHTML = products.map(product => `
+                <li class="px-4 py-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <img src="${product.image_url || '/public/images/placeholder.png'}" alt="${product.name}" class="h-16 w-16 object-cover rounded-lg mr-4">
+                            <div>
+                                <h4 class="text-lg font-medium text-gray-900">${product.name}</h4>
+                                <p class="text-sm text-gray-600">${product.category}</p>
+                                <p class="text-lg font-semibold text-green-600">FRw ${parseFloat(product.price || 0).toLocaleString()}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full ${product.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">
+                                ${product.status}
+                            </span>
+                            <button onclick="editProduct(${product.id})" class="text-blue-600 hover:text-blue-800">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="deleteProduct(${product.id})" class="text-red-600 hover:text-red-800">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </li>
+            `).join('');
+        }
+
+        function editProduct(productId) {
+            window.location.href = `/seller/edit-product.html?id=${productId}`;
+        }
+
+        async function deleteProduct(productId) {
+            // Create custom confirmation modal
+            const confirmed = await showConfirmDialog(
+                'Delete Product',
+                'Are you sure you want to delete this product? This action cannot be undone.',
+                'Delete',
+                'Cancel'
+            );
+            
+            if (!confirmed) return;
+
+            try {
+                const token = localStorage.getItem('token');
+                
+                // Show loading notification
+                showNotification('Deleting Product', 'Please wait while we delete your product...', 'info');
+                
+                const response = await fetch(`/api/seller/products/${productId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    showNotification('Product Deleted', 'Your product has been successfully deleted.', 'success');
+                    loadProducts(); // Reload the list
+                } else {
+                    showNotification('Delete Failed', 'Failed to delete product. Please try again.', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting product:', error);
+                showNotification('Connection Error', 'Unable to delete product. Please check your connection.', 'error');
+            }
+        }
+
+        // --- CONFIRMATION DIALOG ---
+        function showConfirmDialog(title, message, confirmText, cancelText) {
+            return new Promise((resolve) => {
+                const modal = document.createElement('div');
+                modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+                modal.innerHTML = `
+                    <div class="bg-white rounded-lg p-6 max-w-md mx-4">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">${title}</h3>
+                        <p class="text-gray-600 mb-6">${message}</p>
+                        <div class="flex gap-3 justify-end">
+                            <button id="cancel-btn" class="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors">${cancelText}</button>
+                            <button id="confirm-btn" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">${confirmText}</button>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(modal);
+                
+                modal.querySelector('#cancel-btn').onclick = () => {
+                    modal.remove();
+                    resolve(false);
+                };
+                
+                modal.querySelector('#confirm-btn').onclick = () => {
+                    modal.remove();
+                    resolve(true);
+                };
+                
+                modal.onclick = (e) => {
+                    if (e.target === modal) {
+                        modal.remove();
+                        resolve(false);
+                    }
+                };
+            });
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '/auth/auth-seller.html';
+        }
+
+        // --- NOTIFICATION SYSTEM ---
+        function showNotification(title, message, type = 'info') {
+            let container = document.getElementById('notification-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'notification-container';
+                container.className = 'fixed top-4 right-4 z-50 space-y-2';
+                document.body.appendChild(container);
+            }
+            
+            const notification = document.createElement('div');
+            const bgColor = {
+                success: 'bg-green-500',
+                error: 'bg-red-500',
+                warning: 'bg-yellow-500',
+                info: 'bg-blue-500'
+            }[type] || 'bg-blue-500';
+            
+            notification.className = `${bgColor} text-white px-6 py-4 rounded-lg shadow-lg transform translate-x-full transition-transform duration-300 max-w-sm`;
+            notification.innerHTML = `
+                <div class="flex items-start gap-3">
+                    <div class="flex-shrink-0">
+                        ${type === 'success' ? '✅' : type === 'error' ? '❌' : type === 'warning' ? '⚠️' : 'ℹ️'}
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="font-semibold text-sm">${title}</h4>
+                        <p class="text-xs opacity-90 mt-1">${message}</p>
+                    </div>
+                    <button onclick="this.parentElement.parentElement.remove()" class="flex-shrink-0 text-white hover:text-gray-200">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+            `;
+            
+            container.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.classList.remove('translate-x-full');
+            }, 100);
+            
+            setTimeout(() => {
+                notification.classList.add('translate-x-full');
+                setTimeout(() => {
+                    if (notification.parentElement) {
+                        notification.remove();
+                    }
+                }, 300);
+            }, 5000);
+        }
+
+        // --- LOADING STATES ---
+        function showLoadingState(elementId, text = 'Loading...') {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.innerHTML = `
+                    <div class="flex items-center justify-center py-8">
+                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span class="text-gray-600">${text}</span>
+                    </div>
+                `;
+            }
+        }
+
+        // --- MOBILE MENU FUNCTIONALITY ---
+        function setupMobileMenu() {
+            const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+            const mobileMenu = document.getElementById('mobile-menu');
+            
+            if (mobileMenuBtn && mobileMenu) {
+                mobileMenuBtn.addEventListener('click', function() {
+                    mobileMenu.classList.toggle('hidden');
+                    
+                    const icon = mobileMenuBtn.querySelector('svg');
+                    if (mobileMenu.classList.contains('hidden')) {
+                        icon.innerHTML = '<path d="M4 6h16M4 12h16M4 18h16"/>';
+                    } else {
+                        icon.innerHTML = '<path d="M6 18L18 6M6 6l12 12"/>';
+                    }
+                });
+                
+                document.addEventListener('click', function(e) {
+                    if (!mobileMenu.contains(e.target) && !mobileMenuBtn.contains(e.target) && !mobileMenu.classList.contains('hidden')) {
+                        mobileMenu.classList.add('hidden');
+                        const icon = mobileMenuBtn.querySelector('svg');
+                        icon.innerHTML = '<path d="M4 6h16M4 12h16M4 18h16"/>';
+                    }
+                });
+            }
+        }
+
+        // --- PROFILE DROPDOWN FUNCTIONALITY ---
+        function setupProfileDropdown() {
+            const profileBtn = document.getElementById('profile-dropdown-btn');
+            const profileMenu = document.getElementById('profile-dropdown-menu');
+            const arrow = document.getElementById('dropdown-arrow');
+            
+            if (profileBtn && profileMenu) {
+                profileBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    profileMenu.classList.toggle('hidden');
+                    arrow.classList.toggle('rotate-180');
+                });
+                
+                document.addEventListener('click', function(e) {
+                    if (!profileBtn.contains(e.target) && !profileMenu.contains(e.target)) {
+                        profileMenu.classList.add('hidden');
+                        arrow.classList.remove('rotate-180');
+                    }
+                });
+            }
+            
+            // Update profile name
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            const profileName = document.getElementById('profile-name');
+            if (profileName && user.name) {
+                profileName.textContent = user.name;
+            }
+        }
+    </script>
+</body>
+</html>

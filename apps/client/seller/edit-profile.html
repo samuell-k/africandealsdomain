@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Profile - ADD Physical Products</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .glass-morphism {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 via-white to-purple-50 min-h-screen">
+    <!-- Navigation -->
+    <nav class="glass-morphism border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <a href="/seller/dashboard.html" class="text-2xl font-bold text-gray-800 hover:text-blue-600 transition-colors">
+                        <i class="fas fa-store mr-2"></i>ADD Physical Products
+                    </a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="/seller/dashboard.html" class="text-gray-600 hover:text-blue-600 transition-colors">
+                        <i class="fas fa-home mr-1"></i>Dashboard
+                    </a>
+                    <a href="/seller/profile.html" class="text-gray-600 hover:text-blue-600 transition-colors">
+                        <i class="fas fa-user mr-1"></i>Profile
+                    </a>
+                    <button id="logout-btn" class="text-gray-600 hover:text-red-600 transition-colors">
+                        <i class="fas fa-sign-out-alt mr-1"></i>Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-4xl mx-auto px-4 py-8">
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">Edit Profile</h1>
+            <p class="text-gray-600">Update your account information and preferences</p>
+        </div>
+
+        <!-- Flash Messages -->
+        <div id="flash-messages"></div>
+
+        <!-- Edit Profile Form -->
+        <form id="edit-profile-form" class="bg-white rounded-lg shadow-lg p-8 max-w-lg mx-auto animate-fade-in">
+            <div class="space-y-6">
+                <!-- Name -->
+                <div>
+                    <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-user mr-2"></i>Full Name
+                    </label>
+                    <input type="text" id="name" name="name" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors" required>
+                </div>
+
+                <!-- Email -->
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-envelope mr-2"></i>Email Address
+                    </label>
+                    <input type="email" id="email" name="email" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors" required>
+                </div>
+
+                <!-- Phone -->
+                <div>
+                    <label for="phone" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-phone mr-2"></i>Phone Number
+                    </label>
+                    <input type="tel" id="phone" name="phone" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors" required>
+                </div>
+
+                <!-- Company Name -->
+                <div>
+                    <label for="company" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-building mr-2"></i>Company Name
+                    </label>
+                    <input type="text" id="company" name="company" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors">
+                </div>
+
+                <!-- Address -->
+                <div>
+                    <label for="address" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-map-marker-alt mr-2"></i>Address
+                    </label>
+                    <textarea id="address" name="address" rows="3" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"></textarea>
+                </div>
+
+                <!-- Country -->
+                <div>
+                    <label for="country" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-globe mr-2"></i>Country
+                    </label>
+                    <select id="country" name="country" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors">
+                        <option value="">Select Country</option>
+                    </select>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="flex gap-4">
+                    <button type="submit" class="flex-1 bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
+                        <i class="fas fa-save mr-2"></i>Save Changes
+                    </button>
+                    <a href="/seller/profile.html" class="flex-1 bg-gray-300 text-gray-700 py-3 px-6 rounded-lg hover:bg-gray-400 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors text-center">
+                        <i class="fas fa-times mr-2"></i>Cancel
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg p-6 flex items-center space-x-3">
+            <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+            <span class="text-gray-700">Updating profile...</span>
+        </div>
+    </div>
+
+    <script src="/public/auth-check.js"></script>
+    <script>
+        // --- AUTH CHECK ---
+        (function() {
+            const token = localStorage.getItem('authToken');
+            const user = JSON.parse(localStorage.getItem('userData') || 'null');
+
+            if (!token) {
+                window.location.href = '/auth/auth-seller.html';
+                return;
+            }
+
+            // Validate user role
+            if (!user || user.role !== 'seller') {
+                console.log('User is not a seller, redirecting to seller auth');
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('userData');
+                window.location.href = '/auth/auth-seller.html';
+                return;
+            }
+        })();
+
+        // --- LOGOUT ---
+        document.getElementById('logout-btn').onclick = function() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userData');
+            window.location.href = '/auth/auth-seller.html';
+        };
+
+        // --- PROFILE DATA LOADING ---
+        let currentUser = null;
+
+        async function loadUserProfile() {
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch('/api/auth/check', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to load profile data');
+                }
+
+                const data = await response.json();
+                currentUser = data.user;
+                
+                // Populate form fields
+                document.getElementById('name').value = currentUser.name || '';
+                document.getElementById('email').value = currentUser.email || '';
+                document.getElementById('phone').value = currentUser.phone || '';
+                document.getElementById('company').value = currentUser.company || '';
+                document.getElementById('address').value = currentUser.address || '';
+                document.getElementById('country').value = currentUser.country || '';
+
+            } catch (error) {
+                console.error('Error loading profile:', error);
+                showFlashMessage('Error loading profile data. Please try again.', 'error');
+            }
+        }
+
+        // --- COUNTRIES LOADING ---
+        async function loadCountries() {
+            try {
+                const response = await fetch('/api/countries');
+                if (response.ok) {
+                    const countries = await response.json();
+                    const countrySelect = document.getElementById('country');
+                    
+                    countries.forEach(country => {
+                        const option = document.createElement('option');
+                        option.value = country.code;
+                        option.textContent = country.name;
+                        countrySelect.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading countries:', error);
+            }
+        }
+
+        // --- FLASH MESSAGES ---
+        function showFlashMessage(message, type = 'success') {
+            const flashContainer = document.getElementById('flash-messages');
+            const messageDiv = document.createElement('div');
+            
+            messageDiv.className = `px-4 py-3 rounded-lg mb-4 animate-fade-in ${
+                type === 'success' 
+                    ? 'bg-green-100 text-green-800 border border-green-200' 
+                    : 'bg-red-100 text-red-800 border border-red-200'
+            }`;
+            
+            messageDiv.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <span>${message}</span>
+                    <button onclick="this.parentElement.parentElement.remove()" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            
+            flashContainer.appendChild(messageDiv);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (messageDiv.parentElement) {
+                    messageDiv.remove();
+                }
+            }, 5000);
+        }
+
+        // --- FORM SUBMISSION ---
+        document.getElementById('edit-profile-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const loadingOverlay = document.getElementById('loading-overlay');
+            loadingOverlay.classList.remove('hidden');
+            
+            try {
+                const formData = new FormData(this);
+                const token = localStorage.getItem('authToken');
+                
+                const response = await fetch('/api/seller/profile/update', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: formData.get('name'),
+                        email: formData.get('email'),
+                        phone: formData.get('phone'),
+                        company: formData.get('company'),
+                        address: formData.get('address'),
+                        country: formData.get('country')
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showFlashMessage('Profile updated successfully!', 'success');
+                    
+                    // Update localStorage with new user data
+                    if (data.user) {
+                        localStorage.setItem('userData', JSON.stringify(data.user));
+                    }
+                    
+                    // Redirect to profile page after a short delay
+                    setTimeout(() => {
+                        window.location.href = '/seller/profile.html';
+                    }, 1500);
+                } else {
+                    showFlashMessage(data.message || 'Failed to update profile. Please try again.', 'error');
+                }
+            } catch (error) {
+                console.error('Error updating profile:', error);
+                showFlashMessage('An error occurred while updating your profile. Please try again.', 'error');
+            } finally {
+                loadingOverlay.classList.add('hidden');
+            }
+        });
+
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUserProfile();
+            loadCountries();
+        });
+    </script>
+</body>
+</html>

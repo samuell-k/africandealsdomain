@@ -1,0 +1,1109 @@
+/**
+ * Page Navigator - Comprehensive page mapping and navigation injection
+ * Automatically injects navigation into all HTML pages
+ */
+
+class PageNavigator {
+  constructor() {
+    this.pageMap = this.initializePageMap();
+    this.currentPage = this.getCurrentPageInfo();
+    this.init();
+  }
+
+  init() {
+    this.injectNavigationScripts();
+    this.createPageSpecificNavigation();
+    this.setupPageTransitions();
+  }
+
+  initializePageMap() {
+    return {
+      // Public pages
+      'public/index.html': {
+        title: 'Home',
+        role: 'public',
+        category: 'main',
+        navigation: 'public',
+        breadcrumbs: ['Home']
+      },
+      'public/about.html': {
+        title: 'About Us',
+        role: 'public',
+        category: 'info',
+        navigation: 'public',
+        breadcrumbs: ['Home', 'About Us']
+      },
+      'public/contact.html': {
+        title: 'Contact Us',
+        role: 'public',
+        category: 'info',
+        navigation: 'public',
+        breadcrumbs: ['Home', 'Contact Us']
+      },
+      'public/faq.html': {
+        title: 'FAQ',
+        role: 'public',
+        category: 'info',
+        navigation: 'public',
+        breadcrumbs: ['Home', 'FAQ']
+      },
+      'public/how-it-works.html': {
+        title: 'How It Works',
+        role: 'public',
+        category: 'info',
+        navigation: 'public',
+        breadcrumbs: ['Home', 'How It Works']
+      },
+      'public/privacy-policy.html': {
+        title: 'Privacy Policy',
+        role: 'public',
+        category: 'legal',
+        navigation: 'public',
+        breadcrumbs: ['Home', 'Privacy Policy']
+      },
+      'public/terms-and-conditions.html': {
+        title: 'Terms & Conditions',
+        role: 'public',
+        category: 'legal',
+        navigation: 'public',
+        breadcrumbs: ['Home', 'Terms & Conditions']
+      },
+      'public/shipping-policy.html': {
+        title: 'Shipping Policy',
+        role: 'public',
+        category: 'legal',
+        navigation: 'public',
+        breadcrumbs: ['Home', 'Shipping Policy']
+      },
+      'public/returns-policy.html': {
+        title: 'Returns Policy',
+        role: 'public',
+        category: 'legal',
+        navigation: 'public',
+        breadcrumbs: ['Home', 'Returns Policy']
+      },
+      'public/categories.html': {
+        title: 'Categories',
+        role: 'public',
+        category: 'shopping',
+        navigation: 'public',
+        breadcrumbs: ['Home', 'Categories']
+      },
+      'public/products.html': {
+        title: 'Products',
+        role: 'public',
+        category: 'shopping',
+        navigation: 'public',
+        breadcrumbs: ['Home', 'Products']
+      },
+      'public/product-detail.html': {
+        title: 'Product Details',
+        role: 'public',
+        category: 'shopping',
+        navigation: 'public',
+        breadcrumbs: ['Home', 'Products', 'Product Details']
+      },
+      'public/search-results.html': {
+        title: 'Search Results',
+        role: 'public',
+        category: 'shopping',
+        navigation: 'public',
+        breadcrumbs: ['Home', 'Search Results']
+      },
+      'public/boosted-products.html': {
+        title: 'Boosted Products',
+        role: 'public',
+        category: 'shopping',
+        navigation: 'public',
+        breadcrumbs: ['Home', 'Boosted Products']
+      },
+
+      // Authentication pages
+      'auth/auth-buyer.html': {
+        title: 'Buyer Login',
+        role: 'auth',
+        category: 'auth',
+        navigation: 'minimal',
+        breadcrumbs: ['Home', 'Login']
+      },
+      'auth/auth-seller.html': {
+        title: 'Seller Login',
+        role: 'auth',
+        category: 'auth',
+        navigation: 'minimal',
+        breadcrumbs: ['Home', 'Seller Login']
+      },
+      'auth/auth-agent.html': {
+        title: 'Agent Login',
+        role: 'auth',
+        category: 'auth',
+        navigation: 'minimal',
+        breadcrumbs: ['Home', 'Agent Login']
+      },
+      'auth/auth-admin.html': {
+        title: 'Admin Login',
+        role: 'auth',
+        category: 'auth',
+        navigation: 'minimal',
+        breadcrumbs: ['Home', 'Admin Login']
+      },
+
+      // Buyer pages
+      'buyer/buyers-home.html': {
+        title: 'Buyer Dashboard',
+        role: 'buyer',
+        category: 'dashboard',
+        navigation: 'buyer',
+        breadcrumbs: ['Home', 'Dashboard']
+      },
+      'buyer/products.html': {
+        title: 'Browse Products',
+        role: 'buyer',
+        category: 'shopping',
+        navigation: 'buyer',
+        breadcrumbs: ['Home', 'Dashboard', 'Products']
+      },
+      'buyer/cart.html': {
+        title: 'Shopping Cart',
+        role: 'buyer',
+        category: 'shopping',
+        navigation: 'buyer',
+        breadcrumbs: ['Home', 'Dashboard', 'Cart']
+      },
+      'buyer/checkout.html': {
+        title: 'Checkout',
+        role: 'buyer',
+        category: 'shopping',
+        navigation: 'buyer',
+        breadcrumbs: ['Home', 'Dashboard', 'Cart', 'Checkout']
+      },
+      'buyer/orders.html': {
+        title: 'My Orders',
+        role: 'buyer',
+        category: 'orders',
+        navigation: 'buyer',
+        breadcrumbs: ['Home', 'Dashboard', 'Orders']
+      },
+      'buyer/order-detail.html': {
+        title: 'Order Details',
+        role: 'buyer',
+        category: 'orders',
+        navigation: 'buyer',
+        breadcrumbs: ['Home', 'Dashboard', 'Orders', 'Order Details']
+      },
+      'buyer/track-order.html': {
+        title: 'Track Order',
+        role: 'buyer',
+        category: 'orders',
+        navigation: 'buyer',
+        breadcrumbs: ['Home', 'Dashboard', 'Track Order']
+      },
+      'buyer/wishlist.html': {
+        title: 'Wishlist',
+        role: 'buyer',
+        category: 'shopping',
+        navigation: 'buyer',
+        breadcrumbs: ['Home', 'Dashboard', 'Wishlist']
+      },
+      'buyer/profile.html': {
+        title: 'Profile',
+        role: 'buyer',
+        category: 'account',
+        navigation: 'buyer',
+        breadcrumbs: ['Home', 'Dashboard', 'Profile']
+      },
+      'buyer/settings.html': {
+        title: 'Settings',
+        role: 'buyer',
+        category: 'account',
+        navigation: 'buyer',
+        breadcrumbs: ['Home', 'Dashboard', 'Settings']
+      },
+      'buyer/wallet.html': {
+        title: 'Wallet',
+        role: 'buyer',
+        category: 'account',
+        navigation: 'buyer',
+        breadcrumbs: ['Home', 'Dashboard', 'Wallet']
+      },
+      'buyer/messages.html': {
+        title: 'Messages',
+        role: 'buyer',
+        category: 'communication',
+        navigation: 'buyer',
+        breadcrumbs: ['Home', 'Dashboard', 'Messages']
+      },
+      'buyer/notifications.html': {
+        title: 'Notifications',
+        role: 'buyer',
+        category: 'communication',
+        navigation: 'buyer',
+        breadcrumbs: ['Home', 'Dashboard', 'Notifications']
+      },
+      'buyer/reviews.html': {
+        title: 'My Reviews',
+        role: 'buyer',
+        category: 'account',
+        navigation: 'buyer',
+        breadcrumbs: ['Home', 'Dashboard', 'Reviews']
+      },
+      'buyer/support.html': {
+        title: 'Support',
+        role: 'buyer',
+        category: 'support',
+        navigation: 'buyer',
+        breadcrumbs: ['Home', 'Dashboard', 'Support']
+      },
+
+      // Seller pages
+      'seller/dashboard.html': {
+        title: 'Seller Dashboard',
+        role: 'seller',
+        category: 'dashboard',
+        navigation: 'seller',
+        breadcrumbs: ['Home', 'Seller Dashboard']
+      },
+      'seller/products.html': {
+        title: 'My Products',
+        role: 'seller',
+        category: 'products',
+        navigation: 'seller',
+        breadcrumbs: ['Home', 'Seller Dashboard', 'Products']
+      },
+      'seller/add-product.html': {
+        title: 'Add Product',
+        role: 'seller',
+        category: 'products',
+        navigation: 'seller',
+        breadcrumbs: ['Home', 'Seller Dashboard', 'Add Product']
+      },
+      'seller/add-local-market-product.html': {
+        title: 'Add Grocery Product',
+        role: 'seller',
+        category: 'products',
+        navigation: 'seller',
+        breadcrumbs: ['Home', 'Seller Dashboard', 'Add Grocery Product']
+      },
+      'seller/edit-product.html': {
+        title: 'Edit Product',
+        role: 'seller',
+        category: 'products',
+        navigation: 'seller',
+        breadcrumbs: ['Home', 'Seller Dashboard', 'Products', 'Edit Product']
+      },
+      'seller/inventory.html': {
+        title: 'Inventory',
+        role: 'seller',
+        category: 'products',
+        navigation: 'seller',
+        breadcrumbs: ['Home', 'Seller Dashboard', 'Inventory']
+      },
+      'seller/orders.html': {
+        title: 'Orders',
+        role: 'seller',
+        category: 'orders',
+        navigation: 'seller',
+        breadcrumbs: ['Home', 'Seller Dashboard', 'Orders']
+      },
+      'seller/order-detail.html': {
+        title: 'Order Details',
+        role: 'seller',
+        category: 'orders',
+        navigation: 'seller',
+        breadcrumbs: ['Home', 'Seller Dashboard', 'Orders', 'Order Details']
+      },
+      'seller/analytics.html': {
+        title: 'Analytics',
+        role: 'seller',
+        category: 'analytics',
+        navigation: 'seller',
+        breadcrumbs: ['Home', 'Seller Dashboard', 'Analytics']
+      },
+      'seller/promotions.html': {
+        title: 'Promotions',
+        role: 'seller',
+        category: 'marketing',
+        navigation: 'seller',
+        breadcrumbs: ['Home', 'Seller Dashboard', 'Promotions']
+      },
+      'seller/boosted-products.html': {
+        title: 'Boosted Products',
+        role: 'seller',
+        category: 'marketing',
+        navigation: 'seller',
+        breadcrumbs: ['Home', 'Seller Dashboard', 'Boosted Products']
+      },
+      'seller/reviews.html': {
+        title: 'Reviews',
+        role: 'seller',
+        category: 'feedback',
+        navigation: 'seller',
+        breadcrumbs: ['Home', 'Seller Dashboard', 'Reviews']
+      },
+      'seller/messages.html': {
+        title: 'Messages',
+        role: 'seller',
+        category: 'communication',
+        navigation: 'seller',
+        breadcrumbs: ['Home', 'Seller Dashboard', 'Messages']
+      },
+      'seller/notifications.html': {
+        title: 'Notifications',
+        role: 'seller',
+        category: 'communication',
+        navigation: 'seller',
+        breadcrumbs: ['Home', 'Seller Dashboard', 'Notifications']
+      },
+      'seller/payouts.html': {
+        title: 'Payouts',
+        role: 'seller',
+        category: 'finance',
+        navigation: 'seller',
+        breadcrumbs: ['Home', 'Seller Dashboard', 'Payouts']
+      },
+      'seller/wallet.html': {
+        title: 'Wallet',
+        role: 'seller',
+        category: 'finance',
+        navigation: 'seller',
+        breadcrumbs: ['Home', 'Seller Dashboard', 'Wallet']
+      },
+      'seller/commission.html': {
+        title: 'Commission',
+        role: 'seller',
+        category: 'finance',
+        navigation: 'seller',
+        breadcrumbs: ['Home', 'Seller Dashboard', 'Commission']
+      },
+      'seller/returns.html': {
+        title: 'Returns',
+        role: 'seller',
+        category: 'orders',
+        navigation: 'seller',
+        breadcrumbs: ['Home', 'Seller Dashboard', 'Returns']
+      },
+      'seller/returns-detail.html': {
+        title: 'Return Details',
+        role: 'seller',
+        category: 'orders',
+        navigation: 'seller',
+        breadcrumbs: ['Home', 'Seller Dashboard', 'Returns', 'Return Details']
+      },
+      'seller/profile.html': {
+        title: 'Profile',
+        role: 'seller',
+        category: 'account',
+        navigation: 'seller',
+        breadcrumbs: ['Home', 'Seller Dashboard', 'Profile']
+      },
+      'seller/edit-profile.html': {
+        title: 'Edit Profile',
+        role: 'seller',
+        category: 'account',
+        navigation: 'seller',
+        breadcrumbs: ['Home', 'Seller Dashboard', 'Profile', 'Edit Profile']
+      },
+      'seller/settings.html': {
+        title: 'Settings',
+        role: 'seller',
+        category: 'account',
+        navigation: 'seller',
+        breadcrumbs: ['Home', 'Seller Dashboard', 'Settings']
+      },
+      'seller/support.html': {
+        title: 'Support',
+        role: 'seller',
+        category: 'support',
+        navigation: 'seller',
+        breadcrumbs: ['Home', 'Seller Dashboard', 'Support']
+      },
+      'seller/support-tickets.html': {
+        title: 'Support Tickets',
+        role: 'seller',
+        category: 'support',
+        navigation: 'seller',
+        breadcrumbs: ['Home', 'Seller Dashboard', 'Support Tickets']
+      },
+      'seller/support-tickets-detail.html': {
+        title: 'Support Ticket Details',
+        role: 'seller',
+        category: 'support',
+        navigation: 'seller',
+        breadcrumbs: ['Home', 'Seller Dashboard', 'Support Tickets', 'Ticket Details']
+      },
+      'seller/business-location.html': {
+        title: 'Business Location',
+        role: 'seller',
+        category: 'account',
+        navigation: 'seller',
+        breadcrumbs: ['Home', 'Seller Dashboard', 'Business Location']
+      },
+      'seller/store-location.html': {
+        title: 'Store Location',
+        role: 'seller',
+        category: 'account',
+        navigation: 'seller',
+        breadcrumbs: ['Home', 'Seller Dashboard', 'Store Location']
+      },
+
+      // Agent pages
+      'agent/dashboard.html': {
+        title: 'Agent Dashboard',
+        role: 'agent',
+        category: 'dashboard',
+        navigation: 'agent',
+        breadcrumbs: ['Home', 'Agent Dashboard']
+      },
+      'agent/local-market-dashboard.html': {
+        title: 'Local Market Dashboard',
+        role: 'agent',
+        category: 'dashboard',
+        navigation: 'agent',
+        breadcrumbs: ['Home', 'Local Market Dashboard']
+      },
+      'agent/orders.html': {
+        title: 'Orders',
+        role: 'agent',
+        category: 'orders',
+        navigation: 'agent',
+        breadcrumbs: ['Home', 'Agent Dashboard', 'Orders']
+      },
+      'agent/order-detail.html': {
+        title: 'Order Details',
+        role: 'agent',
+        category: 'orders',
+        navigation: 'agent',
+        breadcrumbs: ['Home', 'Agent Dashboard', 'Orders', 'Order Details']
+      },
+      'agent/earnings.html': {
+        title: 'Earnings',
+        role: 'agent',
+        category: 'finance',
+        navigation: 'agent',
+        breadcrumbs: ['Home', 'Agent Dashboard', 'Earnings']
+      },
+      'agent/profile.html': {
+        title: 'Profile',
+        role: 'agent',
+        category: 'account',
+        navigation: 'agent',
+        breadcrumbs: ['Home', 'Agent Dashboard', 'Profile']
+      },
+      'agent/settings.html': {
+        title: 'Settings',
+        role: 'agent',
+        category: 'account',
+        navigation: 'agent',
+        breadcrumbs: ['Home', 'Agent Dashboard', 'Settings']
+      },
+
+      // Admin pages
+      'admin/dashboard.html': {
+        title: 'Admin Dashboard',
+        role: 'admin',
+        category: 'dashboard',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard']
+      },
+      'admin/dashboard.html': {
+        title: 'Dashboard Statistics',
+        role: 'admin',
+        category: 'analytics',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'Statistics']
+      },
+      'admin/user-management.html': {
+        title: 'Users',
+        role: 'admin',
+        category: 'management',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'Users']
+      },
+      'admin/user-detail.html': {
+        title: 'User Details',
+        role: 'admin',
+        category: 'management',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'Users', 'User Details']
+      },
+      'admin/user-edit.html': {
+        title: 'Edit User',
+        role: 'admin',
+        category: 'management',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'Users', 'Edit User']
+      },
+      'admin/sellers.html': {
+        title: 'Sellers',
+        role: 'admin',
+        category: 'management',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'Sellers']
+      },
+      'admin/seller-detail.html': {
+        title: 'Seller Details',
+        role: 'admin',
+        category: 'management',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'Sellers', 'Seller Details']
+      },
+      'admin/seller-edit.html': {
+        title: 'Edit Seller',
+        role: 'admin',
+        category: 'management',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'Sellers', 'Edit Seller']
+      },
+      'admin/agents.html': {
+        title: 'Agents',
+        role: 'admin',
+        category: 'management',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'Agents']
+      },
+      'admin/agent-detail.html': {
+        title: 'Agent Details',
+        role: 'admin',
+        category: 'management',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'Agents', 'Agent Details']
+      },
+      'admin/agent-edit.html': {
+        title: 'Edit Agent',
+        role: 'admin',
+        category: 'management',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'Agents', 'Edit Agent']
+      },
+      'admin/agent-tracking.html': {
+        title: 'Agent Tracking',
+        role: 'admin',
+        category: 'management',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'Agent Tracking']
+      },
+      'admin/products.html': {
+        title: 'Products',
+        role: 'admin',
+        category: 'management',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'Products']
+      },
+      'admin/product-detail.html': {
+        title: 'Product Details',
+        role: 'admin',
+        category: 'management',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'Products', 'Product Details']
+      },
+      'admin/product-edit.html': {
+        title: 'Edit Product',
+        role: 'admin',
+        category: 'management',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'Products', 'Edit Product']
+      },
+      'admin/product-management.html': {
+        title: 'Product Management',
+        role: 'admin',
+        category: 'management',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'Product Management']
+      },
+      'admin/categories.html': {
+        title: 'Categories',
+        role: 'admin',
+        category: 'management',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'Categories']
+      },
+      'admin/category-management.html': {
+        title: 'Category Management',
+        role: 'admin',
+        category: 'management',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'Category Management']
+      },
+      'admin/orders.html': {
+        title: 'Orders',
+        role: 'admin',
+        category: 'management',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'Orders']
+      },
+      'admin/order-detail.html': {
+        title: 'Order Details',
+        role: 'admin',
+        category: 'management',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'Orders', 'Order Details']
+      },
+      'admin/order-edit.html': {
+        title: 'Edit Order',
+        role: 'admin',
+        category: 'management',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'Orders', 'Edit Order']
+      },
+      'admin/order-management.html': {
+        title: 'Order Management',
+        role: 'admin',
+        category: 'management',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'Order Management']
+      },
+      'admin/payments.html': {
+        title: 'Payments',
+        role: 'admin',
+        category: 'finance',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'Payments']
+      },
+      'admin/payment-methods.html': {
+        title: 'Payment Methods',
+        role: 'admin',
+        category: 'finance',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'Payment Methods']
+      },
+      'admin/payment-monitoring.html': {
+        title: 'Payment Monitoring',
+        role: 'admin',
+        category: 'finance',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'Payment Monitoring']
+      },
+      'admin/shipping.html': {
+        title: 'Shipping',
+        role: 'admin',
+        category: 'logistics',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'Shipping']
+      },
+      'admin/shipping-management.html': {
+        title: 'Shipping Management',
+        role: 'admin',
+        category: 'logistics',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'Shipping Management']
+      },
+      'admin/shipping-rules.html': {
+        title: 'Shipping Rules',
+        role: 'admin',
+        category: 'logistics',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'Shipping Rules']
+      },
+      'admin/shipping-insights.html': {
+        title: 'Shipping Insights',
+        role: 'admin',
+        category: 'analytics',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'Shipping Insights']
+      },
+      'admin/delivery-zones.html': {
+        title: 'Delivery Zones',
+        role: 'admin',
+        category: 'logistics',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'Delivery Zones']
+      },
+      'admin/reviews.html': {
+        title: 'Reviews',
+        role: 'admin',
+        category: 'management',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'Reviews']
+      },
+      'admin/review-detail.html': {
+        title: 'Review Details',
+        role: 'admin',
+        category: 'management',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'Reviews', 'Review Details']
+      },
+      'admin/promotions.html': {
+        title: 'Promotions',
+        role: 'admin',
+        category: 'marketing',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'Promotions']
+      },
+      'admin/marketing.html': {
+        title: 'Marketing',
+        role: 'admin',
+        category: 'marketing',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'Marketing']
+      },
+      'admin/announcements-management.html': {
+        title: 'Announcements',
+        role: 'admin',
+        category: 'marketing',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'Announcements']
+      },
+      'admin/blog-announcement-publishing.html': {
+        title: 'Blog Publishing',
+        role: 'admin',
+        category: 'marketing',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'Blog Publishing']
+      },
+      'admin/ads-boosting-approval.html': {
+        title: 'Ads Boosting',
+        role: 'admin',
+        category: 'marketing',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'Ads Boosting']
+      },
+      'admin/reports.html': {
+        title: 'Reports',
+        role: 'admin',
+        category: 'analytics',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'Reports']
+      },
+      'admin/support-tickets.html': {
+        title: 'Support Tickets',
+        role: 'admin',
+        category: 'support',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'Support Tickets']
+      },
+      'admin/live-chat-monitoring.html': {
+        title: 'Live Chat',
+        role: 'admin',
+        category: 'support',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'Live Chat']
+      },
+      'admin/logs.html': {
+        title: 'System Logs',
+        role: 'admin',
+        category: 'system',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'System Logs']
+      },
+      'admin/admin-logs-security.html': {
+        title: 'Security Logs',
+        role: 'admin',
+        category: 'system',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'Security Logs']
+      },
+      'admin/security-monitoring.html': {
+        title: 'Security Monitoring',
+        role: 'admin',
+        category: 'system',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'Security Monitoring']
+      },
+      'admin/settings.html': {
+        title: 'Settings',
+        role: 'admin',
+        category: 'system',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'Settings']
+      },
+      'admin/system-settings.html': {
+        title: 'System Settings',
+        role: 'admin',
+        category: 'system',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'System Settings']
+      },
+      'admin/system-testing.html': {
+        title: 'System Testing',
+        role: 'admin',
+        category: 'system',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'System Testing']
+      },
+      'admin/multi-currency-settings.html': {
+        title: 'Multi-Currency Settings',
+        role: 'admin',
+        category: 'system',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'Multi-Currency Settings']
+      },
+      'admin/tax-commission.html': {
+        title: 'Tax & Commission',
+        role: 'admin',
+        category: 'finance',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'Tax & Commission']
+      },
+      'admin/theme-customization.html': {
+        title: 'Theme Customization',
+        role: 'admin',
+        category: 'system',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'Theme Customization']
+      },
+      'admin/cms-management.html': {
+        title: 'CMS Management',
+        role: 'admin',
+        category: 'system',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'CMS Management']
+      },
+      'admin/email-sms-templates.html': {
+        title: 'Email/SMS Templates',
+        role: 'admin',
+        category: 'system',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'Email/SMS Templates']
+      },
+      'admin/local-market-admin.html': {
+        title: 'Local Market Admin',
+        role: 'admin',
+        category: 'management',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'Local Market Admin']
+      },
+      'admin/grocery-management.html': {
+        title: 'Grocery Management',
+        role: 'admin',
+        category: 'management',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'Grocery Management']
+      },
+      'admin/location-dashboard.html': {
+        title: 'Location Dashboard',
+        role: 'admin',
+        category: 'analytics',
+        navigation: 'admin',
+        breadcrumbs: ['Home', 'Admin Dashboard', 'Location Dashboard']
+      },
+
+      // Grocery/Local Market pages
+      'grocery/local-market-home.html': {
+        title: 'Local Market',
+        role: 'buyer',
+        category: 'dashboard',
+        navigation: 'buyer',
+        breadcrumbs: ['Home', 'Local Market']
+      },
+      'grocery/products.html': {
+        title: 'Grocery Products',
+        role: 'buyer',
+        category: 'shopping',
+        navigation: 'buyer',
+        breadcrumbs: ['Home', 'Local Market', 'Products']
+      },
+      'grocery/product-detail.html': {
+        title: 'Product Details',
+        role: 'buyer',
+        category: 'shopping',
+        navigation: 'buyer',
+        breadcrumbs: ['Home', 'Local Market', 'Products', 'Product Details']
+      },
+      'grocery/cart.html': {
+        title: 'Shopping Cart',
+        role: 'buyer',
+        category: 'shopping',
+        navigation: 'buyer',
+        breadcrumbs: ['Home', 'Local Market', 'Cart']
+      },
+      'grocery/checkout.html': {
+        title: 'Checkout',
+        role: 'buyer',
+        category: 'shopping',
+        navigation: 'buyer',
+        breadcrumbs: ['Home', 'Local Market', 'Cart', 'Checkout']
+      },
+      'grocery/orders.html': {
+        title: 'My Orders',
+        role: 'buyer',
+        category: 'orders',
+        navigation: 'buyer',
+        breadcrumbs: ['Home', 'Local Market', 'Orders']
+      },
+      'grocery/order-detail.html': {
+        title: 'Order Details',
+        role: 'buyer',
+        category: 'orders',
+        navigation: 'buyer',
+        breadcrumbs: ['Home', 'Local Market', 'Orders', 'Order Details']
+      },
+      'grocery/order-success.html': {
+        title: 'Order Success',
+        role: 'buyer',
+        category: 'orders',
+        navigation: 'buyer',
+        breadcrumbs: ['Home', 'Local Market', 'Order Success']
+      },
+      'grocery/track-order.html': {
+        title: 'Track Order',
+        role: 'buyer',
+        category: 'orders',
+        navigation: 'buyer',
+        breadcrumbs: ['Home', 'Local Market', 'Track Order']
+      }
+    };
+  }
+
+  getCurrentPageInfo() {
+    const path = window.location.pathname;
+    const normalizedPath = path.startsWith('/') ? path.substring(1) : path;
+    return this.pageMap[normalizedPath] || {
+      title: 'Page',
+      role: 'public',
+      category: 'unknown',
+      navigation: 'public',
+      breadcrumbs: ['Home']
+    };
+  }
+
+  injectNavigationScripts() {
+    // Ensure required scripts are loaded
+    const requiredScripts = [
+      '/shared/enhanced-navigation.js',
+      '/shared/unified-router.js'
+    ];
+
+    requiredScripts.forEach(scriptSrc => {
+      if (!document.querySelector(`script[src="${scriptSrc}"]`)) {
+        const script = document.createElement('script');
+        script.src = scriptSrc;
+        script.async = true;
+        document.head.appendChild(script);
+      }
+    });
+  }
+
+  createPageSpecificNavigation() {
+    // Add page-specific navigation elements based on page type
+    const pageInfo = this.currentPage;
+    
+    // Add back button for detail pages
+    if (pageInfo.title.includes('Details') || pageInfo.title.includes('Edit')) {
+      this.addBackButton();
+    }
+
+    // Add action buttons for specific pages
+    this.addPageSpecificActions();
+  }
+
+  addBackButton() {
+    const backButton = document.createElement('button');
+    backButton.id = 'page-back-button';
+    backButton.className = 'fixed top-24 left-4 z-40 bg-white shadow-lg rounded-full p-3 hover:bg-gray-50 transition-colors';
+    backButton.innerHTML = `
+      <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+      </svg>
+    `;
+    backButton.title = 'Go Back';
+    
+    backButton.addEventListener('click', () => {
+      window.history.back();
+    });
+    
+    document.body.appendChild(backButton);
+  }
+
+  addPageSpecificActions() {
+    const pageInfo = this.currentPage;
+    const actionsContainer = document.createElement('div');
+    actionsContainer.id = 'page-specific-actions';
+    actionsContainer.className = 'fixed top-24 right-4 z-40 flex flex-col space-y-2';
+
+    // Add actions based on page type
+    if (pageInfo.title === 'My Products' && pageInfo.role === 'seller') {
+      actionsContainer.innerHTML = `
+        <button data-route="seller.add-product" class="bg-green-500 hover:bg-green-600 text-white p-3 rounded-full shadow-lg transition-colors" title="Add Product" onclick="showNotification('Feature in development', 'info')">
+          svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+          </svg>
+        </button>
+      `;
+    } else if (pageInfo.title === 'Browse Products' && pageInfo.role === 'buyer') {
+      actionsContainer.innerHTML = `
+        <button data-route="buyer.cart" class="bg-blue-500 hover:bg-blue-600 text-white p-3 rounded-full shadow-lg transition-colors" title="View Cart" onclick="showNotification('Feature in development', 'info')">
+          svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m0 0h8m-8 0a2 2 0 100 4 2 2 0 000-4zm8 0a2 2 0 100 4 2 2 0 000-4z"></path>
+          </svg>
+        </button>
+        <button data-route="buyer.wishlist" class="bg-red-500 hover:bg-red-600 text-white p-3 rounded-full shadow-lg transition-colors" title="View Wishlist" onclick="showNotification('Feature in development', 'info')">
+          svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+          </svg>
+        </button>
+      `;
+    }
+
+    if (actionsContainer.innerHTML.trim()) {
+      document.body.appendChild(actionsContainer);
+    }
+  }
+
+  setupPageTransitions() {
+    // Add smooth page transitions
+    document.addEventListener('click', (e) => {
+      const link = e.target.closest('a[href]');
+      if (link && link.href && !link.href.startsWith('mailto:') && !link.href.startsWith('tel:') && !link.target) {
+        const href = link.getAttribute('href');
+        if (href.startsWith('/') || href.startsWith('./') || href.startsWith('../')) {
+          e.preventDefault();
+          this.navigateWithTransition(href);
+        }
+      }
+    });
+  }
+
+  navigateWithTransition(url) {
+    // Add loading overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'fixed inset-0 bg-white bg-opacity-90 flex items-center justify-center z-50 transition-opacity duration-300';
+    overlay.innerHTML = `
+      <div class="text-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+        <p class="text-gray-600 font-medium">Loading...</p>
+      </div>
+    `;
+    
+    document.body.appendChild(overlay);
+    
+    // Navigate after short delay
+    setTimeout(() => {
+      window.location.href = url;
+    }, 300);
+  }
+
+  // Utility methods
+  getPageTitle() {
+    return this.currentPage.title;
+  }
+
+  getPageRole() {
+    return this.currentPage.role;
+  }
+
+  getPageCategory() {
+    return this.currentPage.category;
+  }
+
+  getBreadcrumbs() {
+    return this.currentPage.breadcrumbs;
+  }
+
+  isAuthRequired() {
+    return this.currentPage.role !== 'public' && this.currentPage.role !== 'auth';
+  }
+
+  getNavigationType() {
+    return this.currentPage.navigation;
+  }
+}
+
+// Initialize page navigator when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+  window.pageNavigator = new PageNavigator();
+});
+
+// Export for use in other scripts
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = PageNavigator;
+}

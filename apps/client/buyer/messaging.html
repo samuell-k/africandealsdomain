@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Message Agent - ADD Physical Products</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+    <script src="/shared/auth-utils.js"></script>
+    <style>
+        .message-bubble {
+            max-width: 70%;
+            word-wrap: break-word;
+        }
+        .message-sent {
+            background: linear-gradient(135deg, #3B82F6, #1D4ED8);
+            color: white;
+            margin-left: auto;
+        }
+        .message-received {
+            background: #F3F4F6;
+            color: #1F2937;
+        }
+        .chat-container {
+            height: 400px;
+            overflow-y: auto;
+        }
+        .typing-indicator {
+            display: none;
+            align-items: center;
+            padding: 8px 16px;
+            background: #F3F4F6;
+            border-radius: 18px;
+            margin: 8px 0;
+            max-width: 100px;
+        }
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #9CA3AF;
+            margin: 0 2px;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes typing {
+            0%, 80%, 100% { transform: scale(0); opacity: 0.5; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="max-w-4xl mx-auto p-6">
+        <!-- Header -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold mr-4">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div>
+                        <h2 id="agent-name" class="text-xl font-bold text-gray-900">Delivery Agent</h2>
+                        <p class="text-gray-600">Order #<span id="order-number">Loading...</span></p>
+                        <div class="flex items-center mt-1">
+                            <div id="agent-status" class="w-3 h-3 bg-gray-400 rounded-full mr-2"></div>
+                            <span id="agent-status-text" class="text-sm text-gray-500">Offline</span>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="window.close()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">
+                    <i class="fas fa-times mr-2"></i>Close
+                </button>
+            </div>
+        </div>
+
+        <!-- Chat Container -->
+        <div class="bg-white rounded-lg shadow-md">
+            <!-- Messages Area -->
+            <div id="messages-container" class="chat-container p-6 border-b">
+                <div class="text-center text-gray-500 mb-4">
+                    <i class="fas fa-comments text-2xl mb-2"></i>
+                    <p>Start a conversation with your delivery agent</p>
+                </div>
+                
+                <!-- Typing Indicator -->
+                <div id="typing-indicator" class="typing-indicator">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            </div>
+
+            <!-- Message Input -->
+            <div class="p-6">
+                <div class="flex items-center space-x-4">
+                    <input 
+                        type="text" 
+                        id="message-input" 
+                        placeholder="Type your message..." 
+                        class="flex-1 border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        maxlength="500"
+                    >
+                    <button 
+                        id="send-button" 
+                        onclick="sendMessage()" 
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+                    >
+                        <i class="fas fa-paper-plane mr-2"></i>Send
+                    </button>
+                </div>
+                <div class="flex justify-between items-center mt-2">
+                    <span id="char-count" class="text-sm text-gray-500">0/500</span>
+                    <div class="flex space-x-2">
+                        <button onclick="sendQuickMessage('Where are you now?')" class="text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-full">
+                            📍 Location?
+                        </button>
+                        <button onclick="sendQuickMessage('How long until delivery?')" class="text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-full">
+                            ⏰ ETA?
+                        </button>
+                        <button onclick="sendQuickMessage('Thank you!')" class="text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-full">
+                            👍 Thanks
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Info -->
+        <div id="order-info" class="bg-white rounded-lg shadow-md p-6 mt-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Order Information</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <p class="text-sm text-gray-600">Status</p>
+                    <p id="order-status" class="font-semibold text-gray-900">Loading...</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600">Total Amount</p>
+                    <p id="order-amount" class="font-semibold text-gray-900">Loading...</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600">Delivery Address</p>
+                    <p id="delivery-address" class="font-semibold text-gray-900">Loading...</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600">Agent Phone</p>
+                    <p id="agent-phone" class="font-semibold text-gray-900">Not available</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let socket;
+        let currentOrderId;
+        let currentAgentId;
+        let currentUserId;
+
+        // Initialize the messaging interface
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Get URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            currentOrderId = urlParams.get('orderId');
+            currentAgentId = urlParams.get('agentId');
+
+            if (!currentOrderId || !currentAgentId) {
+                alert('Missing order or agent information');
+                window.close();
+                return;
+            }
+
+            // Check authentication
+            const token = Auth.getToken();
+            if (!token) {
+                alert('Please log in first');
+                window.close();
+                return;
+            }
+
+            // Get current user ID
+            try {
+                const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+                currentUserId = tokenPayload.id;
+            } catch (e) {
+                console.error('Error parsing token:', e);
+                window.close();
+                return;
+            }
+
+            // Load order information
+            await loadOrderInfo();
+
+            // Initialize Socket.IO
+            initializeSocket();
+
+            // Setup message input
+            setupMessageInput();
+
+            // Load existing messages
+            await loadMessages();
+        });
+
+        async function loadOrderInfo() {
+            try {
+                const response = await fetch(`/api/orders/${currentOrderId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${Auth.getToken()}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const order = data.order;
+
+                    document.getElementById('order-number').textContent = order.order_number || currentOrderId;
+                    document.getElementById('order-status').textContent = order.status || 'Unknown';
+                    document.getElementById('order-amount').textContent = `$${parseFloat(order.total_amount || 0).toFixed(2)}`;
+                    
+                    // Parse shipping address
+                    let address = 'Not available';
+                    if (order.shipping_address) {
+                        try {
+                            const addr = typeof order.shipping_address === 'string' 
+                                ? JSON.parse(order.shipping_address) 
+                                : order.shipping_address;
+                            address = `${addr.address || ''}, ${addr.city || ''}, ${addr.country || ''}`.trim();
+                        } catch (e) {
+                            address = order.shipping_address;
+                        }
+                    }
+                    document.getElementById('delivery-address').textContent = address;
+
+                    // Agent info
+                    if (order.agent_name) {
+                        document.getElementById('agent-name').textContent = order.agent_name;
+                    }
+                    if (order.agent_phone) {
+                        document.getElementById('agent-phone').textContent = order.agent_phone;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading order info:', error);
+            }
+        }
+
+        function initializeSocket() {
+            socket = io();
+
+            socket.on('connect', function() {
+                console.log('Connected to server');
+                // Join the order room for real-time updates
+                socket.emit('join-order-room', currentOrderId);
+            });
+
+            socket.on('new-message', function(message) {
+                if (message.order_id == currentOrderId) {
+                    displayMessage(message);
+                    scrollToBottom();
+                }
+            });
+
+            socket.on('agent-typing', function(data) {
+                if (data.orderId == currentOrderId && data.userId != currentUserId) {
+                    showTypingIndicator();
+                }
+            });
+
+            socket.on('agent-stopped-typing', function(data) {
+                if (data.orderId == currentOrderId) {
+                    hideTypingIndicator();
+                }
+            });
+
+            socket.on('agent-status', function(data) {
+                if (data.agentId == currentAgentId) {
+                    updateAgentStatus(data.status);
+                }
+            });
+        }
+
+        function setupMessageInput() {
+            const messageInput = document.getElementById('message-input');
+            const charCount = document.getElementById('char-count');
+
+            messageInput.addEventListener('input', function() {
+                const length = this.value.length;
+                charCount.textContent = `${length}/500`;
+                
+                if (length > 450) {
+                    charCount.classList.add('text-red-500');
+                } else {
+                    charCount.classList.remove('text-red-500');
+                }
+
+                // Emit typing indicator
+                if (socket && length > 0) {
+                    socket.emit('typing', { orderId: currentOrderId, userId: currentUserId });
+                }
+            });
+
+            messageInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+
+            // Stop typing indicator when user stops typing
+            let typingTimer;
+            messageInput.addEventListener('input', function() {
+                clearTimeout(typingTimer);
+                typingTimer = setTimeout(() => {
+                    if (socket) {
+                        socket.emit('stop-typing', { orderId: currentOrderId, userId: currentUserId });
+                    }
+                }, 1000);
+            });
+        }
+
+        async function loadMessages() {
+            try {
+                const response = await fetch(`/api/messages/order/${currentOrderId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${Auth.getToken()}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const messagesContainer = document.getElementById('messages-container');
+                    
+                    // Clear existing messages except the welcome message and typing indicator
+                    const welcomeMsg = messagesContainer.querySelector('.text-center');
+                    const typingIndicator = document.getElementById('typing-indicator');
+                    messagesContainer.innerHTML = '';
+                    if (data.messages.length === 0) {
+                        messagesContainer.appendChild(welcomeMsg);
+                    }
+                    messagesContainer.appendChild(typingIndicator);
+
+                    data.messages.forEach(message => {
+                        displayMessage(message);
+                    });
+
+                    scrollToBottom();
+                }
+            } catch (error) {
+                console.error('Error loading messages:', error);
+            }
+        }
+
+        function displayMessage(message) {
+            const messagesContainer = document.getElementById('messages-container');
+            const typingIndicator = document.getElementById('typing-indicator');
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'mb-4';
+
+            const isOwnMessage = message.sender_id == currentUserId;
+            const bubbleClass = isOwnMessage ? 'message-sent' : 'message-received';
+
+            messageDiv.innerHTML = `
+                <div class="flex ${isOwnMessage ? 'justify-end' : 'justify-start'}">
+                    <div class="message-bubble ${bubbleClass} px-4 py-2 rounded-lg">
+                        <p class="text-sm">${escapeHtml(message.message)}</p>
+                        <p class="text-xs opacity-75 mt-1">${formatTime(message.created_at)}</p>
+                    </div>
+                </div>
+            `;
+
+            messagesContainer.insertBefore(messageDiv, typingIndicator);
+            scrollToBottom();
+        }
+
+        async function sendMessage() {
+            const messageInput = document.getElementById('message-input');
+            const message = messageInput.value.trim();
+
+            if (!message) return;
+
+            try {
+                const response = await fetch('/api/messages', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${Auth.getToken()}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        order_id: currentOrderId,
+                        receiver_id: currentAgentId,
+                        message: message
+                    })
+                });
+
+                if (response.ok) {
+                    messageInput.value = '';
+                    document.getElementById('char-count').textContent = '0/500';
+                    
+                    // The message will be displayed via socket.io
+                } else {
+                    alert('Failed to send message. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error sending message:', error);
+                alert('Failed to send message. Please try again.');
+            }
+        }
+
+        function sendQuickMessage(message) {
+            document.getElementById('message-input').value = message;
+            sendMessage();
+        }
+
+        function showTypingIndicator() {
+            document.getElementById('typing-indicator').style.display = 'flex';
+            scrollToBottom();
+        }
+
+        function hideTypingIndicator() {
+            document.getElementById('typing-indicator').style.display = 'none';
+        }
+
+        function updateAgentStatus(status) {
+            const statusIndicator = document.getElementById('agent-status');
+            const statusText = document.getElementById('agent-status-text');
+
+            if (status === 'online') {
+                statusIndicator.className = 'w-3 h-3 bg-green-400 rounded-full mr-2';
+                statusText.textContent = 'Online';
+            } else {
+                statusIndicator.className = 'w-3 h-3 bg-gray-400 rounded-full mr-2';
+                statusText.textContent = 'Offline';
+            }
+        }
+
+        function scrollToBottom() {
+            const container = document.getElementById('messages-container');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function formatTime(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1594 @@
+<!DOCTYPE html>
+<html lang="en" class="admin-page">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tax & Currency Management | Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="admin-auth-check.js"></script>
+    <script src="admin-utils.js"></script>
+    <style>
+        :root {
+            --primary-color: #080b3b;
+            --secondary-color: #1e40af;
+            --accent-color: #3b82f6;
+        }
+        
+        .glass-morphism {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        }
+        .sidebar {
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .nav-item {
+            transition: all 0.3s ease;
+        }
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+        .nav-item.active {
+            background: rgba(255, 255, 255, 0.2);
+            border-left: 3px solid #3b82f6;
+        }
+        .loading-spinner {
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 2px solid #3b82f6;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .form-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+        }
+        .tax-rule-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .tax-rule-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+        .currency-card {
+            transition: all 0.3s ease;
+        }
+        .currency-card:hover {
+            transform: scale(1.02);
+        }
+        .currency-card.primary {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(16, 185, 129, 0.1));
+            border: 2px solid #22c55e;
+        }
+        .status-badge {
+            @apply px-3 py-1 rounded-full text-xs font-medium;
+        }
+        .status-active { @apply bg-green-500/20 text-green-400; }
+        .status-inactive { @apply bg-gray-500/20 text-gray-400; }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .tab-btn {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .tab-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .tab-btn.active {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: var(--accent-color);
+        }
+        .live-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #22c55e;
+            display: inline-block;
+            margin-right: 6px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .real-time-badge {
+            background: linear-gradient(45deg, #22c55e, #16a34a);
+            color: white;
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 1rem;
+            font-weight: 600;
+        }
+        .currency-symbol {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border-radius: 50%;
+            margin-right: 1rem;
+        }
+        .exchange-rate-trend {
+            display: flex;
+            align-items: center;
+            font-size: 0.75rem;
+        }
+        .trend-up { color: #22c55e; }
+        .trend-down { color: #ef4444; }
+        .trend-neutral { color: #6b7280; }
+        .region-flag {
+            width: 24px;
+            height: 16px;
+            border-radius: 2px;
+            display: inline-block;
+            margin-right: 8px;
+            font-size: 16px;
+        }
+        .tax-calculator {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+        .rate-input {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.2);
+            outline: none;
+        }
+        .rate-input::-webkit-slider-thumb {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+        }
+        .rate-input::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            border: none;
+        }
+        .conversion-widget {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(16, 185, 129, 0.1));
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+    </style>
+</head>
+
+<body class="gradient-bg min-h-screen">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <div class="sidebar w-64 lg:w-80 flex-shrink-0 hidden md:flex flex-col">
+            <div class="p-6 border-b border-white/10">
+                <h2 class="text-xl font-bold text-white">Admin Panel</h2>
+            </div>
+            
+            <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+                <a href="dashboard.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="user-management.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-users"></i>
+                    <span>User Management</span>
+                </a>
+                <a href="manual-payment-approval.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-credit-card"></i>
+                    <span>Payment Approval</span>
+                </a>
+                <a href="payment-credentials.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-wallet"></i>
+                    <span>Payment Credentials</span>
+                </a>
+                <a href="products.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-box"></i>
+                    <span>Products</span>
+                </a>
+                <a href="order-management.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Orders</span>
+                </a>
+                <a href="agents.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-user-tie"></i>
+                    <span>Agents</span>
+                </a>
+                <a href="categories.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-tags"></i>
+                    <span>Categories</span>
+                </a>
+                <a href="brands.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-trademark"></i>
+                    <span>Brands</span>
+                </a>
+                <a href="reviews.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-star"></i>
+                    <span>Reviews</span>
+                </a>
+                <a href="sellers.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-store"></i>
+                    <span>Sellers</span>
+                </a>
+                <a href="support-tickets.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-ticket-alt"></i>
+                    <span>Support Tickets</span>
+                </a>
+                <a href="logs.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-file-alt"></i>
+                    <span>System Logs</span>
+                </a>
+                <a href="promotions.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-tags"></i>
+                    <span>Promotions</span>
+                </a>
+                <a href="cms-management.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-edit"></i>
+                    <span>CMS Management</span>
+                </a>
+                <a href="notification-management.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-bell"></i>
+                    <span>Notifications</span>
+                </a>
+                <a href="backup-restore.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-database"></i>
+                    <span>Backup & Restore</span>
+                </a>
+                <a href="security-api.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Security & API</span>
+                </a>
+                <a href="performance-analytics.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Performance & Analytics</span>
+                </a>
+                <a href="system-integrations.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-plug"></i>
+                    <span>System Integrations</span>
+                </a>
+                <a href="file-manager.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-folder-open"></i>
+                    <span>File Manager</span>
+                </a>
+                <a href="email-templates.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-envelope-open-text"></i>
+                    <span>Email Templates</span>
+                </a>
+                <a href="tax-currency-management.html" class="nav-item active flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-coins"></i>
+                    <span>Tax & Currency</span>
+                </a>
+                <a href="reports.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Reports</span>
+                </a>
+                <a href="settings.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
+            
+            <!-- Header -->
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 space-y-4 sm:space-y-0">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-white mb-2 flex items-center">
+                        Tax & Currency Management
+                        <span class="live-indicator ml-3"></span>
+                        <span class="real-time-badge ml-2">Live Rates</span>
+                    </h1>
+                    <p class="text-white/70">Manage tax rules, currency exchange rates, and international pricing</p>
+                </div>
+                <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                    <button onclick="refreshExchangeRates()" class="bg-green-500 hover:bg-green-600 text-white px-3 sm:px-4 py-2 rounded-lg transition text-sm flex items-center justify-center">
+                        <i class="fas fa-sync mr-2"></i>Update Rates
+                    </button>
+                    <button onclick="openTaxRuleModal()" class="bg-blue-500 hover:bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-lg transition text-sm flex items-center justify-center">
+                        <i class="fas fa-plus mr-2"></i>Add Tax Rule
+                    </button>
+                    <button onclick="openCurrencyModal()" class="bg-purple-500 hover:bg-purple-600 text-white px-3 sm:px-4 py-2 rounded-lg transition text-sm flex items-center justify-center">
+                        <i class="fas fa-money-bill mr-2"></i>Add Currency
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
+                <div class="glass-morphism rounded-xl p-4 sm:p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-white/70 text-sm">Active Currencies</h3>
+                        <div class="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-coins text-green-400"></i>
+                        </div>
+                    </div>
+                    <p class="text-white text-2xl font-bold" id="active-currencies">12</p>
+                    <p class="text-white/60 text-xs">Across 8 regions</p>
+                </div>
+                
+                <div class="glass-morphism rounded-xl p-4 sm:p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-white/70 text-sm">Tax Rules</h3>
+                        <div class="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-receipt text-blue-400"></i>
+                        </div>
+                    </div>
+                    <p class="text-white text-2xl font-bold" id="total-tax-rules">28</p>
+                    <p class="text-white/60 text-xs">By region & category</p>
+                </div>
+                
+                <div class="glass-morphism rounded-xl p-4 sm:p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-white/70 text-sm">Exchange Updates</h3>
+                        <div class="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-chart-line text-yellow-400"></i>
+                        </div>
+                    </div>
+                    <p class="text-white text-2xl font-bold" id="last-update">2m ago</p>
+                    <p class="text-white/60 text-xs">Auto-synced</p>
+                </div>
+                
+                <div class="glass-morphism rounded-xl p-4 sm:p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-white/70 text-sm">Tax Collected</h3>
+                        <div class="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-money-check text-purple-400"></i>
+                        </div>
+                    </div>
+                    <p class="text-white text-2xl font-bold" id="tax-collected">$2,450</p>
+                    <p class="text-white/60 text-xs">This month</p>
+                </div>
+            </div>
+
+            <!-- Tab Navigation -->
+            <div class="flex flex-wrap gap-2 mb-6">
+                <div class="tab-btn active" data-tab="currencies" onclick="switchTab('currencies')">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-coins"></i>
+                        <span class="text-white font-medium">Currencies</span>
+                        <span class="text-white/50 text-sm">(12)</span>
+                    </div>
+                </div>
+                <div class="tab-btn" data-tab="tax-rules" onclick="switchTab('tax-rules')">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-receipt"></i>
+                        <span class="text-white font-medium">Tax Rules</span>
+                        <span class="text-white/50 text-sm">(28)</span>
+                    </div>
+                </div>
+                <div class="tab-btn" data-tab="calculator" onclick="switchTab('calculator')">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-calculator"></i>
+                        <span class="text-white font-medium">Tax Calculator</span>
+                    </div>
+                </div>
+                <div class="tab-btn" data-tab="converter" onclick="switchTab('converter')">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-exchange-alt"></i>
+                        <span class="text-white font-medium">Currency Converter</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Contents -->
+            
+            <!-- Currencies Tab -->
+            <div id="currencies-tab" class="tab-content active">
+                <div class="glass-morphism rounded-xl overflow-hidden">
+                    <div class="p-4 sm:p-6 border-b border-white/10">
+                        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-3 sm:space-y-0">
+                            <h3 class="text-lg sm:text-xl font-bold text-white">Currency Management</h3>
+                            <div class="flex space-x-2">
+                                <button onclick="refreshExchangeRates()" class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg text-sm">
+                                    <i class="fas fa-sync mr-2"></i>Update Rates
+                                </button>
+                                <button onclick="openCurrencyModal()" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-sm">
+                                    <i class="fas fa-plus mr-2"></i>Add Currency
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="currencies-container" class="p-6">
+                        <div class="text-center py-8">
+                            <div class="loading-spinner mx-auto mb-4"></div>
+                            <p class="text-white/70">Loading currencies...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tax Rules Tab -->
+            <div id="tax-rules-tab" class="tab-content">
+                <div class="glass-morphism rounded-xl overflow-hidden">
+                    <div class="p-4 sm:p-6 border-b border-white/10">
+                        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-3 sm:space-y-0">
+                            <h3 class="text-lg sm:text-xl font-bold text-white">Tax Rules Management</h3>
+                            <div class="flex space-x-2">
+                                <button onclick="bulkTaxUpdate()" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded-lg text-sm">
+                                    <i class="fas fa-edit mr-2"></i>Bulk Update
+                                </button>
+                                <button onclick="openTaxRuleModal()" class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg text-sm">
+                                    <i class="fas fa-plus mr-2"></i>Add Tax Rule
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="tax-rules-container" class="p-6">
+                        <div class="text-center py-8">
+                            <div class="loading-spinner mx-auto mb-4"></div>
+                            <p class="text-white/70">Loading tax rules...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tax Calculator Tab -->
+            <div id="calculator-tab" class="tab-content">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Calculator -->
+                    <div class="tax-calculator">
+                        <h3 class="text-xl font-bold text-white mb-4">Tax Calculator</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-white/70 text-sm mb-2">Product Price</label>
+                                <div class="relative">
+                                    <input type="number" id="calc-price" class="w-full p-3 rounded-lg form-input pl-8" 
+                                           placeholder="0.00" step="0.01" oninput="calculateTax()">
+                                    <span class="absolute left-3 top-3 text-white/60">$</span>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-white/70 text-sm mb-2">Region/Country</label>
+                                <select id="calc-region" class="w-full p-3 rounded-lg form-input" onchange="calculateTax()">
+                                    <option value="">Select Region</option>
+                                    <option value="us">United States (8.5%)</option>
+                                    <option value="uk">United Kingdom (20%)</option>
+                                    <option value="ca">Canada (13%)</option>
+                                    <option value="de">Germany (19%)</option>
+                                    <option value="fr">France (20%)</option>
+                                    <option value="rw">Rwanda (18%)</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-white/70 text-sm mb-2">Product Category</label>
+                                <select id="calc-category" class="w-full p-3 rounded-lg form-input" onchange="calculateTax()">
+                                    <option value="general">General Products</option>
+                                    <option value="electronics">Electronics</option>
+                                    <option value="food">Food & Beverages</option>
+                                    <option value="books">Books & Media</option>
+                                    <option value="luxury">Luxury Items</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 pt-6 border-t border-white/20">
+                            <div class="space-y-3">
+                                <div class="flex justify-between text-white">
+                                    <span>Subtotal:</span>
+                                    <span id="calc-subtotal">$0.00</span>
+                                </div>
+                                <div class="flex justify-between text-white">
+                                    <span>Tax Rate:</span>
+                                    <span id="calc-tax-rate">0%</span>
+                                </div>
+                                <div class="flex justify-between text-white">
+                                    <span>Tax Amount:</span>
+                                    <span id="calc-tax-amount">$0.00</span>
+                                </div>
+                                <hr class="border-white/20">
+                                <div class="flex justify-between text-white font-bold text-lg">
+                                    <span>Total:</span>
+                                    <span id="calc-total">$0.00</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Recent Calculations -->
+                    <div class="glass-morphism p-6 rounded-xl">
+                        <h3 class="text-xl font-bold text-white mb-4">Recent Calculations</h3>
+                        <div id="recent-calculations" class="space-y-3">
+                            <div class="text-center text-white/60 py-8">
+                                <i class="fas fa-calculator text-3xl mb-3"></i>
+                                <p>No calculations yet</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Currency Converter Tab -->
+            <div id="converter-tab" class="tab-content">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Converter -->
+                    <div class="conversion-widget">
+                        <h3 class="text-xl font-bold text-white mb-4">Currency Converter</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-white/70 text-sm mb-2">From Currency</label>
+                                <div class="grid grid-cols-3 gap-2">
+                                    <select id="from-currency" class="col-span-2 p-3 rounded-lg form-input" onchange="convertCurrency()">
+                                        <option value="USD">USD - US Dollar</option>
+                                        <option value="EUR">EUR - Euro</option>
+                                        <option value="GBP">GBP - British Pound</option>
+                                        <option value="RWF">RWF - Rwandan Franc</option>
+                                        <option value="CAD">CAD - Canadian Dollar</option>
+                                    </select>
+                                    <input type="number" id="from-amount" class="p-3 rounded-lg form-input" 
+                                           placeholder="0.00" step="0.01" oninput="convertCurrency()">
+                                </div>
+                            </div>
+                            
+                            <div class="text-center">
+                                <button onclick="swapCurrencies()" class="w-10 h-10 bg-blue-500/20 rounded-full flex items-center justify-center text-blue-400 hover:bg-blue-500/30 transition">
+                                    <i class="fas fa-exchange-alt"></i>
+                                </button>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-white/70 text-sm mb-2">To Currency</label>
+                                <div class="grid grid-cols-3 gap-2">
+                                    <select id="to-currency" class="col-span-2 p-3 rounded-lg form-input" onchange="convertCurrency()">
+                                        <option value="RWF">RWF - Rwandan Franc</option>
+                                        <option value="USD">USD - US Dollar</option>
+                                        <option value="EUR">EUR - Euro</option>
+                                        <option value="GBP">GBP - British Pound</option>
+                                        <option value="CAD">CAD - Canadian Dollar</option>
+                                    </select>
+                                    <input type="number" id="to-amount" class="p-3 rounded-lg form-input" 
+                                           placeholder="0.00" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 pt-6 border-t border-white/20">
+                            <div class="flex justify-between text-white/70 text-sm mb-2">
+                                <span>Exchange Rate:</span>
+                                <span id="exchange-rate">1 USD = 1,000 RWF</span>
+                            </div>
+                            <div class="flex justify-between text-white/70 text-sm">
+                                <span>Last Updated:</span>
+                                <span id="rate-updated">2 minutes ago</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Exchange Rate Chart -->
+                    <div class="glass-morphism p-6 rounded-xl">
+                        <h3 class="text-xl font-bold text-white mb-4">Exchange Rate Trends</h3>
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center p-3 bg-white/5 rounded-lg">
+                                <div class="flex items-center space-x-3">
+                                    <div class="currency-symbol bg-green-500/20 text-green-400">$</div>
+                                    <div>
+                                        <div class="text-white font-medium">USD/RWF</div>
+                                        <div class="text-white/60 text-sm">1,029.45</div>
+                                    </div>
+                                </div>
+                                <div class="exchange-rate-trend trend-up">
+                                    <i class="fas fa-arrow-up mr-1"></i>+1.2%
+                                </div>
+                            </div>
+                            
+                            <div class="flex justify-between items-center p-3 bg-white/5 rounded-lg">
+                                <div class="flex items-center space-x-3">
+                                    <div class="currency-symbol bg-blue-500/20 text-blue-400">€</div>
+                                    <div>
+                                        <div class="text-white font-medium">EUR/RWF</div>
+                                        <div class="text-white/60 text-sm">1,127.83</div>
+                                    </div>
+                                </div>
+                                <div class="exchange-rate-trend trend-down">
+                                    <i class="fas fa-arrow-down mr-1"></i>-0.8%
+                                </div>
+                            </div>
+                            
+                            <div class="flex justify-between items-center p-3 bg-white/5 rounded-lg">
+                                <div class="flex items-center space-x-3">
+                                    <div class="currency-symbol bg-yellow-500/20 text-yellow-400">£</div>
+                                    <div>
+                                        <div class="text-white font-medium">GBP/RWF</div>
+                                        <div class="text-white/60 text-sm">1,305.21</div>
+                                    </div>
+                                </div>
+                                <div class="exchange-rate-trend trend-up">
+                                    <i class="fas fa-arrow-up mr-1"></i>+2.1%
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tax Rule Modal -->
+    <div id="tax-rule-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+        <div class="glass-morphism p-6 sm:p-8 rounded-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl sm:text-2xl font-bold text-white" id="tax-modal-title">Add Tax Rule</h2>
+                <button onclick="closeTaxRuleModal()" class="text-white/70 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <form id="tax-rule-form" class="space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-white/70 text-sm mb-2">Rule Name *</label>
+                        <input type="text" id="tax-name" required 
+                               class="w-full p-3 rounded-lg form-input" 
+                               placeholder="e.g., US Standard Tax">
+                    </div>
+
+                    <div>
+                        <label class="block text-white/70 text-sm mb-2">Region/Country *</label>
+                        <select id="tax-region" required class="w-full p-3 rounded-lg form-input">
+                            <option value="">Select Region</option>
+                            <option value="US">United States</option>
+                            <option value="UK">United Kingdom</option>
+                            <option value="CA">Canada</option>
+                            <option value="DE">Germany</option>
+                            <option value="FR">France</option>
+                            <option value="RW">Rwanda</option>
+                            <option value="KE">Kenya</option>
+                            <option value="UG">Uganda</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-white/70 text-sm mb-2">Tax Rate (%) *</label>
+                    <div class="flex items-center space-x-4">
+                        <input type="range" id="tax-rate-slider" class="rate-input flex-1" 
+                               min="0" max="30" step="0.1" value="0" oninput="updateTaxRate()">
+                        <div class="w-20">
+                            <input type="number" id="tax-rate-input" 
+                                   class="w-full p-2 rounded form-input text-center" 
+                                   min="0" max="30" step="0.1" value="0" oninput="updateTaxSlider()">
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-white/70 text-sm mb-2">Applicable Categories</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="flex items-center space-x-2">
+                            <input type="checkbox" id="cat-all" class="rounded" checked>
+                            <span class="text-white text-sm">All Products</span>
+                        </label>
+                        <label class="flex items-center space-x-2">
+                            <input type="checkbox" id="cat-electronics" class="rounded">
+                            <span class="text-white text-sm">Electronics</span>
+                        </label>
+                        <label class="flex items-center space-x-2">
+                            <input type="checkbox" id="cat-food" class="rounded">
+                            <span class="text-white text-sm">Food & Beverages</span>
+                        </label>
+                        <label class="flex items-center space-x-2">
+                            <input type="checkbox" id="cat-books" class="rounded">
+                            <span class="text-white text-sm">Books & Media</span>
+                        </label>
+                        <label class="flex items-center space-x-2">
+                            <input type="checkbox" id="cat-luxury" class="rounded">
+                            <span class="text-white text-sm">Luxury Items</span>
+                        </label>
+                        <label class="flex items-center space-x-2">
+                            <input type="checkbox" id="cat-services" class="rounded">
+                            <span class="text-white text-sm">Services</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-white/70 text-sm mb-2">Effective Date</label>
+                        <input type="date" id="tax-effective-date" 
+                               class="w-full p-3 rounded-lg form-input">
+                    </div>
+
+                    <div>
+                        <label class="block text-white/70 text-sm mb-2">Status</label>
+                        <select id="tax-status" class="w-full p-3 rounded-lg form-input">
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                            <option value="scheduled">Scheduled</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-white/70 text-sm mb-2">Description</label>
+                    <textarea id="tax-description" rows="3" 
+                              class="w-full p-3 rounded-lg form-input" 
+                              placeholder="Optional description for this tax rule"></textarea>
+                </div>
+
+                <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 pt-6 border-t border-white/10">
+                    <button type="submit" class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg">
+                        <i class="fas fa-save mr-2"></i>Save Tax Rule
+                    </button>
+                    <button type="button" onclick="closeTaxRuleModal()" 
+                            class="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Currency Modal -->
+    <div id="currency-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+        <div class="glass-morphism p-6 sm:p-8 rounded-xl max-w-lg w-full mx-4">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl sm:text-2xl font-bold text-white">Add Currency</h2>
+                <button onclick="closeCurrencyModal()" class="text-white/70 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <form id="currency-form" class="space-y-4">
+                <div>
+                    <label class="block text-white/70 text-sm mb-2">Currency Code *</label>
+                    <input type="text" id="currency-code" required 
+                           class="w-full p-3 rounded-lg form-input" 
+                           placeholder="e.g., USD" maxlength="3">
+                </div>
+
+                <div>
+                    <label class="block text-white/70 text-sm mb-2">Currency Name *</label>
+                    <input type="text" id="currency-name" required 
+                           class="w-full p-3 rounded-lg form-input" 
+                           placeholder="e.g., US Dollar">
+                </div>
+
+                <div>
+                    <label class="block text-white/70 text-sm mb-2">Symbol *</label>
+                    <input type="text" id="currency-symbol" required 
+                           class="w-full p-3 rounded-lg form-input" 
+                           placeholder="e.g., $" maxlength="5">
+                </div>
+
+                <div>
+                    <label class="block text-white/70 text-sm mb-2">Exchange Rate (to base currency) *</label>
+                    <input type="number" id="currency-rate" required 
+                           class="w-full p-3 rounded-lg form-input" 
+                           placeholder="e.g., 1000" step="0.0001">
+                </div>
+
+                <div class="flex items-center space-x-2">
+                    <input type="checkbox" id="currency-active" checked class="rounded">
+                    <label for="currency-active" class="text-white text-sm">Enable this currency</label>
+                </div>
+
+                <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 pt-6 border-t border-white/10">
+                    <button type="submit" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">
+                        <i class="fas fa-plus mr-2"></i>Add Currency
+                    </button>
+                    <button type="button" onclick="closeCurrencyModal()" 
+                            class="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+<script>
+    // Global variables
+    let currentTab = 'currencies';
+    let currenciesData = [];
+    let taxRulesData = [];
+    let exchangeRates = {};
+    let recentCalculations = [];
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('💰 Tax & Currency Management initializing...');
+        
+        // Check authentication first
+        if (!checkAuthentication()) return;
+        
+        // Load data
+        loadAllData();
+        setupEventListeners();
+        
+        console.log('✅ Tax & Currency Management initialized');
+    });
+
+    // Check authentication
+    function checkAuthentication() {
+        const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
+        const userRole = localStorage.getItem('userRole');
+        
+        if (!token) {
+            console.log('❌ No authentication token found');
+            window.location.href = '/auth/auth-admin.html';
+            return false;
+        }
+        
+        if (userRole !== 'admin') {
+            console.log('❌ Insufficient permissions');
+            window.location.href = '/auth/auth-admin.html';
+            return false;
+        }
+        
+        console.log('✅ Authentication verified');
+        return true;
+    }
+
+    // Setup event listeners
+    function setupEventListeners() {
+        // Form submissions
+        document.getElementById('tax-rule-form').addEventListener('submit', handleTaxRuleSubmit);
+        document.getElementById('currency-form').addEventListener('submit', handleCurrencySubmit);
+    }
+
+    // Load all data
+    async function loadAllData() {
+        await Promise.all([
+            loadCurrencies(),
+            loadTaxRules(),
+            loadExchangeRates()
+        ]);
+    }
+
+    // Load currencies data
+    async function loadCurrencies() {
+        try {
+            console.log('💱 Loading currencies...');
+            
+            // Mock currencies data
+            const mockCurrencies = [
+                {
+                    id: 1,
+                    code: 'USD',
+                    name: 'US Dollar',
+                    symbol: '$',
+                    rate: 1.0000,
+                    is_primary: true,
+                    is_active: true,
+                    trend: 'neutral',
+                    trend_percentage: 0.0,
+                    last_updated: new Date(Date.now() - 2 * 60 * 1000),
+                    region: 'North America'
+                },
+                {
+                    id: 2,
+                    code: 'RWF',
+                    name: 'Rwandan Franc',
+                    symbol: 'RF',
+                    rate: 1029.45,
+                    is_primary: false,
+                    is_active: true,
+                    trend: 'up',
+                    trend_percentage: 1.2,
+                    last_updated: new Date(Date.now() - 2 * 60 * 1000),
+                    region: 'East Africa'
+                },
+                {
+                    id: 3,
+                    code: 'EUR',
+                    name: 'Euro',
+                    symbol: '€',
+                    rate: 0.9156,
+                    is_primary: false,
+                    is_active: true,
+                    trend: 'down',
+                    trend_percentage: -0.8,
+                    last_updated: new Date(Date.now() - 2 * 60 * 1000),
+                    region: 'Europe'
+                },
+                {
+                    id: 4,
+                    code: 'GBP',
+                    name: 'British Pound',
+                    symbol: '£',
+                    rate: 0.7854,
+                    is_primary: false,
+                    is_active: true,
+                    trend: 'up',
+                    trend_percentage: 2.1,
+                    last_updated: new Date(Date.now() - 2 * 60 * 1000),
+                    region: 'Europe'
+                },
+                {
+                    id: 5,
+                    code: 'CAD',
+                    name: 'Canadian Dollar',
+                    symbol: 'C$',
+                    rate: 1.3245,
+                    is_primary: false,
+                    is_active: true,
+                    trend: 'neutral',
+                    trend_percentage: 0.1,
+                    last_updated: new Date(Date.now() - 2 * 60 * 1000),
+                    region: 'North America'
+                }
+            ];
+
+            currenciesData = mockCurrencies;
+            renderCurrencies();
+            
+            console.log('✅ Currencies loaded successfully');
+
+        } catch (error) {
+            console.error('❌ Error loading currencies:', error);
+            document.getElementById('currencies-container').innerHTML = createErrorState(error.message, 'loadCurrencies()');
+        }
+    }
+
+    // Load tax rules data
+    async function loadTaxRules() {
+        try {
+            console.log('🧾 Loading tax rules...');
+            
+            // Mock tax rules data
+            const mockTaxRules = [
+                {
+                    id: 1,
+                    name: 'US Standard Tax',
+                    region: 'US',
+                    region_name: 'United States',
+                    tax_rate: 8.5,
+                    categories: ['all'],
+                    status: 'active',
+                    effective_date: '2024-01-01',
+                    description: 'Standard sales tax for US customers',
+                    created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+                    updated_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
+                },
+                {
+                    id: 2,
+                    name: 'UK VAT',
+                    region: 'UK',
+                    region_name: 'United Kingdom',
+                    tax_rate: 20.0,
+                    categories: ['all'],
+                    status: 'active',
+                    effective_date: '2024-01-01',
+                    description: 'Value Added Tax for UK customers',
+                    created_at: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000),
+                    updated_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
+                },
+                {
+                    id: 3,
+                    name: 'Rwanda VAT',
+                    region: 'RW',
+                    region_name: 'Rwanda',
+                    tax_rate: 18.0,
+                    categories: ['all'],
+                    status: 'active',
+                    effective_date: '2024-01-01',
+                    description: 'Value Added Tax for Rwanda customers',
+                    created_at: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000),
+                    updated_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
+                },
+                {
+                    id: 4,
+                    name: 'Canada GST/HST',
+                    region: 'CA',
+                    region_name: 'Canada',
+                    tax_rate: 13.0,
+                    categories: ['all'],
+                    status: 'active',
+                    effective_date: '2024-01-01',
+                    description: 'Goods and Services Tax / Harmonized Sales Tax',
+                    created_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
+                    updated_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000)
+                },
+                {
+                    id: 5,
+                    name: 'EU Digital Tax',
+                    region: 'EU',
+                    region_name: 'European Union',
+                    tax_rate: 25.0,
+                    categories: ['electronics', 'digital'],
+                    status: 'scheduled',
+                    effective_date: '2025-01-01',
+                    description: 'Special tax rate for digital products in EU',
+                    created_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+                    updated_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000)
+                }
+            ];
+
+            taxRulesData = mockTaxRules;
+            renderTaxRules();
+            
+            console.log('✅ Tax rules loaded successfully');
+
+        } catch (error) {
+            console.error('❌ Error loading tax rules:', error);
+            document.getElementById('tax-rules-container').innerHTML = createErrorState(error.message, 'loadTaxRules()');
+        }
+    }
+
+    // Load exchange rates
+    async function loadExchangeRates() {
+        try {
+            console.log('📈 Loading exchange rates...');
+            
+            // Mock exchange rates
+            exchangeRates = {
+                USD: 1.0000,
+                RWF: 1029.45,
+                EUR: 0.9156,
+                GBP: 0.7854,
+                CAD: 1.3245,
+                last_updated: new Date()
+            };
+            
+            updateExchangeRateDisplay();
+            
+            console.log('✅ Exchange rates loaded successfully');
+
+        } catch (error) {
+            console.error('❌ Error loading exchange rates:', error);
+        }
+    }
+
+    // Render currencies
+    function renderCurrencies() {
+        const container = document.getElementById('currencies-container');
+        
+        if (!currenciesData || currenciesData.length === 0) {
+            container.innerHTML = createEmptyState(
+                'currencies', 
+                'No Currencies Found', 
+                'Add currencies to enable multi-currency support.',
+                `<button onclick="openCurrencyModal()" class="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">
+                    <i class="fas fa-plus mr-2"></i>Add Currency
+                </button>`
+            );
+            return;
+        }
+
+        const currenciesHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                ${currenciesData.map(currency => `
+                    <div class="currency-card glass-morphism rounded-lg p-6 ${currency.is_primary ? 'primary' : ''}">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="currency-symbol bg-${getCurrencyColor(currency.code)}/20 text-${getCurrencyColor(currency.code)}-400">
+                                    ${currency.symbol}
+                                </div>
+                                <div>
+                                    <h3 class="text-white font-semibold">${currency.code}</h3>
+                                    <p class="text-white/60 text-sm">${currency.name}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                ${currency.is_primary ? '<i class="fas fa-star text-yellow-400" title="Primary Currency"></i>' : ''}
+                                <span class="status-badge status-${currency.is_active ? 'active' : 'inactive'}">
+                                    ${currency.is_active ? 'Active' : 'Inactive'}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3 mb-4">
+                            <div class="flex justify-between text-sm">
+                                <span class="text-white/70">Exchange Rate:</span>
+                                <span class="text-white font-medium">
+                                    ${currency.rate === 1 ? '1.0000 (Base)' : currency.rate.toFixed(4)}
+                                </span>
+                            </div>
+                            
+                            <div class="flex justify-between text-sm">
+                                <span class="text-white/70">Region:</span>
+                                <span class="text-white">${currency.region}</span>
+                            </div>
+                            
+                            <div class="flex justify-between text-sm">
+                                <span class="text-white/70">Trend (24h):</span>
+                                <span class="exchange-rate-trend trend-${currency.trend}">
+                                    <i class="fas fa-arrow-${currency.trend === 'up' ? 'up' : currency.trend === 'down' ? 'down' : 'right'}"></i>
+                                    ${currency.trend_percentage > 0 ? '+' : ''}${currency.trend_percentage}%
+                                </span>
+                            </div>
+                            
+                            <div class="text-xs text-white/50">
+                                Updated: ${formatTimeAgo(currency.last_updated)}
+                            </div>
+                        </div>
+
+                        <div class="flex space-x-2">
+                            <button onclick="editCurrency(${currency.id})" 
+                                    class="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-sm">
+                                <i class="fas fa-edit mr-1"></i>Edit
+                            </button>
+                            <button onclick="toggleCurrencyStatus(${currency.id})" 
+                                    class="flex-1 bg-${currency.is_active ? 'gray' : 'green'}-500 hover:bg-${currency.is_active ? 'gray' : 'green'}-600 text-white px-3 py-2 rounded text-sm">
+                                <i class="fas fa-${currency.is_active ? 'pause' : 'play'} mr-1"></i>
+                                ${currency.is_active ? 'Disable' : 'Enable'}
+                            </button>
+                            ${!currency.is_primary ? `
+                                <button onclick="deleteCurrency(${currency.id})" 
+                                        class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded text-sm">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        
+        container.innerHTML = currenciesHTML;
+    }
+
+    // Render tax rules
+    function renderTaxRules() {
+        const container = document.getElementById('tax-rules-container');
+        
+        if (!taxRulesData || taxRulesData.length === 0) {
+            container.innerHTML = createEmptyState(
+                'tax-rules', 
+                'No Tax Rules Found', 
+                'Create tax rules to automatically calculate taxes for different regions.',
+                `<button onclick="openTaxRuleModal()" class="mt-4 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg">
+                    <i class="fas fa-plus mr-2"></i>Add Tax Rule
+                </button>`
+            );
+            return;
+        }
+
+        const taxRulesHTML = `
+            <div class="space-y-4">
+                ${taxRulesData.map(rule => `
+                    <div class="tax-rule-card glass-morphism rounded-lg p-6">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-3 mb-2">
+                                    <span class="region-flag">${getRegionFlag(rule.region)}</span>
+                                    <h3 class="text-white font-semibold text-lg">${rule.name}</h3>
+                                    <span class="status-badge status-${rule.status}">
+                                        ${formatStatus(rule.status)}
+                                    </span>
+                                </div>
+                                <p class="text-white/60 text-sm">${rule.description}</p>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-white text-2xl font-bold">${rule.tax_rate}%</div>
+                                <div class="text-white/60 text-xs">Tax Rate</div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <div>
+                                <span class="text-white/50 text-xs">Region:</span>
+                                <p class="text-white">${rule.region_name}</p>
+                            </div>
+                            <div>
+                                <span class="text-white/50 text-xs">Effective Date:</span>
+                                <p class="text-white">${formatDate(rule.effective_date)}</p>
+                            </div>
+                            <div>
+                                <span class="text-white/50 text-xs">Categories:</span>
+                                <p class="text-white">
+                                    ${rule.categories.includes('all') ? 'All Products' : rule.categories.join(', ')}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between items-center">
+                            <div class="text-xs text-white/50">
+                                Updated: ${formatTimeAgo(rule.updated_at)}
+                            </div>
+                            <div class="flex space-x-2">
+                                <button onclick="editTaxRule(${rule.id})" 
+                                        class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm">
+                                    <i class="fas fa-edit mr-1"></i>Edit
+                                </button>
+                                <button onclick="duplicateTaxRule(${rule.id})" 
+                                        class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-sm">
+                                    <i class="fas fa-copy mr-1"></i>Copy
+                                </button>
+                                <button onclick="deleteTaxRule(${rule.id})" 
+                                        class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">
+                                    <i class="fas fa-trash mr-1"></i>Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        
+        container.innerHTML = taxRulesHTML;
+    }
+
+    // Tab switching
+    function switchTab(tab) {
+        currentTab = tab;
+        
+        // Update active tab
+        document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+        document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+        
+        // Show/hide tab content
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.remove('active');
+        });
+        document.getElementById(`${tab}-tab`).classList.add('active');
+    }
+
+    // Currency operations
+    function openCurrencyModal() {
+        document.getElementById('currency-modal').classList.remove('hidden');
+        document.getElementById('currency-modal').classList.add('flex');
+    }
+
+    function closeCurrencyModal() {
+        document.getElementById('currency-modal').classList.add('hidden');
+        document.getElementById('currency-modal').classList.remove('flex');
+        document.getElementById('currency-form').reset();
+    }
+
+    // Tax rule operations
+    function openTaxRuleModal() {
+        document.getElementById('tax-rule-modal').classList.remove('hidden');
+        document.getElementById('tax-rule-modal').classList.add('flex');
+        
+        // Set default effective date to today
+        document.getElementById('tax-effective-date').value = new Date().toISOString().split('T')[0];
+    }
+
+    function closeTaxRuleModal() {
+        document.getElementById('tax-rule-modal').classList.add('hidden');
+        document.getElementById('tax-rule-modal').classList.remove('flex');
+        document.getElementById('tax-rule-form').reset();
+    }
+
+    // Tax rate slider functions
+    function updateTaxRate() {
+        const sliderValue = document.getElementById('tax-rate-slider').value;
+        document.getElementById('tax-rate-input').value = sliderValue;
+    }
+
+    function updateTaxSlider() {
+        const inputValue = document.getElementById('tax-rate-input').value;
+        document.getElementById('tax-rate-slider').value = inputValue;
+    }
+
+    // Calculator functions
+    function calculateTax() {
+        const price = parseFloat(document.getElementById('calc-price').value) || 0;
+        const region = document.getElementById('calc-region').value;
+        
+        // Get tax rate based on region
+        const taxRates = {
+            'us': 8.5,
+            'uk': 20.0,
+            'ca': 13.0,
+            'de': 19.0,
+            'fr': 20.0,
+            'rw': 18.0
+        };
+        
+        const taxRate = taxRates[region] || 0;
+        const taxAmount = (price * taxRate) / 100;
+        const total = price + taxAmount;
+        
+        // Update display
+        document.getElementById('calc-subtotal').textContent = `$${price.toFixed(2)}`;
+        document.getElementById('calc-tax-rate').textContent = `${taxRate}%`;
+        document.getElementById('calc-tax-amount').textContent = `$${taxAmount.toFixed(2)}`;
+        document.getElementById('calc-total').textContent = `$${total.toFixed(2)}`;
+        
+        // Add to recent calculations if there's a meaningful calculation
+        if (price > 0 && taxRate > 0) {
+            addToRecentCalculations({
+                price,
+                region,
+                taxRate,
+                taxAmount,
+                total,
+                timestamp: new Date()
+            });
+        }
+    }
+
+    function addToRecentCalculations(calculation) {
+        recentCalculations.unshift(calculation);
+        if (recentCalculations.length > 5) {
+            recentCalculations = recentCalculations.slice(0, 5);
+        }
+        updateRecentCalculations();
+    }
+
+    function updateRecentCalculations() {
+        const container = document.getElementById('recent-calculations');
+        
+        if (recentCalculations.length === 0) {
+            container.innerHTML = `
+                <div class="text-center text-white/60 py-8">
+                    <i class="fas fa-calculator text-3xl mb-3"></i>
+                    <p>No calculations yet</p>
+                </div>
+            `;
+            return;
+        }
+        
+        const calculationsHTML = recentCalculations.map(calc => `
+            <div class="bg-white/5 p-3 rounded-lg">
+                <div class="flex justify-between text-white text-sm mb-1">
+                    <span>$${calc.price.toFixed(2)} (${calc.region.toUpperCase()})</span>
+                    <span class="font-bold">$${calc.total.toFixed(2)}</span>
+                </div>
+                <div class="text-white/60 text-xs">
+                    Tax: ${calc.taxRate}% = $${calc.taxAmount.toFixed(2)} • ${formatTimeAgo(calc.timestamp)}
+                </div>
+            </div>
+        `).join('');
+        
+        container.innerHTML = calculationsHTML;
+    }
+
+    // Currency converter functions
+    function convertCurrency() {
+        const fromCurrency = document.getElementById('from-currency').value;
+        const toCurrency = document.getElementById('to-currency').value;
+        const fromAmount = parseFloat(document.getElementById('from-amount').value) || 0;
+        
+        if (fromAmount === 0) {
+            document.getElementById('to-amount').value = '';
+            return;
+        }
+        
+        // Mock conversion rates
+        const rates = {
+            'USD': 1.0,
+            'EUR': 0.9156,
+            'GBP': 0.7854,
+            'RWF': 1029.45,
+            'CAD': 1.3245
+        };
+        
+        // Convert to USD first, then to target currency
+        const usdAmount = fromAmount / rates[fromCurrency];
+        const convertedAmount = usdAmount * rates[toCurrency];
+        
+        document.getElementById('to-amount').value = convertedAmount.toFixed(2);
+        
+        // Update exchange rate display
+        const exchangeRate = rates[toCurrency] / rates[fromCurrency];
+        document.getElementById('exchange-rate').textContent = 
+            `1 ${fromCurrency} = ${exchangeRate.toFixed(4)} ${toCurrency}`;
+    }
+
+    function swapCurrencies() {
+        const fromSelect = document.getElementById('from-currency');
+        const toSelect = document.getElementById('to-currency');
+        
+        const temp = fromSelect.value;
+        fromSelect.value = toSelect.value;
+        toSelect.value = temp;
+        
+        convertCurrency();
+    }
+
+    // Form submission handlers
+    async function handleCurrencySubmit(e) {
+        e.preventDefault();
+        
+        const formData = {
+            code: document.getElementById('currency-code').value.toUpperCase(),
+            name: document.getElementById('currency-name').value,
+            symbol: document.getElementById('currency-symbol').value,
+            rate: parseFloat(document.getElementById('currency-rate').value),
+            is_active: document.getElementById('currency-active').checked
+        };
+        
+        try {
+            showToast('Currency added successfully', 'success');
+            closeCurrencyModal();
+            loadCurrencies();
+            
+        } catch (error) {
+            console.error('❌ Error adding currency:', error);
+            showToast('Error adding currency: ' + error.message, 'error');
+        }
+    }
+
+    async function handleTaxRuleSubmit(e) {
+        e.preventDefault();
+        
+        const categories = [];
+        if (document.getElementById('cat-all').checked) categories.push('all');
+        if (document.getElementById('cat-electronics').checked) categories.push('electronics');
+        if (document.getElementById('cat-food').checked) categories.push('food');
+        if (document.getElementById('cat-books').checked) categories.push('books');
+        if (document.getElementById('cat-luxury').checked) categories.push('luxury');
+        if (document.getElementById('cat-services').checked) categories.push('services');
+        
+        const formData = {
+            name: document.getElementById('tax-name').value,
+            region: document.getElementById('tax-region').value,
+            tax_rate: parseFloat(document.getElementById('tax-rate-input').value),
+            categories: categories,
+            effective_date: document.getElementById('tax-effective-date').value,
+            status: document.getElementById('tax-status').value,
+            description: document.getElementById('tax-description').value
+        };
+        
+        try {
+            showToast('Tax rule created successfully', 'success');
+            closeTaxRuleModal();
+            loadTaxRules();
+            
+        } catch (error) {
+            console.error('❌ Error creating tax rule:', error);
+            showToast('Error creating tax rule: ' + error.message, 'error');
+        }
+    }
+
+    // Update functions
+    async function refreshExchangeRates() {
+        showToast('Updating exchange rates...', 'info');
+        
+        // Simulate API call
+        setTimeout(() => {
+            loadExchangeRates();
+            showToast('Exchange rates updated successfully', 'success');
+            document.getElementById('last-update').textContent = 'Just now';
+        }, 1500);
+    }
+
+    function updateExchangeRateDisplay() {
+        document.getElementById('rate-updated').textContent = 'Just updated';
+    }
+
+    // Utility functions
+    function getCurrencyColor(code) {
+        const colorMap = {
+            'USD': 'green',
+            'EUR': 'blue',
+            'GBP': 'yellow',
+            'RWF': 'purple',
+            'CAD': 'red'
+        };
+        return colorMap[code] || 'gray';
+    }
+
+    function getRegionFlag(region) {
+        const flagMap = {
+            'US': '🇺🇸',
+            'UK': '🇬🇧',
+            'CA': '🇨🇦',
+            'DE': '🇩🇪',
+            'FR': '🇫🇷',
+            'RW': '🇷🇼',
+            'EU': '🇪🇺'
+        };
+        return flagMap[region] || '🌍';
+    }
+
+    function formatStatus(status) {
+        const statusMap = {
+            'active': 'Active',
+            'inactive': 'Inactive',
+            'scheduled': 'Scheduled'
+        };
+        return statusMap[status] || status;
+    }
+
+    function formatDate(dateString) {
+        if (!dateString) return 'N/A';
+        return new Date(dateString).toLocaleDateString();
+    }
+
+    function formatTimeAgo(dateString) {
+        if (!dateString) return 'Unknown';
+        
+        const now = new Date();
+        const date = new Date(dateString);
+        const diffInSeconds = Math.floor((now - date) / 1000);
+        
+        if (diffInSeconds < 60) return 'Just now';
+        if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+        if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+        return `${Math.floor(diffInSeconds / 86400)}d ago`;
+    }
+
+    function createEmptyState(type, title, description, actions = '') {
+        return `
+            <div class="text-center py-12">
+                <div class="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-${type === 'currencies' ? 'coins' : 'receipt'} text-white/30 text-3xl"></i>
+                </div>
+                <h3 class="text-white text-xl font-semibold mb-2">${title}</h3>
+                <p class="text-white/60 mb-6 max-w-md mx-auto">${description}</p>
+                ${actions}
+            </div>
+        `;
+    }
+
+    function createErrorState(message, retry = null) {
+        return `
+            <div class="text-center py-12">
+                <div class="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-exclamation-triangle text-red-400 text-3xl"></i>
+                </div>
+                <h3 class="text-white text-xl font-semibold mb-2">Error Loading Data</h3>
+                <p class="text-white/60 mb-6 max-w-md mx-auto">${message}</p>
+                ${retry ? `<button onclick="${retry}" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg"><i class="fas fa-refresh mr-2"></i>Try Again</button>` : ''}
+            </div>
+        `;
+    }
+
+    function showToast(message, type = 'info') {
+        console.log(`[${type.toUpperCase()}] ${message}`);
+        
+        const toast = document.createElement('div');
+        toast.className = `fixed top-4 right-4 z-50 px-6 py-4 rounded-lg text-white ${
+            type === 'success' ? 'bg-green-500' : 
+            type === 'error' ? 'bg-red-500' : 
+            type === 'warning' ? 'bg-yellow-500' : 'bg-blue-500'
+        }`;
+        toast.textContent = message;
+        
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+
+    // Make functions globally available
+    window.switchTab = switchTab;
+    window.openCurrencyModal = openCurrencyModal;
+    window.closeCurrencyModal = closeCurrencyModal;
+    window.openTaxRuleModal = openTaxRuleModal;
+    window.closeTaxRuleModal = closeTaxRuleModal;
+    window.updateTaxRate = updateTaxRate;
+    window.updateTaxSlider = updateTaxSlider;
+    window.calculateTax = calculateTax;
+    window.convertCurrency = convertCurrency;
+    window.swapCurrencies = swapCurrencies;
+    window.refreshExchangeRates = refreshExchangeRates;
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,14 @@
+const express = require('express');
+const router = express.Router();
+
+// GET /api/payments
+router.get('/', (req, res) => {
+  res.json({ message: 'Payments list (placeholder)' });
+});
+
+// POST /api/payments
+router.post('/', (req, res) => {
+  res.json({ message: 'Create payment (placeholder)' });
+});
+
+module.exports = router; 

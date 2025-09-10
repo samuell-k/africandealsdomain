@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Withdrawal Management - Admin Panel</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="/public/css/admin.css" rel="stylesheet">
+    <style>
+        .withdrawal-card {
+            transition: transform 0.2s;
+            border-left: 4px solid #dee2e6;
+        }
+        .withdrawal-card:hover {
+            transform: translateY(-2px);
+        }
+        .withdrawal-card.referral {
+            border-left-color: #28a745;
+        }
+        .withdrawal-card.wallet {
+            border-left-color: #007bff;
+        }
+        .status-badge {
+            font-size: 0.75rem;
+        }
+        .amount-highlight {
+            font-size: 1.25rem;
+            font-weight: bold;
+        }
+        .user-info {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1rem;
+        }
+        .action-buttons .btn {
+            margin: 0 2px;
+        }
+        .nav-tabs .nav-link.active {
+            background-color: #007bff;
+            color: white;
+        }
+        .summary-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- Admin Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/admin/dashboard">
+                <i class="fas fa-cog"></i> Admin Panel
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/dashboard">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/orders">
+                            <i class="fas fa-shopping-bag"></i> Orders
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/users">
+                            <i class="fas fa-users"></i> Users
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/admin/withdrawal-management">
+                            <i class="fas fa-money-bill-wave"></i> Withdrawals
+                        </a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user"></i> Admin
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <!-- Page Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2><i class="fas fa-money-bill-wave text-primary"></i> Withdrawal Management</h2>
+                        <p class="text-muted">Manage referral and wallet withdrawal requests</p>
+                    </div>
+                    <div>
+                        <button class="btn btn-outline-primary" onclick="refreshData()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card bg-warning text-white">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="me-3">
+                                <i class="fas fa-clock fa-2x"></i>
+                            </div>
+                            <div>
+                                <h4 class="mb-0" id="totalPendingCount">0</h4>
+                                <small>Total Pending</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="me-3">
+                                <i class="fas fa-share-alt fa-2x"></i>
+                            </div>
+                            <div>
+                                <h4 class="mb-0" id="referralPendingCount">0</h4>
+                                <small>Referral Pending</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="me-3">
+                                <i class="fas fa-wallet fa-2x"></i>
+                            </div>
+                            <div>
+                                <h4 class="mb-0" id="walletPendingCount">0</h4>
+                                <small>Wallet Pending</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="me-3">
+                                <i class="fas fa-dollar-sign fa-2x"></i>
+                            </div>
+                            <div>
+                                <h4 class="mb-0">$<span id="totalPendingAmount">0.00</span></h4>
+                                <small>Total Amount</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs for Different Withdrawal Types -->
+        <div class="card">
+            <div class="card-header">
+                <ul class="nav nav-tabs card-header-tabs" id="withdrawalTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="referral-tab" data-bs-toggle="tab" data-bs-target="#referral-withdrawals" type="button" role="tab">
+                            <i class="fas fa-share-alt"></i> Referral Withdrawals
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="wallet-tab" data-bs-toggle="tab" data-bs-target="#wallet-withdrawals" type="button" role="tab">
+                            <i class="fas fa-wallet"></i> Wallet Withdrawals
+                        </button>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="tab-content" id="withdrawalTabContent">
+                    <!-- Referral Withdrawals Tab -->
+                    <div class="tab-pane fade show active" id="referral-withdrawals" role="tabpanel">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0">Referral Withdrawal Requests</h5>
+                            <div>
+                                <select class="form-select form-select-sm" id="referralStatusFilter" onchange="loadReferralWithdrawals()">
+                                    <option value="pending">Pending Only</option>
+                                    <option value="all">All Requests</option>
+                                    <option value="completed">Completed</option>
+                                    <option value="rejected">Rejected</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="referralWithdrawalsList">
+                            <!-- Referral withdrawals will be loaded here -->
+                        </div>
+                    </div>
+
+                    <!-- Wallet Withdrawals Tab -->
+                    <div class="tab-pane fade" id="wallet-withdrawals" role="tabpanel">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0">Wallet Withdrawal Requests</h5>
+                            <div>
+                                <select class="form-select form-select-sm" id="walletStatusFilter" onchange="loadWalletWithdrawals()">
+                                    <option value="pending">Pending Only</option>
+                                    <option value="all">All Requests</option>
+                                    <option value="completed">Completed</option>
+                                    <option value="rejected">Rejected</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="walletWithdrawalsList">
+                            <!-- Wallet withdrawals will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading" class="text-center py-5" style="display: none;">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading withdrawal requests...</p>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="text-center py-5" style="display: none;">
+            <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+            <h4>All Caught Up!</h4>
+            <p class="text-muted">No pending withdrawal requests at the moment.</p>
+        </div>
+    </div>
+
+    <!-- Withdrawal Review Modal -->
+    <div class="modal fade" id="reviewModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-eye"></i> Review Withdrawal Request
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="withdrawalDetails">
+                        <!-- Withdrawal details will be loaded here -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-danger" onclick="processWithdrawal('reject')">
+                        <i class="fas fa-times"></i> Reject
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="processWithdrawal('approve')">
+                        <i class="fas fa-check"></i> Approve & Pay
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/public/js/auth-utils.js"></script>
+    <script src="/public/js/auth.js"></script>
+    <script>
+        let currentWithdrawal = null;
+        let currentWithdrawalType = null;
+
+        // Helper function to safely parse payment details
+        function getPaymentAccountNumber(paymentDetails) {
+            try {
+                if (typeof paymentDetails === 'string') {
+                    const parsed = JSON.parse(paymentDetails);
+                    return parsed.account_number || 'N/A';
+                } else if (typeof paymentDetails === 'object' && paymentDetails !== null) {
+                    return paymentDetails.account_number || 'N/A';
+                }
+                return 'N/A';
+            } catch (error) {
+                console.error('Error parsing payment details:', error);
+                return 'N/A';
+            }
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAdminAuth();
+            refreshData();
+        });
+
+        async function refreshData() {
+            await Promise.all([
+                loadReferralWithdrawals(),
+                loadWalletWithdrawals(),
+                updateSummaryCards()
+            ]);
+        }
+
+        async function loadReferralWithdrawals() {
+            try {
+                const status = document.getElementById('referralStatusFilter').value;
+                const response = await fetch(`/api/referrals/admin/pending-payments?status=${status}`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayReferralWithdrawals(data.pending_payments);
+                } else {
+                    throw new Error(data.error || 'Failed to load referral withdrawals');
+                }
+            } catch (error) {
+                console.error('Error loading referral withdrawals:', error);
+                showError('Failed to load referral withdrawals: ' + error.message);
+            }
+        }
+
+        async function loadWalletWithdrawals() {
+            try {
+                const status = document.getElementById('walletStatusFilter').value;
+                const response = await fetch(`/api/admin/payments/wallet-withdrawals?status=${status}`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayWalletWithdrawals(data.withdrawals);
+                } else {
+                    throw new Error(data.error || 'Failed to load wallet withdrawals');
+                }
+            } catch (error) {
+                console.error('Error loading wallet withdrawals:', error);
+                showError('Failed to load wallet withdrawals: ' + error.message);
+            }
+        }
+
+        function displayReferralWithdrawals(withdrawals) {
+            const container = document.getElementById('referralWithdrawalsList');
+            
+            if (withdrawals.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-4">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <h5>No Referral Withdrawals</h5>
+                        <p class="text-muted">No referral withdrawal requests found.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const withdrawalsHtml = withdrawals.map(withdrawal => `
+                <div class="card withdrawal-card referral mb-3">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <h6 class="mb-1">
+                                            <i class="fas fa-user"></i> ${withdrawal.user_name}
+                                            <span class="badge bg-${getStatusColor(withdrawal.status)} ms-2">${withdrawal.status.toUpperCase()}</span>
+                                        </h6>
+                                        <small class="text-muted">
+                                            <i class="fas fa-envelope"></i> ${withdrawal.user_email}
+                                            ${withdrawal.user_phone ? `<i class="fas fa-phone ms-2"></i> ${withdrawal.user_phone}` : ''}
+                                        </small>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="amount-highlight text-success">
+                                            ${parseInt(withdrawal.amount).toLocaleString()} RWF
+                                        </div>
+                                        <small class="text-muted">${formatDate(withdrawal.created_at)}</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="user-info mb-2">
+                                    <div class="row">
+                                        <div class="col-4">
+                                            <small class="text-muted">Total Referrals</small>
+                                            <div class="fw-bold">${withdrawal.total_referrals || 0}</div>
+                                        </div>
+                                        <div class="col-4">
+                                            <small class="text-muted">Total Earned</small>
+                                            <div class="fw-bold">${parseInt(withdrawal.total_earned || 0).toLocaleString()} RWF</div>
+                                        </div>
+                                        <div class="col-4">
+                                            <small class="text-muted">Total Withdrawn</small>
+                                            <div class="fw-bold">${parseInt(withdrawal.total_withdrawn || 0).toLocaleString()} RWF</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-2">
+                                    <strong>Payment Method:</strong> ${withdrawal.payment_method.replace('_', ' ').toUpperCase()}
+                                    ${withdrawal.payment_details ? `
+                                        <br><small class="text-muted">Account: ${getPaymentAccountNumber(withdrawal.payment_details)}</small>
+                                    ` : ''}
+                                </div>
+
+                                ${withdrawal.notes ? `
+                                    <div class="mb-2">
+                                        <strong>User Notes:</strong> <em>${withdrawal.notes}</em>
+                                    </div>
+                                ` : ''}
+                            </div>
+                            <div class="col-md-4">
+                                <div class="action-buttons text-end">
+                                    <button class="btn btn-outline-primary btn-sm" onclick="reviewWithdrawal(${withdrawal.id}, 'referral')">
+                                        <i class="fas fa-eye"></i> Review
+                                    </button>
+                                    ${withdrawal.status === 'pending' ? `
+                                        <button class="btn btn-success btn-sm" onclick="quickApprove(${withdrawal.id}, 'referral')">
+                                            <i class="fas fa-check"></i> Approve
+                                        </button>
+                                        <button class="btn btn-danger btn-sm" onclick="quickReject(${withdrawal.id}, 'referral')">
+                                            <i class="fas fa-times"></i> Reject
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = withdrawalsHtml;
+        }
+
+        function displayWalletWithdrawals(withdrawals) {
+            const container = document.getElementById('walletWithdrawalsList');
+            
+            if (withdrawals.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-4">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <h5>No Wallet Withdrawals</h5>
+                        <p class="text-muted">No wallet withdrawal requests found.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const withdrawalsHtml = withdrawals.map(withdrawal => `
+                <div class="card withdrawal-card wallet mb-3">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <h6 class="mb-1">
+                                            <i class="fas fa-user"></i> ${withdrawal.user_name}
+                                            <span class="badge bg-${getStatusColor(withdrawal.status)} ms-2">${withdrawal.status.toUpperCase()}</span>
+                                        </h6>
+                                        <small class="text-muted">
+                                            <i class="fas fa-envelope"></i> ${withdrawal.user_email}
+                                            ${withdrawal.user_phone ? `<i class="fas fa-phone ms-2"></i> ${withdrawal.user_phone}` : ''}
+                                        </small>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="amount-highlight text-primary">
+                                            ${parseInt(withdrawal.amount).toLocaleString()} RWF
+                                        </div>
+                                        <small class="text-muted">${formatDate(withdrawal.created_at)}</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="user-info mb-2">
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <small class="text-muted">Current Wallet Balance</small>
+                                            <div class="fw-bold">${parseInt(withdrawal.current_wallet_balance || 0).toLocaleString()} RWF</div>
+                                        </div>
+                                        <div class="col-6">
+                                            <small class="text-muted">Previous Withdrawals</small>
+                                            <div class="fw-bold">${withdrawal.previous_withdrawals || 0}</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-2">
+                                    <strong>Payment Method:</strong> ${withdrawal.payment_method.replace('_', ' ').toUpperCase()}
+                                    ${withdrawal.payment_details ? `
+                                        <br><small class="text-muted">Account: ${getPaymentAccountNumber(withdrawal.payment_details)}</small>
+                                    ` : ''}
+                                </div>
+
+                                ${withdrawal.notes ? `
+                                    <div class="mb-2">
+                                        <strong>User Notes:</strong> <em>${withdrawal.notes}</em>
+                                    </div>
+                                ` : ''}
+                            </div>
+                            <div class="col-md-4">
+                                <div class="action-buttons text-end">
+                                    <button class="btn btn-outline-primary btn-sm" onclick="reviewWithdrawal(${withdrawal.id}, 'wallet')">
+                                        <i class="fas fa-eye"></i> Review
+                                    </button>
+                                    ${withdrawal.status === 'pending' ? `
+                                        <button class="btn btn-success btn-sm" onclick="quickApprove(${withdrawal.id}, 'wallet')">
+                                            <i class="fas fa-check"></i> Approve
+                                        </button>
+                                        <button class="btn btn-danger btn-sm" onclick="quickReject(${withdrawal.id}, 'wallet')">
+                                            <i class="fas fa-times"></i> Reject
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = withdrawalsHtml;
+        }
+
+        async function updateSummaryCards() {
+            try {
+                // Get referral withdrawals summary
+                const referralResponse = await fetch('/api/referrals/admin/pending-payments', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                const referralData = await referralResponse.json();
+
+                // Get wallet withdrawals summary
+                const walletResponse = await fetch('/api/admin/payments/wallet-withdrawals?status=pending', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                const walletData = await walletResponse.json();
+
+                const referralCount = referralData.success ? referralData.count : 0;
+                const walletCount = walletData.success ? walletData.withdrawals.length : 0;
+                const referralAmount = referralData.success ? referralData.total_amount : 0;
+                const walletAmount = walletData.success ? walletData.withdrawals.reduce((sum, w) => sum + parseFloat(w.amount), 0) : 0;
+
+                document.getElementById('totalPendingCount').textContent = referralCount + walletCount;
+                document.getElementById('referralPendingCount').textContent = referralCount;
+                document.getElementById('walletPendingCount').textContent = walletCount;
+                document.getElementById('totalPendingAmount').textContent = (referralAmount + walletAmount).toLocaleString();
+
+            } catch (error) {
+                console.error('Error updating summary cards:', error);
+            }
+        }
+
+        async function reviewWithdrawal(id, type) {
+            currentWithdrawal = id;
+            currentWithdrawalType = type;
+            
+            // Load withdrawal details and show modal
+            const modal = new bootstrap.Modal(document.getElementById('reviewModal'));
+            modal.show();
+        }
+
+        async function quickApprove(id, type) {
+            if (confirm('Are you sure you want to approve this withdrawal request?')) {
+                await processWithdrawalRequest(id, type, 'approve', 'Quick approval by admin');
+            }
+        }
+
+        async function quickReject(id, type) {
+            const reason = prompt('Please provide a reason for rejection:');
+            if (reason) {
+                await processWithdrawalRequest(id, type, 'reject', reason);
+            }
+        }
+
+        async function processWithdrawal(action) {
+            const notes = prompt(`Please provide ${action === 'approve' ? 'approval' : 'rejection'} notes:`);
+            if (notes !== null) {
+                await processWithdrawalRequest(currentWithdrawal, currentWithdrawalType, action, notes);
+                bootstrap.Modal.getInstance(document.getElementById('reviewModal')).hide();
+            }
+        }
+
+        async function processWithdrawalRequest(id, type, action, notes) {
+            try {
+                const endpoint = type === 'referral' 
+                    ? '/api/referrals/admin/process-payment'
+                    : `/api/admin/payments/wallet-withdrawals/${id}/process`;
+
+                const payload = type === 'referral'
+                    ? { withdrawal_id: id, action: action, admin_notes: notes }
+                    : { action: action, admin_notes: notes };
+
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    showSuccess(`Withdrawal request ${action}ed successfully!`);
+                    refreshData();
+                } else {
+                    throw new Error(data.error || `Failed to ${action} withdrawal`);
+                }
+            } catch (error) {
+                console.error(`Error ${action}ing withdrawal:`, error);
+                showError(`Failed to ${action} withdrawal: ` + error.message);
+            }
+        }
+
+        function getStatusColor(status) {
+            const colors = {
+                'pending': 'warning',
+                'processing': 'info',
+                'completed': 'success',
+                'rejected': 'danger'
+            };
+            return colors[status] || 'secondary';
+        }
+
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function showSuccess(message) {
+            // You can implement a toast notification here
+            alert('✅ ' + message);
+        }
+
+        function showError(message) {
+            // You can implement a toast notification here
+            alert('❌ ' + message);
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            window.location.href = '/admin/login.html';
+        }
+    </script>
+</body>
+</html>

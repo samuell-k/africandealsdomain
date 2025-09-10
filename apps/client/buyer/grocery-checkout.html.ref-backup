@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Minimal Navigation System -->
+  <script src="/shared/minimal-navigation-injector.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grocery Checkout | ADD Physical Products</title>
+  <script src="../shared/auth-helper.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/shared/router.js"></script>
+    <script src="/shared/mode-manager.js"></script>
+<script src="/shared/navigation.js"></script>
+  <link rel="icon" href="/public/images/logo.png">
+  
+  <style>
+    .glass { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+    .fade-in { animation: fadeIn 0.6s ease-in-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .step-active { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+    .step-completed { background: #10b981; }
+    .step-inactive { background: #e5e7eb; }
+  </style>
+</head>
+<body class="flex flex-col min-h-screen bg-gray-50" data-page-type="buyer">
+  
+  <!-- Navigation preserved - each page has unique navigation -->
+
+  
+  <!-- Navigation preserved - each page has unique navigation -->
+
+  
+  
+  
+  <!-- Header Component -->
+  <div id="buyer-header"></div>
+  
+  <script src="shared-components.js"></script>
+
+  <!-- Main Content -->
+  <main class="flex-1 max-w-4xl mx-auto w-full px-4 py-8 md:py-12 fade-in pt-16">
+    <!-- Page Header -->
+    <div class="text-center mb-8">
+      <h1 class="text-3xl md:text-4xl font-extrabold text-[#0e2038] mb-4">Grocery Checkout</h1>
+      <p class="text-lg text-gray-600">Complete your order for fresh delivery</p>
+    </div>
+
+    <!-- Progress Steps -->
+    <div class="mb-8">
+      <div class="flex items-center justify-center">
+        <div class="flex items-center space-x-4">
+          <div class="flex items-center">
+            <div id="step1" class="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold step-active">1</div>
+            <span class="ml-2 font-medium">Review Order</span>
+          </div>
+          <div class="w-16 h-1 bg-gray-300"></div>
+          <div class="flex items-center">
+            <div id="step2" class="w-10 h-10 rounded-full flex items-center justify-center text-gray-600 font-semibold step-inactive">2</div>
+            <span class="ml-2 font-medium text-gray-600">Payment</span>
+          </div>
+          <div class="w-16 h-1 bg-gray-300"></div>
+          <div class="flex items-center">
+            <div id="step3" class="w-10 h-10 rounded-full flex items-center justify-center text-gray-600 font-semibold step-inactive">3</div>
+            <span class="ml-2 font-medium text-gray-600">Confirmation</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 1: Review Order -->
+    <div id="reviewStep" class="space-y-6">
+      <!-- Delivery Address -->
+      <div class="bg-white rounded-2xl shadow-lg p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold">Delivery Address</h3>
+          <button id="changeAddress" class="text-green-600 hover:text-green-700 font-semibold">Change</button>
+        </div>
+        
+        <div id="deliveryAddressDisplay" class="p-4 bg-gray-50 rounded-lg">
+          <div class="flex items-start gap-3">
+            <svg class="w-5 h-5 text-green-600 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+            </svg>
+            <div>
+              <div id="addressText" class="font-medium">Please set delivery address</div>
+              <div class="text-sm text-gray-600 mt-1">Estimated delivery: 15-30 minutes</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Address Form (Hidden by default) -->
+        <div id="addressForm" class="hidden mt-4 space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Full Address</label>
+            <textarea id="fullAddress" rows="3" class="w-full border border-gray-300 rounded-lg px-3 py-2" 
+                      placeholder="Enter your complete delivery address..."></textarea>
+          </div>
+          
+          <div class="grid md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+              <input type="tel" id="phoneNumber" class="w-full border border-gray-300 rounded-lg px-3 py-2" 
+                     placeholder="+250 xxx xxx xxx">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Alternative Phone</label>
+              <input type="tel" id="altPhone" class="w-full border border-gray-300 rounded-lg px-3 py-2" 
+                     placeholder="+250 xxx xxx xxx (optional)">
+            </div>
+          </div>
+          
+          <div class="flex gap-3">
+            <button id="saveAddress" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+              Save Address
+            </button>
+            <button id="cancelAddress" class="border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors">
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Order Items -->
+      <div class="bg-white rounded-2xl shadow-lg p-6">
+        <h3 class="text-lg font-semibold mb-4">Order Items</h3>
+        
+        <div id="orderItems" class="space-y-4">
+          <!-- Items will be loaded here -->
+        </div>
+        
+        <div class="border-t pt-4 mt-4">
+          <div class="flex justify-between items-center">
+            <span class="font-medium">Total Items:</span>
+            <span id="totalItems" class="font-semibold">0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Order Summary -->
+      <div class="bg-white rounded-2xl shadow-lg p-6">
+        <h3 class="text-lg font-semibold mb-4">Order Summary</h3>
+        
+        <div class="space-y-3">
+          <div class="flex justify-between">
+            <span>Subtotal:</span>
+            <span id="summarySubtotal">0 FRw</span>
+          </div>
+          <div class="flex justify-between">
+            <span>Platform Fee (1%):</span>
+            <span id="summaryPlatformFee">0 FRw</span>
+          </div>
+          <div class="flex justify-between">
+            <span>Delivery Fee:</span>
+            <span id="summaryDeliveryFee">Calculating...</span>
+          </div>
+          <div class="border-t pt-3 flex justify-between text-lg font-semibold">
+            <span>Total Amount:</span>
+            <span id="summaryTotal">0 FRw</span>
+          </div>
+        </div>
+        
+        <!-- Special Instructions -->
+        <div class="mt-6">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Special Instructions (Optional)</label>
+          <textarea id="specialInstructions" rows="3" class="w-full border border-gray-300 rounded-lg px-3 py-2" 
+                    placeholder="Any special delivery instructions..."></textarea>
+        </div>
+        
+        <button id="proceedToPayment" class="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors font-semibold mt-6">
+          Proceed to Payment
+        </button>
+      </div>
+    </div>
+
+    <!-- Step 2: Payment -->
+    <div id="paymentStep" class="hidden space-y-6">
+      <div class="bg-white rounded-2xl shadow-lg p-6">
+        <h3 class="text-lg font-semibold mb-6">Payment Method</h3>
+        
+        <!-- Payment Methods Status -->
+        <div id="paymentMethodsEnabled" class="hidden">
+          <div class="grid md:grid-cols-2 gap-4 mb-6">
+            <div class="border border-gray-300 rounded-lg p-4 cursor-pointer hover:border-green-500 transition-colors" 
+                 onclick="selectPaymentMethod('momo_pay')">
+              <div class="flex items-center gap-3">
+                <input type="radio" name="paymentMethod" value="momo_pay" class="text-green-600">
+                <div>
+                  <div class="font-semibold">Mobile Money (MoMo Pay)</div>
+                  <div class="text-sm text-gray-600">Pay with your mobile money account</div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="border border-gray-300 rounded-lg p-4 cursor-pointer hover:border-green-500 transition-colors" 
+                 onclick="selectPaymentMethod('cash_on_delivery')">
+              <div class="flex items-center gap-3">
+                <input type="radio" name="paymentMethod" value="cash_on_delivery" class="text-green-600">
+                <div>
+                  <div class="font-semibold">Cash on Delivery</div>
+                  <div class="text-sm text-gray-600">Pay when your order arrives</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Manual Payment (Coming Soon) -->
+        <div id="manualPaymentSection">
+          <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-6">
+            <div class="flex items-start gap-3">
+              <svg class="w-6 h-6 text-yellow-600 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16c-.77.833.192 2.5 1.732 2.5z"></path>
+              </svg>
+              <div>
+                <h4 class="font-semibold text-yellow-800 mb-2">Payment Methods Coming Soon</h4>
+                <p class="text-yellow-700 mb-4">
+                  Automated payment methods are currently being set up. For now, please use manual MoMo Pay transfer.
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+            <h4 class="font-semibold text-blue-800 mb-4">Manual MoMo Pay Instructions</h4>
+            
+            <div class="space-y-4">
+              <div class="bg-white rounded-lg p-4">
+                <div class="font-semibold mb-2">Step 1: Send Money</div>
+                <div class="font-mono bg-gray-100 p-2 rounded text-center">
+                  *182*1*1*<span class="text-green-600 font-bold">ADD-PHONE-NUMBER</span># (send)
+                </div>
+                <div class="text-sm text-gray-600 mt-2">Replace ADD-PHONE-NUMBER with our payment number</div>
+              </div>
+              
+              <div class="bg-white rounded-lg p-4">
+                <div class="font-semibold mb-2">Step 2: Complete Payment</div>
+                <div class="font-mono bg-gray-100 p-2 rounded text-center">
+                  *182*8*1*<span class="text-green-600 font-bold">MOMO-PAY-CODE</span># (pay)
+                </div>
+                <div class="text-sm text-gray-600 mt-2">Enter the MoMo Pay code you received</div>
+              </div>
+              
+              <div class="bg-white rounded-lg p-4">
+                <div class="font-semibold mb-2">Step 3: Confirmation</div>
+                <div class="text-center">
+                  <div class="text-lg font-bold text-green-600">African Deals Domain</div>
+                  <div class="text-sm text-gray-600">This name should appear in your confirmation</div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="mt-6">
+              <label class="block text-sm font-medium text-gray-700 mb-2">Upload Payment Screenshot</label>
+              <input type="file" id="paymentProof" accept="image/*" 
+                     class="w-full border border-gray-300 rounded-lg px-3 py-2">
+              <div class="text-xs text-gray-500 mt-1">
+                Please upload a screenshot of your successful payment confirmation
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="flex gap-4 mt-6">
+          <button id="backToReview" class="flex-1 border border-gray-300 py-3 rounded-lg hover:bg-gray-50 transition-colors font-semibold">
+            Back to Review
+          </button>
+          <button id="confirmPayment" class="flex-1 bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors font-semibold">
+            Confirm Payment
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3: Confirmation -->
+    <div id="confirmationStep" class="hidden space-y-6">
+      <div class="bg-white rounded-2xl shadow-lg p-6 text-center">
+        <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+          </svg>
+        </div>
+        
+        <h3 class="text-2xl font-bold text-gray-900 mb-2">Order Placed Successfully!</h3>
+        <p class="text-gray-600 mb-6">Your grocery order has been received and is being processed.</p>
+        
+        <div class="bg-gray-50 rounded-lg p-4 mb-6">
+          <div class="text-sm text-gray-600 mb-2">Order Number</div>
+          <div id="orderNumber" class="text-xl font-bold text-green-600">GRO-XXXXXX</div>
+        </div>
+        
+        <div class="grid md:grid-cols-2 gap-4 mb-6 text-left">
+          <div class="bg-blue-50 rounded-lg p-4">
+            <div class="font-semibold text-blue-800 mb-2">What's Next?</div>
+            <ul class="text-sm text-blue-700 space-y-1">
+              <li>• Seller will confirm your order</li>
+              <li>• Items will be prepared for pickup</li>
+              <li>• Delivery agent will be assigned</li>
+              <li>• You'll receive real-time updates</li>
+            </ul>
+          </div>
+          
+          <div class="bg-green-50 rounded-lg p-4">
+            <div class="font-semibold text-green-800 mb-2">Estimated Delivery</div>
+            <div class="text-2xl font-bold text-green-600">15-30 min</div>
+            <div class="text-sm text-green-700">From order confirmation</div>
+          </div>
+        </div>
+        
+        <div class="flex gap-4">
+          <a href="/buyer/grocery-orders.html" class="flex-1 bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors font-semibold">
+            Track Your Orders
+          </a>
+          <a href="/buyer/local-market.html" class="flex-1 border border-gray-300 py-3 rounded-lg hover:bg-gray-50 transition-colors font-semibold">
+            Continue Shopping
+          </a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white/90 border-t border-gray-200 mt-12 pt-8 pb-4 px-2 md:px-6">
+    <div class="max-w-7xl mx-auto text-center text-sm text-gray-600">
+      <p>&copy; 2025 African Deals Domain. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    // --- GLOBAL STATE ---
+    let cart = [];
+    let currentStep = 1;
+    let deliveryAddress = '';
+    let selectedCurrency = localStorage.getItem('selectedCurrency') || 'RWF';
+    let selectedCurrencySymbol = { USD: '$', RWF: 'FRw', EUR: '€', KES: 'Ksh', NGN: '₦' }[selectedCurrency] || 'FRw';
+    let orderSummary = {};
+
+    // --- LOAD HEADER COMPONENT ---
+    fetch('/buyer/components/header.html')
+      .then(res => res.text())
+      .then(html => {
+        document.getElementById('buyer-header').innerHTML = html;
+      });
+
+    // --- LOAD CART ---
+    async function loadCart() {
+      try {
+        const response = await fetch('/api/grocery/cart', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          cart = data.cartItems;
+          orderSummary = data.totals;
+          renderOrderItems();
+          updateOrderSummary();
+        } else {
+          showNotification('Error loading cart', 'error');
+          window.location.href = '/buyer/local-market.html';
+        }
+      } catch (error) {
+        console.error('Error loading cart:', error);
+        showNotification('Error loading cart', 'error');
+        window.location.href = '/buyer/local-market.html';
+      }
+    }
+
+    // --- RENDER ORDER ITEMS ---
+    function renderOrderItems() {
+      const container = document.getElementById('orderItems');
+      
+      if (cart.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-8">
+            <p class="text-gray-600">No items in cart</p>
+            <a href="/buyer/local-market.html" class="text-green-600 hover:text-green-700 font-semibold">
+              Continue Shopping
+            </a>
+          </div>
+        `;
+        return;
+      }
+      
+      container.innerHTML = cart.map(item => `
+        <div class="flex items-center gap-4 p-4 border border-gray-200 rounded-lg">
+          <img src="${item.main_image || " loading="lazy"/public/images/placeholder-product.jpg'}" 
+               alt="${item.product_name}" 
+               class="w-16 h-16 object-cover rounded-lg">
+          
+          <div class="flex-1">
+            <h4 class="font-semibold">${item.product_name}</h4>
+            <div class="text-sm text-gray-600">
+              ${item.seller_name} • ${item.seller_city}
+            </div>
+            <div class="text-sm text-gray-600">
+              ${item.unit_price} ${selectedCurrencySymbol}/${item.unit_type}
+            </div>
+          </div>
+          
+          <div class="text-right">
+            <div class="font-semibold">${item.quantity} ${item.unit_type}</div>
+            <div class="text-sm text-gray-600">
+              ${item.item_total} ${selectedCurrencySymbol}
+            </div>
+          </div>
+        </div>
+      `).join('');
+      
+      document.getElementById('totalItems').textContent = cart.length;
+    }
+
+    // --- UPDATE ORDER SUMMARY ---
+    function updateOrderSummary() {
+      document.getElementById('summarySubtotal').textContent = `${orderSummary.subtotal} ${selectedCurrencySymbol}`;
+      document.getElementById('summaryPlatformFee').textContent = `${orderSummary.platformCommission} ${selectedCurrencySymbol}`;
+      document.getElementById('summaryDeliveryFee').textContent = `${orderSummary.estimatedDeliveryFee} ${selectedCurrencySymbol}`;
+      document.getElementById('summaryTotal').textContent = `${orderSummary.total} ${selectedCurrencySymbol}`;
+    }
+
+    // --- STEP NAVIGATION ---
+    function updateStepUI(step) {
+      // Update step indicators
+      for (let i = 1; i <= 3; i++) {
+        const stepEl = document.getElementById(`step${i}`);
+        if (i < step) {
+          stepEl.className = stepEl.className.replace(/step-\w+/, 'step-completed');
+          stepEl.innerHTML = '✓';
+        } else if (i === step) {
+          stepEl.className = stepEl.className.replace(/step-\w+/, 'step-active');
+          stepEl.innerHTML = i;
+        } else {
+          stepEl.className = stepEl.className.replace(/step-\w+/, 'step-inactive');
+          stepEl.innerHTML = i;
+        }
+      }
+      
+      // Show/hide step content
+      document.getElementById('reviewStep').classList.toggle('hidden', step !== 1);
+      document.getElementById('paymentStep').classList.toggle('hidden', step !== 2);
+      document.getElementById('confirmationStep').classList.toggle('hidden', step !== 3);
+      
+      currentStep = step;
+    }
+
+    // --- ADDRESS MANAGEMENT ---
+    document.getElementById('changeAddress').addEventListener('click', function() {
+      document.getElementById('addressForm').classList.remove('hidden');
+    });
+
+    document.getElementById('cancelAddress').addEventListener('click', function() {
+      document.getElementById('addressForm').classList.add('hidden');
+    });
+
+    document.getElementById('saveAddress').addEventListener('click', function() {
+      const fullAddress = document.getElementById('fullAddress').value.trim();
+      const phoneNumber = document.getElementById('phoneNumber').value.trim();
+      
+      if (!fullAddress || !phoneNumber) {
+        showNotification('Please fill in all required fields', 'error');
+        return;
+      }
+      
+      deliveryAddress = fullAddress;
+      document.getElementById('addressText').textContent = fullAddress;
+      document.getElementById('addressForm').classList.add('hidden');
+      
+      showNotification('Delivery address saved', 'success');
+    });
+
+    // --- PAYMENT METHOD SELECTION ---
+    function selectPaymentMethod(method) {
+      document.querySelectorAll('input[name="paymentMethod"]').forEach(radio => {
+        radio.checked = radio.value === method;
+      });
+    }
+
+    // --- STEP TRANSITIONS ---
+    document.getElementById('proceedToPayment').addEventListener('click', function() {
+      if (!deliveryAddress) {
+        showNotification('Please set your delivery address', 'error');
+        return;
+      }
+      
+      updateStepUI(2);
+      checkPaymentMethods();
+    });
+
+    document.getElementById('backToReview').addEventListener('click', function() {
+      updateStepUI(1);
+    });
+
+    // --- CHECK PAYMENT METHODS ---
+    async function checkPaymentMethods() {
+      try {
+        const response = await fetch('/api/grocery/settings');
+        const data = await response.json();
+        
+        if (data.success && data.settings.payment_methods_enabled === 'true') {
+          document.getElementById('paymentMethodsEnabled').classList.remove('hidden');
+          document.getElementById('manualPaymentSection').classList.add('hidden');
+        } else {
+          document.getElementById('paymentMethodsEnabled').classList.add('hidden');
+          document.getElementById('manualPaymentSection').classList.remove('hidden');
+        }
+      } catch (error) {
+        console.error('Error checking payment methods:', error);
+        // Default to manual payment
+        document.getElementById('paymentMethodsEnabled').classList.add('hidden');
+        document.getElementById('manualPaymentSection').classList.remove('hidden');
+      }
+    }
+
+    // --- CONFIRM PAYMENT ---
+    document.getElementById('confirmPayment').addEventListener('click', async function() {
+      const paymentProof = document.getElementById('paymentProof').files[0];
+      
+      if (!paymentProof) {
+        showNotification('Please upload payment screenshot', 'error');
+        return;
+      }
+      
+      // Show loading
+      this.disabled = true;
+      this.textContent = 'Processing...';
+      
+      try {
+        // Upload payment proof first (simplified - in real app, use proper file upload)
+        const formData = new FormData();
+        formData.append('paymentProof', paymentProof);
+        
+        // Create order
+        const orderData = {
+          delivery_address: deliveryAddress,
+          delivery_lat: -1.9441, // Default coordinates - should be from map
+          delivery_lng: 30.0619,
+          payment_method: 'manual',
+          buyer_notes: document.getElementById('specialInstructions').value,
+          payment_proof: 'uploaded_screenshot.jpg' // Simplified
+        };
+        
+        const response = await fetch('/api/grocery-orders', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          },
+          body: JSON.stringify(orderData)
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          // Show order numbers
+          const orderNumbers = data.orders.map(order => order.order_number).join(', ');
+          document.getElementById('orderNumber').textContent = orderNumbers;
+          
+          updateStepUI(3);
+          showNotification('Order placed successfully!', 'success');
+        } else {
+          throw new Error(data.message);
+        }
+      } catch (error) {
+        console.error('Error placing order:', error);
+        showNotification('Error placing order: ' + error.message, 'error');
+      } finally {
+        this.disabled = false;
+        this.textContent = 'Confirm Payment';
+      }
+    });
+
+    // --- SHOW NOTIFICATION ---
+    function showNotification(message, type = 'info') {
+      const notification = document.createElement('div');
+      notification.className = `fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg text-white font-semibold ${
+        type === 'success' ? 'bg-green-600' : 
+        type === 'error' ? 'bg-red-600' : 'bg-blue-600'
+      }`;
+      notification.textContent = message;
+      
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.remove();
+      }, 3000);
+    }
+
+    // --- INITIALIZE ---
+    document.addEventListener('DOMContentLoaded', function() {
+      // Check authentication
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        window.location.href = '/auth/auth-buyer.html';
+        return;
+      }
+      
+      loadCart();
+      updateStepUI(1);
+    });
+  </script>
+
+  <!-- Navigation utilities for this page -->
+  <script>
+    // Page-specific navigation setup
+    document.addEventListener('DOMContentLoaded', function() {
+      // Set page type and mode
+      document.body.setAttribute('data-page-type', 'buyer');
+      
+      
+      // Switch to local market mode for this page
+      if (window.navUtils) {
+        localStorage.setItem('currentMode', 'local-market');
+      }
+      
+      
+      // Add navigation helpers to existing elements
+      enhanceExistingNavigation();
+      
+      // Setup page-specific navigation
+      setupPageNavigation();
+    });
+    
+    function enhanceExistingNavigation() {
+      // Add data-route attributes to links that don't have them
+      const links = document.querySelectorAll('a[href]:not([data-route])');
+      links.forEach(link => {
+        const href = link.getAttribute('href');
+        if (href && !href.startsWith('http') && !href.startsWith('mailto:') && !href.startsWith('tel:')) {
+          const route = getRouteForHref(href);
+          if (route) {
+            link.setAttribute('data-route', route);
+          }
+        }
+      });
+      
+      // Add journey actions to buttons
+      const buttons = document.querySelectorAll('button, .btn, [role="button"]');
+      buttons.forEach(button => {
+        const text = button.textContent.toLowerCase();
+        
+        if (text.includes('add') && text.includes('cart')) {
+          button.setAttribute('data-journey-action', 'add-to-cart');
+        } else if (text.includes('checkout')) {
+          button.setAttribute('data-journey-action', 'proceed-checkout');
+        } else if (text.includes('place') && text.includes('order')) {
+          button.setAttribute('data-journey-action', 'complete-payment');
+        } else if (text.includes('login') || text.includes('sign in')) {
+          button.setAttribute('data-quick-nav', 'login');
+        } else if (text.includes('logout') || text.includes('sign out')) {
+          button.setAttribute('data-quick-nav', 'logout');
+        }
+      });
+    }
+    
+    function setupPageNavigation() {
+      // Page-specific navigation setup
+      const pageType = 'buyer';
+      
+      // Add mode indicators if they exist
+      const modeIndicators = document.querySelectorAll('.mode-indicator');
+      modeIndicators.forEach(indicator => {
+        const currentMode = window.navUtils ? window.navUtils.getCurrentMode() : 'marketplace';
+        indicator.className = `mode-indicator mode-${currentMode}`;
+        indicator.textContent = currentMode === 'marketplace' ? 'Marketplace' : 'Local Market';
+      });
+      
+      // Add quick navigation buttons if they exist
+      const homeButtons = document.querySelectorAll('[data-nav="home"], .home-btn');
+      homeButtons.forEach(btn => btn.setAttribute('data-quick-nav', 'home'));
+      
+      const backButtons = document.querySelectorAll('[data-nav="back"], .back-btn');
+      backButtons.forEach(btn => btn.setAttribute('data-quick-nav', 'back'));
+      
+      const dashboardButtons = document.querySelectorAll('[data-nav="dashboard"], .dashboard-btn');
+      dashboardButtons.forEach(btn => btn.setAttribute('data-quick-nav', 'dashboard'));
+    }
+    
+    function getRouteForHref(href) {
+      // Basic route mapping
+      const routeMap = {
+        '/': 'home',
+        '/public/index.html': 'home',
+        '/public/about.html': 'public.about',
+        '/public/contact.html': 'public.contact',
+        '/public/product-list.html': 'public.product-list',
+        '/public/product-detail.html': 'public.product-detail',
+        '/buyer/buyers-home.html': 'buyer.dashboard',
+        '/buyer/cart.html': 'buyer.cart',
+        '/buyer/checkout.html': 'buyer.checkout',
+        '/buyer/orders.html': 'buyer.orders',
+        '/seller/dashboard.html': 'seller.dashboard',
+        '/seller/add-product.html': 'seller.add-product',
+        '/agent/dashboard.html': 'agent.dashboard',
+        '/admin/dashboard.html': 'admin.dashboard',
+        '/auth/auth-buyer.html': 'auth.login',
+        '/auth/auth-seller.html': 'auth.login-seller',
+        '/auth/auth-agent.html': 'auth.login-agent',
+        '/grocery/local-market-home.html': 'local-market.home',
+        '/grocery/cart.html': 'local-market.cart'
+      };
+      
+      return routeMap[href] || null;
+    }
+    
+    // Wait for flexible navigation system to be ready
+    window.addEventListener('flexibleNavigationReady', function() {
+      console.log('✅ Flexible navigation ready on buyer\grocery-checkout.html');
+      
+      // Start appropriate journey if needed
+      
+      if (window.flexibleNav && !window.flexibleNav.isJourneyActive()) {
+        const user = window.navUtils.getCurrentUser();
+        if (user.isAuthenticated) {
+          const mode = window.navUtils.getCurrentMode();
+          const journeyId = mode === 'local-market' ? 'buyer-local-market' : 'buyer-marketplace';
+          window.flexibleNav.startJourney(journeyId);
+        }
+      }
+      
+    });
+  </script>
+
+</body>
+</html>

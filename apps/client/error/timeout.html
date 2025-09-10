@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Request Timed Out | African Deals Domain</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col items-center justify-center">
+  <div class="w-full max-w-md bg-white rounded-xl shadow-lg p-8 mt-8 text-center animate-fade-in">
+    <img src="/public/images/logo.png" alt="ADD Logo" class="h-14 w-14 rounded-xl shadow mx-auto mb-4 animate-bounce" />
+    <div class="flex justify-center mb-4">
+      <svg class="w-20 h-20 text-blue-300 animate-pulse" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 48 48"><circle cx="24" cy="24" r="22" stroke="currentColor" fill="#dbeafe"/><path d="M24 14v10" stroke="#2563eb" stroke-width="3" stroke-linecap="round"/><circle cx="24" cy="32" r="2" fill="#2563eb"/></svg>
+    </div>
+    <h1 class="text-3xl font-extrabold text-blue-400 mb-2">Request Timed Out</h1>
+    <p class="text-gray-600 mb-4">Sorry, your request took too long to process.</p>
+    <p class="text-gray-500 mb-6">Please try again. If the problem continues, check your connection or contact support.</p>
+    <a href="/" class="bg-blue-400 text-white px-6 py-2 rounded-lg hover:bg-blue-500 transition font-semibold">Go to Home</a>
+  </div>
+
+<script>
+// Enhanced Notification System
+function showNotification(message, type = 'info', duration = 4000) {
+    // Remove existing notifications
+    const existingNotifications = document.querySelectorAll('.system-notification');
+    existingNotifications.forEach(notification => notification.remove());
+    
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `system-notification fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 max-w-md ${
+        type === 'success' ? 'bg-green-500 text-white' :
+        type === 'error' ? 'bg-red-500 text-white' :
+        type === 'warning' ? 'bg-yellow-500 text-black' :
+        'bg-blue-500 text-white'
+    }`;
+    
+    // Add icon based on type
+    const icon = {
+        success: '✅',
+        error: '❌',
+        warning: '⚠️',
+        info: 'ℹ️'
+    }[type] || 'ℹ️';
+    
+    notification.innerHTML = `
+        <div class="flex items-center space-x-2">
+            <span class="text-lg">${icon}</span>
+            <span class="flex-1">${message}</span>
+            <button onclick="this.parentElement.parentElement.remove()" class="text-white/80 hover:text-white text-lg leading-none">&times;</button>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto-remove after duration
+    if (duration > 0) {
+        setTimeout(() => {
+            if (notification.parentElement) {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => notification.remove(), 300);
+            }
+        }, duration);
+    }
+    
+    return notification;
+}
+
+// Global error handler
+window.addEventListener('error', function(event) {
+    console.error('Global error:', event.error);
+                
+                // Enhanced error reporting
+                if (event.error) {
+                    const errorDetails = {
+                        message: event.error.message || 'Unknown error',
+                        stack: event.error.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        event.error.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+    showNotification('An unexpected error occurred', 'error');
+});
+
+// Global unhandled promise rejection handler
+window.addEventListener('unhandledrejection', function(event) {
+    console.error('Unhandled promise rejection:', event.reason);
+                
+                // Enhanced error reporting
+                if (event.reason) {
+                    const errorDetails = {
+                        message: event.reason.message || 'Unknown error',
+                        stack: event.reason.stack,
+                        timestamp: new Date().toISOString(),
+                        url: window.location.href
+                    };
+                    
+                    console.error('Detailed error information:', errorDetails);
+                    
+                    // Show user-friendly notification
+                    showNotification(
+                        event.reason.message || 'An error occurred. Please try again.',
+                        'error'
+                    );
+                }
+    showNotification('Operation failed unexpectedly', 'error');
+});
+</script>
+</body>
+</html> 

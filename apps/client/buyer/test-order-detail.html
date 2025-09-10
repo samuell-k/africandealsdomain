@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Order Detail API</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="/shared/auth-utils.js"></script>
+</head>
+<body class="bg-gray-50 p-8">
+  <div class="max-w-4xl mx-auto">
+    <h1 class="text-3xl font-bold mb-8">🧪 Order Detail API Test</h1>
+    
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+      <h2 class="text-xl font-semibold mb-4">Authentication Status</h2>
+      <div id="auth-status" class="space-y-2"></div>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+      <h2 class="text-xl font-semibold mb-4">Test Order Detail API</h2>
+      <div class="flex gap-4 mb-4">
+        <input type="number" id="order-id" placeholder="Enter Order ID" class="border rounded px-3 py-2 flex-1">
+        <button onclick="testOrderDetail()" class="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600">
+          Test API
+        </button>
+      </div>
+      <div id="api-result" class="mt-4"></div>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow p-6">
+      <h2 class="text-xl font-semibold mb-4">Available Orders</h2>
+      <button onclick="loadAvailableOrders()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 mb-4">
+        Load My Orders
+      </button>
+      <div id="orders-list"></div>
+    </div>
+  </div>
+
+  <script>
+    // Initialize Auth
+    const Auth = new AuthUtils();
+    
+    // Check authentication status
+    function checkAuthStatus() {
+      const authStatus = document.getElementById('auth-status');
+      const token = Auth.getToken();
+      const user = Auth.getUser();
+      
+      authStatus.innerHTML = `
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <strong>Token:</strong> ${token ? '✅ Present' : '❌ Missing'}
+          </div>
+          <div>
+            <strong>User Data:</strong> ${user ? '✅ Present' : '❌ Missing'}
+          </div>
+          ${user ? `
+            <div class="col-span-2">
+              <strong>User Info:</strong><br>
+              <code class="bg-gray-100 p-2 rounded block mt-1">${JSON.stringify(user, null, 2)}</code>
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }
+    
+    // Test order detail API
+    async function testOrderDetail() {
+      const orderId = document.getElementById('order-id').value;
+      const resultDiv = document.getElementById('api-result');
+      
+      if (!orderId) {
+        resultDiv.innerHTML = '<div class="text-red-500">Please enter an Order ID</div>';
+        return;
+      }
+      
+      resultDiv.innerHTML = '<div class="text-blue-500">🔄 Testing API...</div>';
+      
+      try {
+        const token = Auth.getToken();
+        if (!token) {
+          throw new Error('No authentication token found');
+        }
+        
+        console.log('🧪 Testing API for Order ID:', orderId);
+        console.log('🧪 Using token:', token ? 'Present' : 'Missing');
+        console.log('🧪 Current user:', Auth.getUser());
+        
+        const response = await fetch(`/api/orders/${orderId}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        console.log('🧪 Response status:', response.status);
+        console.log('🧪 Response ok:', response.ok);
+        
+        const data = await response.json();
+        console.log('🧪 Response data:', data);
+        
+        if (response.ok && data.success) {
+          resultDiv.innerHTML = `
+            <div class="text-green-500 mb-2">✅ API Success!</div>
+            <div class="bg-gray-100 p-4 rounded">
+              <h3 class="font-semibold mb-2">Order Details:</h3>
+              <div class="space-y-1 text-sm">
+                <div><strong>ID:</strong> ${data.order.id}</div>
+                <div><strong>Order Number:</strong> ${data.order.order_number}</div>
+                <div><strong>Status:</strong> ${data.order.status}</div>
+                <div><strong>Total:</strong> ${data.order.total_amount}</div>
+                <div><strong>Items:</strong> ${data.order.items ? data.order.items.length : 0}</div>
+              </div>
+              <details class="mt-4">
+                <summary class="cursor-pointer font-semibold">Full Response</summary>
+                <pre class="bg-white p-2 rounded mt-2 text-xs overflow-auto">${JSON.stringify(data, null, 2)}</pre>
+              </details>
+            </div>
+          `;
+        } else {
+          resultDiv.innerHTML = `
+            <div class="text-red-500 mb-2">❌ API Error</div>
+            <div class="bg-red-50 p-4 rounded">
+              <div><strong>Status:</strong> ${response.status}</div>
+              <div><strong>Error:</strong> ${data.error || data.message || 'Unknown error'}</div>
+              <details class="mt-2">
+                <summary class="cursor-pointer">Full Response</summary>
+                <pre class="bg-white p-2 rounded mt-2 text-xs">${JSON.stringify(data, null, 2)}</pre>
+              </details>
+            </div>
+          `;
+        }
+        
+      } catch (error) {
+        console.error('🧪 Test error:', error);
+        resultDiv.innerHTML = `
+          <div class="text-red-500 mb-2">❌ Test Failed</div>
+          <div class="bg-red-50 p-4 rounded">
+            <div><strong>Error:</strong> ${error.message}</div>
+          </div>
+        `;
+      }
+    }
+    
+    // Load available orders
+    async function loadAvailableOrders() {
+      const ordersDiv = document.getElementById('orders-list');
+      ordersDiv.innerHTML = '<div class="text-blue-500">🔄 Loading orders...</div>';
+      
+      try {
+        const token = Auth.getToken();
+        if (!token) {
+          throw new Error('No authentication token found');
+        }
+        
+        const response = await fetch('/api/orders', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+          const orders = data.orders || [];
+          
+          if (orders.length === 0) {
+            ordersDiv.innerHTML = '<div class="text-gray-500">No orders found</div>';
+            return;
+          }
+          
+          ordersDiv.innerHTML = `
+            <div class="text-green-500 mb-4">✅ Found ${orders.length} orders</div>
+            <div class="space-y-2">
+              ${orders.map(order => `
+                <div class="border rounded p-3 flex justify-between items-center">
+                  <div>
+                    <div class="font-semibold">Order #${order.order_number}</div>
+                    <div class="text-sm text-gray-600">ID: ${order.id} | Status: ${order.status} | Total: ${order.total_amount}</div>
+                  </div>
+                  <div class="space-x-2">
+                    <button onclick="document.getElementById('order-id').value='${order.id}'" 
+                            class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">
+                      Test This Order
+                    </button>
+                    <a href="/buyer/order-detail.html?id=${order.id}" target="_blank"
+                       class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600 inline-block">
+                      Open Detail Page
+                    </a>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          `;
+        } else {
+          ordersDiv.innerHTML = `
+            <div class="text-red-500">❌ Failed to load orders: ${data.error || 'Unknown error'}</div>
+          `;
+        }
+        
+      } catch (error) {
+        console.error('Error loading orders:', error);
+        ordersDiv.innerHTML = `
+          <div class="text-red-500">❌ Error: ${error.message}</div>
+        `;
+      }
+    }
+    
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+      checkAuthStatus();
+      
+      // Auto-load orders if authenticated
+      if (Auth.getToken() && Auth.getUser()) {
+        loadAvailableOrders();
+      }
+    });
+  </script>
+</body>
+</html>

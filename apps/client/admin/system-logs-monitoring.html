@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="en" class="admin-page">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Logs & Monitoring | Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="admin-auth-check.js"></script>
+    <style>
+        :root {
+            --primary-color: #080b3b;
+            --secondary-color: #1e40af;
+            --accent-color: #3b82f6;
+        }
+        
+        .glass-morphism {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        }
+        .sidebar {
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .nav-item {
+            transition: all 0.3s ease;
+        }
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+        .nav-item.active {
+            background: rgba(255, 255, 255, 0.2);
+            border-left: 3px solid #3b82f6;
+        }
+        .log-entry {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            transition: all 0.3s ease;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+        }
+        .log-entry:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .log-level {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            min-width: 60px;
+            justify-content: center;
+        }
+        .log-info { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+        .log-warn { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+        .log-error { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+        .log-debug { background: rgba(107, 114, 128, 0.2); color: #9ca3af; }
+        .log-success { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
+        .system-status {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            border-radius: 1rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        .status-healthy { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
+        .status-warning { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+        .status-critical { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+        .status-maintenance { background: rgba(107, 114, 128, 0.2); color: #9ca3af; }
+        .metric-card {
+            text-align: center;
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+        .metric-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
+        }
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        .metric-label {
+            font-size: 0.875rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        .metric-change {
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+        .change-positive { color: #22c55e; }
+        .change-negative { color: #ef4444; }
+        .tab-btn {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .tab-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .tab-btn.active {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: var(--accent-color);
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .form-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            transition: all 0.3s ease;
+        }
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+            background: rgba(255, 255, 255, 0.15);
+        }
+        .performance-chart {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            min-height: 300px;
+        }
+        .alert-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+        .alert-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .alert-critical { border-left: 4px solid #ef4444; }
+        .alert-warning { border-left: 4px solid #f59e0b; }
+        .alert-info { border-left: 4px solid #3b82f6; }
+        .service-status {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+        }
+        .service-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        .service-online { background-color: #22c55e; animation: pulse 2s infinite; }
+        .service-offline { background-color: #ef4444; }
+        .service-degraded { background-color: #f59e0b; animation: pulse 2s infinite; }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .real-time-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #22c55e;
+            display: inline-block;
+            margin-right: 6px;
+            animation: pulse 2s infinite;
+        }
+        .log-terminal {
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            color: #f8f9fa;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .filter-chip {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            margin: 0.125rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .filter-chip:hover {
+            background: rgba(59, 130, 246, 0.3);
+        }
+        .filter-chip.active {
+            background: #3b82f6;
+            color: white;
+        }
+        .progress-ring {
+            width: 80px;
+            height: 80px;
+        }
+        .progress-ring-circle {
+            stroke: #3b82f6;
+            stroke-width: 4;
+            fill: transparent;
+            stroke-dasharray: 251.2;
+            stroke-dashoffset: 0;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+            transition: stroke-dashoffset 0.3s ease;
+        }
+        .uptime-badge {
+            background: linear-gradient(45deg, #22c55e, #16a34a);
+            color: white;
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 1rem;
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body class="gradient-bg min-h-screen">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <div class="sidebar w-64 lg:w-80 flex-shrink-0 hidden md:flex flex-col">
+            <div class="p-6 border-b border-white/10">
+                <h2 class="text-xl font-bold text-white">Admin Panel</h2>
+            </div>
+            
+            <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+                <a href="dashboard.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="system-logs-monitoring.html" class="nav-item active flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-server"></i>
+                    <span>System Logs & Monitoring</span>
+                </a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
+            
+            <!-- Header -->
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 space-y-4 sm:space-y-0">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-white mb-2 flex items-center">
+                        System Logs & Monitoring
+                        <span class="real-time-indicator ml-3"></span>
+                        <span class="uptime-badge ml-2">99.8% Uptime</span>
+                    </h1>
+                    <p class="text-white/70">Monitor system health, track performance, and analyze logs in real-time</p>
+                </div>
+                <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                    <button onclick="exportLogs()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition text-sm">
+                        <i class="fas fa-download mr-2"></i>Export Logs
+                    </button>
+                    <button onclick="clearLogs()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition text-sm">
+                        <i class="fas fa-trash mr-2"></i>Clear Logs
+                    </button>
+                    <button onclick="refreshMonitoring()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition text-sm">
+                        <i class="fas fa-sync mr-2"></i>Refresh
+                    </button>
+                </div>
+            </div>
+
+            <!-- System Health Overview -->
+            <div class="grid grid-cols-1 lg:grid-cols-6 gap-4 sm:gap-6 mb-6">
+                <div class="metric-card">
+                    <div class="metric-value text-green-400" id="system-uptime">99.8%</div>
+                    <div class="metric-label">System Uptime</div>
+                    <div class="metric-change change-positive">↑ 0.1% this week</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-value text-blue-400" id="cpu-usage">23%</div>
+                    <div class="metric-label">CPU Usage</div>
+                    <div class="metric-change change-positive">↓ 5% vs avg</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-value text-yellow-400" id="memory-usage">67%</div>
+                    <div class="metric-label">Memory Usage</div>
+                    <div class="metric-change change-negative">↑ 3% vs avg</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-value text-purple-400" id="disk-usage">45%</div>
+                    <div class="metric-label">Disk Usage</div>
+                    <div class="metric-change change-positive">↓ 2% this month</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-value text-red-400" id="error-rate">0.2%</div>
+                    <div class="metric-label">Error Rate</div>
+                    <div class="metric-change change-negative">↑ 0.1% today</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-value text-green-400" id="response-time">142ms</div>
+                    <div class="metric-label">Avg Response</div>
+                    <div class="metric-change change-positive">↓ 8ms improvement</div>
+                </div>
+            </div>
+
+            <!-- System Status -->
+            <div class="grid grid-cols-1 xl:grid-cols-4 gap-6 mb-6">
+                <div class="glass-morphism rounded-xl p-6">
+                    <h3 class="text-lg font-bold text-white mb-4 flex items-center">
+                        <i class="fas fa-server mr-2"></i>System Status
+                    </h3>
+                    
+                    <div class="space-y-3">
+                        <div class="service-status">
+                            <div class="flex items-center">
+                                <span class="service-indicator service-online"></span>
+                                <span class="text-white">Web Server</span>
+                            </div>
+                            <span class="text-green-400 text-sm">Online</span>
+                        </div>
+                        
+                        <div class="service-status">
+                            <div class="flex items-center">
+                                <span class="service-indicator service-online"></span>
+                                <span class="text-white">Database</span>
+                            </div>
+                            <span class="text-green-400 text-sm">Online</span>
+                        </div>
+                        
+                        <div class="service-status">
+                            <div class="flex items-center">
+                                <span class="service-indicator service-degraded"></span>
+                                <span class="text-white">Cache Server</span>
+                            </div>
+                            <span class="text-yellow-400 text-sm">Degraded</span>
+                        </div>
+                        
+                        <div class="service-status">
+                            <div class="flex items-center">
+                                <span class="service-indicator service-online"></span>
+                                <span class="text-white">File Storage</span>
+                            </div>
+                            <span class="text-green-400 text-sm">Online</span>
+                        </div>
+                        
+                        <div class="service-status">
+                            <div class="flex items-center">
+                                <span class="service-indicator service-online"></span>
+                                <span class="text-white">Email Service</span>
+                            </div>
+                            <span class="text-green-400 text-sm">Online</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="xl:col-span-3">
+                    <div class="glass-morphism rounded-xl p-6">
+                        <h3 class="text-lg font-bold text-white mb-4 flex items-center">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>Active Alerts
+                        </h3>
+                        
+                        <div id="active-alerts" class="space-y-3">
+                            <!-- Alerts will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Navigation -->
+            <div class="flex flex-wrap gap-2 mb-6">
+                <div class="tab-btn active" data-tab="logs" onclick="switchTab('logs')">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-file-alt"></i>
+                        <span class="text-white font-medium">System Logs</span>
+                        <span class="text-white/50 text-sm">(Live)</span>
+                    </div>
+                </div>
+                <div class="tab-btn" data-tab="performance" onclick="switchTab('performance')">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-chart-line"></i>
+                        <span class="text-white font-medium">Performance</span>
+                    </div>
+                </div>
+                <div class="tab-btn" data-tab="errors" onclick="switchTab('errors')">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-bug"></i>
+                        <span class="text-white font-medium">Error Tracking</span>
+                        <span class="text-white/50 text-sm">(23)</span>
+                    </div>
+                </div>
+                <div class="tab-btn" data-tab="security" onclick="switchTab('security')">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-shield-alt"></i>
+                        <span class="text-white font-medium">Security</span>
+                    </div>
+                </div>
+                <div class="tab-btn" data-tab="database" onclick="switchTab('database')">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-database"></i>
+                        <span class="text-white font-medium">Database</span>
+                    </div>
+                </div>
+                <div class="tab-btn" data-tab="alerts" onclick="switchTab('alerts')">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-bell"></i>
+                        <span class="text-white font-medium">Alert Rules</span>
+                        <span class="text-white/50 text-sm">(12)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Contents -->
+
+            <!-- System Logs Tab -->
+            <div id="logs-tab" class="tab-content active">
+                <div class="grid grid-cols-1 xl:grid-cols-4 gap-6">
+                    
+                    <!-- Log Stream -->
+                    <div class="xl:col-span-3">
+                        <div class="glass-morphism rounded-xl overflow-hidden">
+                            <div class="p-6 border-b border-white/10">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h3 class="text-xl font-bold text-white flex items-center">
+                                        <span class="real-time-indicator mr-2"></span>Live System Logs
+                                    </h3>
+                                    <div class="flex space-x-2">
+                                        <select id="log-level-filter" class="form-input px-3 py-2 rounded-lg text-sm" onchange="filterLogs()">
+                                            <option value="">All Levels</option>
+                                            <option value="error">Errors Only</option>
+                                            <option value="warn">Warnings & Errors</option>
+                                            <option value="info">Info & Above</option>
+                                            <option value="debug">Debug & Above</option>
+                                        </select>
+                                        <input type="text" id="log-search" placeholder="Search logs..." 
+                                               class="form-input px-3 py-2 rounded-lg text-sm w-48">
+                                        <button onclick="pauseLogs()" id="pause-btn" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded-lg text-sm">
+                                            <i class="fas fa-pause mr-1"></i>Pause
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Log Filters -->
+                                <div class="flex flex-wrap gap-2 mb-4">
+                                    <span class="filter-chip active" data-filter="all" onclick="setLogFilter('all')">All</span>
+                                    <span class="filter-chip" data-filter="application" onclick="setLogFilter('application')">Application</span>
+                                    <span class="filter-chip" data-filter="database" onclick="setLogFilter('database')">Database</span>
+                                    <span class="filter-chip" data-filter="security" onclick="setLogFilter('security')">Security</span>
+                                    <span class="filter-chip" data-filter="performance" onclick="setLogFilter('performance')">Performance</span>
+                                    <span class="filter-chip" data-filter="api" onclick="setLogFilter('api')">API</span>
+                                </div>
+                            </div>
+
+                            <div class="log-terminal" id="log-container">
+                                <!-- Logs will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Log Statistics -->
+                    <div>
+                        <div class="glass-morphism rounded-xl p-6 mb-6">
+                            <h3 class="text-lg font-bold text-white mb-4">Log Statistics</h3>
+                            
+                            <div class="space-y-4">
+                                <div class="text-center">
+                                    <div class="progress-ring mx-auto mb-2">
+                                        <svg class="progress-ring" width="80" height="80">
+                                            <circle class="progress-ring-circle" cx="40" cy="40" r="36" 
+                                                    style="stroke-dashoffset: 62.8;"></circle>
+                                        </svg>
+                                        <div class="absolute inset-0 flex items-center justify-center">
+                                            <span class="text-white font-bold">75%</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-white/70 text-sm">Log Processing</div>
+                                </div>
+                                
+                                <div class="space-y-3 text-sm">
+                                    <div class="flex justify-between">
+                                        <span class="text-white/70">Total Logs Today:</span>
+                                        <span class="text-white font-semibold">47,832</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-white/70">Errors:</span>
+                                        <span class="text-red-400 font-semibold">156</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-white/70">Warnings:</span>
+                                        <span class="text-yellow-400 font-semibold">892</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-white/70">Info:</span>
+                                        <span class="text-blue-400 font-semibold">32,456</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-white/70">Debug:</span>
+                                        <span class="text-gray-400 font-semibold">14,328</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="glass-morphism rounded-xl p-6">
+                            <h3 class="text-lg font-bold text-white mb-4">Quick Actions</h3>
+                            
+                            <div class="space-y-2">
+                                <button onclick="downloadLogs()" class="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">
+                                    <i class="fas fa-download mr-2"></i>Download Today's Logs
+                                </button>
+                                <button onclick="archiveLogs()" class="w-full bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg text-sm">
+                                    <i class="fas fa-archive mr-2"></i>Archive Old Logs
+                                </button>
+                                <button onclick="configureRetention()" class="w-full bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm">
+                                    <i class="fas fa-cog mr-2"></i>Configure Retention
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance Tab -->
+            <div id="performance-tab" class="tab-content">
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                    
+                    <!-- Performance Charts -->
+                    <div class="performance-chart">
+                        <h3 class="text-lg font-bold text-white mb-4">CPU & Memory Usage</h3>
+                        <div id="performance-chart-container" class="flex items-center justify-center h-48">
+                            <div class="text-center text-white/60">
+                                <i class="fas fa-chart-area text-4xl mb-3"></i>
+                                <p>Performance charts would appear here</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="performance-chart">
+                        <h3 class="text-lg font-bold text-white mb-4">Response Time Trends</h3>
+                        <div id="response-chart-container" class="flex items-center justify-center h-48">
+                            <div class="text-center text-white/60">
+                                <i class="fas fa-chart-line text-4xl mb-3"></i>
+                                <p>Response time charts would appear here</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="performance-chart">
+                        <h3 class="text-lg font-bold text-white mb-4">Database Performance</h3>
+                        <div id="db-chart-container" class="flex items-center justify-center h-48">
+                            <div class="text-center text-white/60">
+                                <i class="fas fa-database text-4xl mb-3"></i>
+                                <p>Database performance metrics would appear here</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="performance-chart">
+                        <h3 class="text-lg font-bold text-white mb-4">Network Traffic</h3>
+                        <div id="network-chart-container" class="flex items-center justify-center h-48">
+                            <div class="text-center text-white/60">
+                                <i class="fas fa-network-wired text-4xl mb-3"></i>
+                                <p>Network traffic charts would appear here</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Other tabs content abbreviated for brevity -->
+            <div id="errors-tab" class="tab-content">
+                <!-- Error tracking content -->
+            </div>
+
+            <div id="security-tab" class="tab-content">
+                <!-- Security monitoring content -->
+            </div>
+
+            <div id="database-tab" class="tab-content">
+                <!-- Database monitoring content -->
+            </div>
+
+            <div id="alerts-tab" class="tab-content">
+                <!-- Alert rules content -->
+            </div>
+        </div>
+    </div>
+
+<script>
+    // Global variables
+    let currentTab = 'logs';
+    let logsPaused = false;
+    let logFilter = 'all';
+    let logs = [];
+    let alerts = [];
+    let systemMetrics = {};
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('🖥️ System Logs & Monitoring initializing...');
+        
+        // Check authentication
+        if (!checkAuthentication()) return;
+        
+        // Load monitoring data
+        loadMonitoringData();
+        setupEventListeners();
+        startRealTimeUpdates();
+        
+        console.log('✅ System Logs & Monitoring initialized');
+    });
+
+    // Check authentication
+    function checkAuthentication() {
+        const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
+        const userRole = localStorage.getItem('userRole');
+        
+        if (!token || userRole !== 'admin') {
+            console.log('❌ Authentication failed');
+            window.location.href = '/auth/auth-admin.html';
+            return false;
+        }
+        
+        return true;
+    }
+
+    // Setup event listeners
+    function setupEventListeners() {
+        // Log search functionality
+        document.getElementById('log-search').addEventListener('input', function(e) {
+            searchLogs(e.target.value);
+        });
+
+        // Auto-scroll logs
+        const logContainer = document.getElementById('log-container');
+        logContainer.addEventListener('scroll', function() {
+            const isScrolledToBottom = logContainer.scrollHeight - logContainer.clientHeight <= logContainer.scrollTop + 1;
+            if (isScrolledToBottom) {
+                logContainer.setAttribute('data-auto-scroll', 'true');
+            } else {
+                logContainer.setAttribute('data-auto-scroll', 'false');
+            }
+        });
+    }
+
+    // Start real-time updates
+    function startRealTimeUpdates() {
+        // Update system metrics every 5 seconds
+        setInterval(updateSystemMetrics, 5000);
+        
+        // Add new logs every 2 seconds (if not paused)
+        setInterval(addNewLogs, 2000);
+        
+        // Update alerts every 10 seconds
+        setInterval(updateAlerts, 10000);
+    }
+
+    // Load all monitoring data
+    async function loadMonitoringData() {
+        try {
+            await Promise.all([
+                loadSystemLogs(),
+                loadAlerts(),
+                loadSystemMetrics()
+            ]);
+        } catch (error) {
+            console.error('❌ Error loading monitoring data:', error);
+            showToast('Error loading monitoring data', 'error');
+        }
+    }
+
+    // Load system logs
+    async function loadSystemLogs() {
+        try {
+            console.log('📋 Loading system logs...');
+            
+            logs = [
+                {
+                    timestamp: new Date(Date.now() - 30000),
+                    level: 'info',
+                    category: 'application',
+                    message: 'User authentication successful for user ID: 1234',
+                    source: 'auth-service'
+                },
+                {
+                    timestamp: new Date(Date.now() - 45000),
+                    level: 'warn',
+                    category: 'performance',
+                    message: 'Database query took 2.3s to complete - consider optimization',
+                    source: 'database'
+                },
+                {
+                    timestamp: new Date(Date.now() - 60000),
+                    level: 'error',
+                    category: 'api',
+                    message: 'Failed to process payment: Invalid card number',
+                    source: 'payment-service'
+                },
+                {
+                    timestamp: new Date(Date.now() - 75000),
+                    level: 'info',
+                    category: 'application',
+                    message: 'New product created: African Handmade Basket (ID: 5678)',
+                    source: 'product-service'
+                },
+                {
+                    timestamp: new Date(Date.now() - 90000),
+                    level: 'debug',
+                    category: 'security',
+                    message: 'Rate limiting applied to IP: 192.168.1.100',
+                    source: 'security-middleware'
+                }
+            ];
+
+            renderLogs();
+            
+        } catch (error) {
+            console.error('❌ Error loading system logs:', error);
+        }
+    }
+
+    // Load alerts
+    async function loadAlerts() {
+        try {
+            console.log('🚨 Loading alerts...');
+            
+            alerts = [
+                {
+                    id: 1,
+                    type: 'warning',
+                    title: 'High Memory Usage',
+                    message: 'Memory usage has exceeded 80% for the last 10 minutes',
+                    timestamp: new Date(Date.now() - 5 * 60 * 1000),
+                    status: 'active',
+                    severity: 'medium'
+                },
+                {
+                    id: 2,
+                    type: 'critical',
+                    title: 'Database Connection Pool Exhausted',
+                    message: 'All database connections are in use. New requests are being queued.',
+                    timestamp: new Date(Date.now() - 15 * 60 * 1000),
+                    status: 'active',
+                    severity: 'high'
+                },
+                {
+                    id: 3,
+                    type: 'info',
+                    title: 'Scheduled Maintenance',
+                    message: 'System maintenance is scheduled for tonight at 2:00 AM UTC',
+                    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
+                    status: 'active',
+                    severity: 'low'
+                }
+            ];
+
+            renderAlerts();
+            
+        } catch (error) {
+            console.error('❌ Error loading alerts:', error);
+        }
+    }
+
+    // Load system metrics
+    async function loadSystemMetrics() {
+        try {
+            systemMetrics = {
+                uptime: 99.8,
+                cpu_usage: 23,
+                memory_usage: 67,
+                disk_usage: 45,
+                error_rate: 0.2,
+                response_time: 142
+            };
+            
+        } catch (error) {
+            console.error('❌ Error loading system metrics:', error);
+        }
+    }
+
+    // Render functions
+    function renderLogs() {
+        const container = document.getElementById('log-container');
+        
+        const filteredLogs = logs.filter(log => {
+            if (logFilter !== 'all' && log.category !== logFilter) return false;
+            
+            const searchTerm = document.getElementById('log-search').value.toLowerCase();
+            if (searchTerm && !log.message.toLowerCase().includes(searchTerm)) return false;
+            
+            return true;
+        });
+
+        const logsHTML = filteredLogs.map(log => `
+            <div class="log-entry">
+                <div class="flex items-start space-x-3">
+                    <span class="log-level log-${log.level}">${log.level.toUpperCase()}</span>
+                    <div class="flex-1">
+                        <div class="flex items-center space-x-2 mb-1">
+                            <span class="text-white/60 text-xs">${formatTimestamp(log.timestamp)}</span>
+                            <span class="text-blue-400 text-xs">[${log.source}]</span>
+                            <span class="text-purple-400 text-xs">${log.category}</span>
+                        </div>
+                        <div class="text-white text-sm">${log.message}</div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+        
+        container.innerHTML = logsHTML;
+        
+        // Auto-scroll to bottom if enabled
+        if (container.getAttribute('data-auto-scroll') !== 'false') {
+            container.scrollTop = container.scrollHeight;
+        }
+    }
+
+    function renderAlerts() {
+        const container = document.getElementById('active-alerts');
+        
+        const alertsHTML = alerts.filter(alert => alert.status === 'active').map(alert => `
+            <div class="alert-card alert-${alert.type}">
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <div class="flex items-center space-x-2 mb-2">
+                            <i class="fas fa-${getAlertIcon(alert.type)} text-${getAlertColor(alert.type)}"></i>
+                            <h4 class="text-white font-semibold">${alert.title}</h4>
+                            <span class="px-2 py-1 bg-${getAlertColor(alert.type)}/20 text-${getAlertColor(alert.type)} text-xs rounded-full">
+                                ${alert.severity.toUpperCase()}
+                            </span>
+                        </div>
+                        <p class="text-white/70 text-sm mb-2">${alert.message}</p>
+                        <div class="text-white/50 text-xs">${formatTimeAgo(alert.timestamp)}</div>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="acknowledgeAlert(${alert.id})" 
+                                class="text-blue-400 hover:text-blue-300 text-sm">
+                            <i class="fas fa-check"></i>
+                        </button>
+                        <button onclick="dismissAlert(${alert.id})" 
+                                class="text-red-400 hover:text-red-300 text-sm">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+        
+        container.innerHTML = alertsHTML || '<div class="text-white/60 text-center py-8">No active alerts</div>';
+    }
+
+    // Update functions
+    function updateSystemMetrics() {
+        // Simulate real-time metric updates
+        systemMetrics.cpu_usage += (Math.random() - 0.5) * 10;
+        systemMetrics.cpu_usage = Math.max(0, Math.min(100, systemMetrics.cpu_usage));
+        
+        systemMetrics.memory_usage += (Math.random() - 0.5) * 5;
+        systemMetrics.memory_usage = Math.max(0, Math.min(100, systemMetrics.memory_usage));
+        
+        systemMetrics.response_time += (Math.random() - 0.5) * 20;
+        systemMetrics.response_time = Math.max(50, Math.min(500, systemMetrics.response_time));
+
+        // Update UI
+        document.getElementById('cpu-usage').textContent = Math.round(systemMetrics.cpu_usage) + '%';
+        document.getElementById('memory-usage').textContent = Math.round(systemMetrics.memory_usage) + '%';
+        document.getElementById('response-time').textContent = Math.round(systemMetrics.response_time) + 'ms';
+    }
+
+    function addNewLogs() {
+        if (logsPaused) return;
+
+        const newLogMessages = [
+            'User session started for user ID: ' + Math.floor(Math.random() * 10000),
+            'API request processed successfully in ' + Math.floor(Math.random() * 500) + 'ms',
+            'Database connection established',
+            'Cache miss for key: product_' + Math.floor(Math.random() * 1000),
+            'Email sent successfully to user@example.com',
+            'File upload completed: ' + Math.floor(Math.random() * 1000) + 'KB',
+            'Background job completed: data_sync_' + Math.floor(Math.random() * 100)
+        ];
+
+        const levels = ['info', 'debug', 'warn'];
+        const categories = ['application', 'database', 'api', 'security', 'performance'];
+        const sources = ['web-server', 'api-gateway', 'database', 'cache-service', 'email-service'];
+
+        const newLog = {
+            timestamp: new Date(),
+            level: levels[Math.floor(Math.random() * levels.length)],
+            category: categories[Math.floor(Math.random() * categories.length)],
+            message: newLogMessages[Math.floor(Math.random() * newLogMessages.length)],
+            source: sources[Math.floor(Math.random() * sources.length)]
+        };
+
+        logs.unshift(newLog);
+        
+        // Keep only last 100 logs
+        if (logs.length > 100) {
+            logs = logs.slice(0, 100);
+        }
+
+        renderLogs();
+    }
+
+    function updateAlerts() {
+        // Simulate new alerts occasionally
+        if (Math.random() < 0.1) { // 10% chance
+            const newAlert = {
+                id: Date.now(),
+                type: Math.random() < 0.3 ? 'critical' : Math.random() < 0.6 ? 'warning' : 'info',
+                title: 'System Alert #' + Math.floor(Math.random() * 1000),
+                message: 'Automated system alert generated at ' + new Date().toLocaleTimeString(),
+                timestamp: new Date(),
+                status: 'active',
+                severity: Math.random() < 0.3 ? 'high' : Math.random() < 0.6 ? 'medium' : 'low'
+            };
+            
+            alerts.unshift(newAlert);
+            renderAlerts();
+        }
+    }
+
+    // Tab switching
+    function switchTab(tab) {
+        currentTab = tab;
+        
+        // Update active tab
+        document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+        document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+        
+        // Show/hide tab content
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.remove('active');
+        });
+        document.getElementById(`${tab}-tab`).classList.add('active');
+    }
+
+    // Utility functions
+    function formatTimestamp(date) {
+        return new Date(date).toLocaleTimeString();
+    }
+
+    function formatTimeAgo(date) {
+        const now = new Date();
+        const diffInSeconds = Math.floor((now - new Date(date)) / 1000);
+        
+        if (diffInSeconds < 60) return 'just now';
+        if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+        if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+        return `${Math.floor(diffInSeconds / 86400)}d ago`;
+    }
+
+    function getAlertIcon(type) {
+        switch(type) {
+            case 'critical': return 'exclamation-triangle';
+            case 'warning': return 'exclamation-circle';
+            case 'info': return 'info-circle';
+            default: return 'bell';
+        }
+    }
+
+    function getAlertColor(type) {
+        switch(type) {
+            case 'critical': return 'red-400';
+            case 'warning': return 'yellow-400';
+            case 'info': return 'blue-400';
+            default: return 'gray-400';
+        }
+    }
+
+    function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `fixed top-4 right-4 z-50 px-6 py-4 rounded-lg text-white ${
+            type === 'success' ? 'bg-green-500' : 
+            type === 'error' ? 'bg-red-500' : 
+            type === 'warning' ? 'bg-yellow-500' : 'bg-blue-500'
+        }`;
+        toast.textContent = message;
+        
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+
+    // Action functions
+    function exportLogs() {
+        showToast('Exporting system logs...', 'info');
+        setTimeout(() => {
+            showToast('Logs exported successfully!', 'success');
+        }, 2000);
+    }
+
+    function clearLogs() {
+        if (confirm('Clear all logs? This action cannot be undone.')) {
+            logs = [];
+            renderLogs();
+            showToast('Logs cleared', 'warning');
+        }
+    }
+
+    function refreshMonitoring() {
+        showToast('Refreshing monitoring data...', 'info');
+        loadMonitoringData();
+        setTimeout(() => {
+            showToast('Monitoring data refreshed!', 'success');
+        }, 1000);
+    }
+
+    function pauseLogs() {
+        logsPaused = !logsPaused;
+        const btn = document.getElementById('pause-btn');
+        
+        if (logsPaused) {
+            btn.innerHTML = '<i class="fas fa-play mr-1"></i>Resume';
+            btn.className = btn.className.replace('bg-yellow-500 hover:bg-yellow-600', 'bg-green-500 hover:bg-green-600');
+            showToast('Log stream paused', 'info');
+        } else {
+            btn.innerHTML = '<i class="fas fa-pause mr-1"></i>Pause';
+            btn.className = btn.className.replace('bg-green-500 hover:bg-green-600', 'bg-yellow-500 hover:bg-yellow-600');
+            showToast('Log stream resumed', 'info');
+        }
+    }
+
+    function filterLogs() {
+        renderLogs();
+    }
+
+    function setLogFilter(filter) {
+        logFilter = filter;
+        
+        // Update active filter chip
+        document.querySelectorAll('.filter-chip').forEach(chip => {
+            chip.classList.remove('active');
+        });
+        document.querySelector(`[data-filter="${filter}"]`).classList.add('active');
+        
+        renderLogs();
+    }
+
+    function searchLogs(term) {
+        renderLogs();
+    }
+
+    function acknowledgeAlert(id) {
+        const alert = alerts.find(a => a.id === id);
+        if (alert) {
+            alert.status = 'acknowledged';
+            renderAlerts();
+            showToast('Alert acknowledged', 'success');
+        }
+    }
+
+    function dismissAlert(id) {
+        alerts = alerts.filter(a => a.id !== id);
+        renderAlerts();
+        showToast('Alert dismissed', 'info');
+    }
+
+    function downloadLogs() {
+        showToast('Downloading today\'s logs...', 'info');
+        setTimeout(() => {
+            showToast('Logs downloaded successfully!', 'success');
+        }, 2000);
+    }
+
+    function archiveLogs() {
+        showToast('Archiving old logs...', 'info');
+        setTimeout(() => {
+            showToast('Logs archived successfully!', 'success');
+        }, 3000);
+    }
+
+    function configureRetention() {
+        showToast('Log retention configuration would open here', 'info');
+    }
+
+    // Make functions globally available
+    window.switchTab = switchTab;
+    window.exportLogs = exportLogs;
+    window.clearLogs = clearLogs;
+    window.refreshMonitoring = refreshMonitoring;
+    window.pauseLogs = pauseLogs;
+    window.filterLogs = filterLogs;
+    window.setLogFilter = setLogFilter;
+    window.acknowledgeAlert = acknowledgeAlert;
+    window.dismissAlert = dismissAlert;
+    window.downloadLogs = downloadLogs;
+    window.archiveLogs = archiveLogs;
+    window.configureRetention = configureRetention;
+
+</script>
+
+</body>
+</html>

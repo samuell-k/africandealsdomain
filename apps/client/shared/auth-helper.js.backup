@@ -1,0 +1,225 @@
+/**
+ * Comprehensive Authentication Helper
+ * Handles token management, API calls, and role-based access
+ */
+
+class AuthHelper {
+  constructor() {
+    this.tokenKey = 'authToken';
+    this.userKey = 'userData';
+    this.baseURL = window.location.origin;
+  }
+
+  // Get stored token
+  getToken() {
+    return localStorage.getItem(this.tokenKey);
+  }
+
+  // Get stored user data
+  getUser() {
+    const userData = localStorage.getItem(this.userKey);
+    return userData ? JSON.parse(userData) : null;
+  }
+
+  // Check if user is authenticated
+  isAuthenticated() {
+    const token = this.getToken();
+    const user = this.getUser();
+    return !!(token && user);
+  }
+
+  // Check if user has specific role
+  hasRole(role) {
+    const user = this.getUser();
+    return user && user.role === role;
+  }
+
+  // Check if user has any of the specified roles
+  hasAnyRole(roles) {
+    const user = this.getUser();
+    return user && roles.includes(user.role);
+  }
+
+  // Store authentication data
+  setAuth(token, user) {
+    localStorage.setItem(this.tokenKey, token);
+    localStorage.setItem(this.userKey, JSON.stringify(user));
+  }
+
+  // Clear authentication data
+  clearAuth() {
+    localStorage.removeItem(this.tokenKey);
+    localStorage.removeItem(this.userKey);
+  }
+
+  // Get authorization headers
+  getAuthHeaders() {
+    const token = this.getToken();
+    return token ? { 'Authorization': `Bearer ${token}` } : {};
+  }
+
+  // Make authenticated API request
+  async apiRequest(endpoint, options = {}) {
+    const token = this.getToken();
+    
+    if (!token) {
+      throw new Error('No authentication token available');
+    }
+
+    const defaultOptions = {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+        ...options.headers
+      }
+    };
+
+    const finalOptions = { ...defaultOptions, ...options };
+    const url = endpoint.startsWith('http') ? endpoint : `${this.baseURL}${endpoint}`;
+
+    try {
+      const response = await fetch(url, finalOptions);
+      
+      // Handle authentication errors
+      if (response.status === 401) {
+        console.warn('[AUTH] Token expired or invalid, redirecting to login');
+        this.handleAuthError();
+        throw new Error('Authentication required');
+      }
+
+      // Handle authorization errors
+      if (response.status === 403) {
+        const errorData = await response.json().catch(() => ({}));
+        console.warn('[AUTH] Access denied:', errorData);
+        throw new Error(errorData.error || 'Access denied');
+      }
+
+      return response;
+    } catch (error) {
+      if (error.message === 'Authentication required') {
+        this.handleAuthError();
+      }
+      throw error;
+    }
+  }
+
+  // Handle authentication errors
+  handleAuthError() {
+    this.clearAuth();
+    
+    // Redirect based on current page
+    const currentPath = window.location.pathname;
+    
+    if (currentPath.includes('/buyer/')) {
+      window.location.href = '/auth/auth-buyer.html';
+    } else if (currentPath.includes('/seller/')) {
+      window.location.href = '/auth/auth-seller.html';
+    } else if (currentPath.includes('/agent/')) {
+      window.location.href = '/auth/auth-agent.html';
+    } else if (currentPath.includes('/admin/')) {
+      window.location.href = '/auth/auth-admin.html';
+    } else {
+      window.location.href = '/auth/auth-buyer.html';
+    }
+  }
+
+  // Verify token is still valid
+  async verifyToken() {
+    try {
+      const response = await this.apiRequest('/api/auth/check');
+      if (response.ok) {
+        const userData = await response.json();
+        // Update stored user data
+        localStorage.setItem(this.userKey, JSON.stringify(userData));
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.warn('[AUTH] Token verification failed:', error.message);
+      return false;
+    }
+  }
+
+  // Initialize auth check for protected pages
+  async initAuthCheck(requiredRoles = []) {
+    if (!this.isAuthenticated()) {
+      this.handleAuthError();
+      return false;
+    }
+
+    // Verify token is still valid
+    const isValid = await this.verifyToken();
+    if (!isValid) {
+      this.handleAuthError();
+      return false;
+    }
+
+    // Check role requirements
+    if (requiredRoles.length > 0 && !this.hasAnyRole(requiredRoles)) {
+      console.error('[AUTH] Insufficient permissions. Required:', requiredRoles, 'Current:', this.getUser()?.role);
+      alert('You do not have permission to access this page.');
+      history.back();
+      return false;
+    }
+
+    return true;
+  }
+
+  // Convenience methods for common API calls
+  async get(endpoint) {
+    const response = await this.apiRequest(endpoint, { method: 'GET' });
+    return response.json();
+  }
+
+  async post(endpoint, data) {
+    const response = await this.apiRequest(endpoint, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+    return response.json();
+  }
+
+  async put(endpoint, data) {
+    const response = await this.apiRequest(endpoint, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
+    return response.json();
+  }
+
+  async delete(endpoint) {
+    const response = await this.apiRequest(endpoint, { method: 'DELETE' });
+    return response.json();
+  }
+}
+
+// Create global instance
+window.authHelper = new AuthHelper();
+
+// Auto-initialize for protected pages
+document.addEventListener('DOMContentLoaded', async () => {
+  const currentPath = window.location.pathname;
+  
+  // Define role requirements for different sections
+  const roleRequirements = {
+    '/buyer/': ['buyer'],
+    '/seller/': ['seller'],
+    '/agent/': ['agent'],
+    '/admin/': ['admin']
+  };
+
+  // Check if current page requires authentication
+  const requiresAuth = Object.keys(roleRequirements).some(path => currentPath.includes(path));
+  
+  if (requiresAuth) {
+    const requiredRoles = Object.entries(roleRequirements)
+      .find(([path]) => currentPath.includes(path))?.[1] || [];
+    
+    await window.authHelper.initAuthCheck(requiredRoles);
+  }
+});
+
+// Export for module systems
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = AuthHelper;
+}

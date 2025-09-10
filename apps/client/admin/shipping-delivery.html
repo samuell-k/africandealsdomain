@@ -1,0 +1,1626 @@
+<!DOCTYPE html>
+<html lang="en" class="admin-page">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shipping & Delivery Management | Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="admin-auth-check.js"></script>
+    <script src="admin-utils.js"></script>
+    <style>
+        :root {
+            --primary-color: #080b3b;
+            --secondary-color: #1e40af;
+            --accent-color: #3b82f6;
+        }
+        
+        .glass-morphism {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        }
+        .sidebar {
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .nav-item {
+            transition: all 0.3s ease;
+        }
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+        .nav-item.active {
+            background: rgba(255, 255, 255, 0.2);
+            border-left: 3px solid #3b82f6;
+        }
+        .loading-spinner {
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 2px solid #3b82f6;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .form-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+        }
+        .shipping-zone-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .shipping-zone-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        .carrier-card {
+            transition: all 0.3s ease;
+        }
+        .carrier-card:hover {
+            transform: scale(1.02);
+        }
+        .carrier-card.active {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(16, 185, 129, 0.1));
+            border: 2px solid #22c55e;
+        }
+        .status-badge {
+            @apply px-3 py-1 rounded-full text-xs font-medium;
+        }
+        .status-active { @apply bg-green-500/20 text-green-400; }
+        .status-inactive { @apply bg-gray-500/20 text-gray-400; }
+        .status-pending { @apply bg-yellow-500/20 text-yellow-400; }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .tab-btn {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .tab-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .tab-btn.active {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: var(--accent-color);
+        }
+        .live-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #22c55e;
+            display: inline-block;
+            margin-right: 6px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .real-time-badge {
+            background: linear-gradient(45deg, #22c55e, #16a34a);
+            color: white;
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 1rem;
+            font-weight: 600;
+        }
+        .carrier-logo {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            border-radius: 8px;
+            margin-right: 1rem;
+        }
+        .zone-map {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .delivery-tracking {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(16, 185, 129, 0.1));
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+        .tracking-timeline {
+            position: relative;
+            padding-left: 2rem;
+        }
+        .tracking-timeline::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: rgba(59, 130, 246, 0.3);
+        }
+        .tracking-step {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+        .tracking-step::before {
+            content: '';
+            position: absolute;
+            left: -12px;
+            top: 8px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #3b82f6;
+            border: 3px solid white;
+        }
+        .tracking-step.completed::before {
+            background: #22c55e;
+        }
+        .tracking-step.current::before {
+            background: #f59e0b;
+        }
+        .price-calculator {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+        .weight-slider {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.2);
+            outline: none;
+        }
+        .weight-slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+        }
+        .weight-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            border: none;
+        }
+    </style>
+</head>
+
+<body class="gradient-bg min-h-screen">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <div class="sidebar w-64 lg:w-80 flex-shrink-0 hidden md:flex flex-col">
+            <div class="p-6 border-b border-white/10">
+                <h2 class="text-xl font-bold text-white">Admin Panel</h2>
+            </div>
+            
+            <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+                <a href="dashboard.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="user-management.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-users"></i>
+                    <span>User Management</span>
+                </a>
+                <a href="manual-payment-approval.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-credit-card"></i>
+                    <span>Payment Approval</span>
+                </a>
+                <a href="payment-credentials.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-wallet"></i>
+                    <span>Payment Credentials</span>
+                </a>
+                <a href="products.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-box"></i>
+                    <span>Products</span>
+                </a>
+                <a href="order-management.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Orders</span>
+                </a>
+                <a href="agents.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-user-tie"></i>
+                    <span>Agents</span>
+                </a>
+                <a href="categories.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-tags"></i>
+                    <span>Categories</span>
+                </a>
+                <a href="brands.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-trademark"></i>
+                    <span>Brands</span>
+                </a>
+                <a href="reviews.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-star"></i>
+                    <span>Reviews</span>
+                </a>
+                <a href="sellers.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-store"></i>
+                    <span>Sellers</span>
+                </a>
+                <a href="support-tickets.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-ticket-alt"></i>
+                    <span>Support Tickets</span>
+                </a>
+                <a href="logs.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-file-alt"></i>
+                    <span>System Logs</span>
+                </a>
+                <a href="promotions.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-tags"></i>
+                    <span>Promotions</span>
+                </a>
+                <a href="cms-management.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-edit"></i>
+                    <span>CMS Management</span>
+                </a>
+                <a href="notification-management.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-bell"></i>
+                    <span>Notifications</span>
+                </a>
+                <a href="backup-restore.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-database"></i>
+                    <span>Backup & Restore</span>
+                </a>
+                <a href="security-api.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Security & API</span>
+                </a>
+                <a href="performance-analytics.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Performance & Analytics</span>
+                </a>
+                <a href="system-integrations.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-plug"></i>
+                    <span>System Integrations</span>
+                </a>
+                <a href="file-manager.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-folder-open"></i>
+                    <span>File Manager</span>
+                </a>
+                <a href="email-templates.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-envelope-open-text"></i>
+                    <span>Email Templates</span>
+                </a>
+                <a href="tax-currency-management.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-coins"></i>
+                    <span>Tax & Currency</span>
+                </a>
+                <a href="shipping-delivery.html" class="nav-item active flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-truck"></i>
+                    <span>Shipping & Delivery</span>
+                </a>
+                <a href="reports.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Reports</span>
+                </a>
+                <a href="settings.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
+            
+            <!-- Header -->
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 space-y-4 sm:space-y-0">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-white mb-2 flex items-center">
+                        Shipping & Delivery Management
+                        <span class="live-indicator ml-3"></span>
+                        <span class="real-time-badge ml-2">Live Tracking</span>
+                    </h1>
+                    <p class="text-white/70">Manage shipping zones, carriers, delivery options, and track shipments</p>
+                </div>
+                <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                    <button onclick="addShippingZone()" class="bg-green-500 hover:bg-green-600 text-white px-3 sm:px-4 py-2 rounded-lg transition text-sm flex items-center justify-center">
+                        <i class="fas fa-plus mr-2"></i>Add Zone
+                    </button>
+                    <button onclick="addCarrier()" class="bg-blue-500 hover:bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-lg transition text-sm flex items-center justify-center">
+                        <i class="fas fa-truck mr-2"></i>Add Carrier
+                    </button>
+                    <button onclick="refreshShipping()" class="bg-purple-500 hover:bg-purple-600 text-white px-3 sm:px-4 py-2 rounded-lg transition text-sm flex items-center justify-center">
+                        <i class="fas fa-refresh mr-2"></i>Refresh
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
+                <div class="glass-morphism rounded-xl p-4 sm:p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-white/70 text-sm">Active Carriers</h3>
+                        <div class="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-truck text-blue-400"></i>
+                        </div>
+                    </div>
+                    <p class="text-white text-2xl font-bold" id="active-carriers">8</p>
+                    <p class="text-white/60 text-xs">Worldwide coverage</p>
+                </div>
+                
+                <div class="glass-morphism rounded-xl p-4 sm:p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-white/70 text-sm">Shipping Zones</h3>
+                        <div class="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-globe text-green-400"></i>
+                        </div>
+                    </div>
+                    <p class="text-white text-2xl font-bold" id="shipping-zones">15</p>
+                    <p class="text-white/60 text-xs">Regional coverage</p>
+                </div>
+                
+                <div class="glass-morphism rounded-xl p-4 sm:p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-white/70 text-sm">In Transit</h3>
+                        <div class="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-shipping-fast text-yellow-400"></i>
+                        </div>
+                    </div>
+                    <p class="text-white text-2xl font-bold" id="in-transit">342</p>
+                    <p class="text-white/60 text-xs">Active shipments</p>
+                </div>
+                
+                <div class="glass-morphism rounded-xl p-4 sm:p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-white/70 text-sm">Avg. Delivery</h3>
+                        <div class="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-clock text-purple-400"></i>
+                        </div>
+                    </div>
+                    <p class="text-white text-2xl font-bold" id="avg-delivery">3.2 days</p>
+                    <p class="text-white/60 text-xs">Faster than target</p>
+                </div>
+            </div>
+
+            <!-- Tab Navigation -->
+            <div class="flex flex-wrap gap-2 mb-6">
+                <div class="tab-btn active" data-tab="zones" onclick="switchTab('zones')">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-map"></i>
+                        <span class="text-white font-medium">Shipping Zones</span>
+                        <span class="text-white/50 text-sm">(15)</span>
+                    </div>
+                </div>
+                <div class="tab-btn" data-tab="carriers" onclick="switchTab('carriers')">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-truck"></i>
+                        <span class="text-white font-medium">Carriers</span>
+                        <span class="text-white/50 text-sm">(8)</span>
+                    </div>
+                </div>
+                <div class="tab-btn" data-tab="tracking" onclick="switchTab('tracking')">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-route"></i>
+                        <span class="text-white font-medium">Live Tracking</span>
+                    </div>
+                </div>
+                <div class="tab-btn" data-tab="calculator" onclick="switchTab('calculator')">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-calculator"></i>
+                        <span class="text-white font-medium">Price Calculator</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Contents -->
+            
+            <!-- Shipping Zones Tab -->
+            <div id="zones-tab" class="tab-content active">
+                <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                    
+                    <!-- Zones List -->
+                    <div class="xl:col-span-2">
+                        <div class="glass-morphism rounded-xl overflow-hidden">
+                            <div class="p-4 sm:p-6 border-b border-white/10">
+                                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-3 sm:space-y-0">
+                                    <h3 class="text-lg sm:text-xl font-bold text-white">Shipping Zones</h3>
+                                    <div class="flex space-x-2">
+                                        <button onclick="importZones()" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded-lg text-sm">
+                                            <i class="fas fa-download mr-2"></i>Import
+                                        </button>
+                                        <button onclick="addShippingZone()" class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg text-sm">
+                                            <i class="fas fa-plus mr-2"></i>Add Zone
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="shipping-zones-container" class="p-6">
+                                <div class="text-center py-8">
+                                    <div class="loading-spinner mx-auto mb-4"></div>
+                                    <p class="text-white/70">Loading shipping zones...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Zone Map -->
+                    <div>
+                        <div class="zone-map">
+                            <div class="text-center">
+                                <i class="fas fa-map-marked-alt text-white/30 text-6xl mb-4"></i>
+                                <h3 class="text-white text-lg font-semibold mb-2">Zone Coverage Map</h3>
+                                <p class="text-white/60 text-sm">Visual representation of shipping zones</p>
+                                <div class="mt-6 space-y-2">
+                                    <div class="flex items-center justify-center space-x-2">
+                                        <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                                        <span class="text-white/70 text-sm">Local (1-2 days)</span>
+                                    </div>
+                                    <div class="flex items-center justify-center space-x-2">
+                                        <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                                        <span class="text-white/70 text-sm">Regional (3-5 days)</span>
+                                    </div>
+                                    <div class="flex items-center justify-center space-x-2">
+                                        <div class="w-3 h-3 bg-red-500 rounded-full"></div>
+                                        <span class="text-white/70 text-sm">International (5-14 days)</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Carriers Tab -->
+            <div id="carriers-tab" class="tab-content">
+                <div class="glass-morphism rounded-xl overflow-hidden">
+                    <div class="p-4 sm:p-6 border-b border-white/10">
+                        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-3 sm:space-y-0">
+                            <h3 class="text-lg sm:text-xl font-bold text-white">Shipping Carriers</h3>
+                            <div class="flex space-x-2">
+                                <button onclick="testCarrierAPI()" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-sm">
+                                    <i class="fas fa-vial mr-2"></i>Test APIs
+                                </button>
+                                <button onclick="addCarrier()" class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg text-sm">
+                                    <i class="fas fa-plus mr-2"></i>Add Carrier
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="carriers-container" class="p-6">
+                        <div class="text-center py-8">
+                            <div class="loading-spinner mx-auto mb-4"></div>
+                            <p class="text-white/70">Loading carriers...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live Tracking Tab -->
+            <div id="tracking-tab" class="tab-content">
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                    
+                    <!-- Tracking Search -->
+                    <div class="glass-morphism rounded-xl p-6">
+                        <h3 class="text-xl font-bold text-white mb-4">Track Shipment</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-white/70 text-sm mb-2">Tracking Number</label>
+                                <div class="flex space-x-2">
+                                    <input type="text" id="tracking-number" 
+                                           class="flex-1 p-3 rounded-lg form-input" 
+                                           placeholder="Enter tracking number...">
+                                    <button onclick="trackShipment()" 
+                                            class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-3 rounded-lg">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-2">
+                                <button onclick="trackDemo('TRK123456789')" 
+                                        class="bg-green-500/20 text-green-400 p-2 rounded text-sm hover:bg-green-500/30">
+                                    Demo: Delivered
+                                </button>
+                                <button onclick="trackDemo('TRK987654321')" 
+                                        class="bg-yellow-500/20 text-yellow-400 p-2 rounded text-sm hover:bg-yellow-500/30">
+                                    Demo: In Transit
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="tracking-result" class="hidden mt-6">
+                            <h4 class="text-white font-medium mb-3">Tracking Details</h4>
+                            <div id="tracking-info" class="space-y-3">
+                                <!-- Tracking information will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Delivery Timeline -->
+                    <div class="delivery-tracking">
+                        <h3 class="text-xl font-bold text-white mb-4">Delivery Timeline</h3>
+                        <div id="delivery-timeline" class="tracking-timeline">
+                            <div class="text-center text-white/60 py-8">
+                                <i class="fas fa-route text-3xl mb-3"></i>
+                                <p>Enter a tracking number to see delivery timeline</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Price Calculator Tab -->
+            <div id="calculator-tab" class="tab-content">
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                    
+                    <!-- Calculator -->
+                    <div class="price-calculator">
+                        <h3 class="text-xl font-bold text-white mb-4">Shipping Price Calculator</h3>
+                        <div class="space-y-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-white/70 text-sm mb-2">From Country</label>
+                                    <select id="from-country" class="w-full p-3 rounded-lg form-input" onchange="calculateShipping()">
+                                        <option value="">Select Origin</option>
+                                        <option value="RW">Rwanda</option>
+                                        <option value="KE">Kenya</option>
+                                        <option value="UG">Uganda</option>
+                                        <option value="TZ">Tanzania</option>
+                                        <option value="US">United States</option>
+                                        <option value="UK">United Kingdom</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-white/70 text-sm mb-2">To Country</label>
+                                    <select id="to-country" class="w-full p-3 rounded-lg form-input" onchange="calculateShipping()">
+                                        <option value="">Select Destination</option>
+                                        <option value="RW">Rwanda</option>
+                                        <option value="KE">Kenya</option>
+                                        <option value="UG">Uganda</option>
+                                        <option value="TZ">Tanzania</option>
+                                        <option value="US">United States</option>
+                                        <option value="UK">United Kingdom</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-white/70 text-sm mb-2">Weight: <span id="weight-display">1.0 kg</span></label>
+                                <input type="range" id="weight-slider" class="weight-slider" 
+                                       min="0.1" max="30" step="0.1" value="1.0" oninput="updateWeight(); calculateShipping()">
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-white/70 text-sm mb-2">Length (cm)</label>
+                                    <input type="number" id="package-length" class="w-full p-3 rounded-lg form-input" 
+                                           placeholder="30" oninput="calculateShipping()">
+                                </div>
+                                <div>
+                                    <label class="block text-white/70 text-sm mb-2">Width (cm)</label>
+                                    <input type="number" id="package-width" class="w-full p-3 rounded-lg form-input" 
+                                           placeholder="20" oninput="calculateShipping()">
+                                </div>
+                                <div>
+                                    <label class="block text-white/70 text-sm mb-2">Height (cm)</label>
+                                    <input type="number" id="package-height" class="w-full p-3 rounded-lg form-input" 
+                                           placeholder="10" oninput="calculateShipping()">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-white/70 text-sm mb-2">Service Type</label>
+                                <select id="service-type" class="w-full p-3 rounded-lg form-input" onchange="calculateShipping()">
+                                    <option value="standard">Standard (5-7 days)</option>
+                                    <option value="express">Express (2-3 days)</option>
+                                    <option value="overnight">Overnight (1 day)</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 pt-6 border-t border-white/20">
+                            <div id="shipping-quotes" class="space-y-3">
+                                <div class="text-center text-white/60">
+                                    <i class="fas fa-calculator text-2xl mb-2"></i>
+                                    <p>Enter shipping details to calculate prices</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Recent Calculations -->
+                    <div class="glass-morphism p-6 rounded-xl">
+                        <h3 class="text-xl font-bold text-white mb-4">Recent Calculations</h3>
+                        <div id="recent-calculations" class="space-y-3">
+                            <div class="text-center text-white/60 py-8">
+                                <i class="fas fa-history text-3xl mb-3"></i>
+                                <p>No calculations yet</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Zone Modal -->
+    <div id="zone-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+        <div class="glass-morphism p-6 sm:p-8 rounded-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl sm:text-2xl font-bold text-white">Add Shipping Zone</h2>
+                <button onclick="closeZoneModal()" class="text-white/70 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <form id="zone-form" class="space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-white/70 text-sm mb-2">Zone Name *</label>
+                        <input type="text" id="zone-name" required 
+                               class="w-full p-3 rounded-lg form-input" 
+                               placeholder="e.g., East Africa">
+                    </div>
+
+                    <div>
+                        <label class="block text-white/70 text-sm mb-2">Zone Type *</label>
+                        <select id="zone-type" required class="w-full p-3 rounded-lg form-input">
+                            <option value="">Select Type</option>
+                            <option value="local">Local (Same City)</option>
+                            <option value="regional">Regional (Same Country)</option>
+                            <option value="international">International</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-white/70 text-sm mb-2">Countries/Regions *</label>
+                    <textarea id="zone-countries" required rows="3" 
+                              class="w-full p-3 rounded-lg form-input" 
+                              placeholder="Enter countries/regions separated by commas"></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-white/70 text-sm mb-2">Base Rate ($)</label>
+                        <input type="number" id="zone-base-rate" 
+                               class="w-full p-3 rounded-lg form-input" 
+                               placeholder="5.00" step="0.01">
+                    </div>
+
+                    <div>
+                        <label class="block text-white/70 text-sm mb-2">Per KG Rate ($)</label>
+                        <input type="number" id="zone-per-kg-rate" 
+                               class="w-full p-3 rounded-lg form-input" 
+                               placeholder="2.00" step="0.01">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-white/70 text-sm mb-2">Estimated Days</label>
+                        <input type="number" id="zone-delivery-days" 
+                               class="w-full p-3 rounded-lg form-input" 
+                               placeholder="3-5" min="1">
+                    </div>
+
+                    <div>
+                        <label class="block text-white/70 text-sm mb-2">Status</label>
+                        <select id="zone-status" class="w-full p-3 rounded-lg form-input">
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 pt-6 border-t border-white/10">
+                    <button type="submit" class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg">
+                        <i class="fas fa-save mr-2"></i>Save Zone
+                    </button>
+                    <button type="button" onclick="closeZoneModal()" 
+                            class="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Carrier Modal -->
+    <div id="carrier-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+        <div class="glass-morphism p-6 sm:p-8 rounded-xl max-w-lg w-full mx-4">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl sm:text-2xl font-bold text-white">Add Carrier</h2>
+                <button onclick="closeCarrierModal()" class="text-white/70 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <form id="carrier-form" class="space-y-4">
+                <div>
+                    <label class="block text-white/70 text-sm mb-2">Carrier Name *</label>
+                    <input type="text" id="carrier-name" required 
+                           class="w-full p-3 rounded-lg form-input" 
+                           placeholder="e.g., FedEx">
+                </div>
+
+                <div>
+                    <label class="block text-white/70 text-sm mb-2">API Key</label>
+                    <input type="password" id="carrier-api-key" 
+                           class="w-full p-3 rounded-lg form-input" 
+                           placeholder="Carrier API Key">
+                </div>
+
+                <div>
+                    <label class="block text-white/70 text-sm mb-2">Tracking URL</label>
+                    <input type="url" id="carrier-tracking-url" 
+                           class="w-full p-3 rounded-lg form-input" 
+                           placeholder="https://tracking.carrier.com/{tracking_number}">
+                </div>
+
+                <div class="flex items-center space-x-2">
+                    <input type="checkbox" id="carrier-active" checked class="rounded">
+                    <label for="carrier-active" class="text-white text-sm">Enable this carrier</label>
+                </div>
+
+                <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 pt-6 border-t border-white/10">
+                    <button type="submit" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">
+                        <i class="fas fa-plus mr-2"></i>Add Carrier
+                    </button>
+                    <button type="button" onclick="closeCarrierModal()" 
+                            class="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+<script>
+    // Global variables
+    let currentTab = 'zones';
+    let shippingZones = [];
+    let carriers = [];
+    let recentCalculations = [];
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('🚚 Shipping & Delivery Management initializing...');
+        
+        // Check authentication first
+        if (!checkAuthentication()) return;
+        
+        // Load data
+        loadAllData();
+        setupEventListeners();
+        
+        console.log('✅ Shipping & Delivery Management initialized');
+    });
+
+    // Check authentication
+    function checkAuthentication() {
+        const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
+        const userRole = localStorage.getItem('userRole');
+        
+        if (!token) {
+            console.log('❌ No authentication token found');
+            window.location.href = '/auth/auth-admin.html';
+            return false;
+        }
+        
+        if (userRole !== 'admin') {
+            console.log('❌ Insufficient permissions');
+            window.location.href = '/auth/auth-admin.html';
+            return false;
+        }
+        
+        console.log('✅ Authentication verified');
+        return true;
+    }
+
+    // Setup event listeners
+    function setupEventListeners() {
+        // Form submissions
+        document.getElementById('zone-form').addEventListener('submit', handleZoneSubmit);
+        document.getElementById('carrier-form').addEventListener('submit', handleCarrierSubmit);
+    }
+
+    // Load all data
+    async function loadAllData() {
+        await Promise.all([
+            loadShippingZones(),
+            loadCarriers()
+        ]);
+    }
+
+    // Load shipping zones
+    async function loadShippingZones() {
+        try {
+            console.log('🌍 Loading shipping zones...');
+            
+            // Mock shipping zones data
+            const mockZones = [
+                {
+                    id: 1,
+                    name: 'Rwanda Local',
+                    type: 'local',
+                    countries: ['Rwanda'],
+                    base_rate: 2.50,
+                    per_kg_rate: 1.00,
+                    delivery_days: '1-2',
+                    status: 'active',
+                    created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+                    shipments_count: 1245
+                },
+                {
+                    id: 2,
+                    name: 'East Africa',
+                    type: 'regional',
+                    countries: ['Kenya', 'Uganda', 'Tanzania', 'Burundi'],
+                    base_rate: 8.00,
+                    per_kg_rate: 3.50,
+                    delivery_days: '3-5',
+                    status: 'active',
+                    created_at: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000),
+                    shipments_count: 856
+                },
+                {
+                    id: 3,
+                    name: 'West Africa',
+                    type: 'regional',
+                    countries: ['Ghana', 'Nigeria', 'Senegal', 'Mali'],
+                    base_rate: 12.00,
+                    per_kg_rate: 5.00,
+                    delivery_days: '5-7',
+                    status: 'active',
+                    created_at: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000),
+                    shipments_count: 432
+                },
+                {
+                    id: 4,
+                    name: 'Europe',
+                    type: 'international',
+                    countries: ['UK', 'Germany', 'France', 'Netherlands', 'Belgium'],
+                    base_rate: 25.00,
+                    per_kg_rate: 8.00,
+                    delivery_days: '7-10',
+                    status: 'active',
+                    created_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
+                    shipments_count: 234
+                },
+                {
+                    id: 5,
+                    name: 'North America',
+                    type: 'international',
+                    countries: ['USA', 'Canada'],
+                    base_rate: 30.00,
+                    per_kg_rate: 10.00,
+                    delivery_days: '10-14',
+                    status: 'active',
+                    created_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+                    shipments_count: 189
+                }
+            ];
+
+            shippingZones = mockZones;
+            renderShippingZones();
+            
+            console.log('✅ Shipping zones loaded successfully');
+
+        } catch (error) {
+            console.error('❌ Error loading shipping zones:', error);
+            document.getElementById('shipping-zones-container').innerHTML = createErrorState(error.message, 'loadShippingZones()');
+        }
+    }
+
+    // Load carriers
+    async function loadCarriers() {
+        try {
+            console.log('🚛 Loading carriers...');
+            
+            // Mock carriers data
+            const mockCarriers = [
+                {
+                    id: 1,
+                    name: 'DHL Express',
+                    logo: '📦',
+                    status: 'active',
+                    api_connected: true,
+                    tracking_url: 'https://www.dhl.com/tracking/{tracking_number}',
+                    zones_covered: ['Rwanda Local', 'East Africa', 'Europe', 'North America'],
+                    avg_delivery_time: '3-5 days',
+                    reliability: 98.5,
+                    cost_rating: 'High',
+                    created_at: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000)
+                },
+                {
+                    id: 2,
+                    name: 'FedEx',
+                    logo: '✈️',
+                    status: 'active',
+                    api_connected: true,
+                    tracking_url: 'https://www.fedex.com/tracking/{tracking_number}',
+                    zones_covered: ['Europe', 'North America'],
+                    avg_delivery_time: '2-4 days',
+                    reliability: 97.8,
+                    cost_rating: 'High',
+                    created_at: new Date(Date.now() - 50 * 24 * 60 * 60 * 1000)
+                },
+                {
+                    id: 3,
+                    name: 'UPS',
+                    logo: '🚚',
+                    status: 'active',
+                    api_connected: false,
+                    tracking_url: 'https://www.ups.com/tracking/{tracking_number}',
+                    zones_covered: ['Europe', 'North America'],
+                    avg_delivery_time: '3-6 days',
+                    reliability: 96.2,
+                    cost_rating: 'Medium',
+                    created_at: new Date(Date.now() - 40 * 24 * 60 * 60 * 1000)
+                },
+                {
+                    id: 4,
+                    name: 'Rwanda Post',
+                    logo: '📮',
+                    status: 'active',
+                    api_connected: true,
+                    tracking_url: 'https://rwandapost.rw/track/{tracking_number}',
+                    zones_covered: ['Rwanda Local', 'East Africa'],
+                    avg_delivery_time: '2-3 days',
+                    reliability: 94.5,
+                    cost_rating: 'Low',
+                    created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+                }
+            ];
+
+            carriers = mockCarriers;
+            renderCarriers();
+            
+            console.log('✅ Carriers loaded successfully');
+
+        } catch (error) {
+            console.error('❌ Error loading carriers:', error);
+            document.getElementById('carriers-container').innerHTML = createErrorState(error.message, 'loadCarriers()');
+        }
+    }
+
+    // Render shipping zones
+    function renderShippingZones() {
+        const container = document.getElementById('shipping-zones-container');
+        
+        if (!shippingZones || shippingZones.length === 0) {
+            container.innerHTML = createEmptyState(
+                'zones', 
+                'No Shipping Zones Found', 
+                'Create shipping zones to define delivery areas and pricing.',
+                `<button onclick="addShippingZone()" class="mt-4 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg">
+                    <i class="fas fa-plus mr-2"></i>Add Zone
+                </button>`
+            );
+            return;
+        }
+
+        const zonesHTML = `
+            <div class="space-y-4">
+                ${shippingZones.map(zone => `
+                    <div class="shipping-zone-card glass-morphism rounded-lg p-6">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-3 mb-2">
+                                    <h3 class="text-white font-semibold text-lg">${zone.name}</h3>
+                                    <span class="status-badge status-${zone.status}">
+                                        ${formatStatus(zone.status)}
+                                    </span>
+                                    <span class="px-2 py-1 bg-blue-500/20 text-blue-400 text-xs rounded">
+                                        ${formatZoneType(zone.type)}
+                                    </span>
+                                </div>
+                                <p class="text-white/60 text-sm">
+                                    Countries: ${Array.isArray(zone.countries) ? zone.countries.join(', ') : zone.countries}
+                                </p>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-white text-lg font-bold">$${zone.base_rate}</div>
+                                <div class="text-white/60 text-xs">Base Rate</div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                            <div>
+                                <span class="text-white/50 text-xs">Per KG Rate:</span>
+                                <p class="text-white font-medium">$${zone.per_kg_rate}</p>
+                            </div>
+                            <div>
+                                <span class="text-white/50 text-xs">Delivery Time:</span>
+                                <p class="text-white font-medium">${zone.delivery_days} days</p>
+                            </div>
+                            <div>
+                                <span class="text-white/50 text-xs">Shipments:</span>
+                                <p class="text-white font-medium">${zone.shipments_count}</p>
+                            </div>
+                            <div>
+                                <span class="text-white/50 text-xs">Created:</span>
+                                <p class="text-white font-medium">${formatDate(zone.created_at)}</p>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between items-center">
+                            <div class="text-xs text-white/50">
+                                Zone ID: #${zone.id}
+                            </div>
+                            <div class="flex space-x-2">
+                                <button onclick="editZone(${zone.id})" 
+                                        class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm">
+                                    <i class="fas fa-edit mr-1"></i>Edit
+                                </button>
+                                <button onclick="duplicateZone(${zone.id})" 
+                                        class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-sm">
+                                    <i class="fas fa-copy mr-1"></i>Copy
+                                </button>
+                                <button onclick="deleteZone(${zone.id})" 
+                                        class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">
+                                    <i class="fas fa-trash mr-1"></i>Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        
+        container.innerHTML = zonesHTML;
+    }
+
+    // Render carriers
+    function renderCarriers() {
+        const container = document.getElementById('carriers-container');
+        
+        if (!carriers || carriers.length === 0) {
+            container.innerHTML = createEmptyState(
+                'carriers', 
+                'No Carriers Found', 
+                'Add shipping carriers to handle deliveries.',
+                `<button onclick="addCarrier()" class="mt-4 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg">
+                    <i class="fas fa-plus mr-2"></i>Add Carrier
+                </button>`
+            );
+            return;
+        }
+
+        const carriersHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                ${carriers.map(carrier => `
+                    <div class="carrier-card glass-morphism rounded-lg p-6 ${carrier.status === 'active' && carrier.api_connected ? 'active' : ''}">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="carrier-logo bg-blue-500/20 text-blue-400">
+                                    ${carrier.logo}
+                                </div>
+                                <div>
+                                    <h3 class="text-white font-semibold">${carrier.name}</h3>
+                                    <p class="text-white/60 text-sm">${carrier.avg_delivery_time}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="status-badge status-${carrier.status}">
+                                    ${formatStatus(carrier.status)}
+                                </span>
+                                ${carrier.api_connected ? 
+                                    '<i class="fas fa-wifi text-green-400" title="API Connected"></i>' : 
+                                    '<i class="fas fa-wifi text-red-400" title="API Disconnected"></i>'
+                                }
+                            </div>
+                        </div>
+
+                        <div class="space-y-3 mb-4">
+                            <div class="flex justify-between text-sm">
+                                <span class="text-white/70">Reliability:</span>
+                                <span class="text-white font-medium">${carrier.reliability}%</span>
+                            </div>
+                            
+                            <div class="flex justify-between text-sm">
+                                <span class="text-white/70">Cost Rating:</span>
+                                <span class="text-${carrier.cost_rating === 'High' ? 'red' : carrier.cost_rating === 'Medium' ? 'yellow' : 'green'}-400 font-medium">
+                                    ${carrier.cost_rating}
+                                </span>
+                            </div>
+                            
+                            <div>
+                                <span class="text-white/70 text-sm">Coverage:</span>
+                                <div class="flex flex-wrap gap-1 mt-1">
+                                    ${carrier.zones_covered.map(zone => `
+                                        <span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded">${zone}</span>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex space-x-2">
+                            <button onclick="testCarrier(${carrier.id})" 
+                                    class="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-sm">
+                                <i class="fas fa-vial mr-1"></i>Test
+                            </button>
+                            <button onclick="editCarrier(${carrier.id})" 
+                                    class="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded text-sm">
+                                <i class="fas fa-edit mr-1"></i>Edit
+                            </button>
+                            <button onclick="toggleCarrier(${carrier.id})" 
+                                    class="bg-${carrier.status === 'active' ? 'gray' : 'green'}-500 hover:bg-${carrier.status === 'active' ? 'gray' : 'green'}-600 text-white px-3 py-2 rounded text-sm">
+                                <i class="fas fa-${carrier.status === 'active' ? 'pause' : 'play'}"></i>
+                            </button>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        
+        container.innerHTML = carriersHTML;
+    }
+
+    // Tab switching
+    function switchTab(tab) {
+        currentTab = tab;
+        
+        // Update active tab
+        document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+        document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+        
+        // Show/hide tab content
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.remove('active');
+        });
+        document.getElementById(`${tab}-tab`).classList.add('active');
+    }
+
+    // Modal functions
+    function addShippingZone() {
+        document.getElementById('zone-modal').classList.remove('hidden');
+        document.getElementById('zone-modal').classList.add('flex');
+    }
+
+    function closeZoneModal() {
+        document.getElementById('zone-modal').classList.add('hidden');
+        document.getElementById('zone-modal').classList.remove('flex');
+        document.getElementById('zone-form').reset();
+    }
+
+    function addCarrier() {
+        document.getElementById('carrier-modal').classList.remove('hidden');
+        document.getElementById('carrier-modal').classList.add('flex');
+    }
+
+    function closeCarrierModal() {
+        document.getElementById('carrier-modal').classList.add('hidden');
+        document.getElementById('carrier-modal').classList.remove('flex');
+        document.getElementById('carrier-form').reset();
+    }
+
+    // Tracking functions
+    function trackShipment() {
+        const trackingNumber = document.getElementById('tracking-number').value.trim();
+        if (!trackingNumber) {
+            showToast('Please enter a tracking number', 'warning');
+            return;
+        }
+        
+        trackDemo(trackingNumber);
+    }
+
+    function trackDemo(trackingNumber) {
+        document.getElementById('tracking-number').value = trackingNumber;
+        
+        // Mock tracking data
+        const mockTracking = {
+            'TRK123456789': {
+                status: 'Delivered',
+                carrier: 'DHL Express',
+                origin: 'Kigali, Rwanda',
+                destination: 'Nairobi, Kenya',
+                estimated_delivery: 'Today',
+                timeline: [
+                    { status: 'Order Placed', location: 'Kigali, Rwanda', date: '2025-08-15 10:00', completed: true },
+                    { status: 'Package Picked Up', location: 'Kigali, Rwanda', date: '2025-08-15 14:30', completed: true },
+                    { status: 'In Transit', location: 'Kigali Hub', date: '2025-08-16 08:15', completed: true },
+                    { status: 'Out for Delivery', location: 'Nairobi, Kenya', date: '2025-08-17 09:00', completed: true, current: true },
+                    { status: 'Delivered', location: 'Nairobi, Kenya', date: '2025-08-17 15:30', completed: true }
+                ]
+            },
+            'TRK987654321': {
+                status: 'In Transit',
+                carrier: 'FedEx',
+                origin: 'Kigali, Rwanda',
+                destination: 'London, UK',
+                estimated_delivery: 'Aug 20, 2025',
+                timeline: [
+                    { status: 'Order Placed', location: 'Kigali, Rwanda', date: '2025-08-16 11:00', completed: true },
+                    { status: 'Package Picked Up', location: 'Kigali, Rwanda', date: '2025-08-16 16:45', completed: true },
+                    { status: 'In Transit', location: 'Dubai Hub', date: '2025-08-17 22:30', completed: true, current: true },
+                    { status: 'Customs Clearance', location: 'London, UK', date: 'Pending', completed: false },
+                    { status: 'Out for Delivery', location: 'London, UK', date: 'Pending', completed: false }
+                ]
+            }
+        };
+        
+        const tracking = mockTracking[trackingNumber] || {
+            status: 'Not Found',
+            message: 'Tracking number not found in system'
+        };
+        
+        displayTrackingResult(tracking);
+    }
+
+    function displayTrackingResult(tracking) {
+        const resultDiv = document.getElementById('tracking-result');
+        const infoDiv = document.getElementById('tracking-info');
+        const timelineDiv = document.getElementById('delivery-timeline');
+        
+        if (tracking.status === 'Not Found') {
+            infoDiv.innerHTML = `
+                <div class="text-center text-red-400 py-4">
+                    <i class="fas fa-exclamation-triangle text-2xl mb-2"></i>
+                    <p>Tracking number not found</p>
+                </div>
+            `;
+            timelineDiv.innerHTML = infoDiv.innerHTML;
+        } else {
+            infoDiv.innerHTML = `
+                <div class="bg-white/5 p-3 rounded-lg mb-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-white/70">Status:</span>
+                        <span class="text-green-400 font-medium">${tracking.status}</span>
+                    </div>
+                </div>
+                <div class="bg-white/5 p-3 rounded-lg mb-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-white/70">Carrier:</span>
+                        <span class="text-white">${tracking.carrier}</span>
+                    </div>
+                </div>
+                <div class="bg-white/5 p-3 rounded-lg mb-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-white/70">From:</span>
+                        <span class="text-white">${tracking.origin}</span>
+                    </div>
+                </div>
+                <div class="bg-white/5 p-3 rounded-lg mb-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-white/70">To:</span>
+                        <span class="text-white">${tracking.destination}</span>
+                    </div>
+                </div>
+                <div class="bg-white/5 p-3 rounded-lg">
+                    <div class="flex justify-between items-center">
+                        <span class="text-white/70">Est. Delivery:</span>
+                        <span class="text-white">${tracking.estimated_delivery}</span>
+                    </div>
+                </div>
+            `;
+            
+            if (tracking.timeline) {
+                timelineDiv.innerHTML = tracking.timeline.map(step => `
+                    <div class="tracking-step ${step.completed ? 'completed' : ''} ${step.current ? 'current' : ''}">
+                        <div class="text-white font-medium">${step.status}</div>
+                        <div class="text-white/60 text-sm">${step.location}</div>
+                        <div class="text-white/50 text-xs">${step.date}</div>
+                    </div>
+                `).join('');
+            }
+        }
+        
+        resultDiv.classList.remove('hidden');
+    }
+
+    // Price calculator functions
+    function updateWeight() {
+        const weight = document.getElementById('weight-slider').value;
+        document.getElementById('weight-display').textContent = `${weight} kg`;
+    }
+
+    function calculateShipping() {
+        const fromCountry = document.getElementById('from-country').value;
+        const toCountry = document.getElementById('to-country').value;
+        const weight = parseFloat(document.getElementById('weight-slider').value);
+        const serviceType = document.getElementById('service-type').value;
+        
+        if (!fromCountry || !toCountry || weight === 0) {
+            document.getElementById('shipping-quotes').innerHTML = `
+                <div class="text-center text-white/60">
+                    <i class="fas fa-calculator text-2xl mb-2"></i>
+                    <p>Enter shipping details to calculate prices</p>
+                </div>
+            `;
+            return;
+        }
+        
+        // Mock pricing calculation
+        const baseRates = {
+            'local': { base: 2.50, perKg: 1.00 },
+            'regional': { base: 8.00, perKg: 3.50 },
+            'international': { base: 25.00, perKg: 8.00 }
+        };
+        
+        const serviceMultiplier = {
+            'standard': 1.0,
+            'express': 1.5,
+            'overnight': 2.5
+        };
+        
+        // Determine zone type
+        let zoneType = 'local';
+        if (fromCountry !== toCountry) {
+            const regionalCountries = ['RW', 'KE', 'UG', 'TZ'];
+            if (regionalCountries.includes(fromCountry) && regionalCountries.includes(toCountry)) {
+                zoneType = 'regional';
+            } else {
+                zoneType = 'international';
+            }
+        }
+        
+        const basePrice = baseRates[zoneType].base + (weight * baseRates[zoneType].perKg);
+        const finalPrice = basePrice * serviceMultiplier[serviceType];
+        
+        // Generate quotes from different carriers
+        const quotes = [
+            {
+                carrier: 'Rwanda Post',
+                price: finalPrice * 0.8,
+                days: zoneType === 'local' ? '2-3' : zoneType === 'regional' ? '4-6' : '10-15',
+                reliability: '94%'
+            },
+            {
+                carrier: 'DHL Express',
+                price: finalPrice * 1.2,
+                days: zoneType === 'local' ? '1-2' : zoneType === 'regional' ? '3-4' : '5-7',
+                reliability: '98%'
+            },
+            {
+                carrier: 'FedEx',
+                price: finalPrice * 1.3,
+                days: zoneType === 'local' ? '1-2' : zoneType === 'regional' ? '2-3' : '4-6',
+                reliability: '97%'
+            }
+        ];
+        
+        document.getElementById('shipping-quotes').innerHTML = quotes.map(quote => `
+            <div class="bg-white/5 p-4 rounded-lg flex justify-between items-center">
+                <div>
+                    <div class="text-white font-medium">${quote.carrier}</div>
+                    <div class="text-white/60 text-sm">${quote.days} days • ${quote.reliability} reliability</div>
+                </div>
+                <div class="text-right">
+                    <div class="text-white text-lg font-bold">$${quote.price.toFixed(2)}</div>
+                    <button onclick="selectQuote('${quote.carrier}', ${quote.price})" 
+                            class="text-blue-400 text-sm hover:text-blue-300">
+                        Select
+                    </button>
+                </div>
+            </div>
+        `).join('');
+        
+        // Add to recent calculations
+        addToRecentCalculations({
+            from: fromCountry,
+            to: toCountry,
+            weight: weight,
+            service: serviceType,
+            bestPrice: Math.min(...quotes.map(q => q.price)),
+            timestamp: new Date()
+        });
+    }
+
+    function selectQuote(carrier, price) {
+        showToast(`Selected ${carrier} for $${price.toFixed(2)}`, 'success');
+    }
+
+    function addToRecentCalculations(calculation) {
+        recentCalculations.unshift(calculation);
+        if (recentCalculations.length > 5) {
+            recentCalculations = recentCalculations.slice(0, 5);
+        }
+        updateRecentCalculations();
+    }
+
+    function updateRecentCalculations() {
+        const container = document.getElementById('recent-calculations');
+        
+        if (recentCalculations.length === 0) {
+            container.innerHTML = `
+                <div class="text-center text-white/60 py-8">
+                    <i class="fas fa-history text-3xl mb-3"></i>
+                    <p>No calculations yet</p>
+                </div>
+            `;
+            return;
+        }
+        
+        const calculationsHTML = recentCalculations.map(calc => `
+            <div class="bg-white/5 p-3 rounded-lg">
+                <div class="flex justify-between text-white text-sm mb-1">
+                    <span>${calc.from} → ${calc.to} (${calc.weight}kg)</span>
+                    <span class="font-bold">$${calc.bestPrice.toFixed(2)}</span>
+                </div>
+                <div class="text-white/60 text-xs">
+                    ${calc.service} service • ${formatTimeAgo(calc.timestamp)}
+                </div>
+            </div>
+        `).join('');
+        
+        container.innerHTML = calculationsHTML;
+    }
+
+    // Form submission handlers
+    async function handleZoneSubmit(e) {
+        e.preventDefault();
+        
+        const formData = {
+            name: document.getElementById('zone-name').value,
+            type: document.getElementById('zone-type').value,
+            countries: document.getElementById('zone-countries').value,
+            base_rate: parseFloat(document.getElementById('zone-base-rate').value),
+            per_kg_rate: parseFloat(document.getElementById('zone-per-kg-rate').value),
+            delivery_days: document.getElementById('zone-delivery-days').value,
+            status: document.getElementById('zone-status').value
+        };
+        
+        try {
+            showToast('Shipping zone created successfully', 'success');
+            closeZoneModal();
+            loadShippingZones();
+            
+        } catch (error) {
+            console.error('❌ Error creating zone:', error);
+            showToast('Error creating zone: ' + error.message, 'error');
+        }
+    }
+
+    async function handleCarrierSubmit(e) {
+        e.preventDefault();
+        
+        const formData = {
+            name: document.getElementById('carrier-name').value,
+            api_key: document.getElementById('carrier-api-key').value,
+            tracking_url: document.getElementById('carrier-tracking-url').value,
+            active: document.getElementById('carrier-active').checked
+        };
+        
+        try {
+            showToast('Carrier added successfully', 'success');
+            closeCarrierModal();
+            loadCarriers();
+            
+        } catch (error) {
+            console.error('❌ Error adding carrier:', error);
+            showToast('Error adding carrier: ' + error.message, 'error');
+        }
+    }
+
+    // Utility functions
+    function formatStatus(status) {
+        const statusMap = {
+            'active': 'Active',
+            'inactive': 'Inactive',
+            'pending': 'Pending'
+        };
+        return statusMap[status] || status;
+    }
+
+    function formatZoneType(type) {
+        const typeMap = {
+            'local': 'Local',
+            'regional': 'Regional',
+            'international': 'International'
+        };
+        return typeMap[type] || type;
+    }
+
+    function formatDate(dateString) {
+        if (!dateString) return 'N/A';
+        return new Date(dateString).toLocaleDateString();
+    }
+
+    function formatTimeAgo(dateString) {
+        if (!dateString) return 'Unknown';
+        
+        const now = new Date();
+        const date = new Date(dateString);
+        const diffInSeconds = Math.floor((now - date) / 1000);
+        
+        if (diffInSeconds < 60) return 'Just now';
+        if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+        if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+        return `${Math.floor(diffInSeconds / 86400)}d ago`;
+    }
+
+    function createEmptyState(type, title, description, actions = '') {
+        return `
+            <div class="text-center py-12">
+                <div class="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-${type === 'zones' ? 'map' : 'truck'} text-white/30 text-3xl"></i>
+                </div>
+                <h3 class="text-white text-xl font-semibold mb-2">${title}</h3>
+                <p class="text-white/60 mb-6 max-w-md mx-auto">${description}</p>
+                ${actions}
+            </div>
+        `;
+    }
+
+    function createErrorState(message, retry = null) {
+        return `
+            <div class="text-center py-12">
+                <div class="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-exclamation-triangle text-red-400 text-3xl"></i>
+                </div>
+                <h3 class="text-white text-xl font-semibold mb-2">Error Loading Data</h3>
+                <p class="text-white/60 mb-6 max-w-md mx-auto">${message}</p>
+                ${retry ? `<button onclick="${retry}" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg"><i class="fas fa-refresh mr-2"></i>Try Again</button>` : ''}
+            </div>
+        `;
+    }
+
+    function showToast(message, type = 'info') {
+        console.log(`[${type.toUpperCase()}] ${message}`);
+        
+        const toast = document.createElement('div');
+        toast.className = `fixed top-4 right-4 z-50 px-6 py-4 rounded-lg text-white ${
+            type === 'success' ? 'bg-green-500' : 
+            type === 'error' ? 'bg-red-500' : 
+            type === 'warning' ? 'bg-yellow-500' : 'bg-blue-500'
+        }`;
+        toast.textContent = message;
+        
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+
+    // Make functions globally available
+    window.switchTab = switchTab;
+    window.addShippingZone = addShippingZone;
+    window.closeZoneModal = closeZoneModal;
+    window.addCarrier = addCarrier;
+    window.closeCarrierModal = closeCarrierModal;
+    window.trackShipment = trackShipment;
+    window.trackDemo = trackDemo;
+    window.updateWeight = updateWeight;
+    window.calculateShipping = calculateShipping;
+    window.selectQuote = selectQuote;
+    window.refreshShipping = loadAllData;
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,948 @@
+/**
+ * User Journey Manager
+ * Manages complete user journeys from login to delivery confirmation
+ * Ensures seamless flow between Physical Products and Local Market modes
+ */
+
+class UserJourneyManager {
+  constructor() {
+    this.router = window.unifiedRouter;
+    this.currentJourney = null;
+    this.journeyState = {};
+    this.journeyDefinitions = this.initializeJourneyDefinitions();
+    this.init();
+  }
+
+  init() {
+    this.detectCurrentJourney();
+    this.setupJourneyTracking();
+    this.setupJourneyHelpers();
+    console.log('🛤️ User Journey Manager initialized');
+  }
+
+  initializeJourneyDefinitions() {
+    return {
+      // Complete buyer journey for marketplace
+      'buyer-marketplace': {
+        name: 'Buyer Marketplace Journey',
+        mode: 'marketplace',
+        steps: [
+          {
+            id: 'home',
+            name: 'Home Page',
+            route: 'home',
+            required: false,
+            description: 'Landing page with product discovery'
+          },
+          {
+            id: 'browse',
+            name: 'Browse Products',
+            route: 'public.product-list',
+            required: true,
+            description: 'Browse available products'
+          },
+          {
+            id: 'product-detail',
+            name: 'Product Details',
+            route: 'public.product-detail',
+            required: true,
+            description: 'View detailed product information'
+          },
+          {
+            id: 'add-to-cart',
+            name: 'Add to Cart',
+            route: 'buyer.cart',
+            required: true,
+            description: 'Add products to shopping cart',
+            action: 'addToCart'
+          },
+          {
+            id: 'login',
+            name: 'User Authentication',
+            route: 'auth.login',
+            required: true,
+            description: 'Login or register account',
+            condition: 'requiresAuth'
+          },
+          {
+            id: 'checkout',
+            name: 'Checkout Process',
+            route: 'buyer.checkout',
+            required: true,
+            description: 'Review order and enter shipping details'
+          },
+          {
+            id: 'payment',
+            name: 'Payment Method',
+            route: 'buyer.payment',
+            required: true,
+            description: 'Select and process payment'
+          },
+          {
+            id: 'order-confirmation',
+            name: 'Order Confirmation',
+            route: 'buyer.order-success',
+            required: true,
+            description: 'Confirm order placement'
+          },
+          {
+            id: 'order-tracking',
+            name: 'Order Tracking',
+            route: 'buyer.track-order',
+            required: false,
+            description: 'Track order status and delivery'
+          },
+          {
+            id: 'delivery-confirmation',
+            name: 'Delivery Confirmation',
+            route: 'buyer.orders',
+            required: false,
+            description: 'Confirm delivery and rate experience'
+          }
+        ]
+      },
+
+      // Complete buyer journey for local market
+      'buyer-local-market': {
+        name: 'Buyer Local Market Journey',
+        mode: 'local-market',
+        steps: [
+          {
+            id: 'home',
+            name: 'Local Market Home',
+            route: 'home',
+            required: false,
+            description: 'Local market landing page'
+          },
+          {
+            id: 'browse',
+            name: 'Browse Local Products',
+            route: 'public.product-list',
+            required: true,
+            description: 'Browse local/grocery products'
+          },
+          {
+            id: 'product-detail',
+            name: 'Product Details',
+            route: 'public.product-detail',
+            required: true,
+            description: 'View product details with local delivery info'
+          },
+          {
+            id: 'add-to-cart',
+            name: 'Add to Cart',
+            route: 'buyer.cart',
+            required: true,
+            description: 'Add products to cart with quantity selection',
+            action: 'addToCart'
+          },
+          {
+            id: 'login',
+            name: 'User Authentication',
+            route: 'auth.login',
+            required: true,
+            description: 'Login or register for fast delivery',
+            condition: 'requiresAuth'
+          },
+          {
+            id: 'location-selection',
+            name: 'Delivery Location',
+            route: 'buyer.checkout',
+            required: true,
+            description: 'Select delivery location and time slot',
+            action: 'selectLocation'
+          },
+          {
+            id: 'checkout',
+            name: 'Fast Checkout',
+            route: 'buyer.checkout',
+            required: true,
+            description: 'Quick checkout for local delivery'
+          },
+          {
+            id: 'payment',
+            name: 'Payment Method',
+            route: 'buyer.payment',
+            required: true,
+            description: 'Select payment method (mobile money, card, cash)'
+          },
+          {
+            id: 'order-confirmation',
+            name: 'Order Confirmation',
+            route: 'buyer.order-success',
+            required: true,
+            description: 'Confirm order with delivery time estimate'
+          },
+          {
+            id: 'agent-assignment',
+            name: 'Agent Assignment',
+            route: 'buyer.track-order',
+            required: false,
+            description: 'Agent assigned for delivery',
+            automatic: true
+          },
+          {
+            id: 'real-time-tracking',
+            name: 'Real-time Tracking',
+            route: 'buyer.track-order',
+            required: false,
+            description: 'Track agent location and delivery progress'
+          },
+          {
+            id: 'delivery-confirmation',
+            name: 'Delivery Confirmation',
+            route: 'buyer.orders',
+            required: true,
+            description: 'Confirm delivery and rate experience'
+          }
+        ]
+      },
+
+      // Seller journey
+      'seller-onboarding': {
+        name: 'Seller Onboarding Journey',
+        mode: 'both',
+        steps: [
+          {
+            id: 'registration',
+            name: 'Seller Registration',
+            route: 'auth.login-seller',
+            required: true,
+            description: 'Register as a seller'
+          },
+          {
+            id: 'verification',
+            name: 'Account Verification',
+            route: 'auth.verify-email',
+            required: true,
+            description: 'Verify email and phone number'
+          },
+          {
+            id: 'profile-setup',
+            name: 'Profile Setup',
+            route: 'seller.profile',
+            required: true,
+            description: 'Complete seller profile information'
+          },
+          {
+            id: 'business-setup',
+            name: 'Business Information',
+            route: 'seller.business-location',
+            required: true,
+            description: 'Add business details and location'
+          },
+          {
+            id: 'first-product',
+            name: 'Add First Product',
+            route: 'seller.add-product',
+            required: true,
+            description: 'Add first product to catalog'
+          },
+          {
+            id: 'dashboard-tour',
+            name: 'Dashboard Overview',
+            route: 'seller.dashboard',
+            required: false,
+            description: 'Learn about seller dashboard features'
+          }
+        ]
+      },
+
+      // Agent journey
+      'agent-onboarding': {
+        name: 'Agent Onboarding Journey',
+        mode: 'local-market',
+        steps: [
+          {
+            id: 'registration',
+            name: 'Agent Registration',
+            route: 'auth.login-agent',
+            required: true,
+            description: 'Register as a delivery agent'
+          },
+          {
+            id: 'verification',
+            name: 'Identity Verification',
+            route: 'agent.verification',
+            required: true,
+            description: 'Verify identity and documents'
+          },
+          {
+            id: 'profile-setup',
+            name: 'Profile Setup',
+            route: 'agent.profile',
+            required: true,
+            description: 'Complete agent profile'
+          },
+          {
+            id: 'location-setup',
+            name: 'Service Area',
+            route: 'agent.location-tracking',
+            required: true,
+            description: 'Set service area and availability'
+          },
+          {
+            id: 'first-delivery',
+            name: 'First Delivery',
+            route: 'agent.orders',
+            required: false,
+            description: 'Complete first delivery assignment'
+          }
+        ]
+      },
+
+      // Order fulfillment journey (seller perspective)
+      'order-fulfillment': {
+        name: 'Order Fulfillment Journey',
+        mode: 'both',
+        steps: [
+          {
+            id: 'new-order',
+            name: 'New Order Notification',
+            route: 'seller.orders',
+            required: true,
+            description: 'Receive and acknowledge new order'
+          },
+          {
+            id: 'order-processing',
+            name: 'Process Order',
+            route: 'seller.order-detail',
+            required: true,
+            description: 'Review order details and prepare items'
+          },
+          {
+            id: 'inventory-check',
+            name: 'Inventory Check',
+            route: 'seller.inventory',
+            required: true,
+            description: 'Verify product availability'
+          },
+          {
+            id: 'packaging',
+            name: 'Package Order',
+            route: 'seller.order-detail',
+            required: true,
+            description: 'Package items for shipping/delivery',
+            action: 'markPacked'
+          },
+          {
+            id: 'shipping-label',
+            name: 'Shipping/Delivery Setup',
+            route: 'seller.order-detail',
+            required: true,
+            description: 'Generate shipping label or assign to agent'
+          },
+          {
+            id: 'dispatch',
+            name: 'Dispatch Order',
+            route: 'seller.orders',
+            required: true,
+            description: 'Mark order as dispatched',
+            action: 'markDispatched'
+          },
+          {
+            id: 'delivery-tracking',
+            name: 'Track Delivery',
+            route: 'seller.order-detail',
+            required: false,
+            description: 'Monitor delivery progress'
+          },
+          {
+            id: 'completion',
+            name: 'Order Completion',
+            route: 'seller.orders',
+            required: true,
+            description: 'Confirm delivery and process payment'
+          }
+        ]
+      },
+
+      // Delivery journey (agent perspective)
+      'delivery-execution': {
+        name: 'Delivery Execution Journey',
+        mode: 'local-market',
+        steps: [
+          {
+            id: 'order-assignment',
+            name: 'Order Assignment',
+            route: 'agent.orders',
+            required: true,
+            description: 'Receive delivery assignment'
+          },
+          {
+            id: 'pickup-location',
+            name: 'Navigate to Pickup',
+            route: 'agent.pickups',
+            required: true,
+            description: 'Navigate to seller/warehouse location'
+          },
+          {
+            id: 'pickup-confirmation',
+            name: 'Confirm Pickup',
+            route: 'agent.pickups-detail',
+            required: true,
+            description: 'Confirm item pickup from seller',
+            action: 'confirmPickup'
+          },
+          {
+            id: 'delivery-navigation',
+            name: 'Navigate to Customer',
+            route: 'agent.deliveries',
+            required: true,
+            description: 'Navigate to customer delivery location'
+          },
+          {
+            id: 'customer-contact',
+            name: 'Contact Customer',
+            route: 'agent.deliveries-detail',
+            required: false,
+            description: 'Contact customer for delivery coordination'
+          },
+          {
+            id: 'delivery-confirmation',
+            name: 'Confirm Delivery',
+            route: 'agent.deliveries-detail',
+            required: true,
+            description: 'Confirm successful delivery',
+            action: 'confirmDelivery'
+          },
+          {
+            id: 'payment-collection',
+            name: 'Collect Payment',
+            route: 'agent.deliveries-detail',
+            required: false,
+            description: 'Collect cash payment if applicable',
+            condition: 'cashOnDelivery'
+          },
+          {
+            id: 'completion',
+            name: 'Complete Delivery',
+            route: 'agent.earnings',
+            required: true,
+            description: 'Mark delivery as complete and update earnings'
+          }
+        ]
+      }
+    };
+  }
+
+  detectCurrentJourney() {
+    const path = window.location.pathname;
+    const user = this.getCurrentUser();
+    const mode = this.router?.getMode() || 'marketplace';
+
+    // Detect journey based on current context
+    if (user.isAuthenticated) {
+      switch (user.role) {
+        case 'buyer':
+          if (path.includes('/cart') || path.includes('/checkout') || path.includes('/payment')) {
+            this.currentJourney = mode === 'local-market' ? 'buyer-local-market' : 'buyer-marketplace';
+          }
+          break;
+        case 'seller':
+          if (path.includes('/add-product') || path.includes('/profile')) {
+            this.currentJourney = 'seller-onboarding';
+          } else if (path.includes('/orders') || path.includes('/order-detail')) {
+            this.currentJourney = 'order-fulfillment';
+          }
+          break;
+        case 'agent':
+          if (path.includes('/verification') || path.includes('/profile')) {
+            this.currentJourney = 'agent-onboarding';
+          } else if (path.includes('/orders') || path.includes('/deliveries')) {
+            this.currentJourney = 'delivery-execution';
+          }
+          break;
+      }
+    } else {
+      // Guest user browsing
+      if (path.includes('/product') || path.includes('/cart')) {
+        this.currentJourney = mode === 'local-market' ? 'buyer-local-market' : 'buyer-marketplace';
+      }
+    }
+
+    if (this.currentJourney) {
+      this.loadJourneyState();
+      console.log(`🛤️ Detected journey: ${this.currentJourney}`);
+    }
+  }
+
+  getCurrentUser() {
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const token = localStorage.getItem('token');
+      return {
+        ...user,
+        isAuthenticated: !!token,
+        role: user.role || 'public'
+      };
+    } catch {
+      return { isAuthenticated: false, role: 'public' };
+    }
+  }
+
+  startJourney(journeyId, initialData = {}) {
+    if (!this.journeyDefinitions[journeyId]) {
+      console.error(`Journey not found: ${journeyId}`);
+      return false;
+    }
+
+    this.currentJourney = journeyId;
+    this.journeyState = {
+      journeyId,
+      startTime: Date.now(),
+      currentStep: 0,
+      completedSteps: [],
+      data: initialData,
+      mode: this.journeyDefinitions[journeyId].mode
+    };
+
+    this.saveJourneyState();
+    this.showJourneyProgress();
+    
+    console.log(`🚀 Started journey: ${journeyId}`);
+    return true;
+  }
+
+  getCurrentStep() {
+    if (!this.currentJourney || !this.journeyState) return null;
+    
+    const journey = this.journeyDefinitions[this.currentJourney];
+    return journey.steps[this.journeyState.currentStep];
+  }
+
+  getNextStep() {
+    if (!this.currentJourney || !this.journeyState) return null;
+    
+    const journey = this.journeyDefinitions[this.currentJourney];
+    const nextIndex = this.journeyState.currentStep + 1;
+    
+    return nextIndex < journey.steps.length ? journey.steps[nextIndex] : null;
+  }
+
+  completeCurrentStep(data = {}) {
+    if (!this.currentJourney || !this.journeyState) return false;
+
+    const currentStep = this.getCurrentStep();
+    if (!currentStep) return false;
+
+    // Mark step as completed
+    this.journeyState.completedSteps.push({
+      stepId: currentStep.id,
+      completedAt: Date.now(),
+      data: data
+    });
+
+    // Update journey data
+    this.journeyState.data = { ...this.journeyState.data, ...data };
+
+    // Move to next step
+    this.journeyState.currentStep++;
+
+    this.saveJourneyState();
+    this.updateJourneyProgress();
+
+    console.log(`✅ Completed step: ${currentStep.name}`);
+
+    // Check if journey is complete
+    const journey = this.journeyDefinitions[this.currentJourney];
+    if (this.journeyState.currentStep >= journey.steps.length) {
+      this.completeJourney();
+    } else {
+      // Auto-navigate to next step if required
+      const nextStep = this.getCurrentStep();
+      if (nextStep && nextStep.required) {
+        this.navigateToStep(nextStep);
+      }
+    }
+
+    return true;
+  }
+
+  navigateToStep(step) {
+    if (!step) return false;
+
+    // Check conditions
+    if (step.condition && !this.checkCondition(step.condition)) {
+      console.log(`Condition not met for step: ${step.name}`);
+      return false;
+    }
+
+    // Navigate using router
+    if (this.router) {
+      this.router.navigate(step.route);
+    } else {
+      // Fallback navigation
+      window.location.href = this.getStepUrl(step);
+    }
+
+    return true;
+  }
+
+  getStepUrl(step) {
+    // Convert route to URL
+    const routeMap = {
+      'home': '/',
+      'public.product-list': '/public/product-list.html',
+      'public.product-detail': '/public/product-detail.html',
+      'buyer.cart': '/buyer/cart.html',
+      'buyer.checkout': '/buyer/checkout.html',
+      'buyer.payment': '/buyer/payment.html',
+      'buyer.order-success': '/buyer/order-success.html',
+      'buyer.track-order': '/buyer/track-order.html',
+      'buyer.orders': '/buyer/orders.html',
+      'auth.login': '/auth/auth-buyer.html',
+      'auth.login-seller': '/auth/auth-seller.html',
+      'auth.login-agent': '/auth/auth-agent.html'
+    };
+
+    return routeMap[step.route] || '/';
+  }
+
+  checkCondition(condition) {
+    const user = this.getCurrentUser();
+    
+    switch (condition) {
+      case 'requiresAuth':
+        return !user.isAuthenticated;
+      case 'cashOnDelivery':
+        return this.journeyState.data.paymentMethod === 'cash';
+      default:
+        return true;
+    }
+  }
+
+  completeJourney() {
+    if (!this.currentJourney) return;
+
+    const journey = this.journeyDefinitions[this.currentJourney];
+    const completionTime = Date.now();
+    const duration = completionTime - this.journeyState.startTime;
+
+    console.log(`🎉 Journey completed: ${journey.name} (${duration}ms)`);
+
+    // Save completion data
+    const completionData = {
+      journeyId: this.currentJourney,
+      completedAt: completionTime,
+      duration: duration,
+      stepsCompleted: this.journeyState.completedSteps.length,
+      totalSteps: journey.steps.length,
+      data: this.journeyState.data
+    };
+
+    this.saveJourneyCompletion(completionData);
+    this.showJourneyCompletion(completionData);
+
+    // Clear current journey
+    this.currentJourney = null;
+    this.journeyState = {};
+    this.clearJourneyState();
+  }
+
+  skipToStep(stepId) {
+    if (!this.currentJourney) return false;
+
+    const journey = this.journeyDefinitions[this.currentJourney];
+    const stepIndex = journey.steps.findIndex(step => step.id === stepId);
+
+    if (stepIndex === -1) return false;
+
+    this.journeyState.currentStep = stepIndex;
+    this.saveJourneyState();
+    this.updateJourneyProgress();
+
+    const step = journey.steps[stepIndex];
+    this.navigateToStep(step);
+
+    return true;
+  }
+
+  getJourneyProgress() {
+    if (!this.currentJourney || !this.journeyState) return null;
+
+    const journey = this.journeyDefinitions[this.currentJourney];
+    const totalSteps = journey.steps.length;
+    const completedSteps = this.journeyState.completedSteps.length;
+    const currentStep = this.journeyState.currentStep;
+
+    return {
+      journeyName: journey.name,
+      totalSteps,
+      completedSteps,
+      currentStep: currentStep + 1,
+      progress: Math.round((completedSteps / totalSteps) * 100),
+      currentStepName: journey.steps[currentStep]?.name || 'Complete'
+    };
+  }
+
+  showJourneyProgress() {
+    const progress = this.getJourneyProgress();
+    if (!progress) return;
+
+    // Create or update progress indicator
+    let progressBar = document.getElementById('journey-progress');
+    if (!progressBar) {
+      progressBar = document.createElement('div');
+      progressBar.id = 'journey-progress';
+      progressBar.className = 'fixed top-20 left-0 right-0 bg-white border-b border-gray-200 px-4 py-2 z-30';
+      document.body.appendChild(progressBar);
+    }
+
+    progressBar.innerHTML = `
+      <div class="max-w-7xl mx-auto">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-sm font-medium text-gray-700">${progress.journeyName}</span>
+          <span class="text-sm text-gray-500">${progress.currentStep}/${progress.totalSteps}</span>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-2">
+          <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: ${progress.progress}%"></div>
+        </div>
+        <div class="mt-1 text-xs text-gray-600">${progress.currentStepName}</div>
+      </div>
+    `;
+  }
+
+  updateJourneyProgress() {
+    this.showJourneyProgress();
+  }
+
+  hideJourneyProgress() {
+    const progressBar = document.getElementById('journey-progress');
+    if (progressBar) {
+      progressBar.remove();
+    }
+  }
+
+  showJourneyCompletion(completionData) {
+    // Show completion notification
+    const notification = document.createElement('div');
+    notification.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+    notification.innerHTML = `
+      <div class="bg-white rounded-2xl p-8 max-w-md mx-4 text-center">
+        <div class="text-6xl mb-4">🎉</div>
+        <h2 class="text-2xl font-bold text-gray-900 mb-2">Journey Complete!</h2>
+        <p class="text-gray-600 mb-4">You've successfully completed the ${completionData.journeyId.replace('-', ' ')} journey.</p>
+        <div class="text-sm text-gray-500 mb-6">
+          Completed in ${Math.round(completionData.duration / 1000)} seconds
+        </div>
+        <button onclick="this.parentNode.parentNode.remove()" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
+          Continue
+        </button>
+      </div>
+    `;
+
+    document.body.appendChild(notification);
+
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.remove();
+      }
+    }, 5000);
+  }
+
+  setupJourneyTracking() {
+    // Track page changes
+    let lastPath = window.location.pathname;
+    
+    const checkPathChange = () => {
+      const currentPath = window.location.pathname;
+      if (currentPath !== lastPath) {
+        lastPath = currentPath;
+        this.handlePageChange(currentPath);
+      }
+    };
+
+    // Check for path changes
+    setInterval(checkPathChange, 1000);
+
+    // Listen for router navigation
+    window.addEventListener('modechange', () => {
+      this.detectCurrentJourney();
+    });
+
+    // Listen for user authentication changes
+    window.addEventListener('userchange', () => {
+      this.detectCurrentJourney();
+    });
+  }
+
+  handlePageChange(path) {
+    if (!this.currentJourney) return;
+
+    const currentStep = this.getCurrentStep();
+    if (!currentStep) return;
+
+    // Check if current page matches expected step
+    const expectedUrl = this.getStepUrl(currentStep);
+    if (path === expectedUrl || path.includes(expectedUrl.replace('.html', ''))) {
+      // User is on the correct page for current step
+      this.trackStepVisit(currentStep);
+    }
+  }
+
+  trackStepVisit(step) {
+    // Track that user visited this step
+    console.log(`📍 Visited step: ${step.name}`);
+    
+    // Auto-complete certain steps
+    if (step.automatic) {
+      setTimeout(() => {
+        this.completeCurrentStep();
+      }, 2000);
+    }
+  }
+
+  setupJourneyHelpers() {
+    // Add journey helper methods to window
+    window.journeyManager = {
+      start: (journeyId, data) => this.startJourney(journeyId, data),
+      complete: (data) => this.completeCurrentStep(data),
+      skip: (stepId) => this.skipToStep(stepId),
+      progress: () => this.getJourneyProgress(),
+      current: () => this.getCurrentStep()
+    };
+
+    // Add journey action handlers
+    document.addEventListener('click', (e) => {
+      const journeyAction = e.target.closest('[data-journey-action]');
+      if (journeyAction) {
+        const action = journeyAction.dataset.journeyAction;
+        const data = journeyAction.dataset.journeyData ? 
+          JSON.parse(journeyAction.dataset.journeyData) : {};
+        
+        this.handleJourneyAction(action, data);
+      }
+    });
+  }
+
+  handleJourneyAction(action, data) {
+    switch (action) {
+      case 'addToCart':
+        this.handleAddToCart(data);
+        break;
+      case 'selectLocation':
+        this.handleLocationSelection(data);
+        break;
+      case 'markPacked':
+        this.handleMarkPacked(data);
+        break;
+      case 'markDispatched':
+        this.handleMarkDispatched(data);
+        break;
+      case 'confirmPickup':
+        this.handleConfirmPickup(data);
+        break;
+      case 'confirmDelivery':
+        this.handleConfirmDelivery(data);
+        break;
+      default:
+        console.log(`Unknown journey action: ${action}`);
+    }
+  }
+
+  handleAddToCart(data) {
+    // Handle add to cart action
+    console.log('🛒 Adding to cart:', data);
+    
+    // Start buyer journey if not already started
+    if (!this.currentJourney) {
+      const mode = this.router?.getMode() || 'marketplace';
+      const journeyId = mode === 'local-market' ? 'buyer-local-market' : 'buyer-marketplace';
+      this.startJourney(journeyId, data);
+    }
+    
+    this.completeCurrentStep({ product: data });
+  }
+
+  handleLocationSelection(data) {
+    console.log('📍 Location selected:', data);
+    this.completeCurrentStep({ location: data });
+  }
+
+  handleMarkPacked(data) {
+    console.log('📦 Order packed:', data);
+    this.completeCurrentStep({ packed: true, ...data });
+  }
+
+  handleMarkDispatched(data) {
+    console.log('🚚 Order dispatched:', data);
+    this.completeCurrentStep({ dispatched: true, ...data });
+  }
+
+  handleConfirmPickup(data) {
+    console.log('✅ Pickup confirmed:', data);
+    this.completeCurrentStep({ pickedUp: true, ...data });
+  }
+
+  handleConfirmDelivery(data) {
+    console.log('🎯 Delivery confirmed:', data);
+    this.completeCurrentStep({ delivered: true, ...data });
+  }
+
+  // State management
+  saveJourneyState() {
+    if (this.journeyState) {
+      localStorage.setItem('currentJourney', JSON.stringify(this.journeyState));
+    }
+  }
+
+  loadJourneyState() {
+    try {
+      const saved = localStorage.getItem('currentJourney');
+      if (saved) {
+        this.journeyState = JSON.parse(saved);
+      }
+    } catch (e) {
+      console.warn('Failed to load journey state:', e);
+      this.journeyState = {};
+    }
+  }
+
+  clearJourneyState() {
+    localStorage.removeItem('currentJourney');
+  }
+
+  saveJourneyCompletion(completionData) {
+    try {
+      const completions = JSON.parse(localStorage.getItem('completedJourneys') || '[]');
+      completions.push(completionData);
+      localStorage.setItem('completedJourneys', JSON.stringify(completions));
+    } catch (e) {
+      console.warn('Failed to save journey completion:', e);
+    }
+  }
+
+  // Public API
+  getAvailableJourneys() {
+    return Object.keys(this.journeyDefinitions);
+  }
+
+  getJourneyDefinition(journeyId) {
+    return this.journeyDefinitions[journeyId];
+  }
+
+  isJourneyActive() {
+    return !!this.currentJourney;
+  }
+
+  getCurrentJourneyId() {
+    return this.currentJourney;
+  }
+
+  resetJourney() {
+    this.currentJourney = null;
+    this.journeyState = {};
+    this.clearJourneyState();
+    this.hideJourneyProgress();
+  }
+}
+
+// Create global instance
+window.userJourneyManager = new UserJourneyManager();
+
+// Export for module systems
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = UserJourneyManager;
+}

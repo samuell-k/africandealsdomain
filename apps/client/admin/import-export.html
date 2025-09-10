@@ -1,0 +1,1708 @@
+<!DOCTYPE html>
+<html lang="en" class="admin-page">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Import/Export Management | Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="admin-auth-check.js"></script>
+    <script src="admin-utils.js"></script>
+    <style>
+        :root {
+            --primary-color: #080b3b;
+            --secondary-color: #1e40af;
+            --accent-color: #3b82f6;
+        }
+        
+        .glass-morphism {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        }
+        .sidebar {
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .nav-item {
+            transition: all 0.3s ease;
+        }
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+        .nav-item.active {
+            background: rgba(255, 255, 255, 0.2);
+            border-left: 3px solid #3b82f6;
+        }
+        .loading-spinner {
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 2px solid #3b82f6;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .form-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+        }
+        .import-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .import-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        .export-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .export-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        .status-badge {
+            @apply px-3 py-1 rounded-full text-xs font-medium;
+        }
+        .status-completed { @apply bg-green-500/20 text-green-400; }
+        .status-processing { @apply bg-yellow-500/20 text-yellow-400; }
+        .status-failed { @apply bg-red-500/20 text-red-400; }
+        .status-pending { @apply bg-gray-500/20 text-gray-400; }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .tab-btn {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .tab-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .tab-btn.active {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: var(--accent-color);
+        }
+        .live-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #22c55e;
+            display: inline-block;
+            margin-right: 6px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .real-time-badge {
+            background: linear-gradient(45deg, #22c55e, #16a34a);
+            color: white;
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 1rem;
+            font-weight: 600;
+        }
+        .drag-drop-area {
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .drag-drop-area.drag-over {
+            border-color: var(--accent-color);
+            background: rgba(59, 130, 246, 0.1);
+        }
+        .progress-bar {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            height: 8px;
+        }
+        .progress-fill {
+            background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+        .data-type-icon {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            border-radius: 12px;
+            margin-right: 1rem;
+        }
+        .mapping-field {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        .field-preview {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            padding: 0.75rem;
+            font-family: monospace;
+            font-size: 0.875rem;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .validation-error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #f87171;
+            padding: 0.5rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
+        .validation-success {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: #4ade80;
+            padding: 0.5rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
+        .history-item {
+            transition: all 0.3s ease;
+        }
+        .history-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .format-badge {
+            @apply px-2 py-1 rounded text-xs font-medium;
+        }
+        .format-csv { @apply bg-green-500/20 text-green-400; }
+        .format-json { @apply bg-blue-500/20 text-blue-400; }
+        .format-xlsx { @apply bg-yellow-500/20 text-yellow-400; }
+        .format-xml { @apply bg-purple-500/20 text-purple-400; }
+    </style>
+</head>
+
+<body class="gradient-bg min-h-screen">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <div class="sidebar w-64 lg:w-80 flex-shrink-0 hidden md:flex flex-col">
+            <div class="p-6 border-b border-white/10">
+                <h2 class="text-xl font-bold text-white">Admin Panel</h2>
+            </div>
+            
+            <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+                <a href="dashboard.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="user-management.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-users"></i>
+                    <span>User Management</span>
+                </a>
+                <a href="manual-payment-approval.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-credit-card"></i>
+                    <span>Payment Approval</span>
+                </a>
+                <a href="payment-credentials.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-wallet"></i>
+                    <span>Payment Credentials</span>
+                </a>
+                <a href="products.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-box"></i>
+                    <span>Products</span>
+                </a>
+                <a href="order-management.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Orders</span>
+                </a>
+                <a href="agents.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-user-tie"></i>
+                    <span>Agents</span>
+                </a>
+                <a href="categories.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-tags"></i>
+                    <span>Categories</span>
+                </a>
+                <a href="brands.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-trademark"></i>
+                    <span>Brands</span>
+                </a>
+                <a href="reviews.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-star"></i>
+                    <span>Reviews</span>
+                </a>
+                <a href="sellers.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-store"></i>
+                    <span>Sellers</span>
+                </a>
+                <a href="support-tickets.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-ticket-alt"></i>
+                    <span>Support Tickets</span>
+                </a>
+                <a href="logs.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-file-alt"></i>
+                    <span>System Logs</span>
+                </a>
+                <a href="promotions.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-tags"></i>
+                    <span>Promotions</span>
+                </a>
+                <a href="cms-management.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-edit"></i>
+                    <span>CMS Management</span>
+                </a>
+                <a href="notification-management.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-bell"></i>
+                    <span>Notifications</span>
+                </a>
+                <a href="backup-restore.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-database"></i>
+                    <span>Backup & Restore</span>
+                </a>
+                <a href="security-api.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Security & API</span>
+                </a>
+                <a href="performance-analytics.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Performance & Analytics</span>
+                </a>
+                <a href="system-integrations.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-plug"></i>
+                    <span>System Integrations</span>
+                </a>
+                <a href="file-manager.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-folder-open"></i>
+                    <span>File Manager</span>
+                </a>
+                <a href="email-templates.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-envelope-open-text"></i>
+                    <span>Email Templates</span>
+                </a>
+                <a href="tax-currency-management.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-coins"></i>
+                    <span>Tax & Currency</span>
+                </a>
+                <a href="shipping-delivery.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-truck"></i>
+                    <span>Shipping & Delivery</span>
+                </a>
+                <a href="import-export.html" class="nav-item active flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span>Import/Export</span>
+                </a>
+                <a href="reports.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Reports</span>
+                </a>
+                <a href="settings.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
+            
+            <!-- Header -->
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 space-y-4 sm:space-y-0">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-white mb-2 flex items-center">
+                        Import/Export Management
+                        <span class="live-indicator ml-3"></span>
+                        <span class="real-time-badge ml-2">Live Processing</span>
+                    </h1>
+                    <p class="text-white/70">Import and export data across all platform entities with advanced mapping and validation</p>
+                </div>
+                <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                    <button onclick="downloadTemplates()" class="bg-green-500 hover:bg-green-600 text-white px-3 sm:px-4 py-2 rounded-lg transition text-sm flex items-center justify-center">
+                        <i class="fas fa-download mr-2"></i>Templates
+                    </button>
+                    <button onclick="openImportModal()" class="bg-blue-500 hover:bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-lg transition text-sm flex items-center justify-center">
+                        <i class="fas fa-upload mr-2"></i>Import Data
+                    </button>
+                    <button onclick="refreshJobs()" class="bg-purple-500 hover:bg-purple-600 text-white px-3 sm:px-4 py-2 rounded-lg transition text-sm flex items-center justify-center">
+                        <i class="fas fa-refresh mr-2"></i>Refresh
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
+                <div class="glass-morphism rounded-xl p-4 sm:p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-white/70 text-sm">Import Jobs</h3>
+                        <div class="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-upload text-blue-400"></i>
+                        </div>
+                    </div>
+                    <p class="text-white text-2xl font-bold" id="import-jobs">24</p>
+                    <p class="text-white/60 text-xs">This month</p>
+                </div>
+                
+                <div class="glass-morphism rounded-xl p-4 sm:p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-white/70 text-sm">Export Jobs</h3>
+                        <div class="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-download text-green-400"></i>
+                        </div>
+                    </div>
+                    <p class="text-white text-2xl font-bold" id="export-jobs">18</p>
+                    <p class="text-white/60 text-xs">This month</p>
+                </div>
+                
+                <div class="glass-morphism rounded-xl p-4 sm:p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-white/70 text-sm">Records Processed</h3>
+                        <div class="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-database text-yellow-400"></i>
+                        </div>
+                    </div>
+                    <p class="text-white text-2xl font-bold" id="records-processed">15.2K</p>
+                    <p class="text-white/60 text-xs">Success rate: 98.5%</p>
+                </div>
+                
+                <div class="glass-morphism rounded-xl p-4 sm:p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-white/70 text-sm">Active Jobs</h3>
+                        <div class="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-cogs text-purple-400"></i>
+                        </div>
+                    </div>
+                    <p class="text-white text-2xl font-bold" id="active-jobs">3</p>
+                    <p class="text-white/60 text-xs">Currently running</p>
+                </div>
+            </div>
+
+            <!-- Tab Navigation -->
+            <div class="flex flex-wrap gap-2 mb-6">
+                <div class="tab-btn active" data-tab="import" onclick="switchTab('import')">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-upload"></i>
+                        <span class="text-white font-medium">Import Data</span>
+                    </div>
+                </div>
+                <div class="tab-btn" data-tab="export" onclick="switchTab('export')">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-download"></i>
+                        <span class="text-white font-medium">Export Data</span>
+                    </div>
+                </div>
+                <div class="tab-btn" data-tab="mapping" onclick="switchTab('mapping')">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-sitemap"></i>
+                        <span class="text-white font-medium">Field Mapping</span>
+                    </div>
+                </div>
+                <div class="tab-btn" data-tab="history" onclick="switchTab('history')">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-history"></i>
+                        <span class="text-white font-medium">Job History</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Contents -->
+            
+            <!-- Import Tab -->
+            <div id="import-tab" class="tab-content active">
+                <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                    
+                    <!-- Data Types -->
+                    <div class="xl:col-span-2">
+                        <div class="glass-morphism rounded-xl p-6">
+                            <h3 class="text-xl font-bold text-white mb-4">Import Data Types</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="import-types-container">
+                                <!-- Will be populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Upload Area -->
+                    <div>
+                        <div class="glass-morphism rounded-xl p-6">
+                            <h3 class="text-xl font-bold text-white mb-4">Upload Files</h3>
+                            
+                            <div class="drag-drop-area p-8 text-center rounded-lg mb-4" 
+                                 ondrop="handleFileDrop(event)" 
+                                 ondragover="handleDragOver(event)" 
+                                 ondragleave="handleDragLeave(event)">
+                                <div class="text-white/70">
+                                    <i class="fas fa-cloud-upload-alt text-4xl mb-4"></i>
+                                    <h4 class="text-lg font-medium mb-2">Drop Files Here</h4>
+                                    <p class="text-sm mb-4">or click to browse</p>
+                                    <input type="file" id="file-input" multiple accept=".csv,.json,.xlsx,.xml" 
+                                           hidden onchange="handleFileSelect(event)">
+                                    <button onclick="document.getElementById('file-input').click()" 
+                                            class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">
+                                        <i class="fas fa-folder-open mr-2"></i>Browse Files
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="text-white/60 text-xs">
+                                <p class="mb-1"><strong>Supported formats:</strong></p>
+                                <p>CSV, JSON, XLSX, XML</p>
+                                <p class="mt-2"><strong>Max file size:</strong> 50MB</p>
+                            </div>
+                        </div>
+
+                        <!-- Active Imports -->
+                        <div class="glass-morphism rounded-xl p-6 mt-6">
+                            <h3 class="text-lg font-bold text-white mb-4">Active Imports</h3>
+                            <div id="active-imports" class="space-y-3">
+                                <div class="text-center text-white/60 py-4">
+                                    <i class="fas fa-inbox text-2xl mb-2"></i>
+                                    <p>No active imports</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Export Tab -->
+            <div id="export-tab" class="tab-content">
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    <div id="export-types-container">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Field Mapping Tab -->
+            <div id="mapping-tab" class="tab-content">
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                    
+                    <!-- Mapping Configuration -->
+                    <div class="glass-morphism rounded-xl p-6">
+                        <h3 class="text-xl font-bold text-white mb-4">Field Mapping Configuration</h3>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-white/70 text-sm mb-2">Data Type</label>
+                                <select id="mapping-data-type" class="w-full p-3 rounded-lg form-input" onchange="loadFieldMapping()">
+                                    <option value="">Select Data Type</option>
+                                    <option value="products">Products</option>
+                                    <option value="users">Users</option>
+                                    <option value="orders">Orders</option>
+                                    <option value="categories">Categories</option>
+                                </select>
+                            </div>
+
+                            <div id="field-mappings" class="space-y-3">
+                                <!-- Field mappings will be loaded here -->
+                            </div>
+
+                            <div class="flex space-x-2 pt-4 border-t border-white/10">
+                                <button onclick="saveFieldMapping()" 
+                                        class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm">
+                                    <i class="fas fa-save mr-2"></i>Save Mapping
+                                </button>
+                                <button onclick="resetFieldMapping()" 
+                                        class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg text-sm">
+                                    <i class="fas fa-undo mr-2"></i>Reset
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mapping Preview -->
+                    <div class="glass-morphism rounded-xl p-6">
+                        <h3 class="text-xl font-bold text-white mb-4">Mapping Preview</h3>
+                        
+                        <div id="mapping-preview" class="field-preview">
+                            <div class="text-center text-white/60 py-8">
+                                <i class="fas fa-sitemap text-3xl mb-3"></i>
+                                <p>Select data type to preview field mappings</p>
+                            </div>
+                        </div>
+
+                        <div id="validation-results" class="mt-4">
+                            <!-- Validation results will appear here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- History Tab -->
+            <div id="history-tab" class="tab-content">
+                <div class="glass-morphism rounded-xl overflow-hidden">
+                    <div class="p-4 sm:p-6 border-b border-white/10">
+                        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-3 sm:space-y-0">
+                            <h3 class="text-lg sm:text-xl font-bold text-white">Import/Export History</h3>
+                            <div class="flex space-x-2">
+                                <select id="history-filter" class="form-input px-3 py-2 rounded-lg text-sm" onchange="filterHistory()">
+                                    <option value="">All Jobs</option>
+                                    <option value="import">Import Only</option>
+                                    <option value="export">Export Only</option>
+                                    <option value="completed">Completed</option>
+                                    <option value="failed">Failed</option>
+                                </select>
+                                <button onclick="exportHistory()" class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg text-sm">
+                                    <i class="fas fa-download mr-2"></i>Export History
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="history-container" class="p-6">
+                        <div class="text-center py-8">
+                            <div class="loading-spinner mx-auto mb-4"></div>
+                            <p class="text-white/70">Loading job history...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Modal -->
+    <div id="import-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+        <div class="glass-morphism p-6 sm:p-8 rounded-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl sm:text-2xl font-bold text-white">Import Configuration</h2>
+                <button onclick="closeImportModal()" class="text-white/70 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <form id="import-form" class="space-y-4">
+                <div>
+                    <label class="block text-white/70 text-sm mb-2">Import Type *</label>
+                    <select id="import-type" required class="w-full p-3 rounded-lg form-input">
+                        <option value="">Select Import Type</option>
+                        <option value="products">Products</option>
+                        <option value="users">Users</option>
+                        <option value="orders">Orders</option>
+                        <option value="categories">Categories</option>
+                        <option value="brands">Brands</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-white/70 text-sm mb-2">File Format *</label>
+                    <select id="import-format" required class="w-full p-3 rounded-lg form-input">
+                        <option value="">Select Format</option>
+                        <option value="csv">CSV</option>
+                        <option value="json">JSON</option>
+                        <option value="xlsx">Excel (XLSX)</option>
+                        <option value="xml">XML</option>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-white/70 text-sm mb-2">Delimiter (CSV only)</label>
+                        <select id="csv-delimiter" class="w-full p-3 rounded-lg form-input">
+                            <option value=",">Comma (,)</option>
+                            <option value=";">Semicolon (;)</option>
+                            <option value="|">Pipe (|)</option>
+                            <option value="\t">Tab</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-white/70 text-sm mb-2">Encoding</label>
+                        <select id="file-encoding" class="w-full p-3 rounded-lg form-input">
+                            <option value="utf-8">UTF-8</option>
+                            <option value="iso-8859-1">ISO-8859-1</option>
+                            <option value="windows-1252">Windows-1252</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <label class="block text-white/70 text-sm">Import Options</label>
+                    
+                    <label class="flex items-center space-x-2">
+                        <input type="checkbox" id="skip-duplicates" checked class="rounded">
+                        <span class="text-white text-sm">Skip duplicate records</span>
+                    </label>
+                    
+                    <label class="flex items-center space-x-2">
+                        <input type="checkbox" id="validate-data" checked class="rounded">
+                        <span class="text-white text-sm">Validate data before import</span>
+                    </label>
+                    
+                    <label class="flex items-center space-x-2">
+                        <input type="checkbox" id="create-backup" class="rounded">
+                        <span class="text-white text-sm">Create backup before import</span>
+                    </label>
+                    
+                    <label class="flex items-center space-x-2">
+                        <input type="checkbox" id="send-notification" class="rounded">
+                        <span class="text-white text-sm">Send completion notification</span>
+                    </label>
+                </div>
+
+                <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 pt-6 border-t border-white/10">
+                    <button type="submit" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">
+                        <i class="fas fa-upload mr-2"></i>Start Import
+                    </button>
+                    <button type="button" onclick="validateImport()" 
+                            class="px-6 py-3 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg">
+                        <i class="fas fa-check mr-2"></i>Validate Only
+                    </button>
+                    <button type="button" onclick="closeImportModal()" 
+                            class="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+<script>
+    // Global variables
+    let currentTab = 'import';
+    let importHistory = [];
+    let activeJobs = [];
+    let fieldMappings = {};
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('🔄 Import/Export Management initializing...');
+        
+        // Check authentication first
+        if (!checkAuthentication()) return;
+        
+        // Load data
+        loadAllData();
+        setupEventListeners();
+        
+        console.log('✅ Import/Export Management initialized');
+    });
+
+    // Check authentication
+    function checkAuthentication() {
+        const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
+        const userRole = localStorage.getItem('userRole');
+        
+        if (!token) {
+            console.log('❌ No authentication token found');
+            window.location.href = '/auth/auth-admin.html';
+            return false;
+        }
+        
+        if (userRole !== 'admin') {
+            console.log('❌ Insufficient permissions');
+            window.location.href = '/auth/auth-admin.html';
+            return false;
+        }
+        
+        console.log('✅ Authentication verified');
+        return true;
+    }
+
+    // Setup event listeners
+    function setupEventListeners() {
+        // Form submissions
+        document.getElementById('import-form').addEventListener('submit', handleImportSubmit);
+        
+        // File input change
+        document.getElementById('file-input').addEventListener('change', handleFileSelect);
+    }
+
+    // Load all data
+    async function loadAllData() {
+        await Promise.all([
+            loadImportTypes(),
+            loadExportTypes(),
+            loadJobHistory(),
+            updateStats()
+        ]);
+    }
+
+    // Load import types
+    async function loadImportTypes() {
+        try {
+            console.log('📥 Loading import types...');
+            
+            const importTypes = [
+                {
+                    type: 'products',
+                    name: 'Products',
+                    icon: 'fas fa-box',
+                    color: 'blue',
+                    description: 'Import product catalog with images, pricing, and variants',
+                    fields: ['name', 'description', 'price', 'category', 'sku', 'stock'],
+                    template: 'products_template.csv',
+                    lastImport: '2 days ago',
+                    recordCount: '2,450',
+                    successRate: '98.5%'
+                },
+                {
+                    type: 'users',
+                    name: 'Users',
+                    icon: 'fas fa-users',
+                    color: 'green',
+                    description: 'Import user accounts with profiles and preferences',
+                    fields: ['email', 'name', 'phone', 'address', 'role'],
+                    template: 'users_template.csv',
+                    lastImport: '1 week ago',
+                    recordCount: '1,250',
+                    successRate: '99.2%'
+                },
+                {
+                    type: 'orders',
+                    name: 'Orders',
+                    icon: 'fas fa-shopping-cart',
+                    color: 'yellow',
+                    description: 'Import order history with items and payment details',
+                    fields: ['order_id', 'user_id', 'total', 'status', 'date'],
+                    template: 'orders_template.csv',
+                    lastImport: '3 days ago',
+                    recordCount: '5,890',
+                    successRate: '97.8%'
+                },
+                {
+                    type: 'categories',
+                    name: 'Categories',
+                    icon: 'fas fa-tags',
+                    color: 'purple',
+                    description: 'Import product categories with hierarchy',
+                    fields: ['name', 'parent_id', 'description', 'image'],
+                    template: 'categories_template.csv',
+                    lastImport: '1 month ago',
+                    recordCount: '85',
+                    successRate: '100%'
+                },
+                {
+                    type: 'brands',
+                    name: 'Brands',
+                    icon: 'fas fa-trademark',
+                    color: 'red',
+                    description: 'Import brand information and logos',
+                    fields: ['name', 'description', 'logo', 'website'],
+                    template: 'brands_template.csv',
+                    lastImport: '2 weeks ago',
+                    recordCount: '156',
+                    successRate: '98.1%'
+                },
+                {
+                    type: 'reviews',
+                    name: 'Reviews',
+                    icon: 'fas fa-star',
+                    color: 'orange',
+                    description: 'Import customer reviews and ratings',
+                    fields: ['product_id', 'user_id', 'rating', 'comment'],
+                    template: 'reviews_template.csv',
+                    lastImport: '5 days ago',
+                    recordCount: '3,420',
+                    successRate: '96.7%'
+                }
+            ];
+
+            renderImportTypes(importTypes);
+            
+            console.log('✅ Import types loaded successfully');
+
+        } catch (error) {
+            console.error('❌ Error loading import types:', error);
+            document.getElementById('import-types-container').innerHTML = createErrorState(error.message, 'loadImportTypes()');
+        }
+    }
+
+    // Load export types
+    async function loadExportTypes() {
+        try {
+            console.log('📤 Loading export types...');
+            
+            const exportTypes = [
+                {
+                    type: 'products',
+                    name: 'Products Export',
+                    icon: 'fas fa-box',
+                    color: 'blue',
+                    description: 'Export complete product catalog with all details',
+                    recordCount: '2,450',
+                    formats: ['CSV', 'Excel', 'JSON', 'XML'],
+                    lastExport: '1 day ago',
+                    fileSize: '15.2 MB'
+                },
+                {
+                    type: 'users',
+                    name: 'Users Export',
+                    icon: 'fas fa-users',
+                    color: 'green',
+                    description: 'Export user accounts and profile information',
+                    recordCount: '1,250',
+                    formats: ['CSV', 'Excel', 'JSON'],
+                    lastExport: '3 days ago',
+                    fileSize: '2.8 MB'
+                },
+                {
+                    type: 'orders',
+                    name: 'Orders Export',
+                    icon: 'fas fa-shopping-cart',
+                    color: 'yellow',
+                    description: 'Export order history and transaction details',
+                    recordCount: '5,890',
+                    formats: ['CSV', 'Excel', 'JSON', 'PDF'],
+                    lastExport: '6 hours ago',
+                    fileSize: '45.6 MB'
+                },
+                {
+                    type: 'analytics',
+                    name: 'Analytics Export',
+                    icon: 'fas fa-chart-line',
+                    color: 'purple',
+                    description: 'Export analytics data and performance metrics',
+                    recordCount: '12,580',
+                    formats: ['CSV', 'Excel', 'JSON'],
+                    lastExport: '2 days ago',
+                    fileSize: '8.9 MB'
+                },
+                {
+                    type: 'inventory',
+                    name: 'Inventory Export',
+                    icon: 'fas fa-warehouse',
+                    color: 'red',
+                    description: 'Export inventory levels and stock movements',
+                    recordCount: '3,200',
+                    formats: ['CSV', 'Excel'],
+                    lastExport: '1 week ago',
+                    fileSize: '5.4 MB'
+                },
+                {
+                    type: 'financial',
+                    name: 'Financial Export',
+                    icon: 'fas fa-dollar-sign',
+                    color: 'green',
+                    description: 'Export financial reports and transactions',
+                    recordCount: '8,450',
+                    formats: ['CSV', 'Excel', 'PDF'],
+                    lastExport: '4 days ago',
+                    fileSize: '25.3 MB'
+                }
+            ];
+
+            renderExportTypes(exportTypes);
+            
+            console.log('✅ Export types loaded successfully');
+
+        } catch (error) {
+            console.error('❌ Error loading export types:', error);
+            document.getElementById('export-types-container').innerHTML = createErrorState(error.message, 'loadExportTypes()');
+        }
+    }
+
+    // Load job history
+    async function loadJobHistory() {
+        try {
+            console.log('📋 Loading job history...');
+            
+            // Mock job history data
+            const mockHistory = [
+                {
+                    id: 1,
+                    type: 'import',
+                    data_type: 'products',
+                    filename: 'products_import_2025_08_17.csv',
+                    status: 'completed',
+                    records_total: 2450,
+                    records_processed: 2450,
+                    records_failed: 12,
+                    started_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+                    completed_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000 + 15 * 60 * 1000),
+                    file_size: '15.2 MB',
+                    format: 'csv',
+                    user: 'admin@africandeals.com'
+                },
+                {
+                    id: 2,
+                    type: 'export',
+                    data_type: 'orders',
+                    filename: 'orders_export_2025_08_16.xlsx',
+                    status: 'completed',
+                    records_total: 5890,
+                    records_processed: 5890,
+                    records_failed: 0,
+                    started_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+                    completed_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000 + 45 * 60 * 1000),
+                    file_size: '45.6 MB',
+                    format: 'xlsx',
+                    user: 'admin@africandeals.com'
+                },
+                {
+                    id: 3,
+                    type: 'import',
+                    data_type: 'users',
+                    filename: 'users_import_2025_08_15.csv',
+                    status: 'processing',
+                    records_total: 1200,
+                    records_processed: 850,
+                    records_failed: 5,
+                    started_at: new Date(Date.now() - 10 * 60 * 1000),
+                    completed_at: null,
+                    file_size: '2.8 MB',
+                    format: 'csv',
+                    user: 'admin@africandeals.com'
+                },
+                {
+                    id: 4,
+                    type: 'export',
+                    data_type: 'analytics',
+                    filename: 'analytics_export_2025_08_14.json',
+                    status: 'failed',
+                    records_total: 12580,
+                    records_processed: 8200,
+                    records_failed: 4380,
+                    started_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+                    completed_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000 + 30 * 60 * 1000),
+                    file_size: '8.9 MB',
+                    format: 'json',
+                    user: 'admin@africandeals.com',
+                    error_message: 'Database connection timeout during export'
+                }
+            ];
+
+            importHistory = mockHistory;
+            renderJobHistory(importHistory);
+            
+            console.log('✅ Job history loaded successfully');
+
+        } catch (error) {
+            console.error('❌ Error loading job history:', error);
+            document.getElementById('history-container').innerHTML = createErrorState(error.message, 'loadJobHistory()');
+        }
+    }
+
+    // Update stats
+    function updateStats() {
+        const thisMonth = importHistory.filter(job => {
+            const jobDate = new Date(job.started_at);
+            const now = new Date();
+            return jobDate.getMonth() === now.getMonth() && jobDate.getFullYear() === now.getFullYear();
+        });
+
+        const importJobs = thisMonth.filter(job => job.type === 'import').length;
+        const exportJobs = thisMonth.filter(job => job.type === 'export').length;
+        const activeJobs = importHistory.filter(job => job.status === 'processing').length;
+        const totalRecords = thisMonth.reduce((sum, job) => sum + (job.records_processed || 0), 0);
+        const successfulRecords = thisMonth.reduce((sum, job) => sum + ((job.records_processed || 0) - (job.records_failed || 0)), 0);
+        const successRate = totalRecords > 0 ? ((successfulRecords / totalRecords) * 100).toFixed(1) : 100;
+
+        document.getElementById('import-jobs').textContent = importJobs;
+        document.getElementById('export-jobs').textContent = exportJobs;
+        document.getElementById('active-jobs').textContent = activeJobs;
+        document.getElementById('records-processed').textContent = formatNumber(totalRecords);
+        
+        // Update success rate in records processed stat
+        const recordsElement = document.getElementById('records-processed').parentElement;
+        const successRateElement = recordsElement.querySelector('.text-white\\/60');
+        if (successRateElement) {
+            successRateElement.textContent = `Success rate: ${successRate}%`;
+        }
+    }
+
+    // Render import types
+    function renderImportTypes(importTypes) {
+        const container = document.getElementById('import-types-container');
+        
+        const typesHTML = importTypes.map(type => `
+            <div class="import-card glass-morphism rounded-lg p-4 border border-${type.color}-500/20" 
+                 onclick="selectImportType('${type.type}')">
+                <div class="flex items-start space-x-3">
+                    <div class="data-type-icon bg-${type.color}-500/20 text-${type.color}-400">
+                        <i class="${type.icon}"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="text-white font-semibold mb-2">${type.name}</h4>
+                        <p class="text-white/60 text-sm mb-3">${type.description}</p>
+                        
+                        <div class="space-y-2 text-xs">
+                            <div class="flex justify-between">
+                                <span class="text-white/50">Records:</span>
+                                <span class="text-white">${type.recordCount}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-white/50">Success Rate:</span>
+                                <span class="text-green-400">${type.successRate}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-white/50">Last Import:</span>
+                                <span class="text-white/70">${type.lastImport}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex space-x-2 mt-3">
+                            <button onclick="event.stopPropagation(); downloadTemplate('${type.template}')" 
+                                    class="flex-1 bg-${type.color}-500/20 text-${type.color}-400 px-3 py-2 rounded text-xs hover:bg-${type.color}-500/30">
+                                <i class="fas fa-download mr-1"></i>Template
+                            </button>
+                            <button onclick="event.stopPropagation(); selectImportType('${type.type}')" 
+                                    class="flex-1 bg-${type.color}-500 hover:bg-${type.color}-600 text-white px-3 py-2 rounded text-xs">
+                                <i class="fas fa-upload mr-1"></i>Import
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+        
+        container.innerHTML = typesHTML;
+    }
+
+    // Render export types
+    function renderExportTypes(exportTypes) {
+        const container = document.getElementById('export-types-container');
+        
+        const typesHTML = exportTypes.map(type => `
+            <div class="export-card glass-morphism rounded-lg p-6 border border-${type.color}-500/20">
+                <div class="flex items-start space-x-3 mb-4">
+                    <div class="data-type-icon bg-${type.color}-500/20 text-${type.color}-400">
+                        <i class="${type.icon}"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="text-white font-semibold mb-2">${type.name}</h4>
+                        <p class="text-white/60 text-sm">${type.description}</p>
+                    </div>
+                </div>
+
+                <div class="space-y-2 text-sm mb-4">
+                    <div class="flex justify-between">
+                        <span class="text-white/50">Records:</span>
+                        <span class="text-white">${type.recordCount}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-white/50">File Size:</span>
+                        <span class="text-white">${type.fileSize}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-white/50">Last Export:</span>
+                        <span class="text-white/70">${type.lastExport}</span>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <p class="text-white/50 text-xs mb-2">Available Formats:</p>
+                    <div class="flex flex-wrap gap-1">
+                        ${type.formats.map(format => `
+                            <span class="format-badge format-${format.toLowerCase()}">${format}</span>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <button onclick="initiateExport('${type.type}')" 
+                        class="w-full bg-${type.color}-500 hover:bg-${type.color}-600 text-white px-4 py-2 rounded-lg text-sm">
+                    <i class="fas fa-download mr-2"></i>Export ${type.name.split(' ')[0]}
+                </button>
+            </div>
+        `).join('');
+        
+        container.innerHTML = typesHTML;
+    }
+
+    // Render job history
+    function renderJobHistory(jobs) {
+        const container = document.getElementById('history-container');
+        
+        if (!jobs || jobs.length === 0) {
+            container.innerHTML = createEmptyState(
+                'history', 
+                'No Job History', 
+                'Import and export job history will appear here.',
+                ''
+            );
+            return;
+        }
+
+        const historyHTML = `
+            <div class="space-y-4">
+                ${jobs.map(job => `
+                    <div class="history-item glass-morphism rounded-lg p-4 border-l-4 border-${getJobColor(job.status)}">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-3 mb-2">
+                                    <h4 class="text-white font-semibold">${job.filename}</h4>
+                                    <span class="status-badge status-${job.status}">
+                                        ${formatStatus(job.status)}
+                                    </span>
+                                    <span class="format-badge format-${job.format}">
+                                        ${job.format.toUpperCase()}
+                                    </span>
+                                    <span class="px-2 py-1 bg-${job.type === 'import' ? 'blue' : 'green'}-500/20 text-${job.type === 'import' ? 'blue' : 'green'}-400 text-xs rounded">
+                                        ${job.type.toUpperCase()}
+                                    </span>
+                                </div>
+                                <p class="text-white/60 text-sm">${job.data_type} • ${job.file_size} • ${job.user}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-white text-sm">${formatDate(job.started_at)}</p>
+                                <p class="text-white/50 text-xs">${formatTimeAgo(job.started_at)}</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
+                            <div>
+                                <span class="text-white/50 text-xs">Total:</span>
+                                <p class="text-white font-medium">${formatNumber(job.records_total)}</p>
+                            </div>
+                            <div>
+                                <span class="text-white/50 text-xs">Processed:</span>
+                                <p class="text-white font-medium">${formatNumber(job.records_processed)}</p>
+                            </div>
+                            <div>
+                                <span class="text-white/50 text-xs">Failed:</span>
+                                <p class="text-red-400 font-medium">${formatNumber(job.records_failed || 0)}</p>
+                            </div>
+                            <div>
+                                <span class="text-white/50 text-xs">Duration:</span>
+                                <p class="text-white font-medium">${formatDuration(job.started_at, job.completed_at)}</p>
+                            </div>
+                        </div>
+
+                        ${job.status === 'processing' ? `
+                            <div class="mb-3">
+                                <div class="flex justify-between text-xs mb-1">
+                                    <span class="text-white/70">Progress</span>
+                                    <span class="text-white">${Math.round((job.records_processed / job.records_total) * 100)}%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: ${(job.records_processed / job.records_total) * 100}%"></div>
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        ${job.error_message ? `
+                            <div class="validation-error">
+                                <i class="fas fa-exclamation-triangle mr-2"></i>
+                                ${job.error_message}
+                            </div>
+                        ` : ''}
+
+                        <div class="flex space-x-2">
+                            ${job.status === 'completed' && job.type === 'export' ? `
+                                <button onclick="downloadExportFile(${job.id})" 
+                                        class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm">
+                                    <i class="fas fa-download mr-1"></i>Download
+                                </button>
+                            ` : ''}
+                            <button onclick="viewJobDetails(${job.id})" 
+                                    class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm">
+                                <i class="fas fa-eye mr-1"></i>Details
+                            </button>
+                            ${job.status === 'processing' ? `
+                                <button onclick="cancelJob(${job.id})" 
+                                        class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">
+                                    <i class="fas fa-stop mr-1"></i>Cancel
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        
+        container.innerHTML = historyHTML;
+    }
+
+    // Tab switching
+    function switchTab(tab) {
+        currentTab = tab;
+        
+        // Update active tab
+        document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+        document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+        
+        // Show/hide tab content
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.remove('active');
+        });
+        document.getElementById(`${tab}-tab`).classList.add('active');
+    }
+
+    // File handling
+    function handleFileDrop(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        
+        const files = event.dataTransfer.files;
+        processFiles(files);
+        
+        // Reset drag styling
+        event.target.classList.remove('drag-over');
+    }
+
+    function handleDragOver(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        event.target.classList.add('drag-over');
+    }
+
+    function handleDragLeave(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        event.target.classList.remove('drag-over');
+    }
+
+    function handleFileSelect(event) {
+        const files = event.target.files;
+        processFiles(files);
+    }
+
+    function processFiles(files) {
+        const activeImportsContainer = document.getElementById('active-imports');
+        
+        Array.from(files).forEach(file => {
+            if (!validateFile(file)) return;
+            
+            // Add to active imports display
+            const fileHTML = `
+                <div id="file-${file.name}" class="glass-morphism rounded-lg p-3 border border-blue-500/20">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 bg-blue-500/20 rounded flex items-center justify-center">
+                            <i class="fas fa-file text-blue-400 text-sm"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-white font-medium text-sm">${file.name}</p>
+                            <p class="text-white/60 text-xs">${formatFileSize(file.size)} • ${getFileExtension(file.name).toUpperCase()}</p>
+                        </div>
+                        <button onclick="removeFile('${file.name}')" class="text-red-400 hover:text-red-300">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            if (activeImportsContainer.innerHTML.includes('No active imports')) {
+                activeImportsContainer.innerHTML = fileHTML;
+            } else {
+                activeImportsContainer.innerHTML += fileHTML;
+            }
+            
+            // Store file for processing
+            if (!window.selectedFiles) window.selectedFiles = [];
+            window.selectedFiles.push(file);
+        });
+    }
+
+    function validateFile(file) {
+        const maxSize = 50 * 1024 * 1024; // 50MB
+        const allowedTypes = ['csv', 'json', 'xlsx', 'xml'];
+        const fileExtension = getFileExtension(file.name);
+        
+        if (file.size > maxSize) {
+            showToast(`File ${file.name} exceeds 50MB limit`, 'error');
+            return false;
+        }
+        
+        if (!allowedTypes.includes(fileExtension)) {
+            showToast(`File type ${fileExtension} not supported`, 'error');
+            return false;
+        }
+        
+        return true;
+    }
+
+    function removeFile(filename) {
+        document.getElementById(`file-${filename}`)?.remove();
+        
+        if (window.selectedFiles) {
+            window.selectedFiles = window.selectedFiles.filter(file => file.name !== filename);
+        }
+        
+        // Check if no files remaining
+        const activeImportsContainer = document.getElementById('active-imports');
+        if (!activeImportsContainer.children.length) {
+            activeImportsContainer.innerHTML = `
+                <div class="text-center text-white/60 py-4">
+                    <i class="fas fa-inbox text-2xl mb-2"></i>
+                    <p>No active imports</p>
+                </div>
+            `;
+        }
+    }
+
+    // Modal functions
+    function openImportModal() {
+        document.getElementById('import-modal').classList.remove('hidden');
+        document.getElementById('import-modal').classList.add('flex');
+    }
+
+    function closeImportModal() {
+        document.getElementById('import-modal').classList.add('hidden');
+        document.getElementById('import-modal').classList.remove('flex');
+        document.getElementById('import-form').reset();
+    }
+
+    function selectImportType(type) {
+        document.getElementById('import-type').value = type;
+        openImportModal();
+    }
+
+    // Field mapping functions
+    function loadFieldMapping() {
+        const dataType = document.getElementById('mapping-data-type').value;
+        const mappingsContainer = document.getElementById('field-mappings');
+        const previewContainer = document.getElementById('mapping-preview');
+        
+        if (!dataType) {
+            mappingsContainer.innerHTML = '';
+            previewContainer.innerHTML = `
+                <div class="text-center text-white/60 py-8">
+                    <i class="fas fa-sitemap text-3xl mb-3"></i>
+                    <p>Select data type to preview field mappings</p>
+                </div>
+            `;
+            return;
+        }
+        
+        const fieldMappingConfig = {
+            products: [
+                { source: 'product_name', target: 'name', required: true },
+                { source: 'product_description', target: 'description', required: false },
+                { source: 'product_price', target: 'price', required: true },
+                { source: 'product_category', target: 'category_id', required: true },
+                { source: 'product_sku', target: 'sku', required: true },
+                { source: 'stock_quantity', target: 'stock', required: false }
+            ],
+            users: [
+                { source: 'user_email', target: 'email', required: true },
+                { source: 'user_name', target: 'full_name', required: true },
+                { source: 'user_phone', target: 'phone', required: false },
+                { source: 'user_address', target: 'address', required: false },
+                { source: 'user_role', target: 'role', required: true }
+            ],
+            orders: [
+                { source: 'order_number', target: 'order_id', required: true },
+                { source: 'customer_id', target: 'user_id', required: true },
+                { source: 'order_total', target: 'total_amount', required: true },
+                { source: 'order_status', target: 'status', required: true },
+                { source: 'order_date', target: 'created_at', required: true }
+            ],
+            categories: [
+                { source: 'category_name', target: 'name', required: true },
+                { source: 'parent_category', target: 'parent_id', required: false },
+                { source: 'category_description', target: 'description', required: false },
+                { source: 'category_image', target: 'image_url', required: false }
+            ]
+        };
+        
+        const mappings = fieldMappingConfig[dataType] || [];
+        
+        const mappingsHTML = mappings.map(mapping => `
+            <div class="mapping-field">
+                <div class="flex items-center justify-between mb-2">
+                    <label class="text-white font-medium text-sm">${mapping.source}</label>
+                    ${mapping.required ? '<span class="text-red-400 text-xs">Required</span>' : ''}
+                </div>
+                <div class="flex space-x-2">
+                    <input type="text" value="${mapping.target}" 
+                           class="flex-1 p-2 rounded form-input text-sm"
+                           onchange="updateFieldMapping('${mapping.source}', this.value)">
+                    <button onclick="removeFieldMapping('${mapping.source}')" 
+                            class="bg-red-500/20 text-red-400 px-2 py-2 rounded text-sm hover:bg-red-500/30">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        `).join('');
+        
+        mappingsContainer.innerHTML = mappingsHTML;
+        
+        // Update preview
+        const previewHTML = `
+            <div class="text-white/70 text-sm mb-3">Field Mapping Preview for: <strong>${dataType}</strong></div>
+            <div class="space-y-2">
+                ${mappings.map(mapping => `
+                    <div class="flex justify-between text-sm">
+                        <span class="text-white/60">${mapping.source}</span>
+                        <span class="text-white">→ ${mapping.target}</span>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        
+        previewContainer.innerHTML = previewHTML;
+        
+        // Store current mappings
+        fieldMappings[dataType] = mappings;
+    }
+
+    // Import/Export functions
+    async function handleImportSubmit(e) {
+        e.preventDefault();
+        
+        const formData = {
+            type: document.getElementById('import-type').value,
+            format: document.getElementById('import-format').value,
+            delimiter: document.getElementById('csv-delimiter').value,
+            encoding: document.getElementById('file-encoding').value,
+            skipDuplicates: document.getElementById('skip-duplicates').checked,
+            validateData: document.getElementById('validate-data').checked,
+            createBackup: document.getElementById('create-backup').checked,
+            sendNotification: document.getElementById('send-notification').checked
+        };
+        
+        try {
+            // Mock import process
+            showToast('Import job started successfully', 'success');
+            closeImportModal();
+            
+            // Add to job history
+            const newJob = {
+                id: Date.now(),
+                type: 'import',
+                data_type: formData.type,
+                filename: window.selectedFiles?.[0]?.name || 'uploaded_file.csv',
+                status: 'processing',
+                records_total: Math.floor(Math.random() * 5000) + 100,
+                records_processed: 0,
+                records_failed: 0,
+                started_at: new Date(),
+                completed_at: null,
+                file_size: window.selectedFiles?.[0] ? formatFileSize(window.selectedFiles[0].size) : '2.5 MB',
+                format: formData.format,
+                user: 'admin@africandeals.com'
+            };
+            
+            importHistory.unshift(newJob);
+            renderJobHistory(importHistory);
+            updateStats();
+            
+            // Simulate progress
+            simulateJobProgress(newJob.id);
+            
+        } catch (error) {
+            console.error('❌ Error starting import:', error);
+            showToast('Error starting import: ' + error.message, 'error');
+        }
+    }
+
+    function initiateExport(type) {
+        // Mock export process
+        const newJob = {
+            id: Date.now(),
+            type: 'export',
+            data_type: type,
+            filename: `${type}_export_${new Date().toISOString().split('T')[0]}.csv`,
+            status: 'processing',
+            records_total: Math.floor(Math.random() * 10000) + 500,
+            records_processed: 0,
+            records_failed: 0,
+            started_at: new Date(),
+            completed_at: null,
+            file_size: `${(Math.random() * 50 + 5).toFixed(1)} MB`,
+            format: 'csv',
+            user: 'admin@africandeals.com'
+        };
+        
+        importHistory.unshift(newJob);
+        renderJobHistory(importHistory);
+        updateStats();
+        
+        showToast(`Export job started for ${type}`, 'success');
+        
+        // Simulate progress
+        simulateJobProgress(newJob.id);
+    }
+
+    function simulateJobProgress(jobId) {
+        const job = importHistory.find(j => j.id === jobId);
+        if (!job) return;
+        
+        const interval = setInterval(() => {
+            if (job.status !== 'processing') {
+                clearInterval(interval);
+                return;
+            }
+            
+            // Increase progress
+            const increment = Math.floor(Math.random() * 100) + 50;
+            job.records_processed = Math.min(job.records_processed + increment, job.records_total);
+            
+            // Add occasional failures
+            if (Math.random() < 0.1) {
+                job.records_failed = (job.records_failed || 0) + Math.floor(Math.random() * 5) + 1;
+            }
+            
+            // Complete job when all records processed
+            if (job.records_processed >= job.records_total) {
+                job.status = 'completed';
+                job.completed_at = new Date();
+                showToast(`${job.type} job completed: ${job.filename}`, 'success');
+            }
+            
+            renderJobHistory(importHistory);
+            updateStats();
+        }, 2000);
+    }
+
+    // Utility functions
+    function formatNumber(num) {
+        if (num >= 1000000) {
+            return (num / 1000000).toFixed(1) + 'M';
+        } else if (num >= 1000) {
+            return (num / 1000).toFixed(1) + 'K';
+        }
+        return num.toString();
+    }
+
+    function formatFileSize(bytes) {
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        if (bytes === 0) return '0 Bytes';
+        const i = Math.floor(Math.log(bytes) / Math.log(1024));
+        return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+    }
+
+    function getFileExtension(filename) {
+        return filename.split('.').pop().toLowerCase();
+    }
+
+    function formatStatus(status) {
+        const statusMap = {
+            'completed': 'Completed',
+            'processing': 'Processing',
+            'failed': 'Failed',
+            'pending': 'Pending'
+        };
+        return statusMap[status] || status;
+    }
+
+    function getJobColor(status) {
+        const colorMap = {
+            'completed': 'green-500',
+            'processing': 'yellow-500',
+            'failed': 'red-500',
+            'pending': 'gray-500'
+        };
+        return colorMap[status] || 'gray-500';
+    }
+
+    function formatDate(dateString) {
+        if (!dateString) return 'N/A';
+        return new Date(dateString).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    function formatTimeAgo(dateString) {
+        if (!dateString) return 'Unknown';
+        
+        const now = new Date();
+        const date = new Date(dateString);
+        const diffInSeconds = Math.floor((now - date) / 1000);
+        
+        if (diffInSeconds < 60) return 'Just now';
+        if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+        if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+        return `${Math.floor(diffInSeconds / 86400)}d ago`;
+    }
+
+    function formatDuration(startDate, endDate) {
+        if (!endDate) return 'In progress';
+        
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const diffInMinutes = Math.floor((end - start) / (1000 * 60));
+        
+        if (diffInMinutes < 1) return '<1min';
+        if (diffInMinutes < 60) return `${diffInMinutes}min`;
+        
+        const hours = Math.floor(diffInMinutes / 60);
+        const minutes = diffInMinutes % 60;
+        return `${hours}h ${minutes}m`;
+    }
+
+    function createEmptyState(type, title, description, actions = '') {
+        return `
+            <div class="text-center py-12">
+                <div class="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-${type === 'history' ? 'history' : 'box'} text-white/30 text-3xl"></i>
+                </div>
+                <h3 class="text-white text-xl font-semibold mb-2">${title}</h3>
+                <p class="text-white/60 mb-6 max-w-md mx-auto">${description}</p>
+                ${actions}
+            </div>
+        `;
+    }
+
+    function createErrorState(message, retry = null) {
+        return `
+            <div class="text-center py-12">
+                <div class="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-exclamation-triangle text-red-400 text-3xl"></i>
+                </div>
+                <h3 class="text-white text-xl font-semibold mb-2">Error Loading Data</h3>
+                <p class="text-white/60 mb-6 max-w-md mx-auto">${message}</p>
+                ${retry ? `<button onclick="${retry}" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg"><i class="fas fa-refresh mr-2"></i>Try Again</button>` : ''}
+            </div>
+        `;
+    }
+
+    function showToast(message, type = 'info') {
+        console.log(`[${type.toUpperCase()}] ${message}`);
+        
+        const toast = document.createElement('div');
+        toast.className = `fixed top-4 right-4 z-50 px-6 py-4 rounded-lg text-white ${
+            type === 'success' ? 'bg-green-500' : 
+            type === 'error' ? 'bg-red-500' : 
+            type === 'warning' ? 'bg-yellow-500' : 'bg-blue-500'
+        }`;
+        toast.textContent = message;
+        
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+
+    // Make functions globally available
+    window.switchTab = switchTab;
+    window.handleFileDrop = handleFileDrop;
+    window.handleDragOver = handleDragOver;
+    window.handleDragLeave = handleDragLeave;
+    window.handleFileSelect = handleFileSelect;
+    window.removeFile = removeFile;
+    window.openImportModal = openImportModal;
+    window.closeImportModal = closeImportModal;
+    window.selectImportType = selectImportType;
+    window.loadFieldMapping = loadFieldMapping;
+    window.initiateExport = initiateExport;
+    window.downloadTemplates = () => showToast('Template download started', 'success');
+    window.downloadTemplate = (template) => showToast(`Downloading ${template}`, 'success');
+    window.validateImport = () => showToast('Validation completed', 'success');
+    window.refreshJobs = loadAllData;
+    window.filterHistory = () => showToast('History filtered', 'info');
+    window.exportHistory = () => showToast('History export started', 'success');
+    window.downloadExportFile = (id) => showToast(`Downloading export file #${id}`, 'success');
+    window.viewJobDetails = (id) => showToast(`Viewing details for job #${id}`, 'info');
+    window.cancelJob = (id) => showToast(`Job #${id} cancelled`, 'warning');
+
+</script>
+
+</body>
+</html>

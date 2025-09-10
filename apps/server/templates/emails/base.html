@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{subject}} | African Deals Domain</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            background-color: #f5f7fa;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #0e2038 0%, #23325c 50%, #2d4a73 100%);
+            padding: 40px 30px;
+            text-align: center;
+            color: white;
+        }
+        
+        .logo-container {
+            margin-bottom: 20px;
+        }
+        
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto;
+            background: linear-gradient(135deg, #ff6b35 0%, #f7931e 50%, #ffd23f 100%);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+        }
+        
+        .brand-name {
+            font-size: 28px;
+            font-weight: 700;
+            margin: 15px 0 5px;
+            color: #ffffff;
+        }
+        
+        .brand-tagline {
+            font-size: 14px;
+            color: #b8c5d1;
+            font-weight: 400;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .greeting {
+            font-size: 24px;
+            font-weight: 600;
+            color: #0e2038;
+            margin-bottom: 20px;
+        }
+        
+        .message {
+            font-size: 16px;
+            line-height: 1.8;
+            color: #4a5568;
+            margin-bottom: 30px;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #0e2038 0%, #23325c 100%);
+            color: #ffffff;
+            text-decoration: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            margin: 20px 0;
+            box-shadow: 0 4px 15px rgba(14, 32, 56, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(14, 32, 56, 0.4);
+        }
+        
+        .info-box {
+            background-color: #f8f9fa;
+            border-left: 4px solid #ff6b35;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .info-box h3 {
+            color: #0e2038;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        
+        .order-details {
+            background-color: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            margin: 25px 0;
+        }
+        
+        .order-details h3 {
+            color: #0e2038;
+            font-size: 20px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+        }
+        
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .order-item:last-child {
+            border-bottom: none;
+            font-weight: 600;
+            color: #0e2038;
+        }
+        
+        .social-links {
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .social-links a {
+            display: inline-block;
+            margin: 0 10px;
+            color: #6c757d;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        
+        .footer {
+            background-color: #0e2038;
+            color: #b8c5d1;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        
+        .footer-content {
+            margin-bottom: 20px;
+        }
+        
+        .footer h4 {
+            color: #ffffff;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+        
+        .footer p {
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+        
+        .footer-links {
+            margin: 20px 0;
+        }
+        
+        .footer-links a {
+            color: #ff6b35;
+            text-decoration: none;
+            margin: 0 15px;
+            font-size: 14px;
+        }
+        
+        .footer-links a:hover {
+            color: #ffd23f;
+        }
+        
+        .copyright {
+            border-top: 1px solid #23325c;
+            padding-top: 20px;
+            margin-top: 20px;
+            font-size: 12px;
+            color: #8a9ba8;
+        }
+        
+        /* Responsive Design */
+        @media only screen and (max-width: 600px) {
+            .email-container {
+                margin: 0;
+                width: 100% !important;
+            }
+            
+            .header, .content, .footer {
+                padding: 30px 20px !important;
+            }
+            
+            .brand-name {
+                font-size: 24px !important;
+            }
+            
+            .greeting {
+                font-size: 20px !important;
+            }
+            
+            .logo {
+                width: 60px !important;
+                height: 60px !important;
+                font-size: 28px !important;
+            }
+            
+            .cta-button {
+                display: block !important;
+                text-align: center;
+                margin: 20px 0 !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo-container">
+                <div class="logo">🛍️</div>
+            </div>
+            <h1 class="brand-name">African Deals Domain</h1>
+            <p class="brand-tagline">Empowering Africa's businesses and communities</p>
+        </div>
+        
+        <!-- Content -->
+        <div class="content">
+            {{content}}
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <div class="footer-content">
+                <h4>African Deals Domain</h4>
+                <p>Your trusted partner for quality products across Africa</p>
+                <p>🌍 Serving Rwanda, Kenya, Nigeria and beyond</p>
+                
+                <div class="footer-links">
+                    <a href="https://africandealsdomain.com">Visit Website</a>
+                    <a href="https://africandealsdomain.com/support">Support</a>
+                    <a href="https://africandealsdomain.com/contact">Contact Us</a>
+                </div>
+            </div>
+            
+            <div class="copyright">
+                <p>&copy; 2024 African Deals Domain. All rights reserved.</p>
+                <p>This email was sent to {{email}}. If you no longer wish to receive these emails, you can unsubscribe.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="en" class="admin-page">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Approval | Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="admin-auth-check.js"></script>
+    <script src="admin-utils.js"></script>
+    <script src="api-client.js"></script>
+    <style>
+        :root {
+            --primary-color: #080b3b;
+            --secondary-color: #1e40af;
+            --accent-color: #3b82f6;
+        }
+        
+        .glass-morphism {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        }
+        .sidebar {
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .nav-item {
+            transition: all 0.3s ease;
+        }
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+        .nav-item.active {
+            background: rgba(255, 255, 255, 0.2);
+            border-left: 3px solid #3b82f6;
+        }
+        .loading-spinner {
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 2px solid #3b82f6;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .modal {
+            backdrop-filter: blur(10px);
+        }
+        .stat-card {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+        .form-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        .form-input:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #3b82f6;
+            outline: none;
+        }
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        .approval-type-badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.375rem;
+            font-weight: 600;
+        }
+        .payment-proof-img {
+            max-width: 100%;
+            max-height: 400px;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <div class="sidebar w-64 p-6">
+            <div class="text-white text-2xl font-bold mb-8">
+                <i class="fas fa-shield-alt mr-2"></i>Admin Panel
+            </div>
+            
+            <nav class="space-y-2">
+                <a href="dashboard.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="user-management.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-users"></i>
+                    <span>User Management</span>
+                </a>
+                <a href="manual-payment-approval.html" class="nav-item active flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-credit-card"></i>
+                    <span>Payment Approval</span>
+                </a>
+                <a href="products.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-box"></i>
+                    <span>Products</span>
+                </a>
+                <a href="orders.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Orders</span>
+                </a>
+                <a href="agents.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-user-tie"></i>
+                    <span>Agents</span>
+                </a>
+                <a href="reports.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg text-white">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Reports</span>
+                </a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 p-8 overflow-auto">
+            <!-- Header -->
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold text-white mb-2">Payment Approval Center</h1>
+                <p class="text-white/70">Review and approve payment requests and commission releases</p>
+            </div>
+
+            <!-- Stats Cards (Clickable) -->
+            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+                <!-- Buyer Payment Requests -->
+                <div class="stat-card glass-morphism p-4 rounded-xl" onclick="filterByType('MANUAL_PAYMENT')">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-credit-card text-blue-400 text-sm"></i>
+                        </div>
+                        <span id="buyer-payments-count" class="text-lg font-bold text-white">0</span>
+                    </div>
+                    <p class="text-white/70 text-xs">Buyer Payments</p>
+                </div>
+
+                <!-- Seller Money Release -->
+                <div class="stat-card glass-morphism p-4 rounded-xl" onclick="filterByType('SELLER_PAYOUT')">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="w-8 h-8 bg-green-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-money-bill text-green-400 text-sm"></i>
+                        </div>
+                        <span id="seller-payouts-count" class="text-lg font-bold text-white">0</span>
+                    </div>
+                    <p class="text-white/70 text-xs">Seller Payouts</p>
+                </div>
+
+                <!-- Pickup Site Manager Payment -->
+                <div class="stat-card glass-morphism p-4 rounded-xl" onclick="filterByType('PSM_PAYMENT_APPROVAL')">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-store text-purple-400 text-sm"></i>
+                        </div>
+                        <span id="psm-payments-count" class="text-lg font-bold text-white">0</span>
+                    </div>
+                    <p class="text-white/70 text-xs">PSM Payments</p>
+                </div>
+
+                <!-- PSM Commission Release -->
+                <div class="stat-card glass-morphism p-4 rounded-xl" onclick="filterByType('PSM_COMMISSION')">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="w-8 h-8 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-percentage text-yellow-400 text-sm"></i>
+                        </div>
+                        <span id="psm-commission-count" class="text-lg font-bold text-white">0</span>
+                    </div>
+                    <p class="text-white/70 text-xs">PSM Commission</p>
+                </div>
+
+                <!-- PDA Commission Release -->
+                <div class="stat-card glass-morphism p-4 rounded-xl" onclick="filterByType('PDA_COMMISSION')">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="w-8 h-8 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-truck text-orange-400 text-sm"></i>
+                        </div>
+                        <span id="pda-commission-count" class="text-lg font-bold text-white">0</span>
+                    </div>
+                    <p class="text-white/70 text-xs">PDA Commission</p>
+                </div>
+
+                <!-- FDA Commission Release -->
+                <div class="stat-card glass-morphism p-4 rounded-xl" onclick="filterByType('FDA_COMMISSION')">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="w-8 h-8 bg-red-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-shipping-fast text-red-400 text-sm"></i>
+                        </div>
+                        <span id="fda-commission-count" class="text-lg font-bold text-white">0</span>
+                    </div>
+                    <p class="text-white/70 text-xs">FDA Commission</p>
+                </div>
+            </div>
+
+            <!-- Local Market Payments Row -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+                <!-- Local Market Payment Verification -->
+                <div class="stat-card glass-morphism p-4 rounded-xl" onclick="filterByType('LOCAL_MARKET_PAYMENT')">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="w-8 h-8 bg-indigo-500/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-store-alt text-indigo-400 text-sm"></i>
+                        </div>
+                        <span id="local-market-payments-count" class="text-lg font-bold text-white">0</span>
+                    </div>
+                    <p class="text-white/70 text-xs">Local Market Payments</p>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="glass-morphism p-6 rounded-xl mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-white/70 text-sm mb-2">Filter by Type</label>
+                        <select id="type-filter" class="w-full p-3 rounded-lg form-input">
+                            <option value="">All Types</option>
+                            <option value="MANUAL_PAYMENT">Buyer Payment Requests</option>
+                            <option value="SELLER_PAYOUT">Seller Money Release</option>
+                            <option value="PSM_PAYMENT_APPROVAL">PSM Payment Approval</option>
+                            <option value="PSM_COMMISSION">PSM Commission Release</option>
+                            <option value="PDA_COMMISSION">PDA Commission Release</option>
+                            <option value="FDA_COMMISSION">FDA Commission Release</option>
+                            <option value="LOCAL_MARKET_PAYMENT">Local Market Payments</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-white/70 text-sm mb-2">Filter by Status</label>
+                        <select id="status-filter" class="w-full p-3 rounded-lg form-input">
+                            <option value="">All Status</option>
+                            <option value="pending">Pending</option>
+                            <option value="approved">Approved</option>
+                            <option value="rejected">Rejected</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-white/70 text-sm mb-2">Amount Range (FRW)</label>
+                        <select id="amount-filter" class="w-full p-3 rounded-lg form-input">
+                            <option value="">All Amounts</option>
+                            <option value="0-50000">0 - 50,000 FRW</option>
+                            <option value="50000-200000">50,000 - 200,000 FRW</option>
+                            <option value="200000-500000">200,000 - 500,000 FRW</option>
+                            <option value="500000+">500,000+ FRW</option>
+                        </select>
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="loadApprovals()" class="w-full bg-blue-500 hover:bg-blue-600 text-white p-3 rounded-lg">
+                            <i class="fas fa-search mr-2"></i>Filter
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="mb-6">
+                <div class="flex flex-wrap gap-4">
+                    <button onclick="loadApprovals()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2">
+                        <i class="fas fa-refresh"></i>
+                        <span>Refresh</span>
+                    </button>
+                    <button onclick="clearFilters()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2">
+                        <i class="fas fa-times"></i>
+                        <span>Clear Filters</span>
+                    </button>
+                    <button onclick="exportApprovals()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2">
+                        <i class="fas fa-download"></i>
+                        <span>Export</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Approvals Table -->
+            <div class="glass-morphism rounded-xl overflow-hidden">
+                <div class="p-6 border-b border-white/10">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-xl font-bold text-white">Pending Approvals</h3>
+                        <div class="text-white/70 text-sm">
+                            <span id="total-approvals">0</span> total approvals
+                        </div>
+                    </div>
+                </div>
+
+                <div id="approvals-table-container" class="overflow-x-auto">
+                    <div class="text-center py-8">
+                        <div class="loading-spinner mx-auto mb-4"></div>
+                        <p class="text-white/70">Loading approvals...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Approval Details Modal -->
+    <div id="approval-modal" class="fixed inset-0 bg-black/50 modal hidden items-center justify-center z-50">
+        <div class="glass-morphism p-8 rounded-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-white">Approval Details</h2>
+                <button onclick="closeApprovalModal()" class="text-white/70 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <div id="approval-details-content">
+                <!-- Content will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Proof Modal -->
+    <div id="proof-modal" class="fixed inset-0 bg-black/50 modal hidden items-center justify-center z-50">
+        <div class="glass-morphism p-8 rounded-xl max-w-2xl w-full mx-4">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold text-white">Payment Proof</h2>
+                <button onclick="closeProofModal()" class="text-white/70 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div id="proof-content" class="text-center">
+                <!-- Image will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentApprovals = [];
+        let currentFilter = '';
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Payment Approval page initializing...');
+            
+            // Check authentication first
+            checkAuthentication();
+            
+            // Load data
+            loadApprovals();
+            setupEventListeners();
+        });
+
+        // Check authentication and prevent redirect loops
+        function checkAuthentication() {
+            const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
+            const userRole = localStorage.getItem('userRole');
+            
+            if (!token) {
+                console.log('❌ No authentication token found, redirecting to login');
+                window.location.href = '/auth/auth-admin.html';
+                return false;
+            }
+            
+            if (userRole !== 'admin') {
+                console.log('❌ Insufficient permissions, user role:', userRole);
+                showNotification('Access denied. Admin privileges required.', 'error');
+                setTimeout(() => {
+                    window.location.href = '/auth/auth-admin.html';
+                }, 2000);
+                return false;
+            }
+            
+            console.log('✅ Authentication verified for admin user');
+            return true;
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            const typeFilter = document.getElementById('type-filter');
+            const statusFilter = document.getElementById('status-filter');
+            const amountFilter = document.getElementById('amount-filter');
+            
+            if (typeFilter) typeFilter.addEventListener('change', loadApprovals);
+            if (statusFilter) statusFilter.addEventListener('change', loadApprovals);
+            if (amountFilter) amountFilter.addEventListener('change', loadApprovals);
+        }
+
+        // Load approvals from API
+        async function loadApprovals() {
+            try {
+                console.log('📊 Loading approvals...');
+                
+                const typeFilter = document.getElementById('type-filter')?.value || '';
+                const statusFilter = document.getElementById('status-filter')?.value || '';
+                const amountFilter = document.getElementById('amount-filter')?.value || '';
+
+                const params = new URLSearchParams({
+                    type: typeFilter,
+                    status: statusFilter || 'pending',
+                    limit: 100
+                });
+
+                // If 'All' selected in status filter, send 'all' to fetch all statuses
+                if (statusFilter === 'All' || statusFilter === 'all') {
+                    params.set('status', 'all');
+                }
+
+                // Use standard fetch with authentication header
+                const token = localStorage.getItem('token') || localStorage.getItem('authToken') || localStorage.getItem('adminToken');
+                if (!token) {
+                    window.location.href = '/auth/auth-admin.html';
+                    return;
+                }
+                
+                // Determine which endpoint to use based on type filter
+                let endpoint = '/api/admin/payments/buyer-payments/pending'; // Default to buyer payments
+                if (typeFilter === 'LOCAL_MARKET_PAYMENT') {
+                    endpoint = '/api/local-market/admin/local-market-payments';
+                } else if (typeFilter === 'PAYMENT_RELEASE_REQUEST') {
+                    endpoint = '/api/local-market/payment-release-requests';
+                } else if (typeFilter === 'MANUAL_PAYMENT') {
+                    endpoint = '/api/admin/payments/buyer-payments/pending';
+                } else if (typeFilter === 'SELLER_PAYOUT' || typeFilter === 'PSM_PAYMENT_APPROVAL' || 
+                          typeFilter === 'PSM_COMMISSION' || typeFilter === 'PDA_COMMISSION' || 
+                          typeFilter === 'FDA_COMMISSION') {
+                    endpoint = '/api/admin/pda-approvals/pending';
+                }
+                
+                const response = await fetch(`${endpoint}?${params.toString()}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+
+                if (data.success) {
+                    // Handle different response formats
+                    currentApprovals = data.approvals || data.payments || [];
+
+                    // Normalize data structure and payment proof URL for client display
+                    currentApprovals = currentApprovals.map(a => ({
+                        ...a,
+                        // Ensure buyer payments have the correct approval_type
+                        approval_type: a.approval_type || (endpoint.includes('buyer-payments') ? 'MANUAL_PAYMENT' : a.approval_type),
+                        // Normalize payment proof URL
+                        payment_proof_url: a.payment_proof_url || a.payment_proof || a.o_payment_proof || a.payment_screenshot || null,
+                        // Ensure consistent field names
+                        requester_name: a.requester_name || a.buyer_name || a.sender_name || 'Unknown',
+                        requester_email: a.requester_email || a.buyer_email || a.email || '',
+                        order_number: a.order_number || a.order_id || 'N/A'
+                    }));
+                    
+                    // Apply amount filter client-side
+                    if (amountFilter) {
+                        currentApprovals = filterByAmount(currentApprovals, amountFilter);
+                    }
+                    
+                    updateApprovalStats(currentApprovals);
+                    renderApprovalsTable(currentApprovals);
+                    
+                    console.log('✅ Approvals loaded successfully');
+                } else {
+                    throw new Error(data.message || 'Failed to load approvals');
+                }
+
+            } catch (error) {
+                console.error('❌ Error loading approvals:', error);
+                document.getElementById('approvals-table-container').innerHTML = 
+                    window.adminUtils.createErrorState(error.message, 'loadApprovals()');
+                window.adminUtils.showToast('Failed to load approvals: ' + error.message, 'error');
+            }
+        }
+
+        // Filter by amount range
+        function filterByAmount(approvals, amountRange) {
+            if (!amountRange) return approvals;
+            
+            return approvals.filter(approval => {
+                const amount = parseFloat(approval.amount || approval.total_amount || 0);
+                
+                switch (amountRange) {
+                    case '0-50000':
+                        return amount >= 0 && amount <= 50000;
+                    case '50000-200000':
+                        return amount > 50000 && amount <= 200000;
+                    case '200000-500000':
+                        return amount > 200000 && amount <= 500000;
+                    case '500000+':
+                        return amount > 500000;
+                    default:
+                        return true;
+                }
+            });
+        }
+
+        // Update approval statistics
+        function updateApprovalStats(approvals) {
+            const stats = {
+                buyerPayments: approvals.filter(a => a.approval_type === 'MANUAL_PAYMENT').length,
+                sellerPayouts: approvals.filter(a => a.approval_type === 'SELLER_PAYOUT').length,
+                psmPayments: approvals.filter(a => a.approval_type === 'PSM_PAYMENT_APPROVAL').length,
+                psmCommission: approvals.filter(a => a.approval_type === 'PSM_COMMISSION').length,
+                pdaCommission: approvals.filter(a => a.approval_type === 'PDA_COMMISSION').length,
+                fdaCommission: approvals.filter(a => a.approval_type === 'FDA_COMMISSION').length,
+                localMarketPayments: approvals.filter(a => a.type === 'LOCAL_MARKET_PAYMENT').length
+            };
+
+            document.getElementById('buyer-payments-count').textContent = stats.buyerPayments;
+            document.getElementById('seller-payouts-count').textContent = stats.sellerPayouts;
+            document.getElementById('psm-payments-count').textContent = stats.psmPayments;
+            document.getElementById('psm-commission-count').textContent = stats.psmCommission;
+            document.getElementById('pda-commission-count').textContent = stats.pdaCommission;
+            document.getElementById('fda-commission-count').textContent = stats.fdaCommission;
+            document.getElementById('local-market-payments-count').textContent = stats.localMarketPayments;
+            document.getElementById('total-approvals').textContent = approvals.length;
+        }
+
+        // Render approvals table
+        function renderApprovalsTable(approvals) {
+            const container = document.getElementById('approvals-table-container');
+            
+            if (!approvals || approvals.length === 0) {
+                container.innerHTML = window.adminUtils.createEmptyState(
+                    'clipboard-check', 
+                    'No Approvals Found', 
+                    'No approvals match your current filters.',
+                    '<button onclick="clearFilters()" class="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"><i class="fas fa-times mr-2"></i>Clear Filters</button>'
+                );
+                return;
+            }
+
+            const tableHTML = `
+                <table class="w-full">
+                    <thead class="bg-white/5">
+                        <tr>
+                            <th class="text-left p-4 text-white/70 font-semibold">Type</th>
+                            <th class="text-left p-4 text-white/70 font-semibold">Order/Request</th>
+                            <th class="text-left p-4 text-white/70 font-semibold">Amount</th>
+                            <th class="text-left p-4 text-white/70 font-semibold">Requester</th>
+                            <th class="text-left p-4 text-white/70 font-semibold">Status</th>
+                            <th class="text-left p-4 text-white/70 font-semibold">Created</th>
+                            <th class="text-left p-4 text-white/70 font-semibold">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${approvals.map(approval => `
+                            <tr class="border-t border-white/10 hover:bg-white/5">
+                                <td class="p-4">
+                                    <span class="approval-type-badge ${getApprovalTypeColor(approval.approval_type)}">
+                                        ${formatApprovalType(approval.approval_type)}
+                                    </span>
+                                </td>
+                                <td class="p-4">
+                                    <div class="text-white font-semibold">${approval.order_number || 'N/A'}</div>
+                                    <div class="text-white/50 text-sm">ID: ${approval.order_id || approval.id}</div>
+                                </td>
+                                <td class="p-4">
+                                    <div class="text-white font-semibold">${formatCurrency(approval.amount || approval.total_amount)}</div>
+                                </td>
+                                <td class="p-4">
+                                    <div class="text-white">${approval.requester_name || 'Unknown'}</div>
+                                    <div class="text-white/50 text-sm">${approval.requester_email || ''}</div>
+                                </td>
+                                <td class="p-4">
+                                    <span class="px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(approval.status)}">
+                                        ${approval.status.charAt(0).toUpperCase() + approval.status.slice(1)}
+                                    </span>
+                                </td>
+                                <td class="p-4 text-white/70 text-sm">
+                                    ${window.adminAuth.formatDate(approval.created_at)}
+                                </td>
+                                <td class="p-4">
+                                    <div class="flex space-x-2">
+                                        <button onclick="viewApprovalDetails(${approval.id}, '${approval.type || approval.approval_type}')" 
+                                                class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-xs">
+                                            <i class="fas fa-eye mr-1"></i>View
+                                        </button>
+                                        ${(approval.status === 'pending' || approval.status === 'pending_payment') ? `
+                                            <button onclick="approveRequest(${approval.id})" 
+                                                    class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-xs">
+                                                <i class="fas fa-check mr-1"></i>Approve
+                                            </button>
+                                            <button onclick="rejectRequest(${approval.id})" 
+                                                    class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs">
+                                                <i class="fas fa-times mr-1"></i>Reject
+                                            </button>
+                                        ` : ''}
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+
+            container.innerHTML = tableHTML;
+        }
+
+        // Get approval type color
+        function getApprovalTypeColor(type) {
+            const colors = {
+                'MANUAL_PAYMENT': 'bg-blue-500/20 text-blue-400',
+                'SELLER_PAYOUT': 'bg-green-500/20 text-green-400',
+                'PSM_PAYMENT_APPROVAL': 'bg-purple-500/20 text-purple-400',
+                'PSM_COMMISSION': 'bg-yellow-500/20 text-yellow-400',
+                'PDA_COMMISSION': 'bg-orange-500/20 text-orange-400',
+                'FDA_COMMISSION': 'bg-red-500/20 text-red-400',
+                'LOCAL_MARKET_PAYMENT': 'bg-indigo-500/20 text-indigo-400'
+            };
+            return colors[type] || 'bg-gray-500/20 text-gray-400';
+        }
+
+        // Format approval type
+        function formatApprovalType(type) {
+            const types = {
+                'MANUAL_PAYMENT': 'Buyer Payment',
+                'SELLER_PAYOUT': 'Seller Payout',
+                'PSM_PAYMENT_APPROVAL': 'PSM Payment',
+                'PSM_COMMISSION': 'PSM Commission',
+                'PDA_COMMISSION': 'PDA Commission',
+                'FDA_COMMISSION': 'FDA Commission',
+                'LOCAL_MARKET_PAYMENT': 'Local Market Payment'
+            };
+            return types[type] || type;
+        }
+
+        // Get status color
+        function getStatusColor(status) {
+            const colors = {
+                'pending': 'bg-yellow-500/20 text-yellow-400',
+                'pending_payment': 'bg-yellow-500/20 text-yellow-400',
+                'approved': 'bg-green-500/20 text-green-400',
+                'confirmed': 'bg-green-500/20 text-green-400',
+                'rejected': 'bg-red-500/20 text-red-400',
+                'payment_rejected': 'bg-red-500/20 text-red-400'
+            };
+            return colors[status] || 'bg-gray-500/20 text-gray-400';
+        }
+
+        // Format currency (FRW default)
+        function formatCurrency(amount) {
+            if (!amount) return '0 FRW';
+            return new Intl.NumberFormat('en-RW', {
+                style: 'currency',
+                currency: 'RWF',
+                minimumFractionDigits: 0
+            }).format(parseFloat(amount)).replace('RWF', 'FRW');
+        }
+
+        // Filter by type (from clickable cards)
+        function filterByType(type) {
+            currentFilter = type;
+            document.getElementById('type-filter').value = type;
+            loadApprovals();
+            window.adminUtils.showToast(`Filtered by: ${formatApprovalType(type)}`, 'info');
+        }
+
+        // Clear all filters
+        function clearFilters() {
+            document.getElementById('type-filter').value = '';
+            document.getElementById('status-filter').value = '';
+            document.getElementById('amount-filter').value = '';
+            currentFilter = '';
+            loadApprovals();
+            window.adminUtils.showToast('Filters cleared', 'info');
+        }
+
+        // View approval details
+        async function viewApprovalDetails(approvalId, approvalType = null) {
+            try {
+                console.log('👁️ Loading approval details:', approvalId, 'Type:', approvalType);
+                
+                const token = localStorage.getItem('token') || localStorage.getItem('authToken') || localStorage.getItem('adminToken');
+                if (!token) {
+                    window.location.href = '/auth/auth-admin.html';
+                    return;
+                }
+
+                // Set current approval type for approve/reject functions
+                window.currentApprovalType = approvalType;
+                
+                // For local market payments and manual payments, find the approval in current data
+                if (approvalType === 'LOCAL_MARKET_PAYMENT' || approvalType === 'MANUAL_PAYMENT') {
+                    const approval = currentApprovals.find(a => a.id == approvalId);
+                    if (approval) {
+                        renderApprovalDetails(approval);
+                        document.getElementById('approval-modal').classList.remove('hidden');
+                        document.getElementById('approval-modal').classList.add('flex');
+                        console.log('✅ Approval details loaded for type:', approvalType);
+                        return;
+                    }
+                }
+                
+                // For other approval types, fetch from API
+                const response = await fetch(`/api/admin/pda-approvals/${approvalId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    const approval = data.approval;
+                    renderApprovalDetails(approval);
+                    document.getElementById('approval-modal').classList.remove('hidden');
+                    document.getElementById('approval-modal').classList.add('flex');
+                    console.log('✅ Approval details loaded');
+                } else {
+                    throw new Error(data.message || 'Failed to load approval details');
+                }
+                
+            } catch (error) {
+                console.error('❌ Error loading approval details:', error);
+                window.adminUtils.showToast('Failed to load approval details: ' + error.message, 'error');
+            }
+        }
+
+        // Render approval details
+        function renderApprovalDetails(approval) {
+            const content = document.getElementById('approval-details-content');
+            
+            content.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Basic Information -->
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-semibold text-white mb-4">Basic Information</h3>
+                        
+                        <div class="bg-white/5 p-4 rounded-lg">
+                            <label class="text-white/70 text-sm">Approval Type</label>
+                            <div class="text-white font-semibold">${formatApprovalType(approval.approval_type)}</div>
+                        </div>
+                        
+                        <div class="bg-white/5 p-4 rounded-lg">
+                            <label class="text-white/70 text-sm">Order Number</label>
+                            <div class="text-white font-semibold">${approval.order_number || 'N/A'}</div>
+                        </div>
+                        
+                        <div class="bg-white/5 p-4 rounded-lg">
+                            <label class="text-white/70 text-sm">Amount</label>
+                            <div class="text-white font-semibold text-xl">${formatCurrency(approval.amount || approval.total_amount)}</div>
+                        </div>
+                        
+                        <div class="bg-white/5 p-4 rounded-lg">
+                            <label class="text-white/70 text-sm">Status</label>
+                            <span class="px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(approval.status)}">
+                                ${approval.status.charAt(0).toUpperCase() + approval.status.slice(1)}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <!-- Requester Information -->
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-semibold text-white mb-4">Requester Information</h3>
+                        
+                        <div class="bg-white/5 p-4 rounded-lg">
+                            <label class="text-white/70 text-sm">Name</label>
+                            <div class="text-white font-semibold">${approval.requester_name || 'Unknown'}</div>
+                        </div>
+                        
+                        <div class="bg-white/5 p-4 rounded-lg">
+                            <label class="text-white/70 text-sm">Email</label>
+                            <div class="text-white font-semibold">${approval.requester_email || 'N/A'}</div>
+                        </div>
+                        
+                        <div class="bg-white/5 p-4 rounded-lg">
+                            <label class="text-white/70 text-sm">Phone</label>
+                            <div class="text-white font-semibold">${approval.buyer_phone || approval.seller_phone || 'N/A'}</div>
+                        </div>
+                        
+                        <div class="bg-white/5 p-4 rounded-lg">
+                            <label class="text-white/70 text-sm">Created</label>
+                            <div class="text-white font-semibold">${window.adminAuth.formatDate(approval.created_at)}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Payment Proof -->
+                ${approval.payment_proof_url ? `
+                    <div class="mt-6">
+                        <h3 class="text-lg font-semibold text-white mb-4">Payment Proof</h3>
+                        <div class="bg-white/5 p-4 rounded-lg">
+                            <img src="${approval.payment_proof_url}" alt="Payment Proof" 
+                                 class="payment-proof-img cursor-pointer" 
+                                 onclick="showPaymentProof('${approval.payment_proof_url}')">
+                        </div>
+                    </div>
+                ` : ''}
+                
+                <!-- Description/Notes -->
+                ${approval.description || approval.notes ? `
+                    <div class="mt-6">
+                        <h3 class="text-lg font-semibold text-white mb-4">Description/Notes</h3>
+                        <div class="bg-white/5 p-4 rounded-lg">
+                            <div class="text-white">${approval.description || approval.notes || 'No description provided'}</div>
+                        </div>
+                    </div>
+                ` : ''}
+                
+                <!-- Actions -->
+                ${approval.status === 'pending' ? `
+                    <div class="mt-8 flex justify-end space-x-4">
+                        <button onclick="rejectRequest(${approval.id})" 
+                                class="px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg">
+                            <i class="fas fa-times mr-2"></i>Reject
+                        </button>
+                        <button onclick="approveRequest(${approval.id})" 
+                                class="px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg">
+                            <i class="fas fa-check mr-2"></i>Approve
+                        </button>
+                    </div>
+                ` : ''}
+            `;
+        }
+
+        // Show payment proof in modal
+        function showPaymentProof(imageUrl) {
+            document.getElementById('proof-content').innerHTML = `
+                <img src="${imageUrl}" alt="Payment Proof" class="payment-proof-img">
+            `;
+            document.getElementById('proof-modal').classList.remove('hidden');
+            document.getElementById('proof-modal').classList.add('flex');
+        }
+
+        // Approve request
+        async function approveRequest(approvalId) {
+            try {
+                const notes = await window.adminUtils.promptDialog('Enter approval notes (optional):');
+                
+                console.log('✅ Approving request:', approvalId);
+                
+                const token = localStorage.getItem('token') || localStorage.getItem('authToken') || localStorage.getItem('adminToken');
+                if (!token) {
+                    window.location.href = '/auth/auth-admin.html';
+                    return;
+                }
+                
+                // Determine endpoint based on approval type
+                let endpoint = `/api/admin/pda-approvals/${approvalId}/approve`;
+                if (window.currentApprovalType === 'LOCAL_MARKET_PAYMENT') {
+                    endpoint = `/api/local-market/${approvalId}/approve-payment`;
+                } else if (window.currentApprovalType === 'MANUAL_PAYMENT') {
+                    endpoint = `/api/admin/payments/buyer-payments/${approvalId}/approve`;
+                }
+                
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        review_notes: notes || 'Approved by admin',
+                        notes: notes || 'Approved by admin'
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    window.adminUtils.showToast('Request approved successfully!', 'success');
+                    closeApprovalModal();
+                    
+                    // Update the item in current list immediately
+                    updateApprovalInList(approvalId, 'approved');
+                    
+                    // Trigger real-time notification to other users
+                    triggerRealTimeNotification(approvalId, window.currentApprovalType);
+                    
+                    // Reload data to get fresh counts and ensure consistency
+                    setTimeout(() => {
+                        loadApprovals();
+                    }, 500);
+                    
+                    console.log('✅ Request approved successfully');
+                } else {
+                    throw new Error(data.message || 'Failed to approve request');
+                }
+                
+            } catch (error) {
+                console.error('❌ Error approving request:', error);
+                window.adminUtils.showToast('Failed to approve request: ' + error.message, 'error');
+            }
+        }
+
+        // Trigger real-time notification to other users
+        function triggerRealTimeNotification(approvalId, approvalType) {
+            try {
+                // Store notification in localStorage for other tabs/windows to pick up
+                const notification = {
+                    type: 'payment_approved',
+                    approvalId: approvalId,
+                    approvalType: approvalType,
+                    timestamp: Date.now(),
+                    message: getApprovalNotificationMessage(approvalType)
+                };
+                
+                // Store in localStorage to trigger cross-tab communication
+                localStorage.setItem('payment_approval_notification', JSON.stringify(notification));
+                
+                // Remove after a short delay to avoid stale notifications
+                setTimeout(() => {
+                    localStorage.removeItem('payment_approval_notification');
+                }, 5000);
+                
+                console.log('🔔 Real-time notification triggered:', notification);
+            } catch (error) {
+                console.error('Error triggering real-time notification:', error);
+            }
+        }
+        
+        function getApprovalNotificationMessage(approvalType) {
+            switch (approvalType) {
+                case 'MANUAL_PAYMENT':
+                    return 'Buyer payment approved - Order is now active';
+                case 'SELLER_PAYOUT':
+                    return 'Seller payout approved';
+                case 'PSM_PAYMENT_APPROVAL':
+                    return 'PSM payment approved';
+                case 'PSM_COMMISSION':
+                    return 'PSM commission released';
+                case 'PDA_COMMISSION':
+                    return 'PDA commission released';
+                case 'FDA_COMMISSION':
+                    return 'FDA commission released';
+                case 'LOCAL_MARKET_PAYMENT':
+                    return 'Local market payment approved';
+                default:
+                    return 'Payment approved';
+            }
+        }
+
+        // Reject request
+        async function rejectRequest(approvalId) {
+            try {
+                const reason = await window.adminUtils.promptDialog('Enter rejection reason:');
+                if (!reason) return;
+                
+                console.log('❌ Rejecting request:', approvalId);
+                
+                const token = localStorage.getItem('token') || localStorage.getItem('authToken') || localStorage.getItem('adminToken');
+                if (!token) {
+                    window.location.href = '/auth/auth-admin.html';
+                    return;
+                }
+                
+                // Determine endpoint based on approval type
+                let endpoint = `/api/admin/pda-approvals/${approvalId}/reject`;
+                if (window.currentApprovalType === 'LOCAL_MARKET_PAYMENT') {
+                    endpoint = `/api/local-market/${approvalId}/reject-payment`;
+                } else if (window.currentApprovalType === 'MANUAL_PAYMENT') {
+                    endpoint = `/api/admin/payments/buyer-payments/${approvalId}/reject`;
+                }
+                
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        review_notes: reason,
+                        notes: reason,
+                        rejection_reason: reason
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    window.adminUtils.showToast('Request rejected successfully!', 'success');
+                    closeApprovalModal();
+                    
+                    // Update the item in current list immediately
+                    updateApprovalInList(approvalId, 'rejected');
+                    
+                    // Reload data to get fresh counts and ensure consistency
+                    setTimeout(() => {
+                        loadApprovals();
+                    }, 500);
+                    
+                    console.log('✅ Request rejected successfully');
+                } else {
+                    throw new Error(data.message || 'Failed to reject request');
+                }
+                
+            } catch (error) {
+                console.error('❌ Error rejecting request:', error);
+                window.adminUtils.showToast('Failed to reject request: ' + error.message, 'error');
+            }
+        }
+
+        // Close approval modal
+        function closeApprovalModal() {
+            document.getElementById('approval-modal').classList.add('hidden');
+            document.getElementById('approval-modal').classList.remove('flex');
+        }
+
+        // Close proof modal
+        function closeProofModal() {
+            document.getElementById('proof-modal').classList.add('hidden');
+            document.getElementById('proof-modal').classList.remove('flex');
+        }
+
+        // Update approval in current list (immediate UI feedback)
+        function updateApprovalInList(approvalId, newStatus) {
+            try {
+                // Find and update the approval in current list
+                const approvalIndex = currentApprovals.findIndex(a => a.id == approvalId);
+                if (approvalIndex !== -1) {
+                    currentApprovals[approvalIndex].status = newStatus;
+                    
+                    // Get current status filter
+                    const statusFilter = document.getElementById('status-filter')?.value || '';
+                    
+                    // If we're viewing pending items and item is now approved/rejected, remove it from view
+                    if (statusFilter === 'pending' && (newStatus === 'approved' || newStatus === 'rejected')) {
+                        currentApprovals.splice(approvalIndex, 1);
+                        renderApprovalsTable(currentApprovals);
+                        updateApprovalStats(currentApprovals);
+                        
+                        // Show visual feedback
+                        window.adminUtils.showToast(
+                            `Payment ${newStatus}. Item removed from pending list.`, 
+                            'info'
+                        );
+                    } else {
+                        // Just re-render the table to show updated status
+                        renderApprovalsTable(currentApprovals);
+                    }
+                }
+            } catch (error) {
+                console.error('Error updating approval in list:', error);
+            }
+        }
+
+        // Export approvals
+        function exportApprovals() {
+            if (!currentApprovals || currentApprovals.length === 0) {
+                window.adminUtils.showToast('No approvals to export', 'warning');
+                return;
+            }
+            
+            const exportData = currentApprovals.map(approval => ({
+                'Type': formatApprovalType(approval.approval_type),
+                'Order Number': approval.order_number || 'N/A',
+                'Amount (FRW)': parseFloat(approval.amount || approval.total_amount || 0),
+                'Requester': approval.requester_name || 'Unknown',
+                'Email': approval.requester_email || 'N/A',
+                'Status': approval.status,
+                'Created': new Date(approval.created_at).toLocaleDateString()
+            }));
+            
+            window.adminUtils.exportToCSV(exportData, `payment_approvals_${new Date().toISOString().split('T')[0]}.csv`);
+        }
+
+        // Make functions globally available
+        window.loadApprovals = loadApprovals;
+        window.filterByType = filterByType;
+        window.clearFilters = clearFilters;
+        window.viewApprovalDetails = viewApprovalDetails;
+        window.showPaymentProof = showPaymentProof;
+        window.approveRequest = approveRequest;
+        window.rejectRequest = rejectRequest;
+        window.closeApprovalModal = closeApprovalModal;
+        window.closeProofModal = closeProofModal;
+        window.updateApprovalInList = updateApprovalInList;
+        window.exportApprovals = exportApprovals;
+
+        console.log('✅ Payment Approval Enhanced initialized');
+    </script>
+</body>
+</html>

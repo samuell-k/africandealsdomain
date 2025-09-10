@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Details | ADD Physical Products</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .glass { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+        .fade-in { animation: fadeIn 0.6s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .slide-in { animation: slideIn 0.5s ease-out; }
+        @keyframes slideIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+        .bounce-in { animation: bounceIn 0.8s ease-out; }
+        @keyframes bounceIn { 0% { transform: scale(0.3); opacity: 0; } 50% { transform: scale(1.05); } 70% { transform: scale(0.9); } 100% { transform: scale(1); opacity: 1; } }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .status-progress { transition: all 0.3s ease; }
+        .status-progress:hover { transform: scale(1.02); }
+        .order-card { transition: all 0.3s ease; }
+        .order-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .pulse-animation { animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+        .shimmer { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+        .sidebar-link.active { background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; }
+        .sidebar-link:hover { background: #f3f4f6; }
+        .sidebar-link.active:hover { background: linear-gradient(135deg, #2563eb, #1e40af); }
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Notification System -->
+    <div id="notification" class="fixed top-4 right-4 z-50 transform transition-transform duration-300 translate-x-full">
+        <div id="notification-content" class="px-4 py-3 rounded-lg shadow-lg text-white font-medium flex items-center">
+            <i id="notification-icon" class="mr-2"></i>
+            <span id="notification-message"></span>
+        </div>
+    </div>
+
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
+        <div class="text-center">
+            <div class="loading-spinner mx-auto mb-4"></div>
+            <p class="text-gray-600">Loading order details...</p>
+        </div>
+    </div>
+
+    <!-- Error Screen -->
+    <div id="error-screen" class="fixed inset-0 bg-gray-50 z-40 flex items-center justify-center hidden">
+        <div class="max-w-md w-full mx-4">
+            <div class="bg-white rounded-lg shadow-lg p-8 text-center">
+                <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-exclamation-triangle text-2xl text-red-500"></i>
+                </div>
+                <h2 class="text-xl font-bold text-gray-900 mb-2">Order Not Found</h2>
+                <p id="error-message" class="text-gray-600 mb-6">We couldn't find the order you're looking for.</p>
+                <div class="space-y-3">
+                    <button onclick="retryLoad()" class="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-redo mr-2"></i>Try Again
+                    </button>
+                    <a href="/buyer/orders.html" class="block w-full bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-arrow-left mr-2"></i>Back to Orders
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <div class="w-64 bg-white shadow-lg">
+            <!-- Logo -->
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-shopping-bag text-white text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-gray-900">ADD</h1>
+                        <p class="text-xs text-gray-500">Physical Products</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="p-4 space-y-2">
+                <a href="/buyer/dashboard.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg transition-all">
+                    <i class="fas fa-home w-5"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="/buyer/products.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg transition-all">
+                    <i class="fas fa-box w-5"></i>
+                    <span>Products</span>
+                </a>
+                <a href="/buyer/orders.html" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg transition-all">
+                    <i class="fas fa-receipt w-5"></i>
+                    <span>My Orders</span>
+                </a>
+                <a href="/buyer/cart.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg transition-all">
+                    <i class="fas fa-shopping-cart w-5"></i>
+                    <span>Cart</span>
+                </a>
+                <a href="/buyer/wishlist.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg transition-all">
+                    <i class="fas fa-heart w-5"></i>
+                    <span>Wishlist</span>
+                </a>
+                <a href="/buyer/profile.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg transition-all">
+                    <i class="fas fa-user w-5"></i>
+                    <span>Profile</span>
+                </a>
+            </nav>
+
+            <!-- User Info -->
+            <div class="absolute bottom-0 w-64 p-4 border-t border-gray-200 bg-white">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
+                        <i class="fas fa-user text-gray-600 text-sm"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p id="user-name" class="text-sm font-medium text-gray-900">Loading...</p>
+                        <p class="text-xs text-gray-500">Buyer</p>
+                    </div>
+                    <button onclick="logout()" class="text-gray-400 hover:text-red-500 transition-colors">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 overflow-auto">
+            <!-- Header -->
+            <div class="bg-white shadow-sm border-b border-gray-200 p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">Order Details</h1>
+                        <p class="text-gray-600">View your order information and tracking details</p>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <button onclick="printOrder()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg transition-colors">
+                            <i class="fas fa-print mr-2"></i>Print
+                        </button>
+                        <a href="/buyer/orders.html" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors">
+                            <i class="fas fa-arrow-left mr-2"></i>Back to Orders
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Content -->
+            <div id="order-content" class="p-6 space-y-6 hidden">
+                <!-- Order Header -->
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h2 class="text-xl font-bold text-gray-900" id="order-number">Order #</h2>
+                            <p class="text-gray-600" id="order-date">Placed on</p>
+                        </div>
+                        <div class="text-right">
+                            <div id="order-status-badge" class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium">
+                                <span id="order-status-text">Loading...</span>
+                            </div>
+                            <p class="text-2xl font-bold text-gray-900 mt-2" id="order-total">RWF 0</p>
+                        </div>
+                    </div>
+
+                    <!-- Order Progress -->
+                    <div id="order-progress" class="mt-6">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-medium text-gray-700">Order Progress</span>
+                            <span class="text-sm text-gray-500" id="progress-percentage">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div id="progress-bar" class="bg-blue-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                        <div class="flex justify-between mt-2 text-xs text-gray-500">
+                            <span>Placed</span>
+                            <span>Processing</span>
+                            <span>Shipped</span>
+                            <span>Delivered</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order Items -->
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">Order Items</h3>
+                    <div id="order-items" class="space-y-4">
+                        <!-- Items will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Order Information Grid -->
+                <div class="grid md:grid-cols-2 gap-6">
+                    <!-- Shipping Information -->
+                    <div class="bg-white rounded-lg shadow-sm p-6">
+                        <h3 class="text-lg font-bold text-gray-900 mb-4">
+                            <i class="fas fa-truck mr-2 text-blue-500"></i>Shipping Information
+                        </h3>
+                        <div id="shipping-info" class="space-y-3">
+                            <!-- Shipping details will be loaded here -->
+                        </div>
+                    </div>
+
+                    <!-- Payment Information -->
+                    <div class="bg-white rounded-lg shadow-sm p-6">
+                        <h3 class="text-lg font-bold text-gray-900 mb-4">
+                            <i class="fas fa-credit-card mr-2 text-green-500"></i>Payment Information
+                        </h3>
+                        <div id="payment-info" class="space-y-3">
+                            <!-- Payment details will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Agent Information (if available) -->
+                <div id="agent-info-section" class="bg-white rounded-lg shadow-sm p-6 hidden">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">
+                        <i class="fas fa-user-tie mr-2 text-purple-500"></i>Delivery Agent
+                    </h3>
+                    <div id="agent-info" class="space-y-3">
+                        <!-- Agent details will be loaded here -->
+                    </div>
+                    
+                    <!-- Delivery Confirmation Section -->
+                    <div id="delivery-confirmation-section" class="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg hidden">
+                        <div class="flex items-center mb-4">
+                            <i class="fas fa-handshake text-2xl text-yellow-600 mr-3"></i>
+                            <div>
+                                <h4 class="font-bold text-gray-900">Confirm Delivery</h4>
+                                <p class="text-sm text-gray-600">Please confirm that you have received your order from the delivery agent</p>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <!-- Agent Verification -->
+                            <div class="bg-white p-4 rounded-lg border">
+                                <h5 class="font-medium text-gray-900 mb-2">Verify Agent Identity</h5>
+                                <div class="grid grid-cols-2 gap-4 text-sm">
+                                    <div>
+                                        <span class="text-gray-600">Agent Name:</span>
+                                        <span id="confirm-agent-name" class="font-medium text-gray-900 ml-2">-</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-600">Agent Phone:</span>
+                                        <span id="confirm-agent-phone" class="font-medium text-gray-900 ml-2">-</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-600">Agent ID:</span>
+                                        <span id="confirm-agent-id" class="font-medium text-gray-900 ml-2">-</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-600">Delivery Code:</span>
+                                        <span id="confirm-delivery-code" class="font-medium text-blue-600 ml-2">-</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Delivery Verification Code Input -->
+                            <div class="bg-white p-4 rounded-lg border">
+                                <label for="verification-code" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Enter Delivery Verification Code
+                                </label>
+                                <div class="flex gap-3">
+                                    <input type="text" 
+                                           id="verification-code" 
+                                           class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                                           placeholder="Enter 6-digit code from agent"
+                                           maxlength="6">
+                                    <button onclick="verifyDeliveryCode()" 
+                                            class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors">
+                                        <i class="fas fa-check mr-1"></i>Verify
+                                    </button>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">The agent will provide you with a 6-digit verification code</p>
+                            </div>
+                            
+                            <!-- Order Condition Check -->
+                            <div class="bg-white p-4 rounded-lg border">
+                                <h5 class="font-medium text-gray-900 mb-3">Order Condition Check</h5>
+                                <div class="space-y-2">
+                                    <label class="flex items-center">
+                                        <input type="checkbox" id="items-complete" class="mr-2 rounded">
+                                        <span class="text-sm text-gray-700">All items are complete and as ordered</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" id="items-undamaged" class="mr-2 rounded">
+                                        <span class="text-sm text-gray-700">Items are in good condition (not damaged)</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" id="packaging-intact" class="mr-2 rounded">
+                                        <span class="text-sm text-gray-700">Packaging is intact and secure</span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <!-- Rating Section -->
+                            <div class="bg-white p-4 rounded-lg border">
+                                <h5 class="font-medium text-gray-900 mb-3">Rate Delivery Service</h5>
+                                <div class="flex items-center gap-2 mb-3">
+                                    <span class="text-sm text-gray-600">Rating:</span>
+                                    <div id="rating-stars" class="flex gap-1">
+                                        <i class="fas fa-star text-gray-300 cursor-pointer hover:text-yellow-400" data-rating="1"></i>
+                                        <i class="fas fa-star text-gray-300 cursor-pointer hover:text-yellow-400" data-rating="2"></i>
+                                        <i class="fas fa-star text-gray-300 cursor-pointer hover:text-yellow-400" data-rating="3"></i>
+                                        <i class="fas fa-star text-gray-300 cursor-pointer hover:text-yellow-400" data-rating="4"></i>
+                                        <i class="fas fa-star text-gray-300 cursor-pointer hover:text-yellow-400" data-rating="5"></i>
+                                    </div>
+                                    <span id="rating-text" class="text-sm text-gray-500 ml-2">No rating</span>
+                                </div>
+                                <textarea id="delivery-feedback" 
+                                          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                                          rows="3" 
+                                          placeholder="Optional: Share your feedback about the delivery service"></textarea>
+                            </div>
+                            
+                            <!-- Confirmation Buttons -->
+                            <div class="flex gap-3">
+                                <button onclick="confirmDelivery()" 
+                                        id="confirm-delivery-btn"
+                                        class="flex-1 bg-green-500 hover:bg-green-600 text-white px-4 py-3 rounded-lg font-medium transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed">
+                                    <i class="fas fa-check-circle mr-2"></i>Confirm Delivery Received
+                                </button>
+                                <button onclick="reportIssue()" 
+                                        class="px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-colors">
+                                    <i class="fas fa-exclamation-triangle mr-2"></i>Report Issue
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order Timeline -->
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">
+                        <i class="fas fa-history mr-2 text-indigo-500"></i>Order Timeline
+                    </h3>
+                    <div id="order-timeline" class="space-y-4">
+                        <!-- Timeline will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentOrder = null;
+        let orderId = null;
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Order Detail Page Loading...');
+            
+            // Get order ID from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            orderId = urlParams.get('id');
+            
+            console.log('📋 Order ID from URL:', orderId);
+            
+            if (!orderId) {
+                showError('No order ID provided in URL');
+                return;
+            }
+            
+            // Load user info
+            loadUserInfo();
+            
+            // Load order details
+            loadOrderDetails();
+        });
+
+        // Load user information
+        function loadUserInfo() {
+            try {
+                const userData = localStorage.getItem('userData');
+                if (userData) {
+                    const user = JSON.parse(userData);
+                    const userNameEl = document.getElementById('user-name');
+                    if (userNameEl) {
+                        userNameEl.textContent = user.name || user.username || 'User';
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading user info:', error);
+            }
+        }
+
+        // Load order details
+        async function loadOrderDetails() {
+            console.log('📦 Loading order details for ID:', orderId);
+            
+            try {
+                showLoading();
+                
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    throw new Error('No authentication token found');
+                }
+
+                console.log('🔑 Making API request with token...');
+                
+                const response = await fetch(`/api/orders/${orderId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                console.log('📡 API Response status:', response.status);
+
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        throw new Error('Authentication failed. Please login again.');
+                    } else if (response.status === 404) {
+                        throw new Error('Order not found or you do not have permission to view it.');
+                    } else {
+                        throw new Error(`Server error: ${response.status} ${response.statusText}`);
+                    }
+                }
+
+                const data = await response.json();
+                console.log('📋 Order data received:', data);
+
+                if (!data.success) {
+                    throw new Error(data.message || 'Failed to load order details');
+                }
+
+                if (!data.order) {
+                    throw new Error('Order data is missing from response');
+                }
+
+                currentOrder = data.order;
+                displayOrderDetails(currentOrder);
+                hideLoading();
+
+            } catch (error) {
+                console.error('❌ Error loading order details:', error);
+                hideLoading();
+                showError(error.message);
+            }
+        }
+
+        // Display order details
+        function displayOrderDetails(order) {
+            console.log('🎨 Displaying order details:', order);
+            
+            try {
+                // Store current order globally
+                currentOrder = order;
+                
+                // Update order header
+                updateElement('order-number', `Order #${order.order_number || order.id}`);
+                updateElement('order-date', `Placed on ${formatDate(order.created_at)}`);
+                updateElement('order-total', formatCurrency(order.total_amount));
+                
+                // Update status
+                updateOrderStatus(order.status);
+                
+                // Display order items
+                displayOrderItems(order.items || []);
+                
+                // Display shipping info
+                displayShippingInfo(order);
+                
+                // Display payment info
+                displayPaymentInfo(order);
+                
+                // Display agent info if available
+                if (order.agent_info) {
+                    displayAgentInfo(order.agent_info);
+                }
+                
+                // Display timeline
+                displayOrderTimeline(order);
+                
+                // Show content
+                document.getElementById('order-content').classList.remove('hidden');
+                
+                console.log('✅ Order details displayed successfully');
+                
+            } catch (error) {
+                console.error('❌ Error displaying order details:', error);
+                showError('Error displaying order information');
+            }
+        }
+
+        // Display order items
+        function displayOrderItems(items) {
+            const container = document.getElementById('order-items');
+            if (!container) return;
+            
+            if (!items || items.length === 0) {
+                container.innerHTML = '<p class="text-gray-500">No items found for this order.</p>';
+                return;
+            }
+            
+            container.innerHTML = items.map(item => `
+                <div class="flex items-center gap-4 p-4 border border-gray-200 rounded-lg">
+                    <div class="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center overflow-hidden">
+                        ${item.product_image ? 
+                            `<img src="${item.product_image}" alt="${item.product_name}" class="w-full h-full object-cover">` :
+                            `<i class="fas fa-box text-gray-400"></i>`
+                        }
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="font-medium text-gray-900">${item.product_name || 'Unknown Product'}</h4>
+                        <p class="text-sm text-gray-600">Seller: ${item.seller_name || 'Unknown Seller'}</p>
+                        <p class="text-sm text-gray-600">Quantity: ${item.quantity || 1}</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-medium text-gray-900">${formatCurrency(item.unit_price)}</p>
+                        <p class="text-sm text-gray-600">Total: ${formatCurrency((item.unit_price || 0) * (item.quantity || 1))}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Display shipping information
+        function displayShippingInfo(order) {
+            const container = document.getElementById('shipping-info');
+            if (!container) return;
+            
+            container.innerHTML = `
+                <div class="space-y-2">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Delivery Address:</span>
+                        <span class="font-medium text-gray-900">${order.delivery_address || 'Not specified'}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Phone:</span>
+                        <span class="font-medium text-gray-900">${order.customer_phone || 'Not provided'}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Delivery Method:</span>
+                        <span class="font-medium text-gray-900">${order.delivery_method || 'Standard'}</span>
+                    </div>
+                    ${order.estimated_delivery_time ? `
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Estimated Delivery:</span>
+                        <span class="font-medium text-gray-900">${formatDate(order.estimated_delivery_time)}</span>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        // Display payment information
+        function displayPaymentInfo(order) {
+            const container = document.getElementById('payment-info');
+            if (!container) return;
+            
+            container.innerHTML = `
+                <div class="space-y-2">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Payment Method:</span>
+                        <span class="font-medium text-gray-900">${order.payment_method || 'Not specified'}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Payment Status:</span>
+                        <span class="font-medium ${getPaymentStatusColor(order.payment_status)}">${order.payment_status || 'Pending'}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Subtotal:</span>
+                        <span class="font-medium text-gray-900">${formatCurrency(order.subtotal || order.total_amount)}</span>
+                    </div>
+                    ${order.shipping_cost ? `
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Shipping:</span>
+                        <span class="font-medium text-gray-900">${formatCurrency(order.shipping_cost)}</span>
+                    </div>
+                    ` : ''}
+                    <div class="flex justify-between border-t pt-2">
+                        <span class="text-gray-900 font-bold">Total:</span>
+                        <span class="font-bold text-gray-900">${formatCurrency(order.total_amount)}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Display agent information
+        function displayAgentInfo(agentInfo) {
+            const section = document.getElementById('agent-info-section');
+            const container = document.getElementById('agent-info');
+            
+            if (!section || !container) return;
+            
+            container.innerHTML = `
+                <div class="space-y-2">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Agent Name:</span>
+                        <span class="font-medium text-gray-900">${agentInfo.name || 'Not assigned'}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Phone:</span>
+                        <span class="font-medium text-gray-900">${agentInfo.phone || 'Not provided'}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Agent Type:</span>
+                        <span class="font-medium text-gray-900">${agentInfo.agent_type || 'Standard'}</span>
+                    </div>
+                </div>
+            `;
+            
+            section.classList.remove('hidden');
+            
+            // Initialize delivery confirmation if applicable
+            if (currentOrder) {
+                initializeDeliveryConfirmation(currentOrder, agentInfo);
+            }
+        }
+
+        // Display order timeline
+        function displayOrderTimeline(order) {
+            const container = document.getElementById('order-timeline');
+            if (!container) return;
+            
+            const timeline = [
+                { status: 'placed', label: 'Order Placed', date: order.created_at, completed: true },
+                { status: 'processing', label: 'Processing', date: order.processing_date, completed: ['processing', 'shipped', 'delivered'].includes(order.status) },
+                { status: 'shipped', label: 'Shipped', date: order.shipped_date, completed: ['shipped', 'delivered'].includes(order.status) },
+                { status: 'delivered', label: 'Delivered', date: order.delivered_date, completed: order.status === 'delivered' }
+            ];
+            
+            container.innerHTML = timeline.map(item => `
+                <div class="flex items-center gap-4">
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center ${item.completed ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-400'}">
+                        <i class="fas fa-check text-sm"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="font-medium text-gray-900">${item.label}</p>
+                        ${item.date ? `<p class="text-sm text-gray-600">${formatDate(item.date)}</p>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Update order status
+        function updateOrderStatus(status) {
+            const badge = document.getElementById('order-status-badge');
+            const text = document.getElementById('order-status-text');
+            const progressBar = document.getElementById('progress-bar');
+            const progressPercentage = document.getElementById('progress-percentage');
+            
+            if (!badge || !text) return;
+            
+            const statusConfig = {
+                'pending': { color: 'bg-yellow-100 text-yellow-800', progress: 25 },
+                'processing': { color: 'bg-blue-100 text-blue-800', progress: 50 },
+                'shipped': { color: 'bg-purple-100 text-purple-800', progress: 75 },
+                'delivered': { color: 'bg-green-100 text-green-800', progress: 100 },
+                'cancelled': { color: 'bg-red-100 text-red-800', progress: 0 }
+            };
+            
+            const config = statusConfig[status] || statusConfig['pending'];
+            
+            badge.className = `inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${config.color}`;
+            text.textContent = status ? status.charAt(0).toUpperCase() + status.slice(1) : 'Unknown';
+            
+            if (progressBar && progressPercentage) {
+                progressBar.style.width = `${config.progress}%`;
+                progressPercentage.textContent = `${config.progress}%`;
+            }
+        }
+
+        // Utility functions
+        function updateElement(id, content) {
+            const element = document.getElementById(id);
+            if (element) {
+                element.textContent = content;
+            }
+        }
+
+        function formatCurrency(amount) {
+            if (!amount || isNaN(amount)) return 'RWF 0';
+            return `RWF ${parseFloat(amount).toLocaleString()}`;
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'Not available';
+            try {
+                return new Date(dateString).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } catch (error) {
+                return 'Invalid date';
+            }
+        }
+
+        function getPaymentStatusColor(status) {
+            const colors = {
+                'paid': 'text-green-600',
+                'pending': 'text-yellow-600',
+                'failed': 'text-red-600',
+                'refunded': 'text-blue-600'
+            };
+            return colors[status] || 'text-gray-600';
+        }
+
+        // Loading and error functions
+        function showLoading() {
+            document.getElementById('loading-screen').classList.remove('hidden');
+            document.getElementById('error-screen').classList.add('hidden');
+            document.getElementById('order-content').classList.add('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading-screen').classList.add('hidden');
+        }
+
+        function showError(message) {
+            document.getElementById('loading-screen').classList.add('hidden');
+            document.getElementById('order-content').classList.add('hidden');
+            document.getElementById('error-screen').classList.remove('hidden');
+            document.getElementById('error-message').textContent = message;
+        }
+
+        function retryLoad() {
+            if (orderId) {
+                loadOrderDetails();
+            }
+        }
+
+        // Notification system
+        function showNotification(message, type = 'info') {
+            const notification = document.getElementById('notification');
+            const content = document.getElementById('notification-content');
+            const icon = document.getElementById('notification-icon');
+            const messageEl = document.getElementById('notification-message');
+            
+            const types = {
+                success: { bg: 'bg-green-500', icon: 'fas fa-check-circle' },
+                error: { bg: 'bg-red-500', icon: 'fas fa-exclamation-circle' },
+                warning: { bg: 'bg-yellow-500', icon: 'fas fa-exclamation-triangle' },
+                info: { bg: 'bg-blue-500', icon: 'fas fa-info-circle' }
+            };
+            
+            const config = types[type] || types.info;
+            
+            content.className = `px-4 py-3 rounded-lg shadow-lg text-white font-medium flex items-center ${config.bg}`;
+            icon.className = `mr-2 ${config.icon}`;
+            messageEl.textContent = message;
+            
+            notification.classList.remove('translate-x-full');
+            
+            setTimeout(() => {
+                notification.classList.add('translate-x-full');
+            }, 5000);
+        }
+
+        // Action functions
+        function printOrder() {
+            window.print();
+        }
+
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.clear();
+                sessionStorage.clear();
+                window.location.href = '/auth/login.html';
+            }
+        }
+
+        // Track order function (for compatibility)
+        function trackOrder(orderNumber) {
+            showNotification('Order tracking feature coming soon!', 'info');
+        }
+
+        // View order details function (for compatibility)
+        function viewOrderDetails(orderId) {
+            window.location.href = `/buyer/order-detail.html?id=${orderId}`;
+        }
+
+        // Payment proof modal function (for compatibility)
+        function openPaymentProofModal(orderId) {
+            showNotification('Payment proof feature coming soon!', 'info');
+        }
+
+        // ===== DELIVERY CONFIRMATION FUNCTIONS =====
+        
+        let selectedRating = 0;
+        let isCodeVerified = false;
+
+        // Initialize delivery confirmation when agent info is displayed
+        function initializeDeliveryConfirmation(order, agentInfo) {
+            // Show delivery confirmation section if order is shipped and has pickup delivery agent
+            if (order.status === 'shipped' && agentInfo && agentInfo.agent_type === 'pickup_delivery') {
+                const confirmationSection = document.getElementById('delivery-confirmation-section');
+                if (confirmationSection) {
+                    // Populate agent verification info
+                    updateElement('confirm-agent-name', agentInfo.name || 'Unknown');
+                    updateElement('confirm-agent-phone', agentInfo.phone || 'Not provided');
+                    updateElement('confirm-agent-id', agentInfo.agent_id || agentInfo.id || 'Unknown');
+                    updateElement('confirm-delivery-code', order.delivery_code || generateDeliveryCode());
+                    
+                    confirmationSection.classList.remove('hidden');
+                    
+                    // Initialize rating system
+                    initializeRatingSystem();
+                    
+                    // Update confirmation button state
+                    updateConfirmationButtonState();
+                }
+            }
+        }
+
+        // Initialize rating system
+        function initializeRatingSystem() {
+            const stars = document.querySelectorAll('#rating-stars i');
+            stars.forEach((star, index) => {
+                star.addEventListener('click', () => {
+                    selectedRating = index + 1;
+                    updateStarDisplay();
+                });
+                
+                star.addEventListener('mouseenter', () => {
+                    highlightStars(index + 1);
+                });
+            });
+            
+            const ratingContainer = document.getElementById('rating-stars');
+            if (ratingContainer) {
+                ratingContainer.addEventListener('mouseleave', () => {
+                    updateStarDisplay();
+                });
+            }
+        }
+
+        // Update star display
+        function updateStarDisplay() {
+            const stars = document.querySelectorAll('#rating-stars i');
+            const ratingText = document.getElementById('rating-text');
+            
+            stars.forEach((star, index) => {
+                if (index < selectedRating) {
+                    star.className = 'fas fa-star text-yellow-400 cursor-pointer';
+                } else {
+                    star.className = 'fas fa-star text-gray-300 cursor-pointer hover:text-yellow-400';
+                }
+            });
+            
+            const ratingLabels = ['No rating', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'];
+            if (ratingText) {
+                ratingText.textContent = ratingLabels[selectedRating] || 'No rating';
+            }
+        }
+
+        // Highlight stars on hover
+        function highlightStars(rating) {
+            const stars = document.querySelectorAll('#rating-stars i');
+            stars.forEach((star, index) => {
+                if (index < rating) {
+                    star.className = 'fas fa-star text-yellow-400 cursor-pointer';
+                } else {
+                    star.className = 'fas fa-star text-gray-300 cursor-pointer hover:text-yellow-400';
+                }
+            });
+        }
+
+        // Generate delivery code (for demo purposes)
+        function generateDeliveryCode() {
+            return Math.floor(100000 + Math.random() * 900000).toString();
+        }
+
+        // Verify delivery code
+        async function verifyDeliveryCode() {
+            const codeInput = document.getElementById('verification-code');
+            const expectedCode = document.getElementById('confirm-delivery-code').textContent;
+            
+            if (!codeInput || !expectedCode) {
+                showNotification('Unable to verify code. Please try again.', 'error');
+                return;
+            }
+            
+            const enteredCode = codeInput.value.trim();
+            
+            if (!enteredCode) {
+                showNotification('Please enter the verification code', 'warning');
+                codeInput.focus();
+                return;
+            }
+            
+            if (enteredCode.length !== 6) {
+                showNotification('Verification code must be 6 digits', 'warning');
+                codeInput.focus();
+                return;
+            }
+            
+            try {
+                // In a real implementation, this would verify with the server
+                // For now, we'll check against the displayed code
+                if (enteredCode === expectedCode) {
+                    isCodeVerified = true;
+                    showNotification('Verification code confirmed!', 'success');
+                    
+                    // Update UI to show verification success
+                    codeInput.classList.add('border-green-500', 'bg-green-50');
+                    codeInput.disabled = true;
+                    
+                    // Update button state
+                    updateConfirmationButtonState();
+                    
+                } else {
+                    showNotification('Invalid verification code. Please check with the agent.', 'error');
+                    codeInput.focus();
+                }
+                
+            } catch (error) {
+                console.error('Error verifying code:', error);
+                showNotification('Error verifying code. Please try again.', 'error');
+            }
+        }
+
+        // Update confirmation button state
+        function updateConfirmationButtonState() {
+            const confirmBtn = document.getElementById('confirm-delivery-btn');
+            const itemsComplete = document.getElementById('items-complete');
+            const itemsUndamaged = document.getElementById('items-undamaged');
+            const packagingIntact = document.getElementById('packaging-intact');
+            
+            if (!confirmBtn) return;
+            
+            const allChecked = itemsComplete?.checked && itemsUndamaged?.checked && packagingIntact?.checked;
+            const canConfirm = isCodeVerified && allChecked;
+            
+            confirmBtn.disabled = !canConfirm;
+            
+            if (canConfirm) {
+                confirmBtn.classList.remove('disabled:bg-gray-300', 'disabled:cursor-not-allowed');
+                confirmBtn.classList.add('bg-green-500', 'hover:bg-green-600');
+            } else {
+                confirmBtn.classList.add('disabled:bg-gray-300', 'disabled:cursor-not-allowed');
+                confirmBtn.classList.remove('bg-green-500', 'hover:bg-green-600');
+            }
+        }
+
+        // Add event listeners for checkboxes
+        document.addEventListener('DOMContentLoaded', function() {
+            const checkboxes = ['items-complete', 'items-undamaged', 'packaging-intact'];
+            checkboxes.forEach(id => {
+                const checkbox = document.getElementById(id);
+                if (checkbox) {
+                    checkbox.addEventListener('change', updateConfirmationButtonState);
+                }
+            });
+        });
+
+        // Confirm delivery
+        async function confirmDelivery() {
+            if (!isCodeVerified) {
+                showNotification('Please verify the delivery code first', 'warning');
+                return;
+            }
+            
+            const itemsComplete = document.getElementById('items-complete')?.checked;
+            const itemsUndamaged = document.getElementById('items-undamaged')?.checked;
+            const packagingIntact = document.getElementById('packaging-intact')?.checked;
+            
+            if (!itemsComplete || !itemsUndamaged || !packagingIntact) {
+                showNotification('Please confirm all order condition checks', 'warning');
+                return;
+            }
+            
+            if (!confirm('Are you sure you want to confirm delivery? This action cannot be undone.')) {
+                return;
+            }
+            
+            try {
+                showNotification('Processing delivery confirmation...', 'info');
+                
+                const token = localStorage.getItem('authToken');
+                const deliveryData = {
+                    orderId: orderId,
+                    verificationCode: document.getElementById('verification-code').value,
+                    rating: selectedRating,
+                    feedback: document.getElementById('delivery-feedback').value.trim(),
+                    conditionChecks: {
+                        itemsComplete: itemsComplete,
+                        itemsUndamaged: itemsUndamaged,
+                        packagingIntact: packagingIntact
+                    },
+                    confirmedAt: new Date().toISOString()
+                };
+                
+                const response = await fetch(`/api/orders/${orderId}/confirm-delivery`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(deliveryData)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    showNotification('Delivery confirmed successfully!', 'success');
+                    
+                    // Hide confirmation section
+                    const confirmationSection = document.getElementById('delivery-confirmation-section');
+                    if (confirmationSection) {
+                        confirmationSection.innerHTML = `
+                            <div class="text-center py-8">
+                                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <i class="fas fa-check-circle text-2xl text-green-500"></i>
+                                </div>
+                                <h4 class="font-bold text-gray-900 mb-2">Delivery Confirmed!</h4>
+                                <p class="text-gray-600">Thank you for confirming your delivery. Your order is now complete.</p>
+                                ${selectedRating > 0 ? `<p class="text-sm text-gray-500 mt-2">Rating: ${selectedRating}/5 stars</p>` : ''}
+                            </div>
+                        `;
+                    }
+                    
+                    // Update order status
+                    updateOrderStatus('delivered');
+                    
+                    // Reload order details to reflect changes
+                    setTimeout(() => {
+                        loadOrderDetails();
+                    }, 2000);
+                    
+                } else {
+                    throw new Error(result.message || 'Failed to confirm delivery');
+                }
+                
+            } catch (error) {
+                console.error('Error confirming delivery:', error);
+                showNotification(error.message || 'Failed to confirm delivery. Please try again.', 'error');
+            }
+        }
+
+        // Report issue with delivery
+        async function reportIssue() {
+            const issue = prompt('Please describe the issue with your delivery:');
+            
+            if (!issue || issue.trim().length === 0) {
+                return;
+            }
+            
+            try {
+                showNotification('Reporting issue...', 'info');
+                
+                const token = localStorage.getItem('authToken');
+                const issueData = {
+                    orderId: orderId,
+                    issueDescription: issue.trim(),
+                    reportedAt: new Date().toISOString(),
+                    agentInfo: {
+                        name: document.getElementById('confirm-agent-name')?.textContent,
+                        phone: document.getElementById('confirm-agent-phone')?.textContent,
+                        id: document.getElementById('confirm-agent-id')?.textContent
+                    }
+                };
+                
+                const response = await fetch(`/api/orders/${orderId}/report-issue`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(issueData)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    showNotification('Issue reported successfully. Our support team will contact you soon.', 'success');
+                } else {
+                    throw new Error(result.message || 'Failed to report issue');
+                }
+                
+            } catch (error) {
+                console.error('Error reporting issue:', error);
+                showNotification(error.message || 'Failed to report issue. Please try again.', 'error');
+            }
+        }
+
+        console.log('✅ Order Detail Page Script Loaded Successfully');
+    </script>
+</body>
+</html>

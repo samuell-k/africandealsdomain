@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Help & Support - ADD Physical Products</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="/shared/auth-utils.js"></script>
+    <script src="/shared/agent-auth-protection.js"></script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .glass-morphism {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .faq-item {
+            transition: all 0.3s ease;
+        }
+        .faq-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="min-h-screen gradient-bg">
+    <!-- Navigation -->
+    <nav class="glass-morphism border-b border-white/20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <a href="/agent/dashboard.html" class="text-white font-bold text-xl">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        Agent Support
+                    </a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button id="emergency-btn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        Emergency
+                    </button>
+                    <div class="text-white">
+                        <i class="fas fa-user-circle mr-2"></i>
+                        <span id="agent-name">Agent</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header -->
+        <div class="text-center mb-8 animate-fade-in">
+            <h1 class="text-4xl font-bold text-white mb-4">
+                <i class="fas fa-life-ring mr-3"></i>
+                Help & Support Center
+            </h1>
+            <p class="text-white/80 text-lg max-w-2xl mx-auto">
+                Get help with your agent dashboard, find answers to common questions, and contact support when needed.
+            </p>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="grid md:grid-cols-4 gap-6 mb-8">
+            <button onclick="openContactSupport()" class="glass-morphism p-6 rounded-xl text-center hover:bg-white/20 transition-all animate-fade-in">
+                <i class="fas fa-headset text-3xl text-white mb-3"></i>
+                <h3 class="text-white font-semibold mb-2">Contact Support</h3>
+                <p class="text-white/70 text-sm">Get help from our support team</p>
+            </button>
+            
+            <button onclick="showTutorials()" class="glass-morphism p-6 rounded-xl text-center hover:bg-white/20 transition-all animate-fade-in">
+                <i class="fas fa-play-circle text-3xl text-white mb-3"></i>
+                <h3 class="text-white font-semibold mb-2">Video Tutorials</h3>
+                <p class="text-white/70 text-sm">Learn how to use the platform</p>
+            </button>
+            
+            <button onclick="downloadGuides()" class="glass-morphism p-6 rounded-xl text-center hover:bg-white/20 transition-all animate-fade-in">
+                <i class="fas fa-download text-3xl text-white mb-3"></i>
+                <h3 class="text-white font-semibold mb-2">Download Guides</h3>
+                <p class="text-white/70 text-sm">PDF guides and manuals</p>
+            </button>
+            
+            <button onclick="reportIssue()" class="glass-morphism p-6 rounded-xl text-center hover:bg-white/20 transition-all animate-fade-in">
+                <i class="fas fa-bug text-3xl text-white mb-3"></i>
+                <h3 class="text-white font-semibold mb-2">Report Issue</h3>
+                <p class="text-white/70 text-sm">Report bugs or problems</p>
+            </button>
+        </div>
+
+        <!-- FAQ Section -->
+        <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-8 mb-8 animate-fade-in">
+            <h2 class="text-2xl font-bold text-white mb-6">
+                <i class="fas fa-question-circle mr-3"></i>
+                Frequently Asked Questions
+            </h2>
+            
+            <div class="space-y-4" id="faq-container">
+                <!-- FAQ items will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Contact Form -->
+        <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-8 animate-fade-in">
+            <h2 class="text-2xl font-bold text-white mb-6">
+                <i class="fas fa-envelope mr-3"></i>
+                Contact Support
+            </h2>
+            
+            <form id="support-form" class="space-y-6">
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-white font-semibold mb-2">Subject</label>
+                        <select id="support-subject" class="w-full px-4 py-3 rounded-lg bg-white/20 text-white placeholder-white/70 border border-white/30 focus:border-white/50 focus:outline-none">
+                            <option value="">Select a subject</option>
+                            <option value="technical">Technical Issue</option>
+                            <option value="payment">Payment Problem</option>
+                            <option value="order">Order Issue</option>
+                            <option value="account">Account Problem</option>
+                            <option value="feature">Feature Request</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-white font-semibold mb-2">Priority</label>
+                        <select id="support-priority" class="w-full px-4 py-3 rounded-lg bg-white/20 text-white placeholder-white/70 border border-white/30 focus:border-white/50 focus:outline-none">
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                            <option value="urgent">Urgent</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-white font-semibold mb-2">Message</label>
+                    <textarea id="support-message" rows="6" class="w-full px-4 py-3 rounded-lg bg-white/20 text-white placeholder-white/70 border border-white/30 focus:border-white/50 focus:outline-none resize-none" placeholder="Describe your issue or question in detail..."></textarea>
+                </div>
+                
+                <div>
+                    <label class="block text-white font-semibold mb-2">Attach Screenshot (optional)</label>
+                    <input type="file" id="support-attachment" accept="image/*" class="w-full px-4 py-3 rounded-lg bg-white/20 text-white border border-white/30 focus:border-white/50 focus:outline-none">
+                </div>
+                
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors">
+                    <i class="fas fa-paper-plane mr-2"></i>
+                    Send Support Request
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Emergency Modal -->
+    <div id="emergency-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-2xl p-8 max-w-md w-full">
+                <div class="text-center mb-6">
+                    <i class="fas fa-exclamation-triangle text-red-500 text-4xl mb-4"></i>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">Emergency Support</h3>
+                    <p class="text-gray-600">Are you experiencing an emergency situation that requires immediate assistance?</p>
+                </div>
+                
+                <div class="space-y-4">
+                    <button onclick="callEmergency()" class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors">
+                        <i class="fas fa-phone mr-2"></i>
+                        Call Emergency Line
+                    </button>
+                    
+                    <button onclick="sendEmergencyMessage()" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors">
+                        <i class="fas fa-exclamation-circle mr-2"></i>
+                        Send Emergency Alert
+                    </button>
+                    
+                    <button onclick="closeEmergencyModal()" class="w-full bg-gray-300 hover:bg-gray-400 text-gray-700 font-semibold py-3 px-6 rounded-lg transition-colors">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // FAQ Data
+        const faqData = [
+            {
+                question: "How do I accept new orders?",
+                answer: "New orders appear in your 'Available Orders' tab. Click on an order to view details, then click 'Accept Order' to claim it. Make sure you're online and within the delivery radius."
+            },
+            {
+                question: "What should I do if I can't find the customer's address?",
+                answer: "Use the built-in map feature to navigate. If you still can't find the address, contact the customer through the in-app messaging system or call them directly using the provided phone number."
+            },
+            {
+                question: "How do I update my delivery status?",
+                answer: "Go to your 'Active Orders' tab, select the order, and use the status update buttons. Always update your status when you pick up items and when you deliver them."
+            },
+            {
+                question: "When will I receive my payment?",
+                answer: "Payments are processed weekly on Fridays. You'll receive payment for all completed deliveries from the previous week. Check your earnings in the dashboard."
+            },
+            {
+                question: "What if a customer isn't available for delivery?",
+                answer: "Try calling the customer first. If they don't answer, wait for 10 minutes and try again. If still unavailable, mark the delivery as 'Customer Unavailable' and follow the return procedure."
+            },
+            {
+                question: "How do I report a problem with an order?",
+                answer: "In your active orders, select the problematic order and click 'Report Issue'. Choose the appropriate issue type and provide details. Support will contact you within 30 minutes."
+            },
+            {
+                question: "Can I work in multiple areas?",
+                answer: "Yes, you can update your working area in Settings. However, you'll only receive orders within your selected radius from your current location."
+            },
+            {
+                question: "What documents do I need to provide?",
+                answer: "You need a valid driver's license, vehicle registration, and insurance documents. For some areas, additional permits may be required."
+            }
+        ];
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUserData();
+            populateFAQ();
+            setupEventListeners();
+        });
+
+        function loadUserData() {
+            try {
+                const userData = JSON.parse(localStorage.getItem('userData') || localStorage.getItem('user') || '{}');
+                if (userData.name) {
+                    document.getElementById('agent-name').textContent = userData.name;
+                }
+            } catch (error) {
+                console.error('Error loading user data:', error);
+            }
+        }
+
+        function populateFAQ() {
+            const container = document.getElementById('faq-container');
+            container.innerHTML = faqData.map((faq, index) => `
+                <div class="faq-item bg-white/10 rounded-lg p-4 cursor-pointer" onclick="toggleFAQ(${index})">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-white font-semibold">${faq.question}</h3>
+                        <i class="fas fa-chevron-down text-white transition-transform" id="faq-icon-${index}"></i>
+                    </div>
+                    <div class="faq-answer hidden mt-3 text-white/80" id="faq-answer-${index}">
+                        ${faq.answer}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function toggleFAQ(index) {
+            const answer = document.getElementById(`faq-answer-${index}`);
+            const icon = document.getElementById(`faq-icon-${index}`);
+            
+            if (answer.classList.contains('hidden')) {
+                answer.classList.remove('hidden');
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                answer.classList.add('hidden');
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        function setupEventListeners() {
+            // Emergency button
+            document.getElementById('emergency-btn').addEventListener('click', function() {
+                document.getElementById('emergency-modal').classList.remove('hidden');
+            });
+
+            // Support form
+            document.getElementById('support-form').addEventListener('submit', handleSupportForm);
+        }
+
+        async function handleSupportForm(e) {
+            e.preventDefault();
+            
+            const subject = document.getElementById('support-subject').value;
+            const priority = document.getElementById('support-priority').value;
+            const message = document.getElementById('support-message').value;
+            
+            if (!subject || !message) {
+                showNotification('Please fill in all required fields', 'error');
+                return;
+            }
+
+            try {
+                // Here you would typically send the support request to your backend
+                // For now, we'll simulate success
+                showNotification('Support request sent successfully! We\'ll get back to you soon.', 'success');
+                document.getElementById('support-form').reset();
+            } catch (error) {
+                showNotification('Failed to send support request. Please try again.', 'error');
+            }
+        }
+
+        function openContactSupport() {
+            document.querySelector('#support-form').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function showTutorials() {
+            showNotification('Video tutorials will be available soon!', 'info');
+        }
+
+        function downloadGuides() {
+            showNotification('PDF guides will be available for download soon!', 'info');
+        }
+
+        function reportIssue() {
+            document.getElementById('support-subject').value = 'technical';
+            document.querySelector('#support-form').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function callEmergency() {
+            // In a real implementation, this would initiate a call
+            window.open('tel:+1234567890');
+            closeEmergencyModal();
+        }
+
+        function sendEmergencyMessage() {
+            // In a real implementation, this would send an emergency alert
+            showNotification('Emergency alert sent to support team!', 'success');
+            closeEmergencyModal();
+        }
+
+        function closeEmergencyModal() {
+            document.getElementById('emergency-modal').classList.add('hidden');
+        }
+
+        function showNotification(message, type = 'info') {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm transform transition-all duration-300 translate-x-full opacity-0`;
+            
+            const bgColors = {
+                success: 'bg-green-500',
+                error: 'bg-red-500',
+                warning: 'bg-yellow-500',
+                info: 'bg-blue-500'
+            };
+            
+            notification.classList.add(bgColors[type] || bgColors.info);
+            notification.innerHTML = `
+                <div class="flex items-center text-white">
+                    <i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'times' : type === 'warning' ? 'exclamation' : 'info'}-circle mr-2"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Animate in
+            setTimeout(() => {
+                notification.classList.remove('translate-x-full', 'opacity-0');
+            }, 100);
+            
+            // Remove after 5 seconds
+            setTimeout(() => {
+                notification.classList.add('translate-x-full', 'opacity-0');
+                setTimeout(() => notification.remove(), 300);
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
