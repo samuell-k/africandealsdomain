@@ -1,7 +1,0 @@
-<svg width="120" height="80" viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg">
-  <rect width="120" height="80" fill="#0066CC" rx="5"/>
-  <text x="60" y="20" font-family="Arial, sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="#FFF">Bank of</text>
-  <text x="60" y="35" font-family="Arial, sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="#FFF">Kigali</text>
-  <text x="60" y="55" font-family="Arial, sans-serif" font-size="8" text-anchor="middle" fill="#FFF">Premier Banking</text>
-  <text x="60" y="65" font-family="Arial, sans-serif" font-size="8" text-anchor="middle" fill="#FFF">Solutions</text>
-</svg>

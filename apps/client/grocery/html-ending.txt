@@ -1,8 +1,0 @@
-eady state - all functions loaded
-      console.log('Local Market page fully loaded and ready');
-      
-    });
-
-  </script>
-</body>
-</html>

@@ -1,9 +1,0 @@
-{
-  "name": "agent-types-dependencies",
-  "description": "Additional dependencies required for the three agent types implementation",
-  "dependencies": {
-    "pdfkit": "^0.13.0",
-    "qrcode": "^1.5.3"
-  },
-  "installation_note": "Run 'npm install pdfkit qrcode' in the server directory to install these dependencies"
-}
